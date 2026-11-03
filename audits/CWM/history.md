@@ -10,7 +10,7 @@
 - **Bucket 2 (surface-for-user, judgment):** 4 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 3 items.
 
-Structural pass: M-band fails hard (M1 + M2 + M4 + M6 + M7 collateral). B-band cannot be cleanly graded without modules: B2 / B3 / B4 evaluate against `data_objects` directly and fail on every master (no labels validated? labels exist but pattern flags all default-false uninspected, no canonical-bare-word rationale, no lifecycle states). B6 partially passes (8 intra-domain relationship rows). B7 passes (users-edges loaded for 6 of 6 masters via verbs `sponsors`, `owns`, `manages`, `approves` x2, `dispatches`, `approves`). B9 has events for 5 of 6 masters but `rate_card.published` event 596 has no `handoffs` row, and every loaded handoff is missing `source_domain_module_id` because the source domain has no modules (B10b sub-case 1: upstream M1 gap). C-band passes (3 `business_function_domains` rows: Indirect Procurement owner, Procurement + HR contributors). A1 passes; A2 passes (5 capabilities); A3 passes (7 solutions); A4 fails (both catalog UX fields empty). E-band vacuously fails: no `roles` rows exist for Indirect Procurement, no `role_modules` rows, no `role_permissions` rows; this rolls into a structural-blocker after Bucket 1 #M1 lands. F1 fails (legacy domain-level system skill present); F2 cannot evaluate without modules.
+Structural pass: M-band fails hard (M1 + M2 + M4 + M6 + M7 collateral). B-band cannot be cleanly graded without modules: B2 / B3 / B4 evaluate against `data_objects` directly and fail on every master (no labels validated? labels exist but pattern flags all default-false uninspected, no canonical-bare-word rationale, no lifecycle states). B6 partially passes (8 intra-domain relationship rows). B7 passes (relationships to `users` loaded for 6 of 6 masters via verbs `sponsors`, `owns`, `manages`, `approves` x2, `dispatches`, `approves`). B9 has events for 5 of 6 masters but `rate_card.published` event 596 has no `handoffs` row, and every loaded handoff is missing `source_domain_module_id` because the source domain has no modules (B10b sub-case 1: upstream M1 gap). C-band passes (3 `business_function_domains` rows: Indirect Procurement owner, Procurement + HR contributors). A1 passes; A2 passes (5 capabilities); A3 passes (7 solutions); A4 fails (both catalog UX fields empty). E-band vacuously fails: no `roles` rows exist for Indirect Procurement, no `persona_modules` rows, no `role_permissions` rows; this rolls into a structural-blocker after Bucket 1 #M1 lands. F1 fails (legacy domain-level system skill present); F2 cannot evaluate without modules.
 
 Domain Semantius score (across the 1 legacy skill): 7/8 platform = 87.5%. The 1 non-platform tool is `sign_document` (id 42, external, required) consistent with the SOW-signing leg.
 
@@ -71,14 +71,14 @@ Every master has 0 lifecycle states. Routes to B12 on all 6 masters.
 | B1-S6 | B2 | All 6 masters have `singular_label` + `plural_label`. Pass on B2 specifically. | No fix needed; recorded for completeness. |
 | B1-S7 | B3 | None of the 6 masters carry `is_canonical_bare_word=true`, all 6 are prefixed names (`contingent_workers`, `pm_work_orders`, `staffing_suppliers`, `rate_cards` is bare but `rate_cards` is a generic phrase, `contingent_timesheets`, `contingent_invoices`). Verify `rate_cards` collision: PSA-billing might also use `rate_cards`. If collision-free, optionally claim canonical; otherwise prefix to `vms_rate_cards`. | Run Rule #9 arbitration on `rate_cards` (id 189) specifically: query `/data_objects?data_object_name=ilike.*rate_card*`. Other 5 names are prefixed and pass automatically. |
 | B1-S8 | B4 | All 6 masters have `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false`. Re-evaluate each: `contingent_workers` PII (SSN, tax classification, I-9 / IR35 status) suggests `has_personal_content=true`; `rate_cards` and SOW (entity 187 if confirmed as SOW) plausibly have a single approver. | PATCH per data_object after user confirms which flags should flip (record decision in the audit; no `notes` writes per Rule #15). |
-| B1-S9 | B6 | Intra-domain relationships: 8 edges loaded (verified above). Two issues: (a) row `contingent_workers 186 executes pm_work_orders 187` makes no sense if 187 really is preventive maintenance work orders (you don't have contingent workers execute PMs); blocks on Bucket 2 #B2-1. (b) row `contingent_invoices 191 rolls_up pm_work_orders 187` (`is_required=false`) is also semantically suspect for the same reason. | If user confirms 187 is mis-named (Bucket 2 #B2-1 = a), rename the entity to `staffing_work_orders` or `sow_work_orders` and fix the aliases + description in the same loader. If 187 truly is preventive-maintenance (b), DELETE both relationship rows and the DMDO master row on 187, and route 187 to EAM as a separate concern. |
-| B1-S10 | B7 | Verified: all 6 masters have at least one `users` edge (verbs `sponsors`, `owns`, `manages`, `approves`, `dispatches`). | No fix needed; recorded for completeness. |
+| B1-S9 | B6 | Intra-domain relationships: 8 relationships loaded (verified above). Two issues: (a) row `contingent_workers 186 executes pm_work_orders 187` makes no sense if 187 really is preventive maintenance work orders (you don't have contingent workers execute PMs); blocks on Bucket 2 #B2-1. (b) row `contingent_invoices 191 rolls_up pm_work_orders 187` (`is_required=false`) is also semantically suspect for the same reason. | If user confirms 187 is mis-named (Bucket 2 #B2-1 = a), rename the entity to `staffing_work_orders` or `sow_work_orders` and fix the aliases + description in the same loader. If 187 truly is preventive-maintenance (b), DELETE both relationship rows and the DMDO master row on 187, and route 187 to EAM as a separate concern. |
+| B1-S10 | B7 | Verified: all 6 masters have at least one relationship to `users` (verbs `sponsors`, `owns`, `manages`, `approves`, `dispatches`). | No fix needed; recorded for completeness. |
 | B1-S11 | B9 | `rate_card.published` (event 596) has zero `handoffs` rows. The event description says PSA aligns project bill rates, FIN refreshes cost accruals, so two handoff subscribers are implied. | INSERT 2 `handoffs` rows: VMS to PSA on `rate_cards` (`integration_pattern: batch_sync` typical for rate refreshes), VMS to FIN on `rate_cards` (`integration_pattern: batch_sync`). |
 | B1-S12 | B9b | N/A: VMS will have 2 modules after B1-S1 lands, but no current intra-domain handoffs. Once modules land, the chain `staffing_supplier.activated -> rate_card.published -> contingent_timesheet.approved -> contingent_invoice.received -> contingent_invoice.matched` likely crosses the VMS-WORKER-SOURCING to VMS-TIME-INVOICING boundary on at least `contingent_timesheet.approved` (sourcing produces the request, time-invoicing executes). Surface as a follow-up after B1-S1. | Re-run B9b derivation after B1-S1 lands; INSERT intra-domain `handoffs` rows with `integration_pattern: lifecycle_progression`. |
 | B1-S13 | B10b | Every cross-domain outbound handoff (7 rows: 117, 118, 587, 588, 589, 590, 591) has `source_domain_module_id IS NULL` because VMS has no modules. Sub-case 1: upstream M1 gap. PATCH after B1-S1 lands. | Backfill loader (sibling shape to `backfill_ats_handoff_modules_2026_05_23.ts`). For each outbound row, set `source_domain_module_id` to the module that masters the trigger event's `data_object_id`. After B1-S1: events 147 (worker.tenure_threshold) and 146 (pm_work_order.invoiced) attribute to VMS-WORKER-SOURCING; 596 / 597 / 598 / 599 / 600 attribute to VMS-TIME-INVOICING; 595 (staffing_supplier.activated) attribute to VMS-WORKER-SOURCING. |
 | B1-S14 | B11 | All 6 masters carry aliases (3 / 2 / 2 / 2 / 2 / 1). Pass. | No fix. |
 | B1-S15 | B12 | Zero lifecycle states on any of the 6 masters. `contingent_workers` (worker has tenure threshold + termination), `staffing_suppliers` (draft / activated / suspended / terminated), `rate_cards` (draft / published / superseded / retired), `contingent_timesheets` (drafted / submitted / approved / rejected / billed), `contingent_invoices` (received / matched / disputed / paid). `pm_work_orders` (entity 187): lifecycle depends on Bucket 2 #B2-1 resolution. | Phase B loader: INSERT lifecycle states per master with `requires_permission=true` on workflow gates (approve, activate, publish, dispute). |
-| B1-S16 | E1 | Zero roles authored against `business_function_id=68` (Indirect Procurement). Once B1-S1 lands (2 modules), at minimum: `INDIRECT-PROCUREMENT-VMS-PROGRAM-MGR` (primary on both modules), `INDIRECT-PROCUREMENT-SUPPLIER-MGR` (primary on VMS-WORKER-SOURCING), `INDIRECT-PROCUREMENT-CONTINGENT-LABOR-COORDINATOR` (primary on VMS-TIME-INVOICING). Plus cross-functional `HIRING-MANAGER` (cross-functional, secondary on VMS-WORKER-SOURCING, since hiring managers approve contingent worker requests) which already exists as role 10007. | Phase E loader: INSERT 3 roles + role_modules + role_permissions; PATCH `HIRING-MANAGER` role_modules to add `VMS-WORKER-SOURCING (secondary)`. |
+| B1-S16 | E1 | Zero roles authored against `business_function_id=68` (Indirect Procurement). Once B1-S1 lands (2 modules), at minimum: `INDIRECT-PROCUREMENT-VMS-PROGRAM-MGR` (primary on both modules), `INDIRECT-PROCUREMENT-SUPPLIER-MGR` (primary on VMS-WORKER-SOURCING), `INDIRECT-PROCUREMENT-CONTINGENT-LABOR-COORDINATOR` (primary on VMS-TIME-INVOICING). Plus cross-functional `HIRING-MANAGER` (cross-functional, secondary on VMS-WORKER-SOURCING, since hiring managers approve contingent worker requests) which already exists as role 10007. | Phase E loader: INSERT 3 roles + persona_modules + role_permissions; PATCH `HIRING-MANAGER` persona_modules to add `VMS-WORKER-SOURCING (secondary)`. |
 
 ##### BOUNDARY
 
@@ -155,9 +155,9 @@ No subagent spawn (this audit IS the subagent, per the prompt constraint). Vendo
 
 ### Pass 3 - Neighbor discovery
 
-Cross-edges via outbound `handoffs` (target_domain_id) for VMS:
+Cross-domain relationships via outbound `handoffs` (target_domain_id) for VMS:
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO consumer/contributor on neighbor's masters | Edge weight | Verdict |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO consumer/contributor on neighbor's masters | Relationship weight | Verdict |
 |---|---|---|---|---|---|
 | HCM | 1 (118 worker.tenure_threshold) | 0 | 0 (no VMS module masters yet to consume) | 1 | light |
 | S2P | 1 (117 pm_work_order.invoiced) | 0 | 0 | 1 | light (and gated on Bucket 2 #B2-1) |
@@ -167,17 +167,17 @@ Cross-edges via outbound `handoffs` (target_domain_id) for VMS:
 | PAYROLL | 1 (590 contingent_timesheet.approved) | 0 | 0 | 1 | light |
 | SUP-LIFE | 1 (591 staffing_supplier.activated) | 0 | 0 | 1 | light |
 
-No neighbor crosses the edge-weight-3 threshold for a full pairwise reconciliation. Lighter neighbors get one-line summaries (already in Pass 1 B1-S13 / B1-B1 / B1-B2 / B1-H1). The boundary that would warrant deeper inspection if anything (PSA edge-weight 2, due to the `PSA-TIME-EXPENSE` consumer row) is covered by the structural pass items.
+No neighbor crosses the relationship-weight-3 threshold for a full pairwise reconciliation. Lighter neighbors get one-line summaries (already in Pass 1 B1-S13 / B1-B1 / B1-B2 / B1-H1). The boundary that would warrant deeper inspection if anything (PSA relationship-weight 2, due to the `PSA-TIME-EXPENSE` consumer row) is covered by the structural pass items.
 
-### Pass 4 - Pairwise reconciliation per neighbor (edge weight >= 3)
+### Pass 4 - Pairwise reconciliation per neighbor (relationship weight >= 3)
 
-No neighbor at edge weight >= 3. Pass 4 vacuous.
+No neighbor at relationship weight >= 3. Pass 4 vacuous.
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
 1. **B2-1: Entity 187 (`pm_work_orders`) identity.** The data_object's name, `singular_label` ("Preventive Maintenance Work Order"), and aliases (`preventive maintenance order`, `PM WO`) say Preventive Maintenance, but its description and every workflow attached (relationships, trigger event 146, handoff 117 routing to S2P with payload `contingent_invoices`) say staffing requisition / SOW. Options:
    - **(a) Rename + relabel + re-alias** (description was right; name was wrong): rename to `staffing_work_orders` or `sow_work_orders`, replace labels with "Statement of Work Requisition" or similar, replace aliases with `SOW`, `staffing requisition`, `work order`. Keep in VMS. This is the option most consistent with the existing relationships and handoffs.
-   - **(b) Treat as Preventive Maintenance and remove from VMS**: DELETE the DMDO master row, DELETE the relationships connecting it to contingent-labor masters, route the entity to EAM as a separate concern. Then INSERT a fresh `staffing_requisitions` master in VMS (Bucket 3 #1 becomes Bucket 1).
+   - **(b) Treat as Preventive Maintenance and remove from VMS**: DELETE the DMDO master row, DELETE the relationships relating it to contingent-labor masters, route the entity to EAM as a separate concern. Then INSERT a fresh `staffing_requisitions` master in VMS (Bucket 3 #1 becomes Bucket 1).
    - **(c) Split**: keep `pm_work_orders` as Preventive Maintenance (route to EAM), INSERT a new `staffing_requisitions` master in VMS. Same outcome as (b) but explicit about retaining the entity vs deleting.
    This decision gates B1-S1's module-naming, B1-S9, B1-B1's handoff 117 payload, B1-S11 (rate cards' relationships), all of Bucket 3 #1, and the WRONG-OWNERSHIP / SCOPE-CREEP categories in the market audit. Highest-priority unblock.
 
@@ -262,9 +262,9 @@ Eyeball recommendation: all 3 ring true on the regulated-VMS market shape; user 
 | B1-S13 | B10b | PATCH `handoffs.source_domain_module_id` for 7 rows; NOT derivable from existing modules (VMS has zero modules); cascades from B1-S1. |
 | B1-S14 | B11 | Recorded pass; no action. |
 | B1-S15 | B12 | Lifecycle states and workflow-gate permissions; new entities, gated on B1-S1. |
-| B1-S16 | E1 | Roles, role_modules, role_permissions; new entities, gated on B1-S1. |
+| B1-S16 | E1 | Roles, persona_modules, role_permissions; new entities, gated on B1-S1. |
 | B1-B1 | boundary | Cross-domain DOR mirrors; gated on Bucket 2 #B2-1. |
-| B1-B2 | boundary | INSERT `data_object_relationships` `contingent_workers converts_to employees`; target=employees (id=31), NOT a Rule #10 user-edge (Rule #10 covers edges to `kind='platform_builtin'` rows only); verb selection is judgment. |
+| B1-B2 | boundary | INSERT `data_object_relationships` `contingent_workers converts_to employees`; target=employees (id=31), NOT a Rule #10 relationship to `users` (Rule #10 covers relationships to `kind='platform_builtin'` rows only); verb selection is judgment. |
 
 ### Result
 
@@ -317,7 +317,7 @@ Same enumeration as 2026-05-30 (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, 
 | ID | Band | Finding |
 |---|---|---|
 | B5 | fail | 6 of 8 `trigger_events` carry `event_category=""`: ids 595 (`staffing_supplier.activated`), 596 (`rate_card.published`), 597 (`contingent_timesheet.approved`), 598 (`contingent_timesheet.rejected`), 599 (`contingent_invoice.received`), 600 (`contingent_invoice.matched`). All 6 are `state_change` per the SKILL.md enum (lifecycle / state_change / threshold / signal); each is a master transitioning. Carries to Bucket 1 #B1-B5. ids 146 (`pm_work_order.invoiced`, `state_change`) and 147 (`worker.tenure_threshold`, `threshold`) are correctly populated. |
-| B7 | pass | All 6 masters have at least one `users` (data_object 748, `kind='platform_builtin'`) edge: sponsors+manages on 186, owns on 188, dispatches on 187, approves on 189, approves on 190, approves on 191. Rule #10 satisfied. |
+| B7 | pass | All 6 masters have at least one `users` (data_object 748, `kind='platform_builtin'`) relationship: sponsors+manages on 186, owns on 188, dispatches on 187, approves on 189, approves on 190, approves on 191. Rule #10 satisfied. |
 | B9 | fail | `rate_card.published` (event 596) has zero `handoffs` rows downstream. Event description implies a PSA-side bill-rate refresh and an FIN-side cost accrual; 2 outbound handoffs missing. Carries to Bucket 1 #B1-B9. |
 | B9b | n/a | Intra-domain handoffs cannot be evaluated, VMS has 0 modules. Re-derive after M1 lands. Carries to Bucket 1 #B1-B9b (deferred until B1-M1). |
 | B10b | fail | All 7 outbound handoffs (117, 118, 587, 588, 589, 590, 591) have `source_domain_module_id IS NULL` because VMS has no modules. Sub-case 1: upstream M1 gap. Backfill after B1-M1 lands. Carries to Bucket 1 #B1-B10b. |
@@ -337,7 +337,7 @@ Not applicable, no `parent_domain_id`. Pass.
 | ID | Band | Finding |
 |---|---|---|
 | E1 | vacuous fail | 0 rows in `roles` with `business_function_id=68` (Indirect Procurement). Three VMS-specific roles need authoring after B1-M1 (program manager, supplier manager, contingent-labor coordinator). Carries to Bucket 1 #B1-E1, gated on B1-M1. |
-| E2 | vacuous fail | 0 `role_modules` rows touching any (zero) VMS module. Plus the HIRING-MANAGER (role 10007) cross-functional binding to VMS-WORKER-SOURCING (secondary) is not yet PATCHED in; HIRING-MANAGER's 6 existing role_module rows cover ATS, ONB only. Carries to Bucket 1 #B1-E2, gated on B1-M1. |
+| E2 | vacuous fail | 0 `persona_modules` rows touching any (zero) VMS module. Plus the HIRING-MANAGER (role 10007) cross-functional binding to VMS-WORKER-SOURCING (secondary) is not yet PATCHED in; HIRING-MANAGER's 6 existing role_module rows cover ATS, ONB only. Carries to Bucket 1 #B1-E2, gated on B1-M1. |
 | E3 | n/a | 0 `role_permissions` rows; vacuous. Gated on B1-M1 + B1-E1. |
 | E4 | n/a | Vacuous. |
 | E5 | n/a | Vacuous. |
@@ -374,11 +374,11 @@ No fresh subagent spawn (this audit IS the structural Validate). Market diff fro
 
 ### Pass 3, Neighbor discovery
 
-Edge weights unchanged from 2026-05-30: HCM, S2P, PSA, AP-AUTO, FIN, PAYROLL, SUP-LIFE all at weight 1, except PSA at weight 2 (PSA-TIME-EXPENSE consumes `contingent_timesheets`). No edge weight >= 3, Pass 4 vacuous.
+Relationship weights unchanged from 2026-05-30: HCM, S2P, PSA, AP-AUTO, FIN, PAYROLL, SUP-LIFE all at weight 1, except PSA at weight 2 (PSA-TIME-EXPENSE consumes `contingent_timesheets`). No relationship weight >= 3, Pass 4 vacuous.
 
 ### Pass 4, Pairwise reconciliation
 
-Vacuous (no neighbor at edge weight >= 3).
+Vacuous (no neighbor at relationship weight >= 3).
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -395,7 +395,7 @@ Vacuous (no neighbor at edge weight >= 3).
 | B1-B10b | B10b | 7 outbound handoffs (117, 118, 587, 588, 589, 590, 591) have `source_domain_module_id IS NULL`. Sub-case 1 (upstream M1 gap). | Backfill loader after B1-M1; PATCH each row with the module that masters the trigger event's `data_object_id`. |
 | B1-B12 | B12 | 0 lifecycle states on the 6 masters. None qualify for the config-shape exemption. | Phase B loader after B1-M1: INSERT states per master, `requires_permission=true` on workflow gates (approve, activate, publish, dispute). Cascades from B1-M1. Lifecycle authoring for entity 187 specifically gated on Bucket 2 #B2-1. |
 | B1-E1 | E1 | 0 roles with `business_function_id=68`. Need >=3 VMS-specific roles (program manager, supplier manager, contingent-labor coordinator). | Phase E loader after B1-M1 + B1-E2. Cascades from B1-M1. |
-| B1-E2 | E2 | 0 `role_modules` covering VMS modules. HIRING-MANAGER (role 10007) needs a secondary binding on VMS-WORKER-SOURCING. | Phase E loader after B1-M1; PATCH role_modules for role 10007 + new VMS roles. Cascades from B1-M1 + B1-E1. |
+| B1-E2 | E2 | 0 `persona_modules` covering VMS modules. HIRING-MANAGER (role 10007) needs a secondary binding on VMS-WORKER-SOURCING. | Phase E loader after B1-M1; PATCH persona_modules for role 10007 + new VMS roles. Cascades from B1-M1 + B1-E1. |
 | B1-F1 | F1 | Legacy skill 118 (`vms-system`, kebab, `domain_module_id=NULL`). Rule #17 requires one system skill per module. | After B1-M1: INSERT 2 new `skills` rows (one per module), redistribute 8 existing `skill_tools` rows, DELETE skill 118. Cascades from B1-M1. |
 | B1-F3 | F3 | 8 `skill_tools` on legacy skill 118 need redistribution across 2 new module-scoped system skills. | Part of the B1-F1 loader. |
 
@@ -509,7 +509,7 @@ This is the 2-way split proposed as B1B-M1 / B2-4-default in the 2026-05-31 audi
 
 ### Catalog-wide master pre-check (mandatory)
 
-Queried `/domain_module_data_objects?data_object_id=in.(186,187,188,189,190,191)&role=eq.master` before any write. **Empty result**: none of the 6 VMS masters is mastered in any module anywhere in the catalog. All 6 were assigned `master` here, each in exactly one VMS module (M7 single-master satisfied in-domain AND catalog-wide). **No demotions to embedded_master were required.**
+Queried `/domain_module_data_objects?data_object_id=in.(186,187,188,189,190,191)&held_as=eq.master` before any write. **Empty result**: none of the 6 VMS masters is mastered in any module anywhere in the catalog. All 6 were assigned `master` here, each in exactly one VMS module (M7 single-master satisfied in-domain AND catalog-wide). **No demotions to embedded_master were required.**
 
 ### Verification (live, post-load)
 
@@ -526,13 +526,13 @@ Entity 187 is named `pm_work_orders` / "Preventive Maintenance Work Order" but i
 ### Items resolved by this pass
 
 - **B1A-BUILD** (unbuilt domain, 0 modules): resolved. 2 modules now exist.
-- **B1B-M1** (insert 2 modules + 5 cap links + 6+ DMDO): resolved. Module names/codes used the default 2-way split (B2-4 default); placement of entity 187 followed its description without resolving B2-1. The 187 identity question stays open but no longer blocks the build.
+- **B1B-M1** (insert 2 modules + 5 cap relationships + 6+ DMDO): resolved. Module names/codes used the default 2-way split (B2-4 default); placement of entity 187 followed its description without resolving B2-1. The 187 identity question stays open but no longer blocks the build.
 
 ### Items unblocked (now agent-actionable on the next pass)
 
 The following 2026-05-31 b1b items were gated on B1B-M1 (prerequisite_entity) and are now executable, with `source_domain_module_id` resolvable from the new module ids (315 / 316):
 
-- B1B-B9 (2 handoffs for rate_card.published), B1B-B9b (intra-domain progression handoffs across the 315/316 boundary), B1B-B10b (backfill source_domain_module_id on 7 outbound handoffs), B1B-B12 (lifecycle states + workflow-gate permissions on 6 masters), B1B-E1 (>=3 Indirect-Procurement roles), B1B-E2 (role_modules + HIRING-MANAGER secondary on 315), B1B-F1 (retire legacy skill 118, author 2 module-scoped system skills), B1B-F3 (redistribute 8 skill_tools).
+- B1B-B9 (2 handoffs for rate_card.published), B1B-B9b (intra-domain progression handoffs across the 315/316 boundary), B1B-B10b (backfill source_domain_module_id on 7 outbound handoffs), B1B-B12 (lifecycle states + workflow-gate permissions on 6 masters), B1B-E1 (>=3 Indirect-Procurement roles), B1B-E2 (persona_modules + HIRING-MANAGER secondary on 315), B1B-F1 (retire legacy skill 118, author 2 module-scoped system skills), B1B-F3 (redistribute 8 skill_tools).
 
 These remain out of this pass's scope (modules + entity assignment only) but are recorded so the next audit picks them up. Several still also carry user-decision gates (B2-1 for 187 lifecycle states; B2-4 confirmation of the codes actually used).
 
@@ -603,20 +603,20 @@ Note: the 5 masters carry `entity_type='unclassified'`; the b1a action did not i
 
 F4 invariant holds: all query tools carry data_object_id; both side_effect tools (37/42) carry NULL data_object_id.
 
-### B1A-E1-E2-ROLES - DONE (domain_roles / role_modules)
+### B1A-E1-E2-ROLES - DONE (personas / persona_modules)
 
 - INSERT 3 personas under business_function_id=68 (Indirect Procurement):
   - id **19** INDIRECT-PROCUREMENT-PROGRAM-MANAGER
   - id **20** INDIRECT-PROCUREMENT-SUPPLIER-MANAGER
   - id **21** INDIRECT-PROCUREMENT-CONTINGENT-LABOR-COORDINATOR
-- INSERT 7 role_modules (ids **460-466**), 2-module floor satisfied on each new persona:
+- INSERT 7 persona_modules (ids **460-466**), 2-module floor satisfied on each new persona:
   - 19: 315 primary (460), 316 primary (461)
   - 20: 315 primary (462), 316 secondary (463)
   - 21: 315 primary (464), 316 primary (465)
   - HIRING-MANAGER 315 secondary (466)
-- HIRING-MANAGER secondary on 315: the live persona is `role_code=HIRING-MANAGER` **id 10** (the b1a finding's "10007" was stale; resolved by natural key per Rule #4). Reach accreted to its existing rows on modules 1/4/5/6.
+- HIRING-MANAGER secondary on 315: the live persona is `persona_code=HIRING-MANAGER` **id 10** (the b1a finding's "10007" was stale; resolved by natural key per Rule #4). Reach accreted to its existing rows on modules 1/4/5/6.
 
-Permission bundles NOT authored (DERIVED per Plan 3 / roles.md); reach only.
+Permission bundles NOT authored (DERIVED per Plan 3 / personas.md); reach only.
 
 ### B1A-A4-M8-CATALOG-UX - PARTIAL (M8 DONE; A4 blocked on B2-2)
 
@@ -675,7 +675,7 @@ User answered the post-rename q-file (a1=a "5 modules", a2=a "187 is staffing/SO
 - **5 pattern flags PATCHed (B2-3, resolved):** data_object 186 `contingent_workers` `has_personal_content=true` (a3); 188 `staffing_suppliers`, 189 `rate_cards`, 187 (work-order), 191 `contingent_invoices` `has_single_approver=true` (a4/a5/a6/a7). Pre-flight GET confirmed entity_type is operational (186 operational_workflow, 188/189/187/191 unclassified, none catalog/junction/computed), so the B15 guard passed. No `notes` writes (Rule #15).
 - **Domain catalog UX written (B2-2, resolved):** domain 64 `catalog_tagline` + `catalog_description` were empty; wrote the user-approved copy AS-IS (a8=yes). Per Rule #20 empty-guard.
 - **Domain business_logic written (B2-5, resolved):** domain 64 `business_logic` was empty (crud_percentage=92<95); wrote the user-approved wording (a9=yes).
-- **B9D owners assigned (B2-B9D-OWN-315 / B2-B9D-OWN-167, resolved):** CWM personas exist in `domain_roles` (business_function_id=68, Indirect Procurement: roles 19/20/21 + cross-functional Hiring Manager 10), so authored `process_raci` R+A rows (path = named persona owns, option a): process 315 "Process accounts payable (AP)" -> Contingent Labor Coordinator (role 21), rows 228 (responsible) + 229 (accountable); process 815 "Monitor/Manage supplier information" -> Staffing Supplier Manager (role 20), rows 230 + 231. (q11's footer pointed at the legacy process 167; the live orphan and handoff-591 tag is process 815, so the RACI was keyed to 815.) Loader: `.tmp_deploy/cwm_b9d_raci_2026_06_19.ts`.
+- **B9D owners assigned (B2-B9D-OWN-315 / B2-B9D-OWN-167, resolved):** CWM personas exist in `personas` (business_function_id=68, Indirect Procurement: roles 19/20/21 + cross-functional Hiring Manager 10), so authored `process_raci` R+A rows (path = named persona owns, option a): process 315 "Process accounts payable (AP)" -> Contingent Labor Coordinator (role 21), rows 228 (responsible) + 229 (accountable); process 815 "Monitor/Manage supplier information" -> Staffing Supplier Manager (role 20), rows 230 + 231. (q11's footer pointed at the legacy process 167; the live orphan and handoff-591 tag is process 815, so the RACI was keyed to 815.) Loader: `.tmp_deploy/cwm_b9d_raci_2026_06_19.ts`.
 
 **Decided, execution deferred (B2-1, removed from open b2; folds into Phase-B):**
 

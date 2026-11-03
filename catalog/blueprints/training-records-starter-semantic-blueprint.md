@@ -28,9 +28,9 @@ Deployable starter kit for small and mid-market organizations that outsource tra
 | Certifications | `learner_certifications` | Credentials issued to a worker (internal, vendor, or regulatory), with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns. |
 | Compliance Regulations | `compliance_regulations` | Reference table of statutes a tenant is subject to, with jurisdiction, citation, and retention period; each tenant activates its applicable subset. |
 | Compliance Training Assignments | `compliance_assignments` | Mandatory training assignments tied to a regulation, role, location, or hire event, with due dates and escalation policy. |
-| DPO Training Acknowledgments | `dpo_training_acknowledgements` | Records confirming that data protection officers completed required training, evidencing GDPR compliance. |
+| DPO Training Acknowledgments | `dpo_training_acknowledgments` | Records confirming that data protection officers completed required training, evidencing GDPR compliance. |
 | FDA Part 11 Audit Trails | `fda_part11_audit_trails` | Tamper-evident, retention-locked audit-trail rows for regulated training, meeting electronic-records requirements. |
-| Harassment Training Acknowledgments | `harassment_training_acknowledgements` | Statutory acknowledgments that harassment training was completed, carrying a signed timestamp and IP address. |
+| Harassment Training Acknowledgments | `harassment_training_acknowledgments` | Statutory acknowledgments that harassment training was completed, carrying a signed timestamp and IP address. |
 | PCI DSS Awareness Records | `pci_dss_awareness_records` | Security-awareness training records for staff who handle card data, kept for PCI DSS compliance. |
 | Signature Records | `signature_records` | E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one contract may have many. |
 | Training Evidence Records | `training_evidence_records` | Inspection-ready training evidence packages, bundling the signed roster, certificate hash, content version, and signature record for regulators. |
@@ -44,15 +44,15 @@ flowchart TD
   training_evidence_records["Training Evidence Records"]
   signature_records["Signature Records"]
   learner_certifications["Certifications"]
-  harassment_training_acknowledgements["Harassment Training Acknowledgments"]
+  harassment_training_acknowledgments["Harassment Training Acknowledgments"]
   fda_part11_audit_trails["FDA Part 11 Audit Trails"]
   users["Users"]
   compliance_regulations["Compliance Regulations"]
-  dpo_training_acknowledgements["DPO Training Acknowledgments"]
+  dpo_training_acknowledgments["DPO Training Acknowledgments"]
   pci_dss_awareness_records["PCI DSS Awareness Records"]
-  compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgements
+  compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgments
   compliance_assignments -->|"produces"| fda_part11_audit_trails
-  users -->|"acknowledges"| harassment_training_acknowledgements
+  users -->|"acknowledges"| harassment_training_acknowledgments
   users -->|"audit_trailed_in"| fda_part11_audit_trails
   users -->|"signed"| signature_records
   users -->|"must complete"| compliance_assignments
@@ -63,29 +63,29 @@ flowchart TD
   class training_evidence_records embedded_master;
   class signature_records embedded_master;
   class learner_certifications embedded_master;
-  class harassment_training_acknowledgements embedded_master;
+  class harassment_training_acknowledgments embedded_master;
   class fda_part11_audit_trails embedded_master;
   class users consumer;
   class compliance_regulations embedded_master;
-  class dpo_training_acknowledgements embedded_master;
+  class dpo_training_acknowledgments embedded_master;
   class pci_dss_awareness_records embedded_master;
-  style harassment_training_acknowledgements stroke-dasharray:5 5;
+  style harassment_training_acknowledgments stroke-dasharray:5 5;
   style fda_part11_audit_trails stroke-dasharray:5 5;
   style compliance_regulations stroke-dasharray:5 5;
-  style dpo_training_acknowledgements stroke-dasharray:5 5;
+  style dpo_training_acknowledgments stroke-dasharray:5 5;
   style pci_dss_awareness_records stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | yes | operational_workflow | `:manage` | - |
 | 2 | `compliance_regulations` | `compliance_regulations` | Compliance Regulation | Compliance Regulations | embedded_master | `lms-compliance-training` | Compliance Training | optional | - | catalog | `:admin` | - |
 | 3 | `compliance_assignments` | `compliance_assignments` | Compliance Training Assignment | Compliance Training Assignments | embedded_master | `lms-compliance-training` | Compliance Training | required | yes | operational_workflow | `:manage` | - |
-| 4 | `dpo_training_acknowledgements` | `dpo_training_acknowledgements` | DPO Training Acknowledgment | DPO Training Acknowledgments | embedded_master | - | - | optional | yes | operational_record | `:manage` | - |
+| 4 | `dpo_training_acknowledgments` | `dpo_training_acknowledgments` | DPO Training Acknowledgment | DPO Training Acknowledgments | embedded_master | - | - | optional | yes | operational_record | `:manage` | - |
 | 5 | `fda_part11_audit_trails` | `fda_part11_audit_trails` | FDA Part 11 Audit Trail | FDA Part 11 Audit Trails | embedded_master | `lms-compliance-training` | Compliance Training | optional | yes | operational_workflow | `:manage` | - |
-| 6 | `harassment_training_acknowledgements` | `harassment_training_acknowledgements` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | embedded_master | `lms-compliance-training` | Compliance Training | optional | yes | operational_workflow | `:manage` | - |
+| 6 | `harassment_training_acknowledgments` | `harassment_training_acknowledgments` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | embedded_master | `lms-compliance-training` | Compliance Training | optional | yes | operational_workflow | `:manage` | - |
 | 7 | `pci_dss_awareness_records` | `pci_dss_awareness_records` | PCI DSS Awareness Record | PCI DSS Awareness Records | embedded_master | - | - | optional | yes | operational_record | `:manage` | - |
 | 8 | `signature_records` | `signature_records` | Signature Record | Signature Records | embedded_master | `clm-repository` | Contract Repository | required | yes | operational_workflow | `:manage` | - |
 | 9 | `training_evidence_records` | `training_evidence_records` | Training Evidence Record | Training Evidence Records | embedded_master | `lms-compliance-training` | Compliance Training | required | yes | operational_workflow | `:manage` | - |
@@ -97,34 +97,34 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgements` | one_to_many | reference | optional | target | clear | reference | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | reference | optional | target | clear | reference | - |
 | `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | reference | optional | target | clear | reference | - |
 | `compliance_regulations` | is_evidenced_by | `training_evidence_records` | one_to_many | reference | optional | target | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | acknowledges | `harassment_training_acknowledgements` | one_to_many | required | source | restrict | reference | - |
+| `users` | acknowledges | `harassment_training_acknowledgments` | one_to_many | required | source | restrict | reference | - |
 | `users` | audit_trailed_in | `fda_part11_audit_trails` | one_to_many | optional | source | clear | reference | - |
 | `users` | signed | `signature_records` | one_to_many | optional | source | clear | reference | - |
 | `users` | must complete | `compliance_assignments` | one_to_many | required | source | restrict | reference | - |
 | `users` | owns | `compliance_assignments` | one_to_many | optional | source | clear | reference | - |
 | `users` | holds | `learner_certifications` | one_to_many | required | source | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(none: no outbound cross-scope edges from this scope's masters or contributors)_
+_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -177,17 +177,17 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the linked legal_contract transitions out_for_signature -> signed. |
+| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the related legal_contract transitions out_for_signature -> signed. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `compliance_assignments` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
 | `compliance_regulations` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `dpo_training_acknowledgements` | embedded_master | optional | _(no canonical owner recorded)_ | - |
+| `dpo_training_acknowledgments` | embedded_master | optional | _(no canonical owner recorded)_ | - |
 | `fda_part11_audit_trails` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `harassment_training_acknowledgements` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `harassment_training_acknowledgments` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
 | `learner_certifications` | embedded_master | required | LMS-CREDENTIALS (LMS) | - |
 | `pci_dss_awareness_records` | embedded_master | optional | _(no canonical owner recorded)_ | - |
 | `signature_records` | embedded_master | required | CLM-REPOSITORY (CLM) | - |
@@ -219,9 +219,9 @@ _This scope holds `fda_part11_audit_trails` as **embedded_master**; the canonica
 | 2 | `validated` | - | - | ✓ | `training-records-starter:validate` | - |
 | 3 | `archived` | - | ✓ | ✓ | `training-records-starter:archive` | - |
 
-### `harassment_training_acknowledgements` (Harassment Training Acknowledgment)
+### `harassment_training_acknowledgments` (Harassment Training Acknowledgment)
 
-_This scope holds `harassment_training_acknowledgements` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
+_This scope holds `harassment_training_acknowledgments` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -285,7 +285,7 @@ _This scope holds `training_evidence_records` as **embedded_master**; the canoni
 | `training-records-starter:finalize` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `finalized` | ✓ |
 | `training-records-starter:submit` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `submitted` | ✓ |
 | `training-records-starter:archive` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `archived` | ✓ |
-| `training-records-starter:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgements` into state `acknowledged` | ✓ |
+| `training-records-starter:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgments` into state `acknowledged` | ✓ |
 | `training-records-starter:validate` | workflow-gate (lifecycle) | Transition `fda_part11_audit_trails` into state `validated` | ✓ |
 | `training-records-starter:view_all_compliance_training_assignments` | override (personal_content) | View all `compliance_assignments` rows beyond row-scope | ✓ |
 | `training-records-starter:manage_all_compliance_training_assignments` | override (personal_content) | Manage all `compliance_assignments` rows beyond row-scope | ✓ |
@@ -295,12 +295,12 @@ _This scope holds `training_evidence_records` as **embedded_master**; the canoni
 | `training-records-starter:manage_all_signature_records` | override (personal_content) | Manage all `signature_records` rows beyond row-scope | ✓ |
 | `training-records-starter:view_all_certifications` | override (personal_content) | View all `learner_certifications` rows beyond row-scope | ✓ |
 | `training-records-starter:manage_all_certifications` | override (personal_content) | Manage all `learner_certifications` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgements` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgements` rows beyond row-scope | ✓ |
+| `training-records-starter:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
+| `training-records-starter:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
 | `training-records-starter:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
 | `training-records-starter:manage_all_fda_part_11_audit_trails` | override (personal_content) | Manage all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_dpo_training_acknowledgments` | override (personal_content) | View all `dpo_training_acknowledgements` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_dpo_training_acknowledgments` | override (personal_content) | Manage all `dpo_training_acknowledgements` rows beyond row-scope | ✓ |
+| `training-records-starter:view_all_dpo_training_acknowledgments` | override (personal_content) | View all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
+| `training-records-starter:manage_all_dpo_training_acknowledgments` | override (personal_content) | Manage all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
 | `training-records-starter:view_all_pci_dss_awareness_records` | override (personal_content) | View all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
 | `training-records-starter:manage_all_pci_dss_awareness_records` | override (personal_content) | Manage all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
 
@@ -312,9 +312,9 @@ _This scope holds `training_evidence_records` as **embedded_master**; the canoni
 | `training_evidence_record_edit_scope` | `training_evidence_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_training_evidence_records` / `training-records-starter:manage_all_training_evidence_records` |
 | `signature_record_edit_scope` | `signature_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_signature_records` / `training-records-starter:manage_all_signature_records` |
 | `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_certifications` / `training-records-starter:manage_all_certifications` |
-| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgements` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_harassment_training_acknowledgments` / `training-records-starter:manage_all_harassment_training_acknowledgments` |
+| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgments` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_harassment_training_acknowledgments` / `training-records-starter:manage_all_harassment_training_acknowledgments` |
 | `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_fda_part_11_audit_trails` / `training-records-starter:manage_all_fda_part_11_audit_trails` |
-| `dpo_training_acknowledgment_edit_scope` | `dpo_training_acknowledgements` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_dpo_training_acknowledgments` / `training-records-starter:manage_all_dpo_training_acknowledgments` |
+| `dpo_training_acknowledgment_edit_scope` | `dpo_training_acknowledgments` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_dpo_training_acknowledgments` / `training-records-starter:manage_all_dpo_training_acknowledgments` |
 | `pci_dss_awareness_record_edit_scope` | `pci_dss_awareness_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_pci_dss_awareness_records` / `training-records-starter:manage_all_pci_dss_awareness_records` |
 
 ## 9. Roles, RACI, and responsibilities (derived)

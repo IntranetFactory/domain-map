@@ -20,7 +20,7 @@
 | Module FK columns: nullable or `NOT NULL`? | Stay nullable. New write-time authoring rule requires both; `NOT NULL` deferred (§5) |
 | Add a new validation rule to replace `cross_domain_only` (e.g. "intra-domain rows must be async")? | NO. Let `friction_level` do the disambiguation (§7) |
 | Split into two tables (legacy nullable-module-FK rows vs new required-module-FK rows)? | NO. The distinction is temporal, not structural. Same columns, same semantics, same FKs. UNION tax across two tables for a transitional state is the wrong trade |
-| Add `handoff_processes` junction to link individual handoffs to APQC PCF activities? | Split into [plan-handoff-processes.md](plan-handoff-processes.md). The junction adds a new table, a new role enum, and a review workflow whose rollback window is tighter than the rename's; shipping it separately keeps both reversible |
+| Add `handoff_processes` junction to relate individual handoffs to APQC PCF activities? | Split into [plan-handoff-processes.md](plan-handoff-processes.md). The junction adds a new table, a new role enum, and a review workflow whose rollback window is tighter than the rename's; shipping it separately keeps both reversible |
 | Classify the two structural shapes intra-domain rows introduce (in-process lifecycle progression vs out-of-process async wiring) | YES, in this plan. Extend the existing `integration_pattern` enum with one new value `lifecycle_progression` (§3.7) rather than add a new column. Smaller change, fits the enum's existing role as "how is this realized," and makes the two shapes directly queryable without conflating with the orthogonal `friction_level` pain axis |
 
 ---
@@ -58,7 +58,7 @@ The migration is packaged as a single Bun/TypeScript loader under `.tmp_deploy/r
 
 The current description says:
 
-> *Directional event-driven handoffs between two distinct domains, sharing a data object. Captures the integration friction that an integrated platform would absorb: each row is a pipeline / API call / human handoff that exists today because the source and target domains live in separate systems. Signal 2 of the platform-vs-silos analysis (Signal 1 is the multi-master count on domain_data_objects.role). Intra-domain events are out of scope by design, see the cross_domain_only validation rule.*
+> *Directional event-driven handoffs between two distinct domains, sharing a data object. Captures the integration friction that an integrated platform would absorb: each row is a pipeline / API call / human handoff that exists today because the source and target domains live in separate systems. Signal 2 of the platform-vs-silos analysis (Signal 1 is the multi-master count on domain_data_objects.held_as). Intra-domain events are out of scope by design, see the cross_domain_only validation rule.*
 
 Proposed replacement:
 

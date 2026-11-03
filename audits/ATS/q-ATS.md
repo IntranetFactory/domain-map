@@ -37,17 +37,17 @@ a2:
 
 ---
 
-q3: (Hiring Starter) 33 links between records and people (owning recruiter, publisher, approver, coordinator, interviewer and more) are stored as many-to-many, and two of them combine two roles in one link ("coordinator and panelists", "recruiter and hiring manager"). Restructure them so each role is one person per record, splitting the two combined links (yes/no)
+q3: (Hiring Starter) 33 relationships between records and people (owning recruiter, publisher, approver, coordinator, interviewer and more) are stored as many-to-many, and two of them combine two roles in one relationship ("coordinator and panelists", "recruiter and hiring manager"). Restructure them so each role is one person per record, splitting the two combined relationships (yes/no)
 
-Recommended: yes. A role on a record is one person; with many-to-many links the "only the owner can see this" rules on candidates, applications, scorecards and offers have no owner to check, which is why the blueprint's row-scope rules can't work.
+Recommended: yes. A role on a record is one person; with many-to-many relationships the "only the owner can see this" rules on candidates, applications, scorecards and offers have no owner to check, which is why the blueprint's row-scope rules can't work.
 
 a3: yes, applied 2026-11-02
 
 ---
 
-q4: (Hiring Starter) 10 parent-child links name the child as the owning side (for example "candidate submits application"), which inverts what happens on delete. Apply the drafted fix to each one: 8 flips, one flip plus a reworded verb, and one link turned the right way round (yes/no)
+q4: (Hiring Starter) 10 parent-child relationships name the child as the owning side (for example "candidate submits application"), which inverts what happens on delete. Apply the drafted fix to each one: 8 flips, one flip plus a reworded verb, and one relationship turned the right way round (yes/no)
 
-Recommended: yes. The owning side must be the parent; each link was checked one by one rather than flipped in bulk.
+Recommended: yes. The owning side must be the parent; each relationship was checked one by one rather than flipped in bulk.
 
 a4: yes, applied 2026-11-02
 
@@ -73,7 +73,7 @@ a6: yes, applied 2026-11-02
 
 q7: (Hiring Starter) Once recruitment sources are installed, every candidate must have a source, so a walk-in or inbound candidate with no known source can't be saved. Make the source optional on a candidate (yes/no)
 
-Recommended: yes. Many candidates arrive with no attributed source. (The other flagged link, a scorecard belonging to an interview, is correct as it is.)
+Recommended: yes. Many candidates arrive with no attributed source. (The other flagged relationship, a scorecard belonging to an interview, is correct as it is.)
 
 a7: yes, applied 2026-11-02
 
@@ -240,4 +240,4 @@ a32: c, applied 2026-11-02
 - Candidate experience surveys, job templates, interview transcripts, candidate education and employment history, recruiting audit events: modeled by several of the vendors above.
 - Referral bonuses reach payroll two ways; one path would be cleaner.
 
-<!-- agent map, ignore: q1=B1B-B9D-MISTAG-402 q2=B2-M9-COMPOSED-CHILDREN q3=B2-B7B-USER-EDGES q4=B2-B6B-OWNER-SIDE q5=B2-E4D-SUBMIT-SCORECARD q6=B2-R7-HIRING-STARTER-DESCRIPTION q7=B2-HS-SOURCE-EDGE q8=B2-B9C-EVENT-REPOINTS q9=B2-HIGH-RISK-GATES q21=B2-M5-STATE-221 q22=B2-B4-PERSONAL-CONTENT q23=B2-R18-VENDOR-NAMES q24=B2-MO1-BACKGROUND-CHECKS-MODULE q25=B2-X4-BGV-PUBLISHER q26=B2-S1-RECRUITER-INTERACTIONS q27=B2-S2-NURTURE-VS-SEQUENCES q28=B2-M1-MESSAGE-TEMPLATES q29=B2-M3-AI-MATCHING q30=B2-M10-PAY-RANGES q31=B2-X2-BENADMIN-H395 q32=B2-INTERVIEW-CANDIDATES-NO-GATE | domain_id=56 -->
+<!-- agent map, ignore: q1=B1B-B9D-MISTAG-402 q2=B2-M9-COMPOSED-CHILDREN q3=B2-B7B-USER-RELATIONSHIPS q4=B2-B6B-OWNER-SIDE q5=B2-E4D-SUBMIT-SCORECARD q6=B2-R7-HIRING-STARTER-DESCRIPTION q7=B2-HS-SOURCE-RELATIONSHIP q8=B2-B9C-EVENT-REPOINTS q9=B2-HIGH-RISK-GATES q21=B2-M5-STATE-221 q22=B2-B4-PERSONAL-CONTENT q23=B2-R18-VENDOR-NAMES q24=B2-MO1-BACKGROUND-CHECKS-MODULE q25=B2-X4-BGV-PUBLISHER q26=B2-S1-RECRUITER-INTERACTIONS q27=B2-S2-NURTURE-VS-SEQUENCES q28=B2-M1-MESSAGE-TEMPLATES q29=B2-M3-AI-MATCHING q30=B2-M10-PAY-RANGES q31=B2-X2-BENADMIN-H395 q32=B2-INTERVIEW-CANDIDATES-NO-GATE | domain_id=56 -->

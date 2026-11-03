@@ -73,7 +73,7 @@ type Spec = {
   }>;
   data_objects?: LabelEntry[];
   bundle?: { code: string; name: string };
-  composes?: Array<{ name: string; singular_label?: string; plural_label?: string; role?: string; owning_domain?: string | null }>;
+  composes?: Array<{ name: string; singular_label?: string; plural_label?: string; held_as?: string; owning_domain?: string | null }>;
 };
 
 // Fold a domain spec OR a domain-less bundle spec into one model.
@@ -97,7 +97,7 @@ function normalize(spec: Spec): {
     const labelEntries: LabelEntry[] = [];
     for (const c of spec.composes ?? []) {
       concepts.add(c.name);
-      if (c.role === "master") ownedConcepts.add(c.name);
+      if (c.held_as === "master") ownedConcepts.add(c.name);
       labelEntries.push({ name: c.name, singular_label: c.singular_label, plural_label: c.plural_label });
     }
     return { code: spec.bundle.code, isBundle: true, concepts, ownedConcepts, sliceCodes: [...concepts], labelEntries };

@@ -23,7 +23,7 @@ last_audit: "2026-06-13"
 b1b:
   - id: B1B-S1-MODULES
     summary: "Author IDP `domain_modules` rows; M1 fails (0 rows for domain_id=39). UNBUILT."
-    finding: "Live 2026-06-07: `/domain_modules?domain_id=eq.39` returns 0 rows. M1 is a hard structural gate and blocks M2 through M8 plus every dependent band (B1 DMDOs, B10b module FKs, E1 roles, lifecycle-state module FKs, A2 capability-to-module links). The 2026-05-30 audit proposed two splits (2-module, 3-module) and recommended option (b) 3-module: IDP-CAPTURE-CLASSIFY (capture_batches, document_classification_results, idp_extraction_templates), IDP-EXTRACT-VALIDATE (extracted_records, extracted_fields, idp_validation_results), IDP-MODEL-MGMT (idp_extraction_models, training_datasets)."
+    finding: "Live 2026-06-07: `/domain_modules?domain_id=eq.39` returns 0 rows. M1 is a hard structural gate and blocks M2 through M8 plus every dependent band (B1 DMDOs, B10b module FKs, E1 roles, lifecycle-state module FKs, A2 capability-to-module relationships). The 2026-05-30 audit proposed two splits (2-module, 3-module) and recommended option (b) 3-module: IDP-CAPTURE-CLASSIFY (capture_batches, document_classification_results, idp_extraction_templates), IDP-EXTRACT-VALIDATE (extracted_records, extracted_fields, idp_validation_results), IDP-MODEL-MGMT (idp_extraction_models, training_datasets)."
     action: "After B2-IDP-MODULE-SPLIT lands, author the chosen module set in a focused loader. Each `domain_modules` row needs the correct `module_kind`, `domain_id=39`, and per-module catalog_tagline + catalog_description (buyer voice, no vendor names) authored at build time per Rule #20."
     blocked_by:
       - {type: user_decision, ref: B2-IDP-MODULE-SPLIT}
@@ -32,14 +32,14 @@ b1b:
   - id: B1B-S3-CAPABILITIES
     summary: "A2 fails: 0 `capability_domains` rows for IDP. UNBUILT cascade."
     finding: "Live 2026-06-07: `/capability_domains?domain_id=eq.39` returns 0 rows. The 2026-05-30 audit proposed a 7-capability set (IDP-CAPTURE, IDP-CLASSIFICATION, IDP-EXTRACTION, IDP-VALIDATION, IDP-HITL-REVIEW, IDP-MODEL-MGMT, IDP-TEMPLATE-MGMT). Capability shape depends on the module split because each capability must map cleanly to a realizing module under Rule #14 (M4 / M6)."
-    action: "After B1B-S1-MODULES lands, author 7 `capabilities` rows + `capability_domains` rows + `domain_module_capabilities` links per the chosen module set."
+    action: "After B1B-S1-MODULES lands, author 7 `capabilities` rows + `capability_domains` rows + `domain_module_capabilities` relationships per the chosen module set."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1-MODULES}
 
   - id: B1B-S4-DMDO
     summary: "B1 (DMDO band): 0 `domain_module_data_objects` rows for any IDP master. UNBUILT cascade."
     finding: "Live 2026-06-07: `/domain_module_data_objects?data_object_id=in.(530,531,532,533,534,535,536,537)` returns 0 rows. The 8 masters now carry classified `entity_type` (5 operational_workflow, 2 computed, 1 catalog) but no module hosts them at the modern DMDO grain. M-band gate B1 fails until modules land."
-    action: "After B1B-S1-MODULES lands, INSERT 8 DMDO rows assigning each master to its realizing module per the chosen split, role=master, necessity=required."
+    action: "After B1B-S1-MODULES lands, INSERT 8 DMDO rows assigning each master to its realizing module per the chosen split, held_as=master, necessity=required."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1-MODULES}
     affected_masters:
@@ -68,8 +68,8 @@ b1b:
 
   - id: B1B-S8-INTRA-DOMAIN-RELS
     summary: "B6 fails: 0 master-to-master `data_object_relationships` within IDP."
-    finding: "Live 2026-06-07: the 9 IDP-touching `data_object_relationships` rows are 7 user-edges (1824-1830, added 2026-05-31) plus 2 cross-domain edges to ECM masters (585, 586). Zero intra-domain master-to-master edges exist. The 2026-05-30 audit named 7 candidate edge pairs (capture_batches -> document_classification_results, capture_batches -> extracted_records, extracted_records -> extracted_fields, extracted_records -> idp_validation_results, idp_extraction_templates -> extracted_records, idp_extraction_models -> extracted_records, training_datasets -> idp_extraction_models) but did not author the relationship_verb / inverse_verb / cardinality-equivalent / owner_side / is_required tuples per edge."
-    action: "Author the 7 edge tuples (verb wording is judgment) and INSERT into `data_object_relationships` once approved."
+    finding: "Live 2026-06-07: the 9 IDP-touching `data_object_relationships` rows are 7 relationships to users (1824-1830, added 2026-05-31) plus 2 cross-domain relationships to ECM masters (585, 586). Zero intra-domain master-to-master relationships exist. The 2026-05-30 audit named 7 candidate relationship pairs (capture_batches -> document_classification_results, capture_batches -> extracted_records, extracted_records -> extracted_fields, extracted_records -> idp_validation_results, idp_extraction_templates -> extracted_records, idp_extraction_models -> extracted_records, training_datasets -> idp_extraction_models) but did not author the relationship_verb / inverse_verb / cardinality-equivalent / owner_side / is_required tuples per relationship."
+    action: "Author the 7 relationship tuples (verb wording is judgment) and INSERT into `data_object_relationships` once approved."
     blocked_by:
       - {type: user_decision, ref: B2-IDP-INTRA-VERBS}
     affected_entities: [capture_batches_to_document_classification_results, capture_batches_to_extracted_records, extracted_records_to_extracted_fields, extracted_records_to_idp_validation_results, idp_extraction_templates_to_extracted_records, idp_extraction_models_to_extracted_records, training_datasets_to_idp_extraction_models]
@@ -84,8 +84,8 @@ b1b:
 
   - id: B1B-S13-ROLES
     summary: "E1 fails: 0 roles touching IDP modules (vacuously, because no modules). UNBUILT cascade."
-    finding: "Live 2026-06-07: 0 `role_modules` rows for any IDP module (no modules exist). Business Operations (id 34, the IDP owner per business_function_domains) has its roles; IT Operations (id 27) is the IDP contributor. Once modules land, the 2026-05-30 audit proposed 3 personas (IDP-VALIDATOR for HITL queue worker, IDP-MODEL-OWNER for data scientist / ML engineer, IDP-PROCESS-OWNER for business owner)."
-    action: "After B1B-S1-MODULES lands, author 3 roles each with >=2 `role_modules` rows (primary on one module, secondary on the other) + baseline `role_permissions` bundles. (Personas / RACI authoring is Phase P, deferred.)"
+    finding: "Live 2026-06-07: 0 `persona_modules` rows for any IDP module (no modules exist). Business Operations (id 34, the IDP owner per business_function_domains) has its roles; IT Operations (id 27) is the IDP contributor. Once modules land, the 2026-05-30 audit proposed 3 personas (IDP-VALIDATOR for HITL queue worker, IDP-MODEL-OWNER for data scientist / ML engineer, IDP-PROCESS-OWNER for business owner)."
+    action: "After B1B-S1-MODULES lands, author 3 roles each with >=2 `persona_modules` rows (primary on one module, secondary on the other) + baseline `role_permissions` bundles. (Personas / RACI authoring is Phase P, deferred.)"
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1-MODULES}
 
@@ -112,10 +112,10 @@ b2:
     why: "Gates B1B-S1-MODULES, which in turn gates B1B-S3 / S4 / S6 / S12 / S13 / S10. Highest-priority decision; IDP cannot be built without it."
 
   - id: B2-IDP-INTRA-VERBS
-    summary: "Approve verb / inverse_verb / cardinality / owner_side / is_required tuples for the 7 intra-domain master-to-master edges (B1B-S8)."
-    question: "Approve the 7 IDP intra-domain relationship edges and their verbs (e.g. capture_batches -> document_classification_results, capture_batches -> extracted_records, extracted_records -> extracted_fields, extracted_records -> idp_validation_results, idp_extraction_templates -> extracted_records, idp_extraction_models -> extracted_records, training_datasets -> idp_extraction_models). Verb wording is load-bearing for the relationship graph."
-    options: ["approve audit-proposed verbs", "rewrite specific edges (specify)", "defer"]
-    why: "B6 intra-domain edges need user-approved verb wording before INSERT (gates B1B-S8)."
+    summary: "Approve verb / inverse_verb / cardinality / owner_side / is_required tuples for the 7 intra-domain master-to-master relationships (B1B-S8)."
+    question: "Approve the 7 IDP intra-domain relationships and their verbs (e.g. capture_batches -> document_classification_results, capture_batches -> extracted_records, extracted_records -> extracted_fields, extracted_records -> idp_validation_results, idp_extraction_templates -> extracted_records, idp_extraction_models -> extracted_records, training_datasets -> idp_extraction_models). Verb wording is load-bearing for the relationship graph."
+    options: ["approve audit-proposed verbs", "rewrite specific relationships (specify)", "defer"]
+    why: "B6 intra-domain relationships need user-approved verb wording before INSERT (gates B1B-S8)."
 
   - id: B2-IDP-PATTERN-FLAGS
     summary: "Decide pattern flags per master (B4) for the operational_workflow masters."

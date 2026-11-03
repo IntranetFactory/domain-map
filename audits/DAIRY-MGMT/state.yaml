@@ -17,14 +17,14 @@ last_audit: "2026-06-13"
 
 b1a:
   - id: B1A-S11
-    summary: lactation_records (id=500) lacks the `users` many_to_many edge that the other 7 DAIRY-MGMT masters carry
+    summary: lactation_records (id=500) lacks the `users` many_to_many relationship that the other 7 DAIRY-MGMT masters carry
     finding: >-
       The 2026-05-31 continuation backfilled `data_object_relationships` rows
-      1775-1781 linking 7 of 8 DAIRY-MGMT masters to `users` (id=748) as
+      1775-1781 relating 7 of 8 DAIRY-MGMT masters to `users` (id=748) as
       many_to_many `reference`. lactation_records was skipped. No clean
       single-actor verb exists for it (lactation cycle opens via cow state, not
       a discrete operator). Decision is whether to author a
-      `lactation_recorded_by` edge or accept absence as system-opened.
+      `lactation_recorded_by` relationship or accept absence as system-opened.
     action: >-
       Surface proposed verb (e.g. `is recorded by` parallel to milkings, or `is
       opened by` if system-attribution preferred). If user approves, INSERT one
@@ -37,14 +37,14 @@ b1a:
       Effectively a user-judgment item despite living in b1a; awaiting an
       explicit verb decision.
     affected_masters:
-      - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: user_edge}
+      - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: user_relationship}
 
 b1b:
   - id: B1B-S3
     summary: B6 zero intra-domain `data_object_relationships`
     finding: >-
-      Eight master entities have zero structural edges between each other.
-      Candidate edges and their now-resolved routing:
+      Eight master entities have zero structural relationships between each other.
+      Candidate relationships and their now-resolved routing:
       dairy_cows->lactation_records (intra HERD 227),
       lactation_records->milkings (HERD 227 -> PARLOR 228, cross-module),
       milkings->bulk_milk_shipments (intra PARLOR 228),
@@ -191,7 +191,7 @@ b2:
       Milk Ordinance, FARM Animal Care program, DHIA testing standards, and
       state Dept of Agriculture dairy inspection rules are all in-scope. None
       exist in the `regulations` catalog yet, so this is new-row authoring.
-      Decision: (a) load new `regulations` rows + `domain_regulations` links,
+      Decision: (a) load new `regulations` rows + `domain_regulations` relationships,
       or (b) defer until a specific capability needs them. Informed by B3-3
       (bulk_tanks) and B3-5 (somatic_cell_counts) if those candidates land.
     options: [load_now, defer]
@@ -218,7 +218,7 @@ b2:
   # directions: 4 distinct (process, owner) ORPHAN findings, every one owned by DAIRY-MGMT
   # itself (the domain mastering the carried entity). No ROLL-UP (no re-point), no MIS-TAG
   # (every payload's APQC category fits dairy production). DAIRY-MGMT is persona-cold-start
-  # (zero domain_roles / zero gated lifecycle process wiring / zero process_raci), so each
+  # (zero personas / zero gated lifecycle process wiring / zero process_raci), so each
   # ORPHAN is real missing work with no persona, and the persona itself is part of the
   # question. Recorded as b2 (owner decision) per the B9d contract; the owner is this domain,
   # so no neighbor files were touched.
@@ -228,7 +228,7 @@ b2:
       FSQM forwards a cow_health_event to DAIRY-MGMT to "Manage compliance"
       (drug-withdrawal / treatment compliance), but DAIRY-MGMT has no persona
       assigned to manage compliance, so this step has no owner. DAIRY-MGMT is
-      persona-cold-start (zero domain_roles), so the owning persona must be named
+      persona-cold-start (zero personas), so the owning persona must be named
       as part of this decision. Record it now as DAIRY-MGMT-owned work and name a
       persona once the domain's Phase E personas are authored, or leave it off the
       list for now.
@@ -347,7 +347,7 @@ b3:
     candidate: feed_ration_changed_to_erp_fin_apqc_custom_process
     rationale: >-
       handoff_id=958 (feed_ration.changed -> FIN) has no clean
-      cross-industry PCF match. Feed-cost-per-litre is a dairy-specific KPI;
+      cross-industry PCF match. Feed-cost-per-liter is a dairy-specific KPI;
       custom-process authoring in Discover Pass 3. The new dairy_cow.lifecycle_changed
       -> FIN handoff (1403, authored 2026-06-07) shares the same
       no-clean-PCF profile and rolls into this custom-process bundle.

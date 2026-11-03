@@ -1,0 +1,77 @@
+{
+ "taken_at": "2026-11-03T14:00:57.248Z",
+ "plan": [
+  {
+   "kind": "entity",
+   "key": "personas",
+   "from": "Authored operational persona for a domain; an RBAC input (reach via role_modules, gates via process_raci). Replaces the deleted _core model roles.",
+   "to": "Authored operational persona for a domain; an RBAC input (reach via persona_modules, gates via process_raci). Replaces the deleted _core model roles."
+  },
+  {
+   "kind": "field",
+   "key": "process_raci.persona_id",
+   "from": "Persona actor (XOR actor_skill_id).",
+   "to": "Persona actor (XOR skill_id)."
+  },
+  {
+   "kind": "field",
+   "key": "process_raci.skill_id",
+   "from": "Agent-skill actor (XOR actor_role_id); populated when process-skills land.",
+   "to": "Agent-skill actor (XOR persona_id); populated when process-skills land."
+  },
+  {
+   "kind": "field",
+   "key": "persona_modules.persona_id",
+   "from": "The role that touches this module.",
+   "to": "The persona that touches this module."
+  },
+  {
+   "kind": "field",
+   "key": "persona_modules.interaction_level",
+   "from": "How heavily this role touches this module. `primary` = the role can't function without this module (drives the role-union on-ramp per plan-roles.md §5.1). `secondary` = the role uses this module supportively or read-only.",
+   "to": "How heavily this persona touches this module. `primary` = the persona can't function without this module (drives the persona-union on-ramp per plan-roles.md §5.1). `secondary` = the persona uses this module supportively or read-only."
+  },
+  {
+   "kind": "field",
+   "key": "persona_modules.notes",
+   "from": "Optional. Why this role touches this module at this interaction level.",
+   "to": "Optional. Why this persona touches this module at this interaction level."
+  },
+  {
+   "kind": "field",
+   "key": "persona_modules.domain_module_id",
+   "from": "The catalog module this role interacts with.",
+   "to": "The catalog module this persona interacts with."
+  },
+  {
+   "kind": "field",
+   "key": "domain_data_objects.held_as",
+   "from": "The domain's role with respect to this data object. master: authoritative owner of some slice in a holistic deployment. embedded_master: point-solution local master — owns its own copy when deployed standalone; demoted to consumer at runtime when a canonical master is also deployed in the same environment. contributor: writes some fields without being authoritative. consumer: reads only. derived: produces computed projections only. Combined with the necessity column, embedded_master+required rows count toward the Signal 1 multi-master integration-burden score; embedded_master+optional rows do not.",
+   "to": "How the domain holds this data object. master: authoritative owner of some slice in a holistic deployment. embedded_master: point-solution local master, owns its own copy when deployed standalone; demoted to consumer at runtime when a canonical master is also deployed in the same environment. contributor: writes some fields without being authoritative. consumer: reads only. derived: produces computed projections only. Combined with the necessity column, embedded_master+required rows count toward the Signal 1 multi-master integration-burden score; embedded_master+optional rows do not."
+  },
+  {
+   "kind": "field",
+   "key": "skills.skill_type",
+   "from": "`system` skills mirror a Domain Map domain; `process` skills orchestrate cross-domain handoff clusters; `role` skills wrap a specific user role's day-to-day work.",
+   "to": "`domain` skills mirror a Domain Map domain; `process` skills orchestrate cross-domain handoff clusters."
+  },
+  {
+   "kind": "field",
+   "key": "skills.domain_id",
+   "from": "Optional; set for system skills that mirror a specific Domain Map domain. Null for process and role skills.",
+   "to": "Optional; set for domain skills that mirror a specific Domain Map domain. Null for process skills."
+  },
+  {
+   "kind": "field",
+   "key": "skills.role_id",
+   "from": "For `skill_type='role'` skills, the role this skill wraps. NULL on `system` and `process` skills. Role skills themselves are deferred to plan-roles.md Phase 2 (§4.4); the column lands now so the FK shape is stable.",
+   "to": "Not used: no current skill type wraps a permission role."
+  },
+  {
+   "kind": "field",
+   "key": "data_object_relationships.relationship_kind",
+   "from": "Structural role of the relationship, orthogonal to cardinality: `composition` (parent owns child, cascade), `reference` (loose link, no cascade), `association` (peer-to-peer M:N), `inheritance` (subtype / IS-A)",
+   "to": "Structural kind of the relationship, orthogonal to cardinality: `composition` (parent owns child, cascade), `reference` (loose relationship, no cascade), `association` (peer-to-peer M:N), `inheritance` (subtype / IS-A)"
+  }
+ ]
+}

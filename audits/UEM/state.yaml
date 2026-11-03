@@ -44,17 +44,17 @@ b1b:
     finding: >
       E1-E5 fail. Only 2 EUC roles loaded (IT-COLLAB-PLATFORM-ADMIN 10062,
       IT-EXTERNAL-COLLAB-STEWARD 10063), neither UEM-shaped. With 3 modules the >=3 role
-      floor (E1) and 2-module role_modules floor (E2) apply.
+      floor (E1) and 2-module persona_modules floor (E2) apply.
     action: >
       Author EUC-DEVICE-ADMIN, EUC-HELP-DESK-DEVICE-OPERATOR, EUC-COMPLIANCE-AUDITOR (plus
-      EUC-APP-CATALOG-MANAGER if the config-apps split warrants). Each gets role_modules
+      EUC-APP-CATALOG-MANAGER if the config-apps split warrants). Each gets persona_modules
       rows (>=2 of modules 308/309/310, interaction_level set) and a role_permissions bundle.
     blocked_by:
       # prerequisite_entity B1A-SYSTEM-SKILLS satisfied 2026-06-06 (skills 334/335/336 exist);
       # this item is now unblocked but remains a b1b role-authoring task (not executed this pass).
 
-  - id: B1B-USER-EDGE-VERBS
-    summary: "PATCH relationship_verb on 6 existing user-edge data_object_relationships rows (1847-1852)"
+  - id: B1B-USER-RELATIONSHIP-VERBS
+    summary: "PATCH relationship_verb on 6 existing relationship to users data_object_relationships rows (1847-1852)"
     finding: >
       Rows 1847-1852 carry data_object_id and related_data_object_id correctly (UEM masters
       to users id 748) but relationship_verb="" on every row. Label unreadable until verbs
@@ -69,7 +69,7 @@ b1b:
   - id: B1B-INTRA-DOMAIN-RELS
     summary: "Author 7 intra-domain data_object_relationships between UEM masters (B6)"
     finding: >
-      0 intra-domain edges. Required: device_app_assignments to enrolled_devices and
+      0 intra-domain relationships. Required: device_app_assignments to enrolled_devices and
       mobile_app_packages; device_compliance_results to enrolled_devices and
       device_compliance_policies; device_deployment_results to enrolled_devices;
       enrollment_tokens to enrolled_devices; device_configuration_profiles to enrolled_devices (M:N).
@@ -82,7 +82,7 @@ b1b:
   - id: B1B-CROSS-DOMAIN-RELS
     summary: "Author outbound cross-domain data_object_relationships mirroring 9 outbound handoffs (B8)"
     finding: >
-      0 outbound cross-domain edges from UEM masters to neighbor payloads. Candidate pairings:
+      0 outbound cross-domain relationships from UEM masters to neighbor payloads. Candidate pairings:
       enrolled_devices to ITSM service_incidents, to HAM hardware_assets, to IGA access_grants
       (verify exists); device_compliance_results to IGA access_decisions (verify exists);
       device_app_assignments to SAM software_entitlements (verify exists).
@@ -147,10 +147,10 @@ b2:
     why: "Rule #20 forbids agent-authored buyer-voice prose without explicit per-row approval."
 
   - id: B2-VERBS
-    summary: "Relationship verbs for B7 user-edges, B6 intra-domain edges, and B11 aliases"
+    summary: "Relationship verbs for B7 relationships to users, B6 intra-domain relationships, and B11 aliases"
     question: >
-      What exact relationship_verb strings on the 6 user-edge rows (1847-1852) and the 7
-      proposed intra-domain edges, and which alias_name + alias_type tuples on the 8 masters?
+      What exact relationship_verb strings on the 6 users relationship rows (1847-1852) and the 7
+      proposed intra-domain relationships, and which alias_name + alias_type tuples on the 8 masters?
     options:
       - "Confirm prior continuation labels (has assigned / has last seen / has issued to / has created by / has owned by / has uploaded by)"
       - "Revise specific verbs"

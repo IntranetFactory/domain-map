@@ -39,14 +39,14 @@ b1b:
   - id: B1B-S4-INTRA-DOMAIN-RELATIONSHIPS
     summary: "Load 7 intra-domain data_object_relationships among the 8 KUBE-PLAT masters."
     finding: |
-      Zero intra-domain edges among data_objects 448-455. Real relationships:
+      Zero intra-domain relationships among data_objects 448-455. Real relationships:
       kubernetes_clusters has cluster_node_pools; kubernetes_clusters runs
       container_workloads; helm_releases produces container_workloads;
       operator_installations runs_on kubernetes_clusters; service_meshes overlays
       kubernetes_clusters; platform_pipelines deploys helm_releases;
       container_registries supplies container_workloads.
     blocked_by:
-      - {type: user_decision, ref: B2-EDGE-TUPLES, reason: "intra-master verb/cardinality/owner_side tuples need surfacing per Rule #1 before write"}
+      - {type: user_decision, ref: B2-RELATIONSHIP-TUPLES, reason: "intra-master verb/cardinality/owner_side tuples need surfacing per Rule #1 before write"}
     affected_entities:
       - "kubernetes_clusters has cluster_node_pools"
       - "kubernetes_clusters runs container_workloads"
@@ -65,7 +65,7 @@ b1b:
       outbound handoffs have payload = the KUBE-PLAT master itself (intra-payload,
       not a B8 candidate).
     blocked_by:
-      - {type: user_decision, ref: B2-EDGE-TUPLES, reason: "cross-domain verb/cardinality/owner_side tuples need surfacing per Rule #1"}
+      - {type: user_decision, ref: B2-RELATIONSHIP-TUPLES, reason: "cross-domain verb/cardinality/owner_side tuples need surfacing per Rule #1"}
     affected_handoffs:
       - {handoff_id: 763, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITSM, trigger_event: "container_workload.degraded", payload: "service_incidents"}
 
@@ -144,16 +144,16 @@ b2:
       B1B-S7 source FKs, B1B-S9 lifecycle state domain_module_id, B1B-S8 solution_term
       aliases, E1 role floor).
 
-  - id: B2-EDGE-TUPLES
+  - id: B2-RELATIONSHIP-TUPLES
     summary: "Approve the verb / cardinality / owner_side tuples for the intra-domain (B1B-S4) and cross-domain (B1B-S6) data_object_relationships."
     question: |
-      The 7 intra-domain edges and 1 cross-domain edge are enumerated (see B1B-S4,
+      The 7 intra-domain relationships and 1 cross-domain relationship are enumerated (see B1B-S4,
       B1B-S6) but each needs an exact (relationship_type, relationship_kind,
       owner_side, is_required) tuple before write per Rule #1. Approve the proposed
       tuples or adjust?
     options:
       - "(a) approve the audit-proposed tuples (parent for clusters->node_pools; reference for the rest; owner_side per the directional verb)"
-      - "(b) supply exact tuples per edge"
+      - "(b) supply exact tuples per relationship"
 
   - id: B2-ALIAS-TUPLES
     summary: "Approve the remaining vendor-brand / solution_term alias tuples (B1B-S8)."

@@ -2,7 +2,7 @@
 /**
  * b9d_resolver.ts -- committed, bidirectional B9d cross-domain payload-realization resolver.
  *
- * Supersedes the B9d role of validate_cross_domain.ts (which is read-only and one-directional).
+ * Supersedes the B9d part of validate_cross_domain.ts (which is read-only and one-directional).
  * Plan of record: plans/b9d-reconciliation-handoff-brief.md (attempt #9), corrected against the
  * live catalog by the 2026-06-10 deep review. Where the plan's worked-instance values disagree
  * with the live tenant, this resolver follows the live tenant; the divergences are documented
@@ -63,18 +63,18 @@ console.error(`b9d_resolver: ${DOMAIN_CODE} (${WRITE ? "WRITE" : "DRY-RUN"})`);
 
 const [
   domains, domainModules, dataObjects, processes,
-  dmdoMasters, lifecycleGated, raci, domainRoles, roleModules, boundaryTags,
+  dmdoMasters, lifecycleGated, raci, personas, personaModules, boundaryTags,
 ] = await Promise.all([
   get("/domains?select=id,domain_code,domain_name,domain_kind&limit=10000"),
   get("/domain_modules?select=id,domain_id,domain_module_code&limit=20000"),
   get("/data_objects?select=id,data_object_name,singular_label,entity_type&limit=20000"),
   get("/business_processes?select=id,process_code,process_name,hierarchy_level&limit=20000"),
-  get("/domain_module_data_objects?role=in.(master,embedded_master)&select=data_object_id,role,domain_module_id&limit=20000"),
+  get("/domain_module_data_objects?held_as=in.(master,embedded_master)&select=data_object_id,held_as,domain_module_id&limit=20000"),
   // gated states only: a process is realizable on an entity when it has a permission-gated state.
   get("/data_object_lifecycle_states?requires_permission=eq.true&process_id=not.is.null&select=process_id,data_object_id,state_name&limit=20000"),
-  get("/process_raci?select=process_id,actor_role_id,raci&limit=20000"),
-  get("/domain_roles?select=id,role_name&limit=20000"),
-  get("/role_modules?select=role_id,domain_module_id&limit=20000"),
+  get("/process_raci?select=process_id,persona_id,raci&limit=20000"),
+  get("/personas?select=id,persona_name&limit=20000"),
+  get("/persona_modules?select=persona_id,domain_module_id&limit=20000"),
   // every cross-domain handoff_processes tag, with its handoff endpoints + carried payload entity.
   get("/handoff_processes?select=id,process_id,record_status,proposal_source,handoff:handoffs!inner(id,source_domain_id,target_domain_id,data_object_id,trigger_events(event_name))&limit=40000"),
 ]);
@@ -85,7 +85,7 @@ const domainByCode = new Map<string, Row>(domains.map((d) => [d.domain_code, d])
 const moduleById = new Map<number, Row>(domainModules.map((m) => [m.id, m]));
 const doById = new Map<number, Row>(dataObjects.map((d) => [d.id, d]));
 const procById = new Map<number, Row>(processes.map((p) => [p.id, p]));
-const roleNameById = new Map<number, string>(domainRoles.map((r) => [r.id, r.role_name]));
+const personaNameById = new Map<number, string>(personas.map((r) => [r.id, r.persona_name]));
 
 // ----------------------------------------------------------------------------- --migrate-legacy (read-only scan)
 // The 8 prior outbound-only runs seeded INVERTED B9d records ("owed by <target>" / "owed to <X>")
@@ -160,13 +160,13 @@ for (const m of domainModules) {
 }
 
 // carried-entity mastery -> domain ids that master each data_object (REVIEW: may be >1)
-const masterDomainsOfDO = new Map<number, { domain: number; role: string }[]>();
+const masterDomainsOfDO = new Map<number, { domain: number; held_as: string }[]>();
 for (const r of dmdoMasters) {
   const mod = moduleById.get(r.domain_module_id);
   const dom = mod?.domain_id;
   if (dom == null) continue;
   if (!masterDomainsOfDO.has(r.data_object_id)) masterDomainsOfDO.set(r.data_object_id, []);
-  masterDomainsOfDO.get(r.data_object_id)!.push({ domain: dom, role: r.role });
+  masterDomainsOfDO.get(r.data_object_id)!.push({ domain: dom, held_as: r.held_as });
 }
 
 // realized set: process_id that has a gated state AND >=1 responsible AND >=1 accountable.
@@ -179,8 +179,8 @@ const raciByProcess = new Map<number, { responsible: number[]; accountable: numb
 for (const r of raci) {
   if (!raciByProcess.has(r.process_id)) raciByProcess.set(r.process_id, { responsible: [], accountable: [] });
   const bucket = raciByProcess.get(r.process_id)!;
-  if (r.raci === "responsible" && r.actor_role_id != null) bucket.responsible.push(r.actor_role_id);
-  if (r.raci === "accountable" && r.actor_role_id != null) bucket.accountable.push(r.actor_role_id);
+  if (r.raci === "responsible" && r.persona_id != null) bucket.responsible.push(r.persona_id);
+  if (r.raci === "accountable" && r.persona_id != null) bucket.accountable.push(r.persona_id);
 }
 const hasRA = (pid: number) => {
   const b = raciByProcess.get(pid);
@@ -189,7 +189,7 @@ const hasRA = (pid: number) => {
 const isRealized = (pid: number) => gatedEntitiesByProcess.has(pid) && hasRA(pid);
 
 // reach -> built domains
-const reachedModules = new Set<number>(roleModules.map((r) => r.domain_module_id));
+const reachedModules = new Set<number>(personaModules.map((r) => r.domain_module_id));
 const isBuilt = (domainId: number) => {
   const mods = modulesByDomain.get(domainId);
   if (!mods) return false;
@@ -211,11 +211,11 @@ const domCode = (domId: number) => String(domainById.get(domId)?.domain_code ?? 
 function ownerOfPayload(doId: number, tagCode: string): { domain: number | null; note: string } {
   const masters = masterDomainsOfDO.get(doId) ?? [];
   if (masters.length === 0) return { domain: null, note: "no-master" };
-  // prefer role=master over embedded_master
-  const realMasters = masters.filter((m) => m.role === "master");
+  // prefer held_as=master over embedded_master
+  const realMasters = masters.filter((m) => m.held_as === "master");
   const pool = realMasters.length ? realMasters : masters;
   const uniq = [...new Set(pool.map((m) => m.domain))];
-  if (uniq.length === 1) return { domain: uniq[0], note: pool[0].role };
+  if (uniq.length === 1) return { domain: uniq[0], note: pool[0].held_as };
   // multiple masters: disambiguate by APQC category of each candidate's realized set
   const cat = firstSeg(tagCode);
   const matches = uniq.filter((dom) => {
@@ -256,8 +256,8 @@ function siblingFor(ownerDom: number, payloadDO: number, tagCode: string): { pid
 function raPair(pid: number): { r: string | null; a: string | null } {
   const b = raciByProcess.get(pid);
   return {
-    r: b?.responsible.length ? roleNameById.get(b.responsible[0]) ?? null : null,
-    a: b?.accountable.length ? roleNameById.get(b.accountable[0]) ?? null : null,
+    r: b?.responsible.length ? personaNameById.get(b.responsible[0]) ?? null : null,
+    a: b?.accountable.length ? personaNameById.get(b.accountable[0]) ?? null : null,
   };
 }
 
@@ -431,7 +431,7 @@ function renderOrphanQ(
     const r = ra.r ?? "a named owner";
     const a = ra.a ?? r;
     const sibWork = sib ? work(sib.pid) : "";
-    // a real approver alternative: a different accountable role the owner uses on another step.
+    // a real approver alternative: a different accountable persona the owner uses on another step.
     let altA: string | null = null;
     for (const [pid2, ents] of gatedEntitiesByProcess) {
       if (!isRealized(pid2)) continue;

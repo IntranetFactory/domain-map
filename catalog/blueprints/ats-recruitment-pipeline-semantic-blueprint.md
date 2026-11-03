@@ -46,7 +46,7 @@ Requisitions → postings → applications with pipeline-stage lifecycle. Realiz
 | Candidates | `candidates` | People known to the recruiting organization, with or without an active application, carrying contact details, resume, tags, consent, and source. |
 | Job Profiles | `job_profiles` | Canonical role definitions in the job catalog: title, family, level, responsibilities, required skills, pay range, and FLSA class. Many positions share one profile. |
 | Locations | `locations` | Physical or organizational locations referenced across the system, used to place and group other records. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 | Positions | `hcm_positions` | Approved org slots with role definition, cost center, reporting line, location, and FTE allocation. Each can be open, filled, or eliminated. |
 
 ```mermaid
@@ -147,7 +147,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | catalog code | singular | plural | role | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `applicant_flow_records` | `applicant_flow_records` | Applicant Flow Record | Applicant Flow Records | master | - | - | yes | yes | operational_workflow | `:manage` | - |
 | 2 | `application_dispositions` | `application_dispositions` | Application Disposition | Application Dispositions | master | - | - | yes | - | operational_record | `:manage` | - |
@@ -178,7 +178,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 _`field_required` applies only when both entities are installed. It never makes an entity required._
 
-### 5.1 Links between entities in this blueprint
+### 5.1 Relationships between entities in this blueprint
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -207,7 +207,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | composition | yes | source | cascade | parent | - |
 | `applicant_flow_records` | audited_via | `ofccp_audit_trails` | one_to_many | composition | yes | source | cascade | parent | - |
 
-### 5.2 Links to platform built-ins (`users`)
+### 5.2 Relationships to platform built-ins (`users`)
 
 | from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -215,7 +215,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | leads | `org_units` | one_to_many | no | source | clear | reference | - |
 | `users` | owns | `job_profiles` | one_to_many | no | source | clear | reference | - |
 | `users` | is recruiter for | `job_requisitions` | one_to_many | yes | source | restrict | reference | - |
-| `users` | owns as recruiter | `job_applications` | one_to_many | yes | source | restrict | reference | - |
+| `users` | owns as recruiter | `job_applications` | one_to_many | no | source | clear | reference | - |
 | `org_units` | has members | `users` | one_to_many | no | source | clear | reference | - |
 | `locations` | houses | `users` | one_to_many | no | source | clear | reference | - |
 | `users` | is assigned to | `hiring_team_assignments` | one_to_many | yes | source | restrict | reference | - |
@@ -227,11 +227,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | authors | `ofccp_audit_trails` | one_to_many | no | source | clear | reference | - |
 | `users` | is hiring manager for | `job_requisitions` | one_to_many | yes | source | restrict | reference | - |
 
-### 5.3 Links to entities outside this blueprint
+### 5.3 Relationships to entities outside this blueprint
 
-_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-#### 5.3a Outgoing links: this blueprint's entity points to the external entity
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -259,7 +259,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `org_designs` | proposes | `hcm_positions` | one_to_many | yes | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
-#### 5.3b Incoming links: the external entity points to this blueprint's entity
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -291,7 +291,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
@@ -304,9 +304,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._
+_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
 
-| data_object | other module / domain | role | install_optional | notes |
+| data_object | other module / domain | held_as | install_optional | notes |
 | --- | --- | --- | --- | --- |
 | `job_applications` | ATS-INTERVIEWS (Candidate Interviews) - ATS | embedded_master | - | - |
 | `job_applications` | ATS-OFFERS (Job Offers) - ATS | embedded_master | - | - |
@@ -331,7 +331,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
-| ATS-RECRUITMENT-PIPELINE | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile links to salary bands; COMP-MGMT mapping authoritative. |
+| ATS-RECRUITMENT-PIPELINE | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile relates to salary bands; COMP-MGMT mapping authoritative. |
 | ATS-RECRUITMENT-PIPELINE | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-RECRUITMENT-PIPELINE | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
 | ATS-RECRUITMENT-PIPELINE | PSA | PSA-RESOURCE-MGMT | `job_profile.activated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile activated for production. PSA makes the role assignable on new project_assignments and project_resource_allocations. |
@@ -358,7 +358,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | install_optional | catalog owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | - | ATS-CANDIDATE-CRM (ATS) | - |
 | `hcm_positions` | embedded_master | yes | HCM-ORG-POSITIONS (HCM) | - |
@@ -373,7 +373,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `applied` | ✓ | - | - | - | - | Initial Internet Applicant capture at application submission. Demographics (voluntary) attached if self-identification was provided. |
-| 2 | `under_consideration` | - | - | - | - | - | Applicant has advanced past initial screening and is in active consideration. Auto-progressed when the linked application advances stages. |
+| 2 | `under_consideration` | - | - | - | - | - | Applicant has advanced past initial screening and is in active consideration. Auto-progressed when the related application advances stages. |
 | 3 | `dispositioned` | - | - | ✓ | - | `ats-recruitment-pipeline:disposition_applicant` | Recruiter codes the OFCCP disposition reason on the applicant (selected, not selected with typed reason, withdrew, etc.). |
 | 4 | `archived` | - | ✓ | - | - | - | Auto-archived per OFCCP retention rules (typically a two-year retention window for federal contractors). |
 
@@ -470,7 +470,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | - | `ats-recruitment-pipeline:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | - | `ats-recruitment-pipeline:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | - | `ats-recruitment-pipeline:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | - | `ats-recruitment-pipeline:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
@@ -625,6 +625,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
-| contributor | Human Resources | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Finance | `read` | `:read` |
+| contributor | Human Resources | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Finance | `viewer` | `:read` |

@@ -67,7 +67,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-S5}
     affected_masters:
-      - {data_object_id: 478, name: agency_jobs, target_module_id: 210, workflow: "draft->estimated->active->delivered->invoiced->closed/cancelled"}
+      - {data_object_id: 478, name: agency_jobs, target_module_id: 210, workflow: "draft->estimated->active->delivered->invoiced->closed/canceled"}
       - {data_object_id: 479, name: agency_time_entries, target_module_id: 210, workflow: "draft->submitted->approved->billed/rejected"}
       - {data_object_id: 480, name: agency_retainers, target_module_id: 210, workflow: "active->threshold_warned->depleted->replenished->closed"}
       - {data_object_id: 481, name: media_plans, target_module_id: 211, workflow: "draft->approved->executed->reconciled->closed"}
@@ -220,7 +220,7 @@ b3:
       Workamajig, Deltek WorkBook, and Function Point all model rate cards as first-class
       records distinct from rate-overrides on time entries (per-client rate sheets,
       role-and-seniority-indexed bill rates, effective-date versioning). Currently
-      RATE-MGMT is a shared capability link (placed in module 210) but no AGENCY-MGMT
+      RATE-MGMT is a shared capability relationship (placed in module 210) but no AGENCY-MGMT
       master records the rate card itself.
     vendor_evidence: [Workamajig Platinum, Deltek WorkBook, Function Point]
     proposed_module: AGENCY-MGMT-JOB-TRAFFIC
@@ -287,5 +287,5 @@ b3:
       Aprimo, Workfront for Marketing, Hive9, Allocadia, Plannuh; distinguished from
       agency-mgmt by buyer (in-house marketing department vs external agency) and scope
       (marketing-operations orchestration vs agency-client delivery). The Aprimo row
-      already linked to AGENCY-MGMT as secondary is suggestive of the boundary blur.
+      already related to AGENCY-MGMT as secondary is suggestive of the boundary blur.
     vendor_evidence: [Aprimo Marketing Productivity, Workfront for Marketing, Hive9, Allocadia, Plannuh]

@@ -51,9 +51,9 @@ b1a:
     action: "Upstream fix (not a blind module-FK guess): decide which DLP module ingests each external payload and load a consumer DMDO row on that module (231 for classification/policy-authoring triggers; 232 for runtime egress/scan triggers), THEN re-run the deterministic B10b backfill so target_domain_module_id resolves. Needs a per-payload routing decision (user-shape product call), so deferred."
 
   - id: B1A-S14-E-BAND-ROLES
-    summary: "E1/E2/E4; 0 roles touching DLP modules, 0 role_modules, 0 role_permissions. Authorable since 2 modules exist."
-    finding: "E1 mandates >=3 distinct roles touching both modules. Likely DLP-ADMIN (policy authoring + approval, spans 231 + 232), DLP-INCIDENT-RESPONDER (incident triage + remediation, 232 primary, 231 secondary), SECURITY-ANALYST (cross-cutting investigator, secondary on both). Per Plan 3 the persona bundle is DERIVED (domain_roles reach + process_raci), not a stored role_permissions list."
-    action: "Author domain_roles (function-scoped naming) + role_modules (231, 232) + process_raci; explicit interaction_level per E3. Business-function ownership still gated on B2-S4."
+    summary: "E1/E2/E4; 0 roles touching DLP modules, 0 persona_modules, 0 role_permissions. Authorable since 2 modules exist."
+    finding: "E1 mandates >=3 distinct roles touching both modules. Likely DLP-ADMIN (policy authoring + approval, spans 231 + 232), DLP-INCIDENT-RESPONDER (incident triage + remediation, 232 primary, 231 secondary), SECURITY-ANALYST (cross-cutting investigator, secondary on both). Per Plan 3 the persona bundle is DERIVED (personas reach + process_raci), not a stored role_permissions list."
+    action: "Author personas (function-scoped naming) + persona_modules (231, 232) + process_raci; explicit interaction_level per E3. Business-function ownership still gated on B2-S4."
     affected_modules: [231, 232]
     blocked_by:
       - {type: user_decision, ref: B2-S4}
@@ -82,9 +82,9 @@ b1b:
       - {type: user_decision, ref: B2-S4}
 
   - id: B1B-S5B-B7-3-MASTERS
-    summary: "B7 partial; 3 of 6 DLP masters still lack user-edge data_object_relationships (Rule #10)."
-    finding: "3 user-edges loaded 2026-05-31 (users reviews dlp_incidents 1786, users authors dlp_policies 1787, users approves dlp_exceptions 1788). Missing for dlp_quarantine_items (reviewer / release_approver), dlp_user_activity_logs (user under monitor), data_exfiltration_attempts (actor)."
-    action: "Load 1-3 user-edge rows per master with verb chosen by user (B2-S6)."
+    summary: "B7 partial; 3 of 6 DLP masters still lack relationship to users data_object_relationships (Rule #10)."
+    finding: "3 relationships to users loaded 2026-05-31 (users reviews dlp_incidents 1786, users authors dlp_policies 1787, users approves dlp_exceptions 1788). Missing for dlp_quarantine_items (reviewer / release_approver), dlp_user_activity_logs (user under monitor), data_exfiltration_attempts (actor)."
+    action: "Load 1-3 users relationship rows per master with verb chosen by user (B2-S6)."
     blocked_by:
       - {type: user_decision, ref: B2-S6}
     affected_masters:
@@ -161,11 +161,11 @@ b2:
     why: "Reviewer preference + L3 parent vs. L4 child anchor choice varies across audits. The repeated 20735 L3 anchor on inbound rows is defensible because every inbound row triggers DLP policy authoring/refinement, the substantive job."
 
   - id: B2-S6
-    summary: "User-edge verb choice for 3 remaining DLP masters (B1B-S5B)."
+    summary: "users relationship verb choice for 3 remaining DLP masters (B1B-S5B)."
     question: "Which canonical actor + verb maps to each of the 3 masters?"
     options:
       - "dlp_quarantine_items: reviewer (e.g. reviews) and/or release_approver (e.g. releases / approves_release)"
-      - "dlp_user_activity_logs: user-under-monitor (e.g. is_monitored_by or generates) - direction is inverse from typical user-edge"
+      - "dlp_user_activity_logs: user-under-monitor (e.g. is_monitored_by or generates) - direction is inverse from typical relationship to users"
       - "data_exfiltration_attempts: actor (e.g. initiates or attempts)"
     why: "Multiple plausible verbs per actor; the dominant project convention is the verb-on-source-side pattern (e.g. users reviews dlp_incidents), but dlp_user_activity_logs reverses the typical direction since the activity log RECORDS user behavior."
   - id: B2-B9D-OWN-1164

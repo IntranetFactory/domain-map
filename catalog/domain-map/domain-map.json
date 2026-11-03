@@ -178,7 +178,7 @@
           "name": "Job Offers",
           "description": "Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-MGMT. Realizes the `offer_extended` state on `job_applications`. Requires an external `sign_document` tool, drops module Semantius coverage to ~83%.",
           "catalog_tagline": "Generate, approve, and send offers without losing a version.",
-          "catalog_description": "Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay linked to the offer record, so what was approved is exactly what was sent.",
+          "catalog_description": "Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay related to the offer record, so what was approved is exactly what was sent.",
           "personas": [
             {
               "code": "HIRING-MANAGER",
@@ -2729,7 +2729,7 @@
           "name": "SLA and Chargeback Management",
           "description": "SLA / OLA definitions, breach tracking, escalation rules, service-cost tracking, and chargeback to consuming business units.",
           "catalog_tagline": "Set service-level targets, track them in real time, and account for the cost.",
-          "catalog_description": "SLA and Chargeback Management defines the response and resolution commitments your service desk operates to, then measures every ticket against them so breaches are caught before they become escalations. Targets are explicit and performance is visible.\n\nLinking service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around.",
+          "catalog_description": "SLA and Chargeback Management defines the response and resolution commitments your service desk operates to, then measures every ticket against them so breaches are caught before they become escalations. Targets are explicit and performance is visible.\n\nRelating service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around.",
           "personas": [],
           "processes": [],
           "related_modules": ["HCM-ORG-POSITIONS", "ITSM-STARTER"]
@@ -4173,7 +4173,7 @@
       "name": "Work Management",
       "description": "Task, project, and workflow management for cross-functional work: assignments with owners and due dates, dependencies, statuses, dashboards, automations, and goal/OKR tracking. Bought by PMOs, BizOps, marketing, and any team running structured work that isn't engineering-specific. Distinct from SPM (top-down portfolio investment decision, CIO/EPMO buyer), from PSA (services billing/utilization for revenue-generating projects), and from dedicated software-engineering sprint tooling (developer-specific dev workflow).",
       "catalog_tagline": "Run every team's projects, tasks, and goals in one place, from first request to finished work.",
-      "catalog_description": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then connect them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when.",
+      "catalog_description": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then relate them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when.",
       "domain_kind": "established_market",
       "catalog_release": "2026-06-16",
       "business_functions": [
@@ -4202,9 +4202,9 @@
         {
           "code": "WORK-MGMT-GOALS-OKR",
           "name": "Team-Execution Goals and OKRs",
-          "description": "Team-execution OKR tracking surface: objectives with key results that link to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR linking.",
+          "description": "Team-execution OKR tracking surface: objectives with key results that relate to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR relationships.",
           "catalog_tagline": "Set objectives, score key results, and see progress roll up from the work behind them.",
-          "catalog_description": "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Link objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand.\n\nCommit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked.",
+          "catalog_description": "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Relate objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand.\n\nCommit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked.",
           "personas": [
             {
               "code": "OKR-OWNER",

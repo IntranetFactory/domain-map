@@ -58,11 +58,11 @@ b1b:
       - {data_object_id: 60, name: license_audits, target_module_id: 203, workflow: aliases_pending}
     extra_count_range: "8_to_12"
   - id: B1B-S7
-    summary: Author 6 intra-SAM `data_object_relationships` edges (B6).
+    summary: Author 6 intra-SAM `data_object_relationships` rows (B6).
     finding: |
-      0 intra-SAM relationship rows among the 4 masters. Expected graph: (a) `software_licenses entitles software_titles` (many_to_one, owner_side source, required); (b) `software_installations is_of software_titles` (many_to_one, owner_side source, required); (c) `software_installations consumes software_licenses` (many_to_one, owner_side source, optional); (d) `license_audits audits software_titles` (many_to_many); (e) `license_audits scrutinizes software_licenses` (many_to_many); (f) `license_audits examines software_installations` (many_to_many). The blocker is judgment on cardinality choices, junction tables for the many_to_many edges, and `is_required` defaults.
+      0 intra-SAM relationship rows among the 4 masters. Expected graph: (a) `software_licenses entitles software_titles` (many_to_one, owner_side source, required); (b) `software_installations is_of software_titles` (many_to_one, owner_side source, required); (c) `software_installations consumes software_licenses` (many_to_one, owner_side source, optional); (d) `license_audits audits software_titles` (many_to_many); (e) `license_audits scrutinizes software_licenses` (many_to_many); (f) `license_audits examines software_installations` (many_to_many). The blocker is judgment on cardinality choices, junction tables for the many_to_many relationships, and `is_required` defaults.
     blocked_by:
-      - {type: user_decision, ref: B2-S7-relationships, reason: "6 edges need cardinality + junction + is_required judgment"}
+      - {type: user_decision, ref: B2-S7-relationships, reason: "6 relationships need cardinality + junction + is_required judgment"}
     affected_masters:
       - {data_object_id: 57, name: software_titles, target_module_id: 201, workflow: relationship_target}
       - {data_object_id: 58, name: software_licenses, target_module_id: 202, workflow: relationship_target}

@@ -4,7 +4,7 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
 # All agent-buildable corrective gap-fill is DONE (verified live 2026-06-13): intra-domain
-# master-master relationships, users-edges (Rule #10), aliases, lifecycle states, and the
+# master-master relationships, relationships to users (Rule #10), aliases, lifecycle states, and the
 # outbound handoff source_domain_module_id backfill are all present in the catalog. B9d ran
 # this pass in BOTH directions. Everything still open below is user-gated: b2 decisions,
 # destructive sign-offs, deferred-research (b3), or blocked-on-neighbor.
@@ -49,7 +49,7 @@ b2:
     why: B4 flag is structural; PCI-DSS and CCPA / GDPR treat cardholder + shipping-address content as PII.
   - id: B2-S3
     summary: parent_domain_id=69 (CRM) on B2C-COMM. Should it be NULL?
-    question: Digital Commerce flagship vendors sell as standalone markets, not as CRM extensions. Keep the CRM parent link, clear to NULL, or set a different parent?
+    question: Digital Commerce flagship vendors sell as standalone markets, not as CRM extensions. Keep the CRM parent relationship, clear to NULL, or set a different parent?
     options:
       - "(a) clear to NULL"
       - "(b) keep CRM parent as curated affinity / cluster signal"

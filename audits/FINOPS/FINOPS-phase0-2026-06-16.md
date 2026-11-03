@@ -7,7 +7,7 @@ Research only. Zero inserts. This report feeds a human q-file (market-shape deci
 - `domains` id=41, code=FINOPS, name="Cloud Financial Operations", `parent_domain_id=3` (child of ITAM, alongside SAM and SMP).
 - Metadata today: `crud_percentage=70`, `min_org_size="30 m <2500"`, `cost_band="$$$"`, `usa_market_size_usd_m=1500`, `market_size_source_year=2025`, `certification_required=false`, `business_logic` populated.
 - Modules: **ZERO**. Capabilities: **ZERO**. Masters: **ZERO** (the domain only `consumer`s `supplier_invoices`). This is an UNBUILT stub.
-- Solutions linked (5): Apptio Cloudability (primary), CloudHealth (primary), Finout (primary), ServiceNow Cloud Insights (primary), Flexera One (secondary).
+- Solutions related (5): Apptio Cloudability (primary), CloudHealth (primary), Finout (primary), ServiceNow Cloud Insights (primary), Flexera One (secondary).
 
 What adjacent domains already master (verified, for boundary analysis):
 - **FIN** (id=65): `general_ledger_accounts`, `journal_entries`, `cost_centers`, `accounting_periods`, `legal_entities`, `bank_accounts`, `cash_transactions`, `fixed_assets`, `revenue_recognition_records`, `intercompany_transactions`, `asset_depreciation_schedules`. The accounting system of record.

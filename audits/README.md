@@ -148,4 +148,4 @@ The legacy `audits/<DOMAIN>.md` files were removed; restore with `git checkout` 
 
 ## Older audit text that names `necessity`
 
-`domain_module_data_objects.necessity` and `domain_data_objects.necessity` are replaced by the boolean `is_install_optional`. Audit files written before 2026-11-02 still use the old name, including open write instructions in `state.yaml` and q-files. When applying one, translate it: `necessity=required` is `is_install_optional=false` (the default), and `necessity=optional` is `is_install_optional=true`. `data_object_relationships.is_required` is a separate fact about a link's field and does not change.
+`domain_module_data_objects.necessity` and `domain_data_objects.necessity` are replaced by the boolean `is_install_optional`. Audit files written before 2026-11-02 still use the old name, including open write instructions in `state.yaml` and q-files. When applying one, translate it: `necessity=required` is `is_install_optional=false` (the default), and `necessity=optional` is `is_install_optional=true`. `data_object_relationships.is_required` is a separate fact about a relationship's field and does not change.

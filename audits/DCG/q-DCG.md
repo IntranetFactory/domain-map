@@ -9,7 +9,7 @@ Find, trust, and govern every data asset across the enterprise from one place. C
 
 q1: One existing trigger event looks mis-pointed. The handoff where DCG pushes an access-policy update to the data platform (handoff 158) fires on an event called `access_policy.updated`, but that event is attached to `lakehouse_tables` (a data-platform entity) instead of DCG's own `data_access_policies`. Should I re-point the event to `data_access_policies`? (yes/no)
 
-Recommended: yes. The event name and the fact that DCG is the publisher both say the real subject is the access policy, not the lakehouse table. The lakehouse table is what the policy applies to, which is fine as the handoff payload, but the event itself should hang off the policy. I left it untouched because re-pointing an existing shared event's link is an overwrite (it could affect anything else subscribing to that event), so it needs your nod.
+Recommended: yes. The event name and the fact that DCG is the publisher both say the real subject is the access policy, not the lakehouse table. The lakehouse table is what the policy applies to, which is fine as the handoff payload, but the event itself should hang off the policy. I left it untouched because re-pointing an existing shared event's relationship is an overwrite (it could affect anything else subscribing to that event), so it needs your nod.
 
 a1:
 
@@ -42,7 +42,7 @@ a3:
 
 ## Optional (will not hold up anything)
 
-q4: Run the B9d handoff-payload realization pass on DCG (classify every handoff payload both directions, re-point or flag mis-tagged process links)? It was outside the build scope. (yes/no)
+q4: Run the B9d handoff-payload realization pass on DCG (classify every handoff payload both directions, re-point or flag mis-tagged process relationships)? It was outside the build scope. (yes/no)
 
 Recommended: yes, as a follow-up audit pass. It is mechanical and additive; it does not change the build.
 

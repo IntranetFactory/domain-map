@@ -4,7 +4,7 @@
 
 ### Summary
 
-- **Current footprint:** 0 modules, 2 masters (`tax_returns` id=400, `client_engagements` id=401), 4 contributors (`engagement_letters` id=394 mastered by LEGAL-PRACT-MGMT, `time_entries` id=162 mastered by WFM, `supplier_invoices` id=75 mastered by S2P, `crm_contacts` id=98 mastered by CRM), 6 capabilities (ACCT-WORKFLOW, ACCT-CLIENT-PORTAL, ACCT-TIME-BILLING, ACCT-ENGAGEMENT-LTR, ACCT-DEADLINE-MGMT, ACCT-DOC-MGMT), 8 primary solutions, 5 regulations linked (IRS-PUB-4557, GLBA, AICPA-CODE mandatory; SOX conditional; SOC-2 recommended), 3 outbound handoffs, 0 inbound handoffs, 2 outbound `trigger_events` (both `event_category=lifecycle`), 0 lifecycle states, 0 aliases, 0 `data_object_relationships` (none intra-domain, none cross-domain, no users edges), 1 legacy `skills` row (`acct-pract-mgmt-system` id=25 with `domain_module_id=null`), 4 `skill_tools` (2 `query` platform, 1 `side_effect` platform `send_email`, 1 `side_effect` external `sign_document`).
+- **Current footprint:** 0 modules, 2 masters (`tax_returns` id=400, `client_engagements` id=401), 4 contributors (`engagement_letters` id=394 mastered by LEGAL-PRACT-MGMT, `time_entries` id=162 mastered by WFM, `supplier_invoices` id=75 mastered by S2P, `crm_contacts` id=98 mastered by CRM), 6 capabilities (ACCT-WORKFLOW, ACCT-CLIENT-PORTAL, ACCT-TIME-BILLING, ACCT-ENGAGEMENT-LTR, ACCT-DEADLINE-MGMT, ACCT-DOC-MGMT), 8 primary solutions, 5 regulations related (IRS-PUB-4557, GLBA, AICPA-CODE mandatory; SOX conditional; SOC-2 recommended), 3 outbound handoffs, 0 inbound handoffs, 2 outbound `trigger_events` (both `event_category=lifecycle`), 0 lifecycle states, 0 aliases, 0 `data_object_relationships` (none intra-domain, none cross-domain, no relationships to `users`), 1 legacy `skills` row (`acct-pract-mgmt-system` id=25 with `domain_module_id=null`), 4 `skill_tools` (2 `query` platform, 1 `side_effect` platform `send_email`, 1 `side_effect` external `sign_document`).
 - **Vendor-surface basis:** Karbon (cloud-native practice operating platform; strong workflow + email triage), Canopy (mid-market practice management + client portal), TaxDome (SMB-favored end-to-end: portal, e-sign, billing), Jetpack Workflow (recurring-task templating, SMB focus), CCH Axcess Practice (Wolters Kluwer enterprise-tier suite paired with tax-prep software), Aiwyn (AR + billing automation specialist), Liscio (secure client communications + document portal specialist), Ignition (engagement-letter + proposals + payment specialist). Catalog already enumerates all 8 as `primary`. The matrix covers solo/mid-market CPA practices on the US market; no separate compliance-specialist row needed since IRS Pub 4557 / GLBA / WISP obligations are embedded across all the practice-management suites rather than served by a standalone preparer-compliance vendor.
 - **Bucket 1 (in-scope, agent fixable):** 13 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
@@ -48,8 +48,8 @@ Both masters are at zero states + zero aliases. Routes to B12 (lifecycle), B11 (
 #### A-band - Market shape
 
 - **A1.** `domains` row has all 7 business-metadata fields populated. `crud_percentage=88`, `business_logic` non-empty (covers tax-calendar workflow generation, client-folder document-retention rules per IRS / state preparer requirements, engagement-letter e-signature chains with retainer-payment gating, capacity forecasting through tax season, per-engagement workflow checkpoints with sign-off), `min_org_size='10 xs <50'`, `cost_band='$$'`, `certification_required=false`, `usa_market_size_usd_m=800`, `market_size_source_year=2024`. PASS.
-- **A2.** 6 capabilities linked: ACCT-WORKFLOW, ACCT-CLIENT-PORTAL, ACCT-TIME-BILLING, ACCT-ENGAGEMENT-LTR, ACCT-DEADLINE-MGMT, ACCT-DOC-MGMT. PASS (>=3 floor).
-- **A3.** 8 solutions linked, all `coverage_level='primary'`. PASS. (Worth noting: an all-`primary` distribution is unusual; secondary / partial rows could cover cross-market suites like FIN AR addons, but not a structural fail.)
+- **A2.** 6 capabilities related: ACCT-WORKFLOW, ACCT-CLIENT-PORTAL, ACCT-TIME-BILLING, ACCT-ENGAGEMENT-LTR, ACCT-DEADLINE-MGMT, ACCT-DOC-MGMT. PASS (>=3 floor).
+- **A3.** 8 solutions related, all `coverage_level='primary'`. PASS. (Worth noting: an all-`primary` distribution is unusual; secondary / partial rows could cover cross-market suites like FIN AR addons, but not a structural fail.)
 - **A4.** `catalog_tagline` and `catalog_description` are both empty. **FAIL** - Bucket 2 (Rule #20 requires user-approved buyer-voice wording before write).
 - **A5.** Skip per default (not requested).
 
@@ -66,8 +66,8 @@ Both masters are at zero states + zero aliases. Routes to B12 (lifecycle), B11 (
 - **B3.** Both masters use prefixed names (`tax_returns`, `client_engagements`); neither is a bare word. `is_canonical_bare_word=false` on both, `naming_authority_rationale=''`. PASS.
 - **B4.** Both masters have all three pattern flags = false. Positive re-evaluation: `tax_returns` carries human PII (taxpayer SSN, dependents' SSNs, income, deductions, account numbers, IRS audit-trail metadata) which is a strong candidate for `has_personal_content=true`. Once filed and accepted by the IRS, the return is effectively immutable from the practice's side (corrections require an amended return, a distinct workflow), so `has_submit_lock=true` is plausible on the `filed` state. `client_engagements` typically require partner sign-off on opening, so `has_single_approver=true` may apply. All three flag candidates surfaced to Bucket 2 for explicit confirmation per Rule #12.
 - **B5.** No `embedded_master` rows for this domain. PASS (vacuously).
-- **B6.** Zero intra-domain `data_object_relationships`. **FAIL.** Workflow ties absent: `client_engagements scopes tax_returns` (a single engagement may scope multiple-year returns or extension returns). With only 2 masters, the intra-domain edge set is minimal but the one edge above is load-bearing for the workflow graph. Bucket 1.
-- **B7.** Zero `users` edges. **FAIL.** Expected user-actor edges: `tax_returns.preparer -> users`, `tax_returns.reviewer -> users` (partner sign-off), `client_engagements.engagement_partner -> users`, `client_engagements.engagement_manager -> users`, `client_engagements.assigned_staff -> users` (line accountants). Bucket 1.
+- **B6.** Zero intra-domain `data_object_relationships`. **FAIL.** Workflow ties absent: `client_engagements scopes tax_returns` (a single engagement may scope multiple-year returns or extension returns). With only 2 masters, the intra-domain relationship set is minimal but the one relationship above is load-bearing for the workflow graph. Bucket 1.
+- **B7.** Zero relationships to `users`. **FAIL.** Expected user-actor relationships: `tax_returns.preparer -> users`, `tax_returns.reviewer -> users` (partner sign-off), `client_engagements.engagement_partner -> users`, `client_engagements.engagement_manager -> users`, `client_engagements.assigned_staff -> users` (line accountants). Bucket 1.
 - **B8.** Zero cross-domain `data_object_relationships`. **FAIL.** Three outbound handoffs exist (B9) but no mirror relationship rows: `tax_returns reports_to <grc-tax-compliance>` (GRC payload), `client_engagements references_letter engagement_letters` (LEGAL-PRACT-MGMT consumer; the engagement_letter is the contract artifact under the engagement), `engagement_letters scopes_into client_engagements` (CLM payload). The `tax_returns -> AP-AUTO` mirror is itself questionable (handoff 340 lists payload `supplier_invoices`/id=75 which doesn't obviously fall out of `tax_return.filed`; surfaced as Bucket 2 architectural review). Bucket 1.
 - **B9.** 2 outbound `trigger_events` + 3 outbound `handoffs` rows. Both events carry `event_category=lifecycle` (correct enum). PASS on event-category coverage. The two events are:
   - `tax_return.filed` (id=331, `data_object_id=400`) - fans out to 2 handoffs (id=338 -> GRC, id=340 -> AP-AUTO).
@@ -89,10 +89,10 @@ Both masters are at zero states + zero aliases. Routes to B12 (lifecycle), B11 (
 
 - **B9b.** Skipped (no modules; <2-module floor). When modules are authored, intra-domain cross-module handoffs need to be drafted (e.g. `client_engagement.commenced` -> WORKFLOW module instantiating tasks; `tax_return.filed` -> BILLING module triggering invoice creation; `tax_return.accepted_by_irs` -> CLIENT-PORTAL notifying client).
 - **B10.** Inbound report-only. Zero inbound handoff rows. Catalog suggests the following candidate inbound dependencies via the 4 contributor rows:
-  - `engagement_letters` (id=394, role=contributor, necessity=required) mastered by LEGAL-PRACT-MGMT (id=150). LEGAL B9 owes outbound on `engagement_letter.signed` / `.executed` / `.terminated` to ACCT-PRACT-MGMT (mirrors handoff 339 going outbound, but the inbound from LEGAL into ACCT isn't loaded).
-  - `time_entries` (id=162, role=contributor, necessity=required) mastered by WFM (id=59). WFM B9 owes outbound on `time_entry.submitted` / `.approved` / `.locked` to ACCT-PRACT-MGMT (time entries roll up into engagement billing).
-  - `supplier_invoices` (id=75, role=contributor, necessity=required) mastered by S2P (id=27). S2P B9 owes outbound on `supplier_invoice.approved` / `.paid` to ACCT-PRACT-MGMT (supplier invoices paid by the firm; this is a less obvious dependency but the contributor row is in the catalog).
-  - `crm_contacts` (id=98, role=contributor, necessity=required) mastered by CRM (id=69). CRM B9 owes outbound on `crm_contact.upserted` / `.merged` to ACCT-PRACT-MGMT (client master upserts feed practice management).
+  - `engagement_letters` (id=394, held_as=contributor, necessity=required) mastered by LEGAL-PRACT-MGMT (id=150). LEGAL B9 owes outbound on `engagement_letter.signed` / `.executed` / `.terminated` to ACCT-PRACT-MGMT (mirrors handoff 339 going outbound, but the inbound from LEGAL into ACCT isn't loaded).
+  - `time_entries` (id=162, held_as=contributor, necessity=required) mastered by WFM (id=59). WFM B9 owes outbound on `time_entry.submitted` / `.approved` / `.locked` to ACCT-PRACT-MGMT (time entries roll up into engagement billing).
+  - `supplier_invoices` (id=75, held_as=contributor, necessity=required) mastered by S2P (id=27). S2P B9 owes outbound on `supplier_invoice.approved` / `.paid` to ACCT-PRACT-MGMT (supplier invoices paid by the firm; this is a less obvious dependency but the contributor row is in the catalog).
+  - `crm_contacts` (id=98, held_as=contributor, necessity=required) mastered by CRM (id=69). CRM B9 owes outbound on `crm_contact.upserted` / `.merged` to ACCT-PRACT-MGMT (client master upserts feed practice management).
 - **B10b.** Every handoff in B9 has `source_domain_module_id=NULL` and `target_domain_module_id=NULL`. Source side is owed by THIS domain once M1 is cured. Target side: handoff 339 (-> CLM) can be backfilled today since CLM has 5 modules; the natural target is CLM-REPOSITORY or CLM-OBLIGATION-MGMT (signed engagement letter lands in repository and creates obligation tracking). GRC and AP-AUTO have zero modules per spot-check; their target-side fix waits on their modularization. Bucket 1 (source side); Report-only for GRC and AP-AUTO target-side; Bucket 1 (or report-only-on-CLM) for CLM target-side.
 - **B11.** Zero aliases on either master. Expected cross-vendor / cross-industry synonyms: `tax_returns` <-> "1040", "1120", "1065", "1041", "990" (form-number aliases; aliases are typically the form code itself when CPA software lists "Form 1040" alongside "Tax Return"); `client_engagements` <-> "Engagement" (Karbon / Canopy / TaxDome universally call them "Engagements"), "Job" (Jetpack Workflow terminology), "Matter" (legal-adjacent term, especially for tax-controversy work), "Project" (some bookkeeping-focused PM suites). The "Engagement" alias is essentially the canonical industry term and is most load-bearing. Bucket 1.
 - **B12.** Zero `data_object_lifecycle_states` across both masters. **FAIL.** Both have observable state machines:
@@ -124,9 +124,9 @@ Both masters are at zero states + zero aliases. Routes to B12 (lifecycle), B11 (
 - **F1.** 1 legacy `skills` row (`acct-pract-mgmt-system` id=25) with `domain_module_id=null`. Acceptable transitional state ONLY because no module-level skill exists yet. Once modules are authored, this legacy row must be retired (DELETE) or split into module-level skills (one `<module_code_lower>_agent` per module). Bucket 1.
 - **F2.** Zero module-level system skills (vacuous: no modules). **FAIL** (gated by M1).
 - **F3.** Legacy skill has 4 `skill_tools` rows: 2 `query` rows (`query_tax_returns`, `query_client_engagements`, both `coverage_tier=platform`), 1 `side_effect` (`send_email`, `coverage_tier=platform`), 1 `side_effect` (`sign_document`, `coverage_tier=external`). The tool set is thin: zero `mutate` (no `create_tax_return`, `update_client_engagement`, `transition_tax_return_to_filed`), zero workflow gates (no `submit_for_review`, `partner_signoff`, `release_for_efile`), zero `fetch` (no IRS-acceptance polling, no QuickBooks / Xero / GL pull, no tax-research-database lookup), zero `inbound` (no IRS-acceptance webhook receiver, no e-sign callback). Once modules are split, the per-module skill tool sets need to be redistributed and expanded. Bucket 1.
-- **F4.** All 4 linked tools pair `operation_kind` and `data_object_id` correctly (2 `query` rows have `data_object_id` set; the 2 `side_effect` rows have `data_object_id=null`). PASS on the invariant.
+- **F4.** All 4 related tools pair `operation_kind` and `data_object_id` correctly (2 `query` rows have `data_object_id` set; the 2 `side_effect` rows have `data_object_id=null`). PASS on the invariant.
 - **F5.** Semantius score uncomputable (no modules). Routes to F2 + F3. Tool-level note: the 1 external row (`sign_document`) drops the strict score, while `operational_score` depends on `tool_solutions` rows for sign_document (DocuSign, Adobe Acrobat Sign, Dropbox Sign) which were not queried in this audit.
-- **F7.** `send_email` is a channel primitive linked to the legacy skill. Per the channel-vs-capability authoring rule, the default for generic notifications is `notify_person`; client communications in CPA practice (return-ready notice, engagement-letter sign reminder, missing-document follow-up) are substitutable-channel (email, SMS, portal-push are all valid per Karbon / Canopy / TaxDome). When modules are split and the legacy skill retired, the per-module reminder skill should link `notify_person`, not `send_email` directly, unless the workflow specifically requires email (e.g. a regulator-mandated PDF acknowledgement, which is not the case here). Bucket 1.
+- **F7.** `send_email` is a channel primitive related to the legacy skill. Per the channel-vs-capability authoring rule, the default for generic notifications is `notify_person`; client communications in CPA practice (return-ready notice, engagement-letter sign reminder, missing-document follow-up) are substitutable-channel (email, SMS, portal-push are all valid per Karbon / Canopy / TaxDome). When modules are split and the legacy skill retired, the per-module reminder skill should relate `notify_person`, not `send_email` directly, unless the workflow specifically requires email (e.g. a regulator-mandated PDF acknowledgment, which is not the case here). Bucket 1.
 
 #### H-band - APQC coverage
 
@@ -176,9 +176,9 @@ Open question: TAX-RETURNS being a separate module vs. merged into WORKFLOW. Tax
 
 ### Pass 3 - Neighbor discovery
 
-Edge weights derived from outbound `handoffs` (B9 table), inbound dependencies via contributor rows, and shared masters:
+Relationship weights derived from outbound `handoffs` (B9 table), inbound dependencies via contributor rows, and shared masters:
 
-| neighbor | edge weight | outbound events | inbound | dependencies | notes |
+| neighbor | relationship weight | outbound events | inbound | dependencies | notes |
 | --- | --- | --- | --- | --- | --- |
 | GRC | 1 | `tax_return.filed` | 0 | - | tax-compliance reporting |
 | CLM | 1 | `engagement_letter.signed` (via id=339; LEGAL-mastered payload) | 0 | - | engagement letter as contract artifact |
@@ -188,35 +188,35 @@ Edge weights derived from outbound `handoffs` (B9 table), inbound dependencies v
 | S2P | 1 | - | (implied via id=75 contributor) | `supplier_invoices` | drug-supplier invoice routing (questioned) |
 | CRM | 1 | - | (implied via id=98 contributor) | `crm_contacts` | client master upserts |
 
-No neighbor reaches edge weight >=3. Per the audit recipe, each neighbor gets a one-line summary instead of the full 5-section diff. Note: CLM (5 modules), CRM (5 modules), LEGAL-PRACT-MGMT (5 modules) are the modularized neighbors; GRC, AP-AUTO, WFM, S2P all have zero `domain_modules` per spot-check (M1 hard fail on each).
+No neighbor reaches relationship weight >=3. Per the audit recipe, each neighbor gets a one-line summary instead of the full 5-section diff. Note: CLM (5 modules), CRM (5 modules), LEGAL-PRACT-MGMT (5 modules) are the modularized neighbors; GRC, AP-AUTO, WFM, S2P all have zero `domain_modules` per spot-check (M1 hard fail on each).
 
 ### Pass 4 - Pairwise reconciliation per neighbor
 
-#### GRC (edge weight 1) - one-line summary
+#### GRC (relationship weight 1) - one-line summary
 
 One outbound (338 `tax_return.filed` -> GRC) for tax-compliance reporting. NULL source + target module FKs. GRC has 0 modules per spot-check; target-side B10b fix waits on GRC modularization. No mirror `data_object_relationships` row exists; Bucket 1 B8 fix needed (e.g. `tax_returns reports_to <grc-tax-compliance-payload>`). APQC tag exists (discovery_substring on PCF 1505) but the cluster better fits PCF L3 process 328 "Process taxes" or PCF L3 process 207 "Submit regulatory reports".
 
-#### CLM (edge weight 1) - one-line summary
+#### CLM (relationship weight 1) - one-line summary
 
 One outbound (339 `engagement_letter.signed` -> CLM) for contract repository / obligation tracking. NULL source + target module FKs. CLM has 5 modules; the natural target is `CLM-REPOSITORY` (id=127, where the signed letter lands) with `CLM-OBLIGATION-MGMT` (id=128) as a secondary if downstream obligation extraction fires. Target-side B10b fix is actionable today on CLM's own audit (CLM is modularized). Existing APQC tag (`agent_curated`, process 300 "Evaluate and manage financial performance") is the **wrong fit**; should be process id=807 "Manage contracts" or id=398 "Negotiate and document agreements / contracts". No mirror `data_object_relationships` row; Bucket 1 B8 fix needed (e.g. `engagement_letters scopes_into client_engagements`, `client_engagements references_letter engagement_letters`).
 
-#### AP-AUTO (edge weight 1) - one-line summary
+#### AP-AUTO (relationship weight 1) - one-line summary
 
 One outbound (340 `tax_return.filed` -> AP-AUTO with payload `supplier_invoices` id=75) for AP creation. NULL source + target module FKs. AP-AUTO has 0 modules per spot-check; target-side fix waits. **Payload mis-modeling concern**: the trigger event publishes on `tax_returns` (id=400) but the payload is `supplier_invoices` (id=75). Either (a) the handoff is mis-modeled and should fire on a different event (e.g. `tax_invoice.issued`), or (b) the handoff name should be redrawn (AP profile creation for a new client's payable workflow). Bucket 2 architectural decision.
 
-#### LEGAL-PRACT-MGMT (dependency-only, edge weight 1) - report-only
+#### LEGAL-PRACT-MGMT (dependency-only, relationship weight 1) - report-only
 
 `engagement_letters` (id=394) is mastered in LEGAL-PRACT-MGMT (id=150); ACCT-PRACT-MGMT consumes as contributor. No inbound handoff today. Report-only follow-up: LEGAL-PRACT-MGMT B9 owes outbound on `engagement_letter.signed` / `.executed` / `.terminated` to ACCT-PRACT-MGMT once both are modularized. Bucket 2 architectural decision: is the CPA-firm engagement letter conceptually the same master as the law-firm engagement letter (consolidated master, current shape) or should it split into a CPA-specific master (`acct_engagement_letters`) and a law-specific master (`legal_engagement_letters`)? Different obligations, different retention rules, different statutory anchors.
 
-#### WFM (dependency-only, edge weight 1) - report-only
+#### WFM (dependency-only, relationship weight 1) - report-only
 
 `time_entries` (id=162) is mastered in WFM (id=59); ACCT-PRACT-MGMT consumes as contributor (timekeeper data feeds engagement billing). No inbound handoff. Report-only follow-up: WFM B9 owes outbound on `time_entry.submitted` / `.approved` / `.locked` to ACCT-PRACT-MGMT once WFM is modularized.
 
-#### S2P (dependency-only, edge weight 1) - report-only
+#### S2P (dependency-only, relationship weight 1) - report-only
 
 `supplier_invoices` (id=75) is mastered in S2P (id=27); ACCT-PRACT-MGMT consumes as contributor. No inbound handoff. The dependency reading is non-obvious: a CPA practice's contributor role on S2P-mastered supplier invoices likely covers the firm's own AP (vendor invoices the firm pays) rather than client-side AP. Bucket 2 architectural review on the contributor row's scope.
 
-#### CRM (dependency-only, edge weight 1) - report-only
+#### CRM (dependency-only, relationship weight 1) - report-only
 
 `crm_contacts` (id=98) is mastered in CRM (id=69); ACCT-PRACT-MGMT consumes as contributor (client contact master upserts). No inbound handoff. Report-only: CRM B9 owes outbound on `crm_contact.upserted` / `.merged` to ACCT-PRACT-MGMT.
 
@@ -237,8 +237,8 @@ One outbound (340 `tax_return.filed` -> AP-AUTO with payload `supplier_invoices`
 | --- | --- | --- | --- |
 | B1-S1 | M1 | Zero `domain_modules` rows | Author the 5-module set (ACCT-ENGAGEMENT-LTR-MGMT, ACCT-WORKFLOW, ACCT-TAX-RETURNS, ACCT-CLIENT-PORTAL, ACCT-TIME-BILLING) per Pass-2 modularization. Bucket 2.1 confirms shape (4-vs-5 module split, separate TAX-RETURNS module yes / no, separate ACCT-DEADLINE-MGMT module yes / no) first. |
 | B1-S2 | A4 | `catalog_tagline` and `catalog_description` empty | Draft both in buyer voice per Rule #20; surface to user for approval (Bucket 2.2). |
-| B1-S3 | B6 | Zero intra-domain `data_object_relationships` | Draft 1 edge: `client_engagements scopes tax_returns` (cardinality 1:N, optional, source-master = client_engagements). The single relationship at the two-master level is minimal but load-bearing. Load via cluster-drafts pattern. |
-| B1-S4 | B7 | Zero `users` edges | Draft ~5 edges: `tax_returns.preparer -> users`, `tax_returns.reviewer -> users` (partner sign-off), `client_engagements.engagement_partner -> users`, `client_engagements.engagement_manager -> users`, `client_engagements.assigned_staff -> users`. |
+| B1-S3 | B6 | Zero intra-domain `data_object_relationships` | Draft 1 relationship: `client_engagements scopes tax_returns` (cardinality 1:N, optional, source-master = client_engagements). The single relationship at the two-master level is minimal but load-bearing. Load via cluster-drafts pattern. |
+| B1-S4 | B7 | Zero relationships to `users` | Draft ~5 relationships: `tax_returns.preparer -> users`, `tax_returns.reviewer -> users` (partner sign-off), `client_engagements.engagement_partner -> users`, `client_engagements.engagement_manager -> users`, `client_engagements.assigned_staff -> users`. |
 | B1-S5 | B9 (missing handoff or terminal-state annotation) | `client_engagement.commenced` (id=332) has zero `handoffs` rows | Decide: (a) author intra-domain handoffs once modules exist (commenced -> WORKFLOW module instantiating tasks, commenced -> CLIENT-PORTAL module provisioning portal access), OR (b) confirm the event is terminal-by-design (no downstream subscribers needed) and note rationale via Bucket 2 not via `trigger_events.notes` (Rule #15). Recommendation: option (a) once modules exist; the engagement-commenced transition almost always has at least one workflow / portal subscriber. |
 | B1-S6 | B9 (missing events) | Likely-missing trigger events on `tax_returns`: `tax_return.accepted_by_irs`, `tax_return.rejected_by_irs`, `tax_return.amended`. On `client_engagements`: `client_engagement.completed`, `client_engagement.terminated`. | Draft these 5 events with `event_category=lifecycle` (4) / `state_change` (`amended` could go either way; recommend `state_change`). Without these, the lifecycle states from B12 won't have corresponding event rows, and the practice-workflow story stops at `.filed` / `.commenced`. |
 | B1-S7 | B11 | Zero aliases on either master | Draft ~6 alias rows: `tax_returns` <-> "1040" (vendor / form-code, when the row carries a form-specific filter), "1120", "1065"; `client_engagements` <-> "Engagement" (universal industry term; Karbon / Canopy / TaxDome standard), "Job" (Jetpack Workflow), "Project" (some PM-flavored suites). The "Engagement" alias is the most load-bearing. |
@@ -251,7 +251,7 @@ One outbound (340 `tax_return.filed` -> AP-AUTO with payload `supplier_invoices`
 | --- | --- | --- | --- |
 | B1-B1 | B10b (outbound) | All 3 outbound handoffs have `source_domain_module_id=NULL` | Backfill once ACCT-PRACT-MGMT modules exist: handoff 338 (`tax_return.filed` -> GRC) routes from ACCT-TAX-RETURNS; handoff 339 (`engagement_letter.signed` -> CLM) routes from ACCT-ENGAGEMENT-LTR-MGMT; handoff 340 (`tax_return.filed` -> AP-AUTO) routes from ACCT-TAX-RETURNS (pending Bucket 2.4 payload review). |
 | B1-B2 | B10b (target side, CLM) | Handoff 339 `target_domain_module_id=NULL`; CLM has 5 modules | Backfill `target_domain_module_id` to CLM-REPOSITORY (id=127) as the natural landing module for the signed letter; if obligation extraction is in scope, also create a sibling handoff to CLM-OBLIGATION-MGMT (id=128). Actionable today since CLM is modularized. (Report-only-on-CLM if the user prefers to schedule CLM's own audit to own the backfill.) |
-| B1-B3 | B8 (CLM mirror) | No outbound `data_object_relationships` mirroring handoff 339 | Author edge `engagement_letters scopes_into client_engagements` and `client_engagements references_letter engagement_letters` (both intra-cluster relationships; the letter is the LEGAL-mastered artifact, the engagement is the ACCT-mastered workflow envelope). |
+| B1-B3 | B8 (CLM mirror) | No outbound `data_object_relationships` mirroring handoff 339 | Author relationship `engagement_letters scopes_into client_engagements` and `client_engagements references_letter engagement_letters` (both intra-cluster relationships; the letter is the LEGAL-mastered artifact, the engagement is the ACCT-mastered workflow envelope). |
 | B1-B4 | B8 (GRC mirror) | No outbound `data_object_relationships` for `tax_returns -> GRC` payload | Author `tax_returns reports_to <grc-tax-compliance-obligation>` once GRC's tax-compliance master is identified (likely a future `compliance_obligations` master under a GRC compliance-reporting module). For the audit, surface as deferred-pending-GRC-modularization. |
 
 #### APQC TAGGING
@@ -327,14 +327,14 @@ Subagent pass applied the technical-only slice of B1, deferring every item gated
 ### Applied (3 of 13 B1 items)
 
 - **B1-B2 (B10b target side, CLM).** PATCHed `handoffs.id=339` `target_domain_module_id` from NULL to `127` (CLM-REPOSITORY). FK derivable from existing CLM modules; no judgment needed.
-- **B1-S4 (B7 user-edges, Rule #10).** INSERTED 5 rows in `data_object_relationships` to `data_objects.users` (id=748, `kind=platform_builtin`). New row ids: 1662 (`tax_returns is prepared by users`), 1663 (`tax_returns is reviewed by users`), 1664 (`client_engagements is led by engagement partner users`), 1665 (`client_engagements is managed by engagement manager users`), 1666 (`client_engagements is staffed by users`, `many_to_many`). All `record_status` default `new`; first four `is_required=true`, fifth `false`.
+- **B1-S4 (B7 relationships to `users`, Rule #10).** INSERTED 5 rows in `data_object_relationships` to `data_objects.users` (id=748, `kind=platform_builtin`). New row ids: 1662 (`tax_returns is prepared by users`), 1663 (`tax_returns is reviewed by users`), 1664 (`client_engagements is led by engagement partner users`), 1665 (`client_engagements is managed by engagement manager users`), 1666 (`client_engagements is staffed by users`, `many_to_many`). All `record_status` default `new`; first four `is_required=true`, fifth `false`.
 - **B1-H1 (APQC tagging).** INSERTED 3 `handoff_processes` rows with `proposal_source='agent_curated'`, supplementing existing rows per the audit's "supplementing the existing rows" recommendation. New ids: 465 (handoff 338 -> process 328 `Process taxes`), 466 (handoff 339 -> process 807 `Manage contracts`), 467 (handoff 340 -> process 315 `Process accounts payable (AP)`). The wrong-fit existing row id=206 (`handoff 339 -> process 300`) was NOT deleted or PATCHed: the audit lists DELETE-and-replace vs. PATCH as a user-pick.
 
 ### Deferred (10 of 13 B1 items)
 
 - **B1-S1 (M1 modules).** Gated on Bucket 2.1 (4-vs-5-vs-6-vs-7 module split is a user pick).
 - **B1-S2 (A4 catalog UX).** Rule #20 requires user-approved buyer-voice wording before write.
-- **B1-S3 (B6 intra-domain edge).** Audit pre-specifies one edge (`client_engagements scopes tax_returns`) but the technical filter authorizes only `users` user-edges via Rule #10, not intra-domain edges.
+- **B1-S3 (B6 intra-domain relationship).** Audit pre-specifies one relationship (`client_engagements scopes tax_returns`) but the technical filter authorizes only relationships to `users` via Rule #10, not intra-domain relationships.
 - **B1-S5 (B9 missing handoff or terminal-state).** Audit poses an (a)/(b) decision.
 - **B1-S6 (B9 missing trigger_events).** Five new entity inserts; deferred under the new-entities filter.
 - **B1-S7 (B11 aliases).** Audit lists candidate aliases but does not pre-specify exact `(data_object_id, alias_name, alias_type)` tuples per row (vendor-shape annotations such as "Karbon / Canopy / TaxDome standard" require `alias_type` and optional `solution_id` judgment).
@@ -358,7 +358,7 @@ UI:
 
 ### Summary
 
-- **Current footprint:** still 0 `domain_modules` for `domain_id=152`. 2 masters (`tax_returns` id=400, `client_engagements` id=401), 4 contributors (`engagement_letters` id=394, `time_entries` id=162, `supplier_invoices` id=75, `crm_contacts` id=98), 6 capabilities, 8 primary solutions, 5 regulations (3 mandatory + 1 conditional + 1 recommended), 4 `business_function_domains`, 3 outbound handoffs + 0 inbound, 2 outbound `trigger_events` (event 332 `client_engagement.commenced` still has zero handoffs), 0 `data_object_lifecycle_states`, 5 user-edge `data_object_relationships` (ids 1662-1666 from the 2026-05-31 continuation), 0 intra-domain or cross-domain mirror relationships, 0 aliases on either master, 0 `domain_aliases`. Skill layer: 1 legacy `skills` row id=25 (`acct-pract-mgmt-system`, `skill_type=system`, `domain_module_id=null`) with 4 `skill_tools` (2 `query` platform, 1 `side_effect` platform `send_email`, 1 `side_effect` external `sign_document`). RBAC: 0 roles, 0 ACCT-PRACT-MGMT permissions (gated on M1). APQC: 6 `handoff_processes` rows across the 3 outbound handoffs (1 wrong-fit `agent_curated` row id=206 pointing handoff 339 -> process 300 "Evaluate and manage financial performance" still present alongside the corrected id=466 pointing to process 807 "Manage contracts"); 0 of 6 are `record_status=approved`.
+- **Current footprint:** still 0 `domain_modules` for `domain_id=152`. 2 masters (`tax_returns` id=400, `client_engagements` id=401), 4 contributors (`engagement_letters` id=394, `time_entries` id=162, `supplier_invoices` id=75, `crm_contacts` id=98), 6 capabilities, 8 primary solutions, 5 regulations (3 mandatory + 1 conditional + 1 recommended), 4 `business_function_domains`, 3 outbound handoffs + 0 inbound, 2 outbound `trigger_events` (event 332 `client_engagement.commenced` still has zero handoffs), 0 `data_object_lifecycle_states`, 5 relationship to `users` `data_object_relationships` (ids 1662-1666 from the 2026-05-31 continuation), 0 intra-domain or cross-domain mirror relationships, 0 aliases on either master, 0 `domain_aliases`. Skill layer: 1 legacy `skills` row id=25 (`acct-pract-mgmt-system`, `skill_type=system`, `domain_module_id=null`) with 4 `skill_tools` (2 `query` platform, 1 `side_effect` platform `send_email`, 1 `side_effect` external `sign_document`). RBAC: 0 roles, 0 ACCT-PRACT-MGMT permissions (gated on M1). APQC: 6 `handoff_processes` rows across the 3 outbound handoffs (1 wrong-fit `agent_curated` row id=206 pointing handoff 339 -> process 300 "Evaluate and manage financial performance" still present alongside the corrected id=466 pointing to process 807 "Manage contracts"); 0 of 6 are `record_status=approved`.
 - **Vendor surface basis:** same 8 flagships already loaded as `primary` (Karbon, Canopy, TaxDome, Jetpack Workflow, CCH Axcess Practice, Aiwyn, Liscio, Ignition). Specialist anchors for IRS Pub 4557 / GLBA / WISP duties are embedded across the suites, no standalone preparer-compliance vendor warrants enumeration. The Pass-2 enumeration from the 2026-05-30 audit still holds.
 - **Bucket 1 (b1a + b1b agent-actionable):** 14 items pending.
 - **Bucket 2 (user judgment):** 7 items.
@@ -388,7 +388,7 @@ Pass 2 enumeration unchanged from 2026-05-30: Karbon (cloud-native practice oper
 | 1 | M1 | Zero `domain_modules` rows | b1b | Bucket 2.1 (module-shape decision) |
 | 2 | A4 | `catalog_tagline` and `catalog_description` empty | b1b | Bucket 2.2 (user-approved buyer-voice wording per Rule #20) |
 | 3 | B4 | `tax_returns` pattern flags all false; candidates `has_personal_content=true`, `has_submit_lock=true`, `has_single_approver=true` | b1b | Bucket 2.3 |
-| 4 | B6 | Zero intra-domain `data_object_relationships`; missing edge `client_engagements scopes tax_returns` (cardinality 1:N, optional, source-master `client_engagements`) | b1a | actionable now via small INSERT |
+| 4 | B6 | Zero intra-domain `data_object_relationships`; missing relationship `client_engagements scopes tax_returns` (cardinality 1:N, optional, source-master `client_engagements`) | b1a | actionable now via small INSERT |
 | 5 | B9 (event 332) | `client_engagement.commenced` (event id=332) has zero handoff fan-out | b1b | M1 (intra-domain handoffs need modules) |
 | 6 | B9 (missing events) | Likely-missing `tax_return.accepted_by_irs`, `tax_return.rejected_by_irs`, `tax_return.amended`, `client_engagement.completed`, `client_engagement.terminated` | b1a | actionable (5 INSERT into `trigger_events`, `event_category=lifecycle` for 4 / `state_change` for `amended`) |
 | 7 | B11 | Zero aliases on both masters; candidates `tax_returns` <-> "1040" / "1120" / "1065", `client_engagements` <-> "Engagement" / "Job" / "Project" / "Matter" | b1b | Bucket 2.7 (alias_type vocabulary + per-row vendor-shape judgment) |
@@ -402,7 +402,7 @@ Pass 2 enumeration unchanged from 2026-05-30: Karbon (cloud-native practice oper
 | 10 | B10b (outbound, source side) | All 3 outbound handoffs (338, 339, 340) still have `source_domain_module_id=NULL` | b1b | M1 |
 | 11 | B10b (target side, GRC / AP-AUTO) | Handoffs 338 (-> GRC) and 340 (-> AP-AUTO) have `target_domain_module_id=NULL` | b1b | GRC + AP-AUTO modularization (both 0 modules per spot-check) |
 | 12 | B8 (CLM mirror) | Missing intra-cluster mirrors `engagement_letters scopes_into client_engagements` and `client_engagements references_letter engagement_letters` | b1b | Bucket 2.5 (engagement_letters master ownership) |
-| 13 | B8 (GRC mirror) | Missing `tax_returns reports_to <grc-tax-compliance-obligation>` payload edge | b1b | GRC modularization (no GRC obligations master identified yet) |
+| 13 | B8 (GRC mirror) | Missing `tax_returns reports_to <grc-tax-compliance-obligation>` payload relationship | b1b | GRC modularization (no GRC obligations master identified yet) |
 
 #### APQC TAGGING
 
@@ -452,7 +452,7 @@ Unchanged from 2026-05-30 enumeration; six candidate groups:
 
 ### Fixes applied during this audit
 
-None. This is a structural audit pass only; no writes were issued. The 2 b1a items above (B1-#4 intra-domain edge, B1-#6 new trigger events) are ready to load on the next agent pass if the user approves, but were not applied during the audit itself.
+None. This is a structural audit pass only; no writes were issued. The 2 b1a items above (B1-#4 intra-domain relationship, B1-#6 new trigger events) are ready to load on the next agent pass if the user approves, but were not applied during the audit itself.
 
 UI for spot-check (unchanged):
 - https://tests.semantius.app/domain_map/handoffs
@@ -464,7 +464,7 @@ UI for spot-check (unchanged):
 
 ### Summary
 
-M1 hard fail cured. ACCT-PRACT-MGMT (domain_id=152) went from 0 `domain_modules` to 3 `module_kind='full'` modules. Scope of this pass was modules + entity assignment ONLY: linked the 6 existing capabilities into modules, assigned the 6 existing `domain_data_objects` (2 master + 4 contributor) at their existing role + necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_acct_pract_mgmt_2026-06-02.ts` (idempotent; re-run is a no-op). All `semantius call crud postgrestRequest` calls returned cleanly; zero JWT errors.
+M1 hard fail cured. ACCT-PRACT-MGMT (domain_id=152) went from 0 `domain_modules` to 3 `module_kind='full'` modules. Scope of this pass was modules + entity assignment ONLY: related the 6 existing capabilities into modules, assigned the 6 existing `domain_data_objects` (2 master + 4 contributor) at their existing role + necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_acct_pract_mgmt_2026-06-02.ts` (idempotent; re-run is a no-op). All `semantius call crud postgrestRequest` calls returned cleanly; zero JWT errors.
 
 The prior audit's Pass-2 5-to-7-module proposal assumed new masters (acct_engagement_proposals, acct_workflow_templates / tasks, acct_client_documents / messages, acct_invoices / payment_transactions / retainer_balances, etc.) that remain Bucket 3 / Phase 0 candidates. Those entities are out of scope for a reuse-only modularization, so the practical Rule #14 floor with only the 6 existing data_objects is a 3-module split that keeps each capability placed, each master single-mastered, and no module empty. When the Bucket 3 entities land via a future Phase A/B pass, the 3 modules can be split further toward the 5-to-7 shape (notably carving ACCT-TAX-RETURNS out of TAX-RETURN-PREP, ACCT-ENGAGEMENT-LTR-MGMT out of ENGAGEMENT-WORKFLOW, and ACCT-CLIENT-PORTAL out of CLIENT-PORTAL-BILLING).
 
@@ -508,12 +508,12 @@ UI for spot-check:
 
 Agent pass executed the 3 agent-solvable b1a items. All `semantius call crud postgrestRequest` calls returned cleanly; zero JWT errors. `record_status` omitted on every insert (DB default `new`). No `notes`, `catalog_tagline`, or `catalog_description` written.
 
-### B1A-B6-INTRA-EDGE — DONE
+### B1A-B6-INTRA-RELATIONSHIP — DONE
 
 INSERTED 1 row into `data_object_relationships` (id=**2015**):
 - `client_engagements scopes tax_returns`: `data_object_id=401`, `related_data_object_id=400`, `relationship_verb='scopes'`, `inverse_verb='is scoped by'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, `owner_side='source'` (the engagement is the "one"/parent scoping many returns), `record_status='new'`.
 
-Verification: the intra-domain edge set between masters (400, 401) is now 1 row (was 0). B6 cured for the two-master domain.
+Verification: the intra-domain relationship set between masters (400, 401) is now 1 row (was 0). B6 cured for the two-master domain.
 
 ### B1A-B9-MISSING-EVENTS — DONE
 
@@ -545,7 +545,7 @@ Loader: `.tmp_deploy/fix_acct_pract_mgmt_module_skills_2026_06_05.ts` (idempoten
 - id=**265** `acct_pract_mgmt_tax_return_prep_agent` — module 208.
 - id=**266** `acct_pract_mgmt_client_portal_billing_agent` — module 209.
 
-**skill_tools links inserted** (10 rows, `record_status='new'`, `notes=''` per Rule #15):
+**skill_tools relationships inserted** (10 rows, `record_status='new'`, `notes=''` per Rule #15):
 - Skill 264 (module 207, masters client_engagements 401): `query_client_engagements`(288, required), `update_client_engagement`(1589, required), `notify_person`(913, optional).
 - Skill 265 (module 208, masters tax_returns 400): `query_tax_returns`(287, required), `update_tax_return`(1588, required), `sign_document`(42, required — e-signature IS the workflow per F7), `fetch_irs_acceptance_status`(1590, optional), `receive_webhook`(896, optional).
 - Skill 266 (module 209, carries time_entries 162 contributor): `query_time_entries`(780, required), `notify_person`(913, optional).
@@ -559,7 +559,7 @@ Per the F7 / channel-vs-capability rule, generic client notifications use the `n
   - id=319 → tool 288 `query_client_engagements` (required)
   - id=320 → tool 37 `send_email` (side_effect, platform) (required)
   - id=321 → tool 42 `sign_document` (side_effect, external) (required)
-- No `tools` rows were deleted (the catalog-wide `tools` table is shared; only the legacy skill's junction links were removed). Tools 287, 288, 42 are re-linked from the new module skills; tool 37 `send_email` is no longer linked from this domain (superseded by `notify_person`).
+- No `tools` rows were deleted (the catalog-wide `tools` table is shared; only the legacy skill's junction relationships were removed). Tools 287, 288, 42 are re-related from the new module skills; tool 37 `send_email` is no longer related from this domain (superseded by `notify_person`).
 
 ### Verification (live re-query)
 

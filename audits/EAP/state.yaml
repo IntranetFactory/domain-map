@@ -37,7 +37,7 @@ b2:
 
   - id: B2-EAP-PHASE-E
     summary: Author Phase E (personas + RACI) for EAP now, or leave deferred.
-    question: Author Phase E (domain_roles personas + process_raci) for EAP now?
+    question: Author Phase E (personas personas + process_raci) for EAP now?
     options: [yes, no]
     why: >-
       The user scoped this build to A+B+C+S, so Phase E was deferred. EAP is a multi-module

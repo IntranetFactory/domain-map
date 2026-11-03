@@ -9,7 +9,7 @@ Built (all `record_status='new'`):
 - **4 full modules**: PMM-COMPETITIVE-INTEL (385), PMM-LAUNCH-MGMT (386), PMM-MESSAGING (387), PMM-SALES-ENABLEMENT (388).
 - **7 capabilities RELOCATED** in (capability_domains re-pointed to PMM): LAUNCH-ORCHESTRATION (109, from GTM-PLAN) + LAUNCH-PLANNING (119), GTM-LAUNCH-COORDINATION (120), MESSAGING-AND-POSITIONING (121), SALES-ENABLEMENT-CONTENT (122), COMPETITIVE-INTELLIGENCE (123), WIN-LOSS-INTERVIEWS (124) (from PROD-MGMT). 7 domain_module_capabilities.
 - **17 masters** across the 4 modules (competitive_intelligence_records, battlecards, competitor_profiles, intel_sources, win_loss_interviews; launch_plans, product_launches, launch_milestones, readiness_checklists, launch_activities; messaging_frameworks, persona_definitions, value_propositions; sales_enablement_content, content_collections, enablement_trainings, content_engagement_events). win_loss_interviews + content_engagement_events flagged has_personal_content (GDPR/CPRA, no compliance entity needed). 24 lifecycle states on the 6 operational_workflow masters.
-- **5 flagship solutions** linked primary (Klue, Crayon, Highspot, Seismic, Aha! Roadmaps); Klue/Crayon/Highspot vendors created, Aha!/Seismic reused.
+- **5 flagship solutions** related primary (Klue, Crayon, Highspot, Seismic, Aha! Roadmaps); Klue/Crayon/Highspot vendors created, Aha!/Seismic reused.
 - **Phase C**: Marketing (owner), Product Management (contributor), Sales (consumer).
 - **Phase S**: pmm-system skill (domain-grain) + 10 query/mutate tools + notify_team, 11 domain_module_tools.
 

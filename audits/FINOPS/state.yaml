@@ -40,7 +40,7 @@ b1a:
   - id: B1A-A2
     summary: "FINOPS has zero capability_domains rows (A2 hard fail)."
     finding: "Live 2026-06-07 /capability_domains?domain_id=eq.41 returns 0 rows. Without capabilities the M4/M6 bipartite-coverage loop is unenforceable and the domain system-skill anchor surface is missing."
-    action: "Draft 6 to 8 capability rows + capability_domains links: FINOPS-COST-VISIBILITY, FINOPS-COST-ALLOCATION, FINOPS-ANOMALY-DETECTION, FINOPS-COMMITMENT-OPTIM, FINOPS-RIGHTSIZING, FINOPS-FORECASTING, FINOPS-UNIT-ECONOMICS, FINOPS-KUBE-COST-ALLOC. Decide cross-cutting status (FINOPS-COST-ALLOCATION is borderline)."
+    action: "Draft 6 to 8 capability rows + capability_domains relationships: FINOPS-COST-VISIBILITY, FINOPS-COST-ALLOCATION, FINOPS-ANOMALY-DETECTION, FINOPS-COMMITMENT-OPTIM, FINOPS-RIGHTSIZING, FINOPS-FORECASTING, FINOPS-UNIT-ECONOMICS, FINOPS-KUBE-COST-ALLOC. Decide cross-cutting status (FINOPS-COST-ALLOCATION is borderline)."
     blocked_by:
       - {type: user_decision, ref: B2-BUILD}
 
@@ -96,7 +96,7 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Personas / RACI deferred (does not apply to an UNBUILT domain)."
-    finding: "Phase P (personas, role_modules, process_raci, lifecycle.process_id) only applies after a multi-module build. FINOPS is UNBUILT, so personas are not authored. Candidate personas once built: FinOps Practitioner / Cloud Cost Analyst (owner), Engineering Cost Owner (contributor), Finance / FP&A Reviewer (approver of commitments)."
+    finding: "Phase P (personas, persona_modules, process_raci, lifecycle.process_id) only applies after a multi-module build. FINOPS is UNBUILT, so personas are not authored. Candidate personas once built: FinOps Practitioner / Cloud Cost Analyst (owner), Engineering Cost Owner (contributor), Finance / FP&A Reviewer (approver of commitments)."
     action: "After B1A-M1 lands a multi-module shape, run Phase P. Until then, do NOT author personas."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-M1}
@@ -151,7 +151,7 @@ b2:
 
   - id: B2-FOCUS-REG
     summary: "Add the FinOps cost-data interchange spec as a regulations row (industry_standard)?"
-    question: "Live 2026-06-07 /regulations?regulation_name=ilike.*FOCUS* returns 0 rows. Add the FinOps billing-data normalization spec as a regulations row with applicability=industry_standard and link via domain_regulations to FINOPS?"
+    question: "Live 2026-06-07 /regulations?regulation_name=ilike.*FOCUS* returns 0 rows. Add the FinOps billing-data normalization spec as a regulations row with applicability=industry_standard and relate via domain_regulations to FINOPS?"
     options:
       - "(a) Add as industry_standard regulation; consistent with PCI-DSS / FedRAMP precedent."
       - "(b) Skip; keep regulations strictly statutory + standards-body."

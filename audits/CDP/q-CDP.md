@@ -23,17 +23,17 @@ q2: How should lifecycle states be authored across the six CDP masters? Five of 
 - b) A different split (specify which masters get lifecycles).
 - c) All five masters get lifecycles (specify the state lists).
 
-Recommended: a. The two workflow masters have real state machines; the other three are config-shape and warrant a Rule #12 exemption, which needs your explicit acknowledgement.
+Recommended: a. The two workflow masters have real state machines; the other three are config-shape and warrant a Rule #12 exemption, which needs your explicit acknowledgment.
 
 a2:
 
 ---
 
-q3: The `customers` master has two state machines collapsed onto one (engagement: prospect, active, inactive, churned; billing: prospect, active, past_due, cancelled), which is why `state_order` 3 and 4 each appear twice. How should this be untangled?
+q3: The `customers` master has two state machines collapsed onto one (engagement: prospect, active, inactive, churned; billing: prospect, active, past_due, canceled), which is why `state_order` 3 and 4 each appear twice. How should this be untangled?
 
 - a) Re-order into a single linear sequence on `customers`.
 - b) Split into two explicit state machines on the same master (an engagement axis and a billing axis).
-- c) Move the billing states (past_due, cancelled) to a SUB-MGMT-mastered entity and leave only the engagement states on `customers`.
+- c) Move the billing states (past_due, canceled) to a SUB-MGMT-mastered entity and leave only the engagement states on `customers`.
 
 Recommended: b. Engagement and billing are conceptually independent lifecycles; keeping both on the master but as distinct axes restores the disambiguation that the collapse lost.
 
@@ -52,7 +52,7 @@ a4:
 
 ---
 
-q5: How should Composable / warehouse-native CDP (reverse-ETL) be classified? It is currently a capability linked into the Segmentation and Activation module.
+q5: How should Composable / warehouse-native CDP (reverse-ETL) be classified? It is currently a capability related into the Segmentation and Activation module.
 
 - a) Keep it as a CDP capability (current state).
 - b) Split it into a separate REVERSE-ETL domain (Hightouch, Census, RudderStack, Polytomic, and Grouparoo pass the 3-vendor point-solution test).
@@ -104,7 +104,7 @@ a10:
 
 ---
 
-q11: Should LGPD (Brazil) be linked to CDP via `domain_regulations`? The regulation row does not exist yet and would need creating first. (yes/no)
+q11: Should LGPD (Brazil) be related to CDP via `domain_regulations`? The regulation row does not exist yet and would need creating first. (yes/no)
 
 Recommended: yes if you serve Brazilian data subjects. Flagship CDP vendors market against LGPD.
 
@@ -112,7 +112,7 @@ a11:
 
 ---
 
-q12: Should IAB TCF v2 (the ad-tech transparency and consent framework) be linked to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
+q12: Should IAB TCF v2 (the ad-tech transparency and consent framework) be related to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
 
 Recommended: yes if any vendor passes consent strings; otherwise skip.
 
@@ -120,7 +120,7 @@ a12:
 
 ---
 
-q13: Should Quebec Law 25 be linked to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
+q13: Should Quebec Law 25 be related to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
 
 Recommended: yes if you serve Quebec residents; otherwise skip.
 
@@ -128,7 +128,7 @@ a13:
 
 ---
 
-q14: Should POPIA (South Africa) be linked to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
+q14: Should POPIA (South Africa) be related to CDP? The regulation row does not exist yet and would need creating first. (yes/no)
 
 Recommended: yes if you serve South African data subjects; otherwise skip.
 

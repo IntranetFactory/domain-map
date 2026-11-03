@@ -9,7 +9,7 @@ Your last answers settled the Delivery Ops shape, the no-CRM-handoff call, the p
 
 ---
 
-q1: (answer this first) Five "consumer" links let one module read a master a sibling module owns (for example Delivery Ops reading CSA share packs, wholesale orders, and butcher orders). You asked whether embedded master would be better. It is, for any module you want to deploy on its own. How should these be shaped?
+q1: (answer this first) Five "consumer" relationships let one module read a master a sibling module owns (for example Delivery Ops reading CSA share packs, wholesale orders, and butcher orders). You asked whether embedded master would be better. It is, for any module you want to deploy on its own. How should these be shaped?
 
 - a) Promote the ones that should run standalone to embedded master (Delivery Ops is the clearest: it reads four sibling masters, so an embedded shell lets it ship without the CSA, Wholesale, and Butcher modules and defer to them when they are installed). Tell me which.
 - b) Keep all five as accurate cross-module reads (valid if you do not need per-module standalone deploy; the nine intra-domain handoffs already wire the flows).

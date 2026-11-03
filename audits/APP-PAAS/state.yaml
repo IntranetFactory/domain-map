@@ -21,7 +21,7 @@
 # Fly.io / Railway / Vercel provision managed databases/caches/queues directly with no marketplace).
 # Reversal: keep it as its own capability (provisioning a backing service is a distinct workflow,
 # do NOT fold into env-mgmt) but rename it for the UNIVERSAL shape (managed-service / backing-service
-# attachment) rather than the marketplace. q1 (RUNTIME vs DELIVERY split), q2 (link LCAP-MANAGED-RUNTIME),
+# attachment) rather than the marketplace. q1 (RUNTIME vs DELIVERY split), q2 (relationship LCAP-MANAGED-RUNTIME),
 # q4/q5 (deployment/build immutability), q6 (addon credentials), q7 (instance config-shape, with the
 # Fly.io Machine counter-evidence surfaced), q8 (consumer DMDO), and q11-q14 (release versions / config
 # vars / log streams / custom domains, all confirmed Core in the surface matrix) were CONFIRMED and
@@ -58,7 +58,7 @@ b1a:
       on all 7 trigger_events, catalog UX on the domain row, 17 generic data_object_aliases);
       everything that remains is gated on the module split (B2-S1) or is a destructive judgment
       call surfaced to the user.
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill (skill 30 already exists in the correct shape). If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-S1."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill (skill 30 already exists in the correct shape). If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-S1."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -72,14 +72,14 @@ b1b:
       (masters paas_applications 463, paas_environments 465, paas_runtime_instances
       466, paas_addons 467) and APP-PAAS-DELIVERY (masters paas_deployments 464,
       paas_build_records 468). Proposed capability set under B2-S1: managed runtime
-      (link to existing LCAP-MANAGED-RUNTIME id 333 or author parallel),
+      (relate to existing LCAP-MANAGED-RUNTIME id 333 or author parallel),
       autoscaling, environment management, addon marketplace on RUNTIME; build
       pipeline, deploy/release on DELIVERY.
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     action: >
       After B2-S1 lands: author 2 domain_modules rows + 5-7 capabilities rows +
-      capability_domains links + domain_module_capabilities links + 6
+      capability_domains relationships + domain_module_capabilities relationships + 6
       domain_module_data_objects master rows in a focused loader.
     affected_modules: []
     affected_masters:
@@ -114,8 +114,8 @@ b1b:
   - id: B1B-S4-INTRA-DOMAIN-RELS
     summary: "B6 hard-fail; zero master-master intra-domain data_object_relationships"
     finding: >
-      Only the 5 users-edges (1617-1621) loaded by the 2026-05-31 continuation exist
-      on APP-PAAS masters. Zero master-master edges. Minimum coherent edge set of 7
+      Only the 5 relationships to users (1617-1621) loaded by the 2026-05-31 continuation exist
+      on APP-PAAS masters. Zero master-master relationships. Minimum coherent relationship set of 7
       rows: (a) paas_applications has_environments paas_environments 1:N; (b)
       paas_applications has_deployments paas_deployments 1:N; (c) paas_applications
       has_addons paas_addons 1:N; (d) paas_deployments produces paas_runtime_instances
@@ -123,7 +123,7 @@ b1b:
       paas_build_records); (f) paas_environments hosts paas_runtime_instances 1:N;
       (g) paas_environments scopes paas_deployments 1:N.
     blocked_by:
-      - {type: depends_on, ref: B1B-S1-MODULES-CAPABILITIES, reason: "module attribution informs is_required + owner_side annotations on some edges"}
+      - {type: depends_on, ref: B1B-S1-MODULES-CAPABILITIES, reason: "module attribution informs is_required + owner_side annotations on some relationships"}
     action: >
       Author 7 data_object_relationships rows via the cluster-drafts loader pattern.
       Draft block (verb + inverse + cardinality + is_required + owner_side) goes
@@ -136,7 +136,7 @@ b1b:
       The 2026-06-07 pass loaded 17 clearly-generic cross-PaaS synonyms (alias_type='synonym')
       across all 6 masters (app/project/service/site, deploy/release/rollout, environment/
       deployment stage, instance/runtime/worker, add-on/managed service/plugin, build/build job).
-      What remains are the vendor-brand-specific alias tuples that need a solution_id link and
+      What remains are the vendor-brand-specific alias tuples that need a solution_id relationship and
       pre-specified exact tuples per the loader-prompt scope: e.g. Heroku "dyno" /
       "config vars" / "log drains", Fly.io "machine", App Engine "version", Vercel
       "integration", Render "managed service" (already generic), Azure App Service
@@ -240,7 +240,7 @@ b1b:
       (paas_build_records -> VSDP master TBD); handoff 798 (paas_addons -> SAM
       master TBD).
     blocked_by:
-      - {type: depends_on, ref: B1B-S4-INTRA-DOMAIN-RELS, reason: "intra-domain edges should land first to anchor the relationship cluster"}
+      - {type: depends_on, ref: B1B-S4-INTRA-DOMAIN-RELS, reason: "intra-domain relationships should land first to anchor the relationship cluster"}
     action: >
       After B1B-S4: author the 3 fully-resolved cross-domain rows; defer the 4
       pending rows to a one-query target-master verification pass against ITOM /
@@ -278,15 +278,15 @@ b2:
     summary: "Module split + capability shape decision"
     question: >
       (a) Approve the proposed 2-module split APP-PAAS-RUNTIME (masters 463/465/466/467)
-      + APP-PAAS-DELIVERY (masters 464/468), or propose alternative? (b) Link to
+      + APP-PAAS-DELIVERY (masters 464/468), or propose alternative? (b) Relate to
       existing cross-cutting LCAP-MANAGED-RUNTIME (id 333) or author parallel
       APP-PAAS-MANAGED-RUNTIME? Rule #18 cross-cutting-capability convention says
-      >=3-domain shared capability earns the neutral name; today only LCAP links to
+      >=3-domain shared capability earns the neutral name; today only LCAP relates to
       333 and APP-PAAS would make it 2, holding at 2 vs renaming to MANAGED-RUNTIME
       is a Rule #18 call. (c) Keep the add-on capability as its own top-level line
       named for managed-service / backing-service attachment (NOT "marketplace"), name
       it for the marketplace surface, or fold into APP-PAAS-ENV-MGMT?
-    options: ["approve 2-module split + link 333", "approve 2-module split + author APP-PAAS-MANAGED-RUNTIME", "rename 333 to MANAGED-RUNTIME (link both)", "alternative split", "addon capability = managed-service-attachment naming", "addon capability = marketplace naming", "fold addon capability into ENV-MGMT"]
+    options: ["approve 2-module split + relationship 333", "approve 2-module split + author APP-PAAS-MANAGED-RUNTIME", "rename 333 to MANAGED-RUNTIME (relate both)", "alternative split", "addon capability = managed-service-attachment naming", "addon capability = marketplace naming", "fold addon capability into ENV-MGMT"]
     why: >
       Cross-cutting decision is a Rule #18 call; module split shapes downstream Phase
       B / E / F authoring on every subsequent state.yaml item. This is the master
@@ -297,7 +297,7 @@ b2:
       is "attach a managed backing service", not "marketplace". Recommendation: keep it
       as its own capability (distinct workflow, do NOT fold into env-mgmt) but name it
       for the universal managed-service-attachment shape. Module split (q1) and
-      LCAP-MANAGED-RUNTIME link (q2) CONFIRMED by Phase 0 (Beanstalk app-version-vs-environment
+      LCAP-MANAGED-RUNTIME relationship (q2) CONFIRMED by Phase 0 (Beanstalk app-version-vs-environment
       + App Engine version-vs-instance ground the RUNTIME/DELIVERY split; APP-PAAS + LCAP
       share the managed-runtime shape at 2 domains, below the >=3 neutral-name threshold).
 

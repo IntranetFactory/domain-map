@@ -48,7 +48,7 @@ a4:
 
 ---
 
-q5: One incoming link (from Document Management) was auto-tagged to a process category called "Document trade", almost certainly a mistake (it matched the word "trade"). A correct tag, "Deliver approved content", is already in place. Should I remove the wrong tag? (yes/no)
+q5: One incoming relationship (from Document Management) was auto-tagged to a process category called "Document trade", almost certainly a mistake (it matched the word "trade"). A correct tag, "Deliver approved content", is already in place. Should I remove the wrong tag? (yes/no)
 
 Recommended: yes. It is a cleanup; removing a tag is a deletion, so I need your OK.
 
@@ -72,7 +72,7 @@ a7:
 
 ---
 
-q8: 17 cross-domain "knowledge flow" links have been drafted and are waiting for your sign-off to become final (for example: when an HR case resolves, feed it to the knowledge base; when an article publishes, notify Customer Service). Should I approve all 17? (yes/no)
+q8: 17 cross-domain "knowledge flow" relationships have been drafted and are waiting for your sign-off to become final (for example: when an HR case resolves, feed it to the knowledge base; when an article publishes, notify Customer Service). Should I approve all 17? (yes/no)
 
 Recommended: yes. I cannot approve my own drafts; your OK flips them to final.
 
@@ -80,13 +80,13 @@ a8:
 
 ---
 
-q10: Two incoming links from HR Service Management (when an HR case resolves, and when a case category updates) were tagged to the wrong process categories ("enterprise knowledge management capability" and "harvest knowledge"). The work they actually represent is already tracked under "manage employee inquiry process". Should I move those two tags to the correct process, or just remove them?
+q10: Two incoming relationships from HR Service Management (when an HR case resolves, and when a case category updates) were tagged to the wrong process categories ("enterprise knowledge management capability" and "harvest knowledge"). The work they actually represent is already tracked under "manage employee inquiry process". Should I move those two tags to the correct process, or just remove them?
 
 - a) Move both tags to "manage employee inquiry process"
 - b) Remove both tags
 - c) Leave them for now
 
-Recommended: a. The work is real and already has a home, so re-pointing keeps the link accurate. Either moving or removing is a change to existing records, so I need your OK before doing it.
+Recommended: a. The work is real and already has a home, so re-pointing keeps the relationship accurate. Either moving or removing is a change to existing records, so I need your OK before doing it.
 
 a10:
 

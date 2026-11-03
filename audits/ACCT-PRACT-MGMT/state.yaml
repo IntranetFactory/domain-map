@@ -39,10 +39,10 @@ last_audit: "2026-06-13"
 # add the two new B9d questions; b3 candidate groups unchanged.
 # --- prior pass ---
 # 2026-06-05 b1a execution: all 3 agent-solvable items resolved.
-# - B1A-B6-INTRA-EDGE: inserted data_object_relationships id=2015 (client_engagements scopes tax_returns).
+# - B1A-B6-INTRA-RELATIONSHIP: inserted data_object_relationships id=2015 (client_engagements scopes tax_returns).
 # - B1A-B9-MISSING-EVENTS: inserted trigger_events ids 1493-1497 (3 on tax_returns, 2 on client_engagements).
 # - B1A-MODULE-SKILLS: authored skills 264/207, 265/208, 266/209 (skill_type=system); created tools
-#   update_tax_return(1588), update_client_engagement(1589), fetch_irs_acceptance_status(1590); linked
+#   update_tax_return(1588), update_client_engagement(1589), fetch_irs_acceptance_status(1590); related
 #   10 skill_tools (reusing query_*/notify_person/receive_webhook/sign_document); retired legacy skill
 #   id=25 + its 4 skill_tools. The catalog-UX sub-concern of B1A-MODULE-SKILLS (empty catalog_tagline/
 #   catalog_description on modules 207/208/209 and domains.id=152) was NOT written per Rule #20; it
@@ -96,9 +96,9 @@ b1b:
       - {handoff_id: 340, direction: outbound, source_domain: "ACCT-PRACT-MGMT", target_domain: "AP-AUTO", trigger_event: "tax_return.filed", payload: "supplier_invoices", null_field: "target_domain_module_id"}
   - id: B1B-B8-CLM-MIRROR
     summary: "Missing intra-cluster mirrors engagement_letters scopes_into client_engagements and client_engagements references_letter engagement_letters."
-    finding: "Handoff 339 (engagement_letter.signed -> CLM) lacks supporting data_object_relationships rows linking engagement_letters (id=394, LEGAL-PRACT-MGMT-mastered, contributor in module 207) to client_engagements (id=401, ACCT-PRACT-MGMT-mastered in module 207). The mirror edge is load-bearing for the workflow graph. Source master ownership depends on whether engagement_letters splits, stays consolidated, or is renamed (B2-LETTERS-OWNERSHIP)."
+    finding: "Handoff 339 (engagement_letter.signed -> CLM) lacks supporting data_object_relationships rows relating engagement_letters (id=394, LEGAL-PRACT-MGMT-mastered, contributor in module 207) to client_engagements (id=401, ACCT-PRACT-MGMT-mastered in module 207). The mirror relationship is load-bearing for the workflow graph. Source master ownership depends on whether engagement_letters splits, stays consolidated, or is renamed (B2-LETTERS-OWNERSHIP)."
     blocked_by:
-      - {type: user_decision, ref: B2-LETTERS-OWNERSHIP, reason: "Master ownership choice changes which domain authors the relationship edge."}
+      - {type: user_decision, ref: B2-LETTERS-OWNERSHIP, reason: "Master ownership choice changes which domain authors the relationship."}
     affected_entities: ["data_object_relationships", "engagement_letters", "client_engagements"]
     affected_handoffs:
       - {handoff_id: 339, direction: outbound, source_domain: "ACCT-PRACT-MGMT", target_domain: "CLM", trigger_event: "engagement_letter.signed", payload: "engagement_letters", null_field: null}

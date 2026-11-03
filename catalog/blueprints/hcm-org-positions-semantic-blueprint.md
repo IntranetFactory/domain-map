@@ -29,7 +29,7 @@ Organization design: org units, positions, and job profiles. Effective-dated org
 | Name | data_object | Description |
 | --- | --- | --- |
 | Job Profiles | `job_profiles` | Canonical role definitions in the job catalog: title, family, level, responsibilities, required skills, pay range, and FLSA class. Many positions share one profile. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 | Positions | `hcm_positions` | Approved org slots with role definition, cost center, reporting line, location, and FTE allocation. Each can be open, filled, or eliminated. |
 | Cost Centers | `cost_centers` | Organizational units for cost allocation, with code, manager, hierarchy, and currency, driving variance and departmental reporting. |
 | Financial Plans | `financial_plans` | Umbrella records for financial planning artifacts: annual budget, rolling forecast, and long-range plan, with period, version, and approval state. |
@@ -74,7 +74,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `job_profiles` | `job_profiles` | Job Profile | Job Profiles | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `org_units` | `org_units` | Org Unit | Org Units | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -89,7 +89,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -100,7 +100,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `org_units` | maps_to | `cost_centers` | one_to_one | reference | optional | source | clear | reference | - |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -111,7 +111,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `job_requisitions` | has recruiter and hiring manager | `users` | many_to_many | required | source | restrict | reference | - |
 | `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -143,7 +143,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -168,7 +168,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `hcm_positions` | ATS-RECRUITMENT-PIPELINE (Recruitment Pipeline) - ATS | embedded_master | optional | - |
 | `hcm_positions` | COMP-BENCHMARKING (Benchmarking and Pay Equity) - COMP-MGMT | embedded_master | optional | - |
@@ -281,7 +281,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.merged` | _(state_change)_ | `org_units` | api_call | high | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
 | HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
-| HCM-ORG-POSITIONS | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile links to salary bands; COMP-MGMT mapping authoritative. |
+| HCM-ORG-POSITIONS | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile relates to salary bands; COMP-MGMT mapping authoritative. |
 | HCM-ORG-POSITIONS | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
 | HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.activated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile activated for production. PSA makes the role assignable on new project_assignments and project_resource_allocations. |
 | HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | New job profile published. PSA picks up the role definition (competencies, level) as a new shape for skill-based demand modeling and resource_skill_inventories matching. |
@@ -300,7 +300,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `cost_centers` | contributor | optional | FIN-GL-CLOSE (FIN) | - |
 | `financial_plans` | consumer | optional | EPM-PLAN-BUDGET (EPM) | - |
@@ -358,7 +358,7 @@ _This scope holds `job_requisitions` as **consumer**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `hcm-org-positions:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `hcm-org-positions:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 

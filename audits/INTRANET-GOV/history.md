@@ -43,9 +43,9 @@ in `.tmp_deploy/INTRANET-GOV-market-surface-2026-06-10.md`.
 - **B1-B14 (data-object footprint):** 6 masters - connected_intranets (catalog), 
   intranet_content_inventory_records (operational_record), intranet_content_types (catalog),
   intranet_content_health_scores (computed), intranet_content_ownership_assignments (junction),
-  intranet_content_attestations (operational_workflow, has_single_approver). All labelled (B2),
+  intranet_content_attestations (operational_workflow, has_single_approver). All labeled (B2),
   prefixed/named cleanly (B3), entity_type classified (B13), pattern flags considered (B4). embedded_master
-  integrity holds (B5). Intra-domain relationships present (B6); users edges present (B7: owner on
+  integrity holds (B5). Intra-domain relationships present (B6); relationships to `users` present (B7: owner on
   assignments, attester on attestations). Aliases on the non-self-explanatory masters (B11). Lifecycle on
   the one operational_workflow master is a clean 5-state machine: pending(initial) ->
   attested_current / flagged_stale -> remediated -> archived(terminal), gates wired to custom process
@@ -104,7 +104,7 @@ because the market is white-space (substrate borrowed from M365-bound neighbors)
 
 ### Pairwise reconciliation — INTRANET-GOV <-> WORK-MGMT (135), light neighbor
 
-Single cross-domain edge: handoff 1433 (flagged_stale -> create work_item in WORK-MGMT-TASK-EXEC 149).
+Single cross-domain relationship: handoff 1433 (flagged_stale -> create work_item in WORK-MGMT-TASK-EXEC 149).
 - **Phase 1 (structural gate):** all four legs sound. Producer master 1047 + flagged_stale gate state;
   trigger_event 1659; handoff row with both module FKs (336, 149); the payload work_items is mastered by
   the target (149) and embedded_master+optional in 336. PASS. WORK-MGMT declares no role on any INTGOV
@@ -112,12 +112,12 @@ Single cross-domain edge: handoff 1433 (flagged_stale -> create work_item in WOR
 - **Phase 2 (semantic):** payload now tagged 13.6.4.6 "Track content non-compliance resolution". On the
   WORK-MGMT side the created work item executes through ordinary task management (WORK-MGMT-TASK-EXEC has
   its own personas), i.e. ROLL-UP to generic task execution rather than a content-non-compliance-specific
-  realized process. For a single low-weight edge this is the honest verdict; no cross-domain persona
+  realized process. For a single low-weight relationship this is the honest verdict; no cross-domain persona
   authored. No ORPHAN/MIS-TAG. Boundary reconciled (light-neighbor condensed verdict).
 
 ### Minor observations (not open items)
 
-- **B6b verb direction (soft):** three composition edges on the inventory record read child-to-parent
+- **B6b verb direction (soft):** three composition relationships on the inventory record read child-to-parent
   ("intranet_content_inventory_records is governed by / is attested by / is scored by ..."). owner_side=source
   is correct (1043 is the parent); only the forward-verb phrasing is inverted. Soft warning, never blocks;
   left as-is (the fix is an overwrite of existing verb columns - not done unprompted).

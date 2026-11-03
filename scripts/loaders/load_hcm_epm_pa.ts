@@ -132,7 +132,7 @@ const hcmDataObjects = [
 
 const dataObjMap = await syncByKey("/data_objects", hcmDataObjects, "data_object_name");
 
-// HCM master links
+// HCM master relationships
 const existingDDO_HCM = await get(
   `/domain_data_objects?domain_id=eq.${did("HCM")}&select=data_object_id&limit=10000`,
 );
@@ -140,9 +140,9 @@ const existingHCMSet = new Set(existingDDO_HCM.map(r => Number(r.data_object_id)
 const hcmMasterRows = hcmDataObjects
   .map(o => dataObjMap.get(o.data_object_name)!)
   .filter(id => !existingHCMSet.has(id))
-  .map(id => ({ domain_id: did("HCM"), data_object_id: id, role: "master", notes: "" }));
+  .map(id => ({ domain_id: did("HCM"), data_object_id: id, held_as: "master", notes: "" }));
 if (hcmMasterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${hcmMasterRows.length} HCM-master links`);
+  console.log(`  /domain_data_objects: inserting ${hcmMasterRows.length} HCM-master relationships`);
   await insertChunked("/domain_data_objects", hcmMasterRows);
 }
 
@@ -166,7 +166,7 @@ const epmDataObjects = [
     plural_label: "Budgets",
     display_label: "Budget",
     description:
-      "Approved annual or quarterly budget by org unit, cost center, account, and period. Once approved, drives spend authorisation downstream (procurement, headcount, capex). Plan-vs-actual variance is the operational output.",
+      "Approved annual or quarterly budget by org unit, cost center, account, and period. Once approved, drives spend authorization downstream (procurement, headcount, capex). Plan-vs-actual variance is the operational output.",
   },
   {
     data_object_name: "forecasts",
@@ -204,9 +204,9 @@ const existingEPMSet = new Set(existingDDO_EPM.map(r => Number(r.data_object_id)
 const epmMasterRows = epmDataObjects
   .map(o => dataObjMap.get(o.data_object_name)!)
   .filter(id => !existingEPMSet.has(id))
-  .map(id => ({ domain_id: did("EPM"), data_object_id: id, role: "master", notes: "" }));
+  .map(id => ({ domain_id: did("EPM"), data_object_id: id, held_as: "master", notes: "" }));
 if (epmMasterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${epmMasterRows.length} EPM-master links`);
+  console.log(`  /domain_data_objects: inserting ${epmMasterRows.length} EPM-master relationships`);
   await insertChunked("/domain_data_objects", epmMasterRows);
 }
 
@@ -246,7 +246,7 @@ const paDataObjects = [
     plural_label: "Engagement Surveys",
     display_label: "Engagement Survey",
     description:
-      "Employee engagement, pulse, and sentiment survey responses. Mastered by PA (or by a specialised engagement vendor when used — Culture Amp, Qualtrics EmployeeXM, Workday Peakon). Drives segment-level engagement scoring and intervention triggers.",
+      "Employee engagement, pulse, and sentiment survey responses. Mastered by PA (or by a specialized engagement vendor when used — Culture Amp, Qualtrics EmployeeXM, Workday Peakon). Drives segment-level engagement scoring and intervention triggers.",
   },
   {
     data_object_name: "predictive_models",
@@ -268,9 +268,9 @@ const existingPASet = new Set(existingDDO_PA.map(r => Number(r.data_object_id)))
 const paMasterRows = paDataObjects
   .map(o => dataObjMap.get(o.data_object_name)!)
   .filter(id => !existingPASet.has(id))
-  .map(id => ({ domain_id: did("PA"), data_object_id: id, role: "master", notes: "" }));
+  .map(id => ({ domain_id: did("PA"), data_object_id: id, held_as: "master", notes: "" }));
 if (paMasterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${paMasterRows.length} PA-master links`);
+  console.log(`  /domain_data_objects: inserting ${paMasterRows.length} PA-master relationships`);
   await insertChunked("/domain_data_objects", paMasterRows);
 }
 
@@ -279,41 +279,41 @@ if (paMasterRows.length > 0) {
 // =============================================================================
 console.log("\n=== Phase D: multi-master Signal-1 rows ===");
 
-// Each row: (data_object_name, domain_code, role, notes)
+// Each row: (data_object_name, domain_code, held_as, notes)
 const multiMaster = [
   // employees — 3-way master + consumers
   {
     data_object_name: "employees",
     domain: "PAYROLL",
-    role: "master",
+    held_as: "master",
     notes:
       "Comp / withholding / payable slice — gross-to-net rules, deductions, tax setup, bank account, pay history. HCM masters the core HR record, Payroll masters the payable view, IGA masters the identity view.",
   },
   {
     data_object_name: "employees",
     domain: "IGA",
-    role: "master",
+    held_as: "master",
     notes:
       "Identity / access slice — directory account, group memberships, role assignments, entitlements, last-login. HCM masters the core HR record, Payroll masters the payable view, IGA masters the identity view.",
   },
   {
     data_object_name: "employees",
     domain: "PA",
-    role: "consumer",
+    held_as: "consumer",
     notes:
       "Read-only — derives KPIs and cohorts from the canonical record. Does not author any slice.",
   },
   {
     data_object_name: "employees",
     domain: "ONBOARDING",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Writes onboarding-state fields (pre-board start, Day-1 reached, milestones) during the journey window. Does not master core HR fields.",
   },
   {
     data_object_name: "employees",
     domain: "TALENT-MGMT",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Writes talent-specific fields (career aspirations, mobility preferences, succession status) but does not master the core HR record.",
   },
@@ -321,7 +321,7 @@ const multiMaster = [
   {
     data_object_name: "positions",
     domain: "SWP",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Contributes proposed positions via org_designs and headcount approvals; HCM operationalizes them as canonical position records. SWP does not master positions themselves — the intent lives in org_designs.",
   },
@@ -329,7 +329,7 @@ const multiMaster = [
   {
     data_object_name: "org_units",
     domain: "EPM",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Cost-center alignment slice. EPM contributes the financial mapping that org_units need to support variance reporting. (A future Finance/GL domain would master cost_centers proper.)",
   },
@@ -337,7 +337,7 @@ const multiMaster = [
   {
     data_object_name: "job_profiles",
     domain: "TALENT-MGMT",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Contributes the skills/competencies slice — the required capability profile for the role, used in succession and internal-mobility matching. HCM masters the operational profile.",
   },
@@ -345,7 +345,7 @@ const multiMaster = [
   {
     data_object_name: "employment_events",
     domain: "PA",
-    role: "consumer",
+    held_as: "consumer",
     notes:
       "Reads the event stream to compute time-based metrics (tenure, time-in-level, time-to-promotion).",
   },
@@ -354,7 +354,7 @@ const multiMaster = [
   {
     data_object_name: "financial_plans",
     domain: "SWP",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Workforce cost contribution — workforce_cost_projections feed the people-cost line of the financial plan via the cost_projection.approved handoff.",
   },
@@ -362,19 +362,19 @@ const multiMaster = [
   {
     data_object_name: "people_kpis",
     domain: "HCM",
-    role: "consumer",
+    held_as: "consumer",
     notes: "Surfaces operational HR KPIs in manager and HR-business-partner views.",
   },
   {
     data_object_name: "people_kpis",
     domain: "SWP",
-    role: "consumer",
+    held_as: "consumer",
     notes: "Consumes attrition rate, fill rate, span-of-control to update plan assumptions.",
   },
 ];
 
 const existingMM = await get(
-  "/domain_data_objects?select=domain_id,data_object_id,role&limit=20000",
+  "/domain_data_objects?select=domain_id,data_object_id,held_as&limit=20000",
 );
 const existingMMKey = new Set(
   existingMM.map(r => `${r.domain_id}|${r.data_object_id}`),
@@ -390,7 +390,7 @@ const mmRows = multiMaster
     return {
       domain_id: did(m.domain),
       data_object_id: objId,
-      role: m.role,
+      held_as: m.held_as,
       notes: m.notes,
     };
   })
@@ -437,7 +437,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "medium",
     description:
-      "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event.",
+      "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event.",
     notes: "",
   },
   // HCM → IGA: employee.created triggers identity provisioning
@@ -485,7 +485,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "low",
     description:
-      "New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs.",
+      "New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs.",
     notes: "",
   },
   // ATS → PA: requisition.filled → recruiting metric refresh
@@ -524,7 +524,7 @@ const handoffs = [
       "Closed pay cycle from Payroll lands a snapshot in PA for compensation analytics: total comp by org / level / geo, gender pay-gap analysis, comp velocity. Batch because pay cycles are inherently periodic.",
     notes: "",
   },
-  // PA → TALENT-MGMT: hi-po identification → talent program enrolment
+  // PA → TALENT-MGMT: hi-po identification → talent program enrollment
   {
     source_domain_id: did("PA"),
     target_domain_id: did("TALENT-MGMT"),
@@ -533,7 +533,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "medium",
     description:
-      "PA's predictive-model output identifies employees in the hi-po segment; this triggers their enrolment in Talent Management programs (succession slate, accelerated development, mentor assignment). Friction sits in keeping the hi-po definition consistent with the program criteria.",
+      "PA's predictive-model output identifies employees in the hi-po segment; this triggers their enrollment in Talent Management programs (succession slate, accelerated development, mentor assignment). Friction sits in keeping the hi-po definition consistent with the program criteria.",
     notes: "",
   },
   // EPM → SWP: rolling forecast refresh → plan re-alignment
@@ -578,9 +578,9 @@ console.log(`  total data_objects:           ${totalDO}`);
 console.log(`  total domain_data_objects:    ${totalDDO}`);
 console.log(`  total cross_domain_handoffs:  ${totalHO}`);
 
-console.log("\nMulti-master leaderboard (data_objects with role=master count > 1):");
+console.log("\nMulti-master leaderboard (data_objects with held_as=master count > 1):");
 const masterRows = await get(
-  "/domain_data_objects?role=eq.master&select=data_object_id&limit=20000",
+  "/domain_data_objects?held_as=eq.master&select=data_object_id&limit=20000",
 );
 const masterCount = new Map<number, number>();
 for (const r of masterRows) {

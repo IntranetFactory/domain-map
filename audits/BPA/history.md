@@ -4,13 +4,13 @@
 
 ### Summary
 
-- Current footprint: 0 `domain_modules`, 4 masters (per legacy `domain_data_objects` rollup only; none of the four is held as `role='master'` in any `domain_module_data_objects` row under BPA), 7 capabilities, 9 solutions, 0 regulations, 5 trigger events on BPA-claimed masters, 8 outbound + 3 inbound handoffs (11 total BPA-touching), 1 legacy `skill_type='system'` skill (`bpa-system`, id 34, `domain_module_id=null`) with 4 `skill_tools` rows (all `platform`-tier query primitives), 3 `data_object_relationships` rows touching BPA masters (all on capability_maps, two of which are near-duplicates), zero roles.
+- Current footprint: 0 `domain_modules`, 4 masters (per legacy `domain_data_objects` rollup only; none of the four is held as `held_as='master'` in any `domain_module_data_objects` row under BPA), 7 capabilities, 9 solutions, 0 regulations, 5 trigger events on BPA-claimed masters, 8 outbound + 3 inbound handoffs (11 total BPA-touching), 1 legacy `skill_type='system'` skill (`bpa-system`, id 34, `domain_module_id=null`) with 4 `skill_tools` rows (all `platform`-tier query primitives), 3 `data_object_relationships` rows touching BPA masters (all on capability_maps, two of which are near-duplicates), zero roles.
 - Vendor-surface basis (flagship vendors enumerated): SAP Signavio, Software AG ARIS, MEGA HOPEX, BiZZdesign Horizzon, iGrafx Process360 Live, Bizagi Modeler, Trisotech Digital Enterprise Suite, Mavim. ARIS and Signavio anchor enterprise BPMN authoring; MEGA HOPEX and BiZZdesign anchor capability-map / enterprise-architecture overlap; Bizagi and iGrafx anchor mid-market modeling; Trisotech anchors BPMN+CMMN+DMN tri-spec. No regulated compliance specialist for this market (BPA is descriptive, not transactional).
 - **Bucket 1 (in-scope, agent fixable):** 17 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 8 items.
 
-**Structural verdict: catastrophic M-band failure.** BPA has zero `domain_modules` rows (M1 fails outright), which makes M2, M4, M5, M6 vacuously inapplicable and forces every B-band per-module check (B9b, B10b, F2-F5) into a structural void. The legacy `domain_data_objects` rollup claims BPA masters four entities, but the modular DMDO ground truth shows only `business_capability_maps` (248) has a `role='master'` row anywhere in the catalog, and that row is on **APM-PORTFOLIO-REGISTRY** (module 103, APM domain), not BPA. `business_process_models` (247), `value_streams` (249), and `process_simulation_runs` (250) have **zero `master` rows** anywhere in `domain_module_data_objects`. The capability `BUSINESS-CAPABILITY-MAP` (343) and `REFERENCE-FRAME-LIBRARY` (344) are similarly realized through APM module 103 instead of through any BPA module. The capability_map lifecycle states (`draft` -> `published` -> `superseded`) and the resulting workflow-gate permission (`apm-portfolio-registry:publish_business_capability_map`) are also living on APM module 103. The fact-sheet emitter, the deployer, and the Semantius score are all uncomputable for BPA as it stands. Modularization is the single Phase-M obligation that must land before any other fix.
+**Structural verdict: catastrophic M-band failure.** BPA has zero `domain_modules` rows (M1 fails outright), which makes M2, M4, M5, M6 vacuously inapplicable and forces every B-band per-module check (B9b, B10b, F2-F5) into a structural void. The legacy `domain_data_objects` rollup claims BPA masters four entities, but the modular DMDO ground truth shows only `business_capability_maps` (248) has a `held_as='master'` row anywhere in the catalog, and that row is on **APM-PORTFOLIO-REGISTRY** (module 103, APM domain), not BPA. `business_process_models` (247), `value_streams` (249), and `process_simulation_runs` (250) have **zero `master` rows** anywhere in `domain_module_data_objects`. The capability `BUSINESS-CAPABILITY-MAP` (343) and `REFERENCE-FRAME-LIBRARY` (344) are similarly realized through APM module 103 instead of through any BPA module. The capability_map lifecycle states (`draft` -> `published` -> `superseded`) and the resulting workflow-gate permission (`apm-portfolio-registry:publish_business_capability_map`) are also living on APM module 103. The fact-sheet emitter, the deployer, and the Semantius score are all uncomputable for BPA as it stands. Modularization is the single Phase-M obligation that must land before any other fix.
 
 ### Pass 1 - Structural (per-domain completeness checklist)
 
@@ -49,7 +49,7 @@ Three of four masters have zero lifecycle states and zero aliases. The four mast
 #### A-band
 
 - **A1.** `domains` row 136 metadata: `crud_percentage=80`, `business_logic` populated, `min_org_size='40 l <10000'`, `cost_band='$$$'`, `certification_required=false`, `usa_market_size_usd_m=400`, `market_size_source_year=2024`. Pass.
-- **A2.** 7 capabilities linked. Pass.
+- **A2.** 7 capabilities related. Pass.
 - **A3.** 9 solutions with `coverage_level` set; 8 primary, 1 secondary. Pass on count, but 4 of 9 solutions (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) also serve the Enterprise Architecture market (Bucket 2 #3).
 - **A4.** `catalog_tagline` empty, `catalog_description` empty. **Fail.** Buyer-facing surface is blank.
 - **A5.** Skipped (not requested).
@@ -61,7 +61,7 @@ Three of four masters have zero lifecycle states and zero aliases. The four mast
 - **M4.** Inapplicable from BPA's side. Two of seven BPA capabilities (343 `BUSINESS-CAPABILITY-MAP`, 344 `REFERENCE-FRAME-LIBRARY`) are realized through APM module 103. Five capabilities (338 `BPA-BPMN-MODEL`, 339 `BPA-PROCESS-REPO`, 340 `BPA-SIMULATION`, 341 `BPA-VALUE-STREAM`, 342 `BPA-PUBLISH`) have **no realizing module at all** anywhere in the catalog.
 - **M5.** Three lifecycle states on 248 carry `domain_module_id=103` (APM). The realizing module is APM, not BPA, which collides with M7.
 - **M6.** Inapplicable (zero BPA modules).
-- **M7.** **Hard fail (cross-domain master location).** `business_capability_maps` (248) has `role='master'` in **APM-PORTFOLIO-REGISTRY** (APM domain), while the legacy `domain_data_objects` rollup for BPA also claims it as master. Either APM legitimately owns it (then BPA should hold `embedded_master`, not `master`) or BPA owns it (then APM's master row demotes). The other three "BPA masters" (247, 249, 250) have **no `role='master'` row anywhere in DMDO**, meaning they are orphan masters with no canonical module owner.
+- **M7.** **Hard fail (cross-domain master location).** `business_capability_maps` (248) has `held_as='master'` in **APM-PORTFOLIO-REGISTRY** (APM domain), while the legacy `domain_data_objects` rollup for BPA also claims it as master. Either APM legitimately owns it (then BPA should hold `embedded_master`, not `master`) or BPA owns it (then APM's master row demotes). The other three "BPA masters" (247, 249, 250) have **no `held_as='master'` row anywhere in DMDO**, meaning they are orphan masters with no canonical module owner.
 
 #### B-band
 
@@ -71,7 +71,7 @@ Three of four masters have zero lifecycle states and zero aliases. The four mast
 - **B4.** All three pattern flags are false-by-default on all four masters with no recorded audit consideration. Soft fail (re-evaluate; see Bucket 2 #4).
 - **B5.** No `embedded_master` rows for BPA (because no BPA modules exist).
 - **B6.** **Fail.** Zero intra-domain `data_object_relationships` rows between the four BPA masters. A flagship BPA load would carry at minimum `value_streams references business_process_models`, `business_capability_maps groups business_process_models`, and `process_simulation_runs simulates business_process_models`.
-- **B7.** **Fail.** Only one master (`business_capability_maps`) has any `users` edges, and those are duplicated (relationship rows 226 and 1044 both express the user-owner edge with slightly different verbs, `"owned capability maps"` vs `"owns_business_capability_map"`). The other three masters have no `users` edges. Process models have authors; value streams have owners; simulation runs have requesters.
+- **B7.** **Fail.** Only one master (`business_capability_maps`) has any relationships to `users`, and those are duplicated (relationship rows 226 and 1044 both express the user-owner relationship with slightly different verbs, `"owned capability maps"` vs `"owns_business_capability_map"`). The other three masters have no relationships to `users`. Process models have authors; value streams have owners; simulation runs have requesters.
 - **B8.** Inapplicable in detail because no BPA module masters anything modularly. All eight outbound `handoffs` rows have `source_domain_module_id=null`; the cross-domain relationship rows that would mirror them are also absent.
 - **B9.** Five trigger events authored on BPA masters; eight outbound handoffs reference them. Outbound coverage looks reasonable in count but the trigger events themselves have no lifecycle anchors on three of four masters.
 - **B9b.** Vacuously inapplicable (M1 fail). Once BPA is modularized into >=2 modules, B9b will need intra-domain handoffs (e.g., capability-map publication firing into process-repo, simulation results firing back into BPMN authoring).
@@ -99,9 +99,9 @@ Three of four masters have zero lifecycle states and zero aliases. The four mast
 - **F1.** **Fail.** One legacy `domain_id=136`, `domain_module_id=null`, `skill_type='system'` skill (`bpa-system`, id 34) is still present. Per Rule #17 and F2 the target shape is one `system` skill per `domain_modules` row, anchored by `domain_module_id`.
 - **F2.** Inapplicable (zero modules). Once BPA is modularized, F2 will require exactly one `system` skill per module.
 - **F3.** The legacy `bpa-system` skill has 4 `skill_tools` rows (`query_business_process_models`, `query_business_capability_maps`, `query_value_streams`, `query_process_simulation_runs`), all `platform`-tier. Once modularized, the per-module skills will inherit these plus need mutate / workflow-gate primitives.
-- **F4.** All four linked tools are `operation_kind='query'` with `data_object_id` set: pass on the invariant.
+- **F4.** All four related tools are `operation_kind='query'` with `data_object_id` set: pass on the invariant.
 - **F5.** Semantius score is **uncomputable per-module** because there are no modules. Domain-level rollup over the legacy skill: 4/4 = 100% strict. The score is misleading because the skill set covers only the query side, not the workflow gates the modular target state would include.
-- **F7.** No channel primitives linked. Pass.
+- **F7.** No channel primitives related. Pass.
 
 #### H-band
 
@@ -119,9 +119,9 @@ Subagent-style summary (analyst-direct here because BPA's catalog is so under-mo
 
 ### Pass 3 - Neighbor discovery
 
-Edge-weight table (handoffs only; cross-domain DMDO references on BPA's side are all currently null because no BPA modules exist):
+Relationship-weight table (handoffs only; cross-domain DMDO references on BPA's side are all currently null because no BPA modules exist):
 
-| Neighbor | Outbound from BPA | Inbound to BPA | Total edge weight |
+| Neighbor | Outbound from BPA | Inbound to BPA | Total relationship weight |
 |---|---|---|---|
 | PROC-MIN (40) | 2 (`process_model.published`, `process_simulation_run.completed`) | 3 (`conformance.deviation_detected`, `discovered_process_model.published`, `process_variant.identified`) | **5** |
 | PROD-MGMT (101) | 2 (`value_stream.bottleneck_identified`, `process_simulation_run.bottleneck_identified`) | 0 | 2 |
@@ -129,7 +129,7 @@ Edge-weight table (handoffs only; cross-domain DMDO references on BPA's side are
 | SPM (9) | 1 (`process_simulation_run.completed`) | 0 | 1 |
 | WORK-MGMT (135) | 1 (`process_simulation_run.bottleneck_identified`) | 0 | 1 |
 
-Per the audit recipe, neighbors at edge weight >= 3 trigger the full 5-section pairwise reconciliation. Only **PROC-MIN** qualifies. Lighter neighbors get a one-line summary in Bucket 1 / Bucket 2 instead.
+Per the audit recipe, neighbors at relationship weight >= 3 trigger the full 5-section pairwise reconciliation. Only **PROC-MIN** qualifies. Lighter neighbors get a one-line summary in Bucket 1 / Bucket 2 instead.
 
 ### Pass 4 - Pairwise reconciliation (BPA <-> PROC-MIN, weight 5)
 
@@ -148,10 +148,10 @@ The 5-leg analysis is unusually shallow on this boundary because BPA has no modu
 | ID | Finding | Fix |
 |---|---|---|
 | B1-M1 | Zero `domain_modules` rows. M1 hard fail. Capability count is 7 (>=3) so target shape is >=2 full modules. | Author the module set (shape vetoed in Bucket 2 #1). Default proposal: `BPA-PROCESS-REPO` (BPMN authoring + governance + publishing), `BPA-CAPABILITY-MAP` (capability maps + reference frameworks), `BPA-VALUE-STREAM` (value-stream + simulation). All three `module_kind='full'`. |
-| B1-M2 | `business_process_models` (247), `value_streams` (249), `process_simulation_runs` (250) have no `role='master'` row anywhere in `domain_module_data_objects`. M7 / B1 fail by modular ground truth. | Author `domain_module_data_objects` master rows on the new BPA modules: 247 -> `BPA-PROCESS-REPO`, 249 -> `BPA-VALUE-STREAM`, 250 -> `BPA-VALUE-STREAM` (or split `BPA-SIMULATION` per Bucket 2 #1). |
+| B1-M2 | `business_process_models` (247), `value_streams` (249), `process_simulation_runs` (250) have no `held_as='master'` row anywhere in `domain_module_data_objects`. M7 / B1 fail by modular ground truth. | Author `domain_module_data_objects` master rows on the new BPA modules: 247 -> `BPA-PROCESS-REPO`, 249 -> `BPA-VALUE-STREAM`, 250 -> `BPA-VALUE-STREAM` (or split `BPA-SIMULATION` per Bucket 2 #1). |
 | B1-M3 | `business_capability_maps` (248) is mastered in APM-PORTFOLIO-REGISTRY (module 103, APM domain). Cross-domain master-location collision with BPA's `domain_data_objects` rollup claim. | Resolve per Bucket 2 #2 decision: either DELETE the APM `master` row and re-INSERT under `BPA-CAPABILITY-MAP`, with APM downgrading to `embedded_master` or `consumer`; or formally accept APM as canonical owner and DELETE BPA's `domain_data_objects` claim (which would then leave BPA with three masters total). |
 | B1-M4 | Three lifecycle states on `business_capability_maps` (673 draft, 674 published, 675 superseded) carry `domain_module_id=103` (APM). Workflow-gate permission `apm-portfolio-registry:publish_business_capability_map` is materialized under APM as a result. | PATCH `data_object_lifecycle_states.domain_module_id` to the new BPA `BPA-CAPABILITY-MAP` module id (post B1-M1 load). Drop the APM-prefixed permission row in `permissions` and re-derive the BPA-prefixed `bpa-capability-map:publish_business_capability_map` from the relocated state. Sequence after B1-M3. |
-| B1-M5 | Capabilities `BUSINESS-CAPABILITY-MAP` (343) and `REFERENCE-FRAME-LIBRARY` (344) are realized through APM module 103 via `domain_module_capabilities`. The other five BPA capabilities (`BPA-BPMN-MODEL`, `BPA-PROCESS-REPO`, `BPA-SIMULATION`, `BPA-VALUE-STREAM`, `BPA-PUBLISH`) have zero realizing modules. | Author `domain_module_capabilities` rows linking all 7 capabilities to the new BPA modules per the proposed shape. Remove the APM rows once the BPA-side realizations land (sequence after B1-M3). |
+| B1-M5 | Capabilities `BUSINESS-CAPABILITY-MAP` (343) and `REFERENCE-FRAME-LIBRARY` (344) are realized through APM module 103 via `domain_module_capabilities`. The other five BPA capabilities (`BPA-BPMN-MODEL`, `BPA-PROCESS-REPO`, `BPA-SIMULATION`, `BPA-VALUE-STREAM`, `BPA-PUBLISH`) have zero realizing modules. | Author `domain_module_capabilities` rows relating all 7 capabilities to the new BPA modules per the proposed shape. Remove the APM rows once the BPA-side realizations land (sequence after B1-M3). |
 
 #### STRUCTURAL
 
@@ -168,9 +168,9 @@ The 5-leg analysis is unusually shallow on this boundary because BPA has no modu
 
 | ID | Finding | Fix |
 |---|---|---|
-| B1-B1 | B7 fail. Three of four BPA masters have no `users` edges (`business_process_models` -> author/owner; `value_streams` -> owner; `process_simulation_runs` -> requester). | Author 3 `data_object_relationships` rows from `users` to each master per Rule #10 (`users` is `kind='platform_builtin'`, id 748). |
-| B1-B2 | Two near-duplicate `users` edges on `business_capability_maps`: row 226 (`"owned capability maps"`, verb space-form, legacy) and row 1044 (`"owns_business_capability_map"`, verb snake-form, newer). | DELETE the older row (226) once row 1044 is confirmed as the canonical edge. |
-| B1-B3 | B6 fail. Zero intra-domain `data_object_relationships` rows between BPA masters. | Author edges: `value_streams maps_to business_process_models`; `business_capability_maps groups business_process_models`; `process_simulation_runs simulates business_process_models`; optionally `value_streams supports business_capability_maps`. 3-4 rows. |
+| B1-B1 | B7 fail. Three of four BPA masters have no relationships to `users` (`business_process_models` -> author/owner; `value_streams` -> owner; `process_simulation_runs` -> requester). | Author 3 `data_object_relationships` rows from `users` to each master per Rule #10 (`users` is `kind='platform_builtin'`, id 748). |
+| B1-B2 | Two near-duplicate relationships to `users` on `business_capability_maps`: row 226 (`"owned capability maps"`, verb space-form, legacy) and row 1044 (`"owns_business_capability_map"`, verb snake-form, newer). | DELETE the older row (226) once row 1044 is confirmed as the canonical relationship. |
+| B1-B3 | B6 fail. Zero intra-domain `data_object_relationships` rows between BPA masters. | Author relationships: `value_streams maps_to business_process_models`; `business_capability_maps groups business_process_models`; `process_simulation_runs simulates business_process_models`; optionally `value_streams supports business_capability_maps`. 3-4 rows. |
 | B1-B4 | B12 + B4 fail. Three of four BPA masters have zero lifecycle states and no Rule #12 pattern-flag audit. | Author lifecycle states: `business_process_models` (draft -> in_review -> published -> retired); `value_streams` (in_discovery -> baselined -> archived); `process_simulation_runs` (queued -> running -> completed | failed). Anchor `domain_module_id` to the new BPA module per state. Re-evaluate `has_submit_lock` (true on `business_process_models.published`), `has_single_approver` (true on `business_capability_maps.published`), `has_personal_content` (false on all four). Surface re-evaluation to user before writing flag PATCHes. |
 | B1-B5 | B11 fail. Aliases exist only on `business_capability_maps`. Three masters have zero. | Author aliases: `business_process_models` -> "BPMN diagram", "process map"; `value_streams` -> "VSM", "lean value stream map"; `process_simulation_runs` -> "Monte Carlo simulation run", "what-if scenario". 6 rows. |
 
@@ -202,7 +202,7 @@ All proposals: `proposal_source='agent_curated'`, `record_status='new'`. Counted
    - **(c) 2 modules:** collapse to `BPA-PROCESS-ARCH` (process_models + value_streams + simulation) and `BPA-CAPABILITY-MAP` (capability maps + reference frameworks). Defensible if the user wants a leaner footprint.
    Depends on Bucket 3 #1 / #3 vetting outcome.
 2. **`business_capability_maps` canonical owner.** Today the DMDO master row is on APM-PORTFOLIO-REGISTRY (module 103). Options: (a) BPA owns canonically (move master to `BPA-CAPABILITY-MAP`, APM holds `embedded_master`); (b) APM owns canonically (BPA holds `embedded_master`, delete BPA's `domain_data_objects` master claim); (c) split-master is wrong, the entity belongs to a future EA domain (queued). Option (a) is the default given BPA-prefixed capability codes and BPA-anchored lifecycle states, but APM has a strong claim via portfolio-architecture coupling.
-3. **Solution split with EA candidate.** 4 of 9 BPA solutions (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) are also EA leaders. Once the queued EA domain promotes, decide: (a) keep all 4 on BPA only and re-link to EA when it lands; (b) downgrade those 4 to `secondary` on BPA and create `primary` rows on EA; (c) split coverage on a per-solution basis (Signavio = BPA primary, ARIS = EA primary, etc.).
+3. **Solution split with EA candidate.** 4 of 9 BPA solutions (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) are also EA leaders. Once the queued EA domain promotes, decide: (a) keep all 4 on BPA only and re-relate to EA when it lands; (b) downgrade those 4 to `secondary` on BPA and create `primary` rows on EA; (c) split coverage on a per-solution basis (Signavio = BPA primary, ARIS = EA primary, etc.).
 4. **Pattern-flag re-evaluation per Rule #12.** Three flags on four masters (12 cells). Defaults are all false. Proposed positive evaluations (need user confirmation): `business_process_models.has_submit_lock=true` (published models lock); `business_capability_maps.has_single_approver=true` (capability-map publication typically routes to one architect lead); `process_simulation_runs.has_submit_lock=true` (queued runs lock at start). All others stay false.
 5. **PROC-MIN reconciliation reach.** Pass 4 surfaced a candidate handoff (`discovered_process_model.reconciled` from PROC-MIN -> BPA once `business_process_models` absorbs a variant). Author it now (after BPA modularizes), defer to a PROC-MIN audit, or skip entirely as overspecification.
 6. **APQC tag for handoff 183 (already-substring-tagged).** Existing row: substring matcher proposed `Manage non-conformance` (414) at L3. Options: (a) promote the existing row by PATCHing `proposal_source='agent_curated'` and adding 78 `Manage business processes` (L2 parent) for clustering; (b) leave the substring row and add a sibling `agent_curated` row for 78 (the natural-key `(handoff_id, process_id)` prevents collision since process ids differ); (c) leave as-is.
@@ -249,7 +249,7 @@ These items the BPA audit surfaced but the fix is owned by another domain. They 
 | SPM B10b | Outbound 785 (BPA -> SPM) has `target_domain_module_id=null`. Owed to SPM's B10b backfill once SPM determines which module consumes BPA simulation results. | SPM B10b. |
 | WORK-MGMT (no defect) | Outbound 786 carries `target_domain_module_id=149` (WORK-MGMT-TASK-EXEC). Pass. | Informational. |
 | APM B8 / B5 (severe, depends on Bucket 2 #2) | If the user picks option (a) on Bucket 2 #2 (BPA owns capability_maps), APM's existing master DMDO row on `business_capability_maps` (module 103) demotes to `embedded_master`, plus APM-prefixed permission `apm-portfolio-registry:publish_business_capability_map` needs to be deleted and re-derived under BPA. | The deeper cleanup of the existing scope-crossing into APM. |
-| GRC / BCM / ITSM (potential SCOPE-CREEP) | None observed today; flag for future audits if BPA cross-edges drift. | No action. |
+| GRC / BCM / ITSM (potential SCOPE-CREEP) | None observed today; flag for future audits if BPA cross-domain relationships drift. | No action. |
 
 ### Candidates queued
 
@@ -266,9 +266,9 @@ Applied the truly-technical subset of Bucket 1 against the live catalog via load
 
 | ID | Action | Result |
 |---|---|---|
-| B1-B1 | INSERT 3 users -> master `data_object_relationships` edges (Rule #10) | ids 1766 (247 owns_business_process_model), 1767 (249 owns_value_stream), 1768 (250 requests_process_simulation_run). Pattern: `data_object_id=748` source, snake_case verbs mirroring canonical row 1044 |
+| B1-B1 | INSERT 3 users -> master `data_object_relationships` rows (Rule #10) | ids 1766 (247 owns_business_process_model), 1767 (249 owns_value_stream), 1768 (250 requests_process_simulation_run). Pattern: `data_object_id=748` source, snake_case verbs mirroring canonical row 1044 |
 | B1-B2 | DELETE legacy near-duplicate row 226 | No-op: row 226 was already absent in live state. Only canonical row 1044 (users -> business_capability_maps, `owns_business_capability_map`) remains. Audit row count for row 226 was stale |
-| B1-B3 | INSERT 3 intra-BPA master `data_object_relationships` | ids 1769 (249 maps_to_business_process_model 247), 1770 (248 groups_business_process_model 247), 1771 (250 simulates_business_process_model 247). All `one_to_many`, `reference`-kind. Audit's optional 4th edge (value_streams supports business_capability_maps) deferred |
+| B1-B3 | INSERT 3 intra-BPA master `data_object_relationships` | ids 1769 (249 maps_to_business_process_model 247), 1770 (248 groups_business_process_model 247), 1771 (250 simulates_business_process_model 247). All `one_to_many`, `reference`-kind. Audit's optional 4th relationship (value_streams supports business_capability_maps) deferred |
 | B1-B5 | INSERT 6 `data_object_aliases` (synonym) on 247/249/250 | ids 1003 (247 "BPMN diagram"), 1004 (247 "process map"), 1005 (249 "VSM"), 1006 (249 "lean value stream map"), 1007 (250 "Monte Carlo simulation run"), 1008 (250 "what-if scenario") |
 | B1-H1 | INSERT 10 `handoff_processes` agent_curated tags | ids 551-560 across handoffs 180, 181, 182, 184, 740, 741, 783, 784, 785, 786. PCF resolution: external_id 16378 -> process 78 (Manage business processes) x7, 10013 -> process 13 (Develop and Manage Business Capabilities) x1, 11161 -> process 1708 (Reengineer business processes and systems) x3. Handoff 181 used the audit's primary recommendation (PCF 13); alt PCF 261 (Define and maintain enterprise architecture) deferred to user |
 
@@ -295,7 +295,7 @@ Bucket 2 #6 (promote-or-keep handoff 183 substring tag) was untouched; the exist
 
 ### Live state after fix
 
-- `data_object_relationships` touching BPA masters: 9 rows (was 3). Breakdown: 4 users->master edges (247/248/249/250 each have one canonical user edge), 3 intra-BPA edges (audit B6 satisfied for the 3 named tuples), 1 enterprise_applications->business_capability_maps edge (id 217, pre-existing, owned by APM substrate), 1 legacy is now redundant only on 248 (already absorbed).
+- `data_object_relationships` touching BPA masters: 9 rows (was 3). Breakdown: 4 users->master relationships (247/248/249/250 each have one canonical relationship to `users`), 3 intra-BPA relationships (audit B6 satisfied for the 3 named tuples), 1 enterprise_applications->business_capability_maps relationship (id 217, pre-existing, owned by APM substrate), 1 legacy is now redundant only on 248 (already absorbed).
 - `data_object_aliases` on BPA masters: 8 rows (was 2). Coverage: 247 has 2, 248 has 2, 249 has 2, 250 has 2.
 - `handoff_processes` on BPA-touching handoffs: 11 rows (was 1). Catalog quality count remains 0 `record_status='approved'`; all new rows are `agent_curated` per Rule #1.
 
@@ -307,7 +307,7 @@ Bucket 2 #6 (promote-or-keep handoff 183 substring tag) was untouched; the exist
 
 ### Summary
 
-- Current footprint (live, post-2026-05-31 continuation): 0 `domain_modules`, 4 legacy `domain_data_objects` master rows (247, 248, 249, 250), 1 DMDO `role='master'` row catalog-wide on the four (248 on APM-PORTFOLIO-REGISTRY module 103), 7 capabilities, 9 solutions, 0 regulations, 4 trigger events on BPA masters with `event_category=''` plus 1 with `state_change`, 8 outbound + 3 inbound handoffs, 1 legacy `skill_type='system'` skill `bpa-system` (id 34, `domain_module_id=null`) with 4 query-tier `skill_tools`, 0 roles attributable to BPA, 9 `data_object_relationships` rows touching BPA masters (4 users-edges, 3 intra-BPA, 1 enterprise_applications cross-edge, 1 already-canonical row), 8 aliases on the four masters (2 per master), 3 lifecycle states on 248 with `domain_module_id=103`, 0 `domain_aliases`, 0 `business_function_capabilities` overrides, 11 `handoff_processes` rows covering all 11 BPA-touching handoffs (10 `agent_curated` + 1 `discovery_substring`, 0 `approved`).
+- Current footprint (live, post-2026-05-31 continuation): 0 `domain_modules`, 4 legacy `domain_data_objects` master rows (247, 248, 249, 250), 1 DMDO `held_as='master'` row catalog-wide on the four (248 on APM-PORTFOLIO-REGISTRY module 103), 7 capabilities, 9 solutions, 0 regulations, 4 trigger events on BPA masters with `event_category=''` plus 1 with `state_change`, 8 outbound + 3 inbound handoffs, 1 legacy `skill_type='system'` skill `bpa-system` (id 34, `domain_module_id=null`) with 4 query-tier `skill_tools`, 0 roles attributable to BPA, 9 `data_object_relationships` rows touching BPA masters (4 relationships to `users`, 3 intra-BPA, 1 enterprise_applications cross-domain relationship, 1 already-canonical row), 8 aliases on the four masters (2 per master), 3 lifecycle states on 248 with `domain_module_id=103`, 0 `domain_aliases`, 0 `business_function_capabilities` overrides, 11 `handoff_processes` rows covering all 11 BPA-touching handoffs (10 `agent_curated` + 1 `discovery_substring`, 0 `approved`).
 - Bucket 1 (in-scope, agent fixable): 0 items. All five technical Bucket 1 items the 2026-05-30 audit identified (B1-B1, B1-B2, B1-B3, B1-B5, B1-H1) were applied in the 2026-05-31 continuation; the remaining 12 Bucket 1 items are gated on B1-M1 (modularization shape, Bucket 2 #1) or on policy decisions (Bucket 2 #2 for B1-M3, Rule #20 user surfacing for B1-S1, channel approval for lifecycle states / pattern flags). They are now reclassified as b1b (blocked).
 - Bucket 2 (surface-for-user, judgment): 6 items, unchanged in substance from 2026-05-30. The dominant blocker remains module shape (2 vs 3 vs 4 modules).
 - Bucket 3 (Phase 0 pending, speculative): 8 entity candidates, unchanged from 2026-05-30. EA candidate promotion would shift Bucket 2 #2 and Bucket 2 #3.
@@ -354,7 +354,7 @@ Aliases band is now uniform (B11 passes per-master); states remain skewed.
 #### B-band
 
 - **B5.** Vacuously inapplicable (no BPA modules to hold `embedded_master` rows).
-- **B7.** **Pass after continuation.** All 4 BPA masters (247, 248, 249, 250) now have exactly one `users` edge each (ids 1766, 1767, 1768, 1044, all snake-case verbs). No near-duplicates remain.
+- **B7.** **Pass after continuation.** All 4 BPA masters (247, 248, 249, 250) now have exactly one relationship to `users` each (ids 1766, 1767, 1768, 1044, all snake-case verbs). No near-duplicates remain.
 - **B9.** Five trigger events on 4 masters; 8 outbound handoffs reference them. Coverage pattern unchanged.
 - **B9b.** Vacuously inapplicable.
 - **B10b.** **Fail.** Outbound: 8/8 rows have `source_domain_module_id=null`. Outbound `target_domain_module_id`: 184/181/182/784/786 have it set (5/8), 180/783/785 are null (3/8). Inbound: 3/3 have both module FKs null. All gated on B1-M1.
@@ -398,7 +398,7 @@ No re-spawn of the market-surface subagent this run; the 2026-05-30 audit's Buck
 
 ### Pass 3, Neighbor discovery
 
-Edge weights unchanged: PROC-MIN 5, PROD-MGMT 2, APM 2, SPM 1, WORK-MGMT 1. Only PROC-MIN qualifies for the full pairwise pass (>=3).
+Relationship weights unchanged: PROC-MIN 5, PROD-MGMT 2, APM 2, SPM 1, WORK-MGMT 1. Only PROC-MIN qualifies for the full pairwise pass (>=3).
 
 ### Pass 4, Pairwise reconciliation (BPA <-> PROC-MIN, weight 5)
 
@@ -406,7 +406,7 @@ No new findings since 2026-05-30. All 5 BPA<->PROC-MIN handoffs (180, 783, 183, 
 
 ### Bucket 1, In-scope confirmed gaps
 
-**Zero items.** The five technical fixes from 2026-05-30 (B1-B1 user edges, B1-B2 legacy edge cleanup, B1-B3 intra-BPA relationships, B1-B5 aliases, B1-H1 APQC tags) all landed in the 2026-05-31 continuation. The remaining 12 Bucket 1 items from 2026-05-30 are all blocked: 11 on B1-M1 (zero modules) or B1-M3 (capability_map owner), 1 on Rule #20 user surfacing (B1-S1, catalog UX). They are reclassified as b1b (blocked) in state.yaml.
+**Zero items.** The five technical fixes from 2026-05-30 (B1-B1 relationships to `users`, B1-B2 legacy relationship cleanup, B1-B3 intra-BPA relationships, B1-B5 aliases, B1-H1 APQC tags) all landed in the 2026-05-31 continuation. The remaining 12 Bucket 1 items from 2026-05-30 are all blocked: 11 on B1-M1 (zero modules) or B1-M3 (capability_map owner), 1 on Rule #20 user surfacing (B1-S1, catalog UX). They are reclassified as b1b (blocked) in state.yaml.
 
 ### Bucket 2, Surface-for-user (judgment calls)
 
@@ -471,9 +471,9 @@ JWT errors: none.
 
 ### Summary
 
-BPA was an unbuilt domain (M1 hard fail: 0 `domain_modules`) carrying 7 capabilities and 4 master-claimed data_objects via the legacy `domain_data_objects` rollup. This pass executed the modularization-only scope: it authored the BPA module set, linked every capability, and assigned every existing data_object at its preserved role and necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The default 3-module shape from the 2026-05-30 audit (Bucket 2 #1 option a) was adopted.
+BPA was an unbuilt domain (M1 hard fail: 0 `domain_modules`) carrying 7 capabilities and 4 master-claimed data_objects via the legacy `domain_data_objects` rollup. This pass executed the modularization-only scope: it authored the BPA module set, related every capability, and assigned every existing data_object at its preserved role and necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The default 3-module shape from the 2026-05-30 audit (Bucket 2 #1 option a) was adopted.
 
-The single load-bearing structural decision: `business_capability_maps` (248) already holds its one catalog-wide `role='master'` DMDO row on **APM-PORTFOLIO-REGISTRY** (module 103, APM domain). Under M7 (single-master) and the "reuse existing entities, never promote to master" rule, 248 was assigned in BPA as **embedded_master / required**, NOT master. The B2-CAPMAP-OWNER user decision (relocate the master to BPA vs accept APM as canonical) remains open and untouched. Likewise capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) are now realized through the new BPA-CAPABILITY-MAP module **in addition to** their existing APM-103 realizations; the APM realizations were left in place (their removal is part of the deferred capmap-owner reconciliation, not this scope).
+The single load-bearing structural decision: `business_capability_maps` (248) already holds its one catalog-wide `held_as='master'` DMDO row on **APM-PORTFOLIO-REGISTRY** (module 103, APM domain). Under M7 (single-master) and the "reuse existing entities, never promote to master" rule, 248 was assigned in BPA as **embedded_master / required**, NOT master. The B2-CAPMAP-OWNER user decision (relocate the master to BPA vs accept APM as canonical) remains open and untouched. Likewise capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) are now realized through the new BPA-CAPABILITY-MAP module **in addition to** their existing APM-103 realizations; the APM realizations were left in place (their removal is part of the deferred capmap-owner reconciliation, not this scope).
 
 ### Module split
 
@@ -504,7 +504,7 @@ All three modules `module_kind='full'`, `record_status='new'`. `catalog_tagline`
 - **Catalog UX backfill (M8 / A4).** `domains.catalog_tagline` / `domains.catalog_description` on row 136, and `catalog_tagline` / `catalog_description` on the 3 new module rows, are all empty. Rule 20 requires user-approved buyer copy before any write. Captured as b1a B1A-SKILLS (UX backfill clause) and b2 B2-CATALOG-UX.
 - **Missing-master candidate.** None genuinely missing from this scope. 248's master location is a user-decision (B2-CAPMAP-OWNER / B3-CAPMAP-RELOCATE), not a missing master: it is mastered by APM today and embedded by BPA here. Recorded as b3 B3-CAPMAP-RELOCATE so the relocate option stays visible.
 - **Capability-realization cleanup.** Capabilities 343, 344 are now double-realized (new BPA-221 rows plus legacy APM-103 rows). The APM-103 DMC rows (190, 191) should be removed if and only if B2-CAPMAP-OWNER resolves BPA as canonical owner. Left in place by design.
-- **Downstream M-band fixes now unblocked.** B1B-M2 (already satisfied for 247/249/250 by the new master rows), B1B-M4 (relocate lifecycle states 673/674/675 to BPA-221, gated on capmap-owner), B1B-M5 (capability links, now landed for the BPA side), B1B-S3/S4 (handoff source/target module FK backfill, now derivable), B1B-S5 (intra-domain handoffs), B1B-B4 (lifecycle states on 247/249/250). These remain in the b1b queue: they require entity creation or PATCHes outside this modules-and-assignment-only scope.
+- **Downstream M-band fixes now unblocked.** B1B-M2 (already satisfied for 247/249/250 by the new master rows), B1B-M4 (relocate lifecycle states 673/674/675 to BPA-221, gated on capmap-owner), B1B-M5 (capability relationships, now landed for the BPA side), B1B-S3/S4 (handoff source/target module FK backfill, now derivable), B1B-S5 (intra-domain handoffs), B1B-B4 (lifecycle states on 247/249/250). These remain in the b1b queue: they require entity creation or PATCHes outside this modules-and-assignment-only scope.
 
 JWT errors: none.
 
@@ -517,7 +517,7 @@ Executed b1a item **B1A-SKILLS** (Phase S system skills + tools + skill_tools pe
 - **Source 1 (masters -> query + representative mutate + workflow gate):** each module's master(s) keep their existing `query_<entity>` tool and gain `create`/`update` plus a publish/run gate keyed to the master's published trigger_event (`process_model.published` -> `publish_business_process_model`; `capability_map.updated` -> `publish_business_capability_map`; `process_simulation_run.completed` -> `run_process_simulation_run`).
 - **Source 2 (consumer/contributor reads):** BPA modules hold no consumer/contributor DMDO rows yet (deferred B1B-S4), so no cross-domain query tools were required.
 - **Source 3 (outbound handoffs -> mutate on receiving side):** all 8 BPA outbound handoffs (180/181/182/184/783/784/785/786) publish BPA's OWN masters as the event payload (publish/run gates on 247/249/250), already covered by Source 1. No foreign-domain mutate tool required.
-- **Channel rule:** `notify_person` (abstraction, coverage_tier=platform) linked OPTIONAL on each skill; the workflow needs no specific channel, so no channel primitive and not required.
+- **Channel rule:** `notify_person` (abstraction, coverage_tier=platform) related OPTIONAL on each skill; the workflow needs no specific channel, so no channel primitive and not required.
 
 ### Tools created (9 new, dedup by tool_name)
 
@@ -643,8 +643,8 @@ Resolves B1B-S5.
 ### Phase E - personas + RACI (E1-E6)
 
 Zero personas before (E1 fired on a 7-capability / 3-module domain). Authored:
-- domain_roles: 77 Process Architect (BUSINESS-OPS-PROCESS-ARCHITECT, fn 34), 78 Process Analyst (BUSINESS-OPS-PROCESS-ANALYST, fn 34), 79 Process Owner (PROCESS-OWNER, cross-functional, business_function_id null).
-- role_modules (8 rows, ids 630-637): each persona reaches >=2 modules with interaction_level set (E2/E3).
+- personas: 77 Process Architect (BUSINESS-OPS-PROCESS-ARCHITECT, fn 34), 78 Process Analyst (BUSINESS-OPS-PROCESS-ANALYST, fn 34), 79 Process Owner (PROCESS-OWNER, cross-functional, business_function_id null).
+- persona_modules (8 rows, ids 630-637): each persona reaches >=2 modules with interaction_level set (E2/E3).
 - Wired `process_id` on the two gated states: 247.published -> 1644 (13.1.3.5 Publish processes); 249.baselined -> 1641 (13.1.3.2 Analyze processes) (E6).
 - process_raci (5 rows, ids 160-164): Publish processes = Architect R / Owner A / Analyst C; Analyze processes = Analyst R / Architect A (E4: each gated process has R+A).
 

@@ -57,7 +57,7 @@ Vendor columns: DB=Demandbase, 6S=6sense, ML=Madison Logic, RW=RollWorks, TM=Ter
 
 Notes on classification:
 - `intent_signals`, `ad_campaign_targets`, `web_personalization_rules` are the three entities GTM-PLAN Phase 0 (D3) explicitly routed downstream to ABM-PLATFORM. They are MASTERED here.
-- `ideal_customer_profiles` and `target_account_lists` are MASTERED by GTM-PLAN. ABM consumes them via `domain_data_objects.role = consumer`. They are listed as vendor-present because the ABM vendors expose ICP/list UIs, but the authoring authority stays in GTM-PLAN (the planning vendors, Anaplan/Pigment/Fullcast/Salesforce, also master them, which is the proof of planning-side ownership).
+- `ideal_customer_profiles` and `target_account_lists` are MASTERED by GTM-PLAN. ABM consumes them via `domain_data_objects.held_as = consumer`. They are listed as vendor-present because the ABM vendors expose ICP/list UIs, but the authoring authority stays in GTM-PLAN (the planning vendors, Anaplan/Pigment/Fullcast/Salesforce, also master them, which is the proof of planning-side ownership).
 - `engagement_scores` (account- and contact-level engagement) is distinct from GTM-PLAN's planning-grade `account_scores` (fit/propensity authored once per planning cycle). The two are different masters in different domains; do not collapse them.
 
 ## Compliance entities (non-optional)
@@ -91,7 +91,7 @@ Recommended count: **4 modules** (ABM-INTENT, ABM-ENGAGEMENT-ORCHESTRATION, ABM-
 ABM-PLATFORM takes these as `consumer`-role `domain_data_objects` rows; GTM-PLAN remains the master/author:
 
 - `ideal_customer_profiles` — GTM-PLAN authors ICP definitions once per planning cycle. ABM ingests them to seed intent topics, audience segments, and personalization audiences.
-- `target_account_lists` — GTM-PLAN authors named/target account lists. ABM ingests them as the account universe for campaigns, journeys, ad audiences, and personalization. This is the handoff edge GTM-PLAN Phase 0 flagged (`GTM-PLAN-ACCOUNT-TARGETING` hands `target_account_lists` downstream).
+- `target_account_lists` — GTM-PLAN authors named/target account lists. ABM ingests them as the account universe for campaigns, journeys, ad audiences, and personalization. This is the handoff GTM-PLAN Phase 0 flagged (`GTM-PLAN-ACCOUNT-TARGETING` hands `target_account_lists` downstream).
 - Planning-grade `account_scores` — GTM-PLAN's fit/propensity scoring (NOT the same as ABM's `engagement_scores`). ABM may read it to tier accounts for engagement spend, but it does not author it.
 
 Do NOT model ICP authoring or target-list authoring as ABM masters. The handoff direction is GTM-PLAN (publisher) -> ABM-PLATFORM (consumer), realized via `handoffs` rows on events like `target_account_list.published` and `ideal_customer_profile.updated`.

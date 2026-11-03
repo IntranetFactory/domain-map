@@ -43,7 +43,7 @@ Every vendor treats anonymous report, intake channel, and anonymous follow-up as
 
 ## 4. Regulatory anchors and the entities they force
 
-- **EU Whistleblower Protection Directive 2019/1937** (orgs 50+ staff): mandated secure reporting **channels**, optional **anonymous** reports, 7-day acknowledgement + 3-month feedback (forces a **follow-up-comms** clock), strict confidentiality of reporter identity, documented **retention** per GDPR. -> drives `intake_channels`, `anonymized_reporters`, timeline/SLA fields, audit retention.
+- **EU Whistleblower Protection Directive 2019/1937** (orgs 50+ staff): mandated secure reporting **channels**, optional **anonymous** reports, 7-day acknowledgment + 3-month feedback (forces a **follow-up-comms** clock), strict confidentiality of reporter identity, documented **retention** per GDPR. -> drives `intake_channels`, `anonymized_reporters`, timeline/SLA fields, audit retention.
 - **SOX s.301**: audit committee (not management, not HR) must own procedures for **confidential, anonymous** employee submissions on accounting/audit matters; ~7-yr tamper-proof retention; records not editable by the subject of a complaint. -> forces separation from HR/management and an immutable case record.
 - **SOX s.806 / Dodd-Frank**: anti-retaliation + SEC bounty/external-reporting path. -> drives `regulatory_disclosures` and reporter-protection tracking.
 - **GDPR**: anonymity must be genuine (no IP/metadata), minimization, lawful retention. -> constrains the **reporter** model and storage.
@@ -55,7 +55,7 @@ These create concrete entity requirements (`anonymized_reporters`, `intake_chann
 
 **(a) Point-solution-market test:** PASS. A dense field of independent, separately-procured flagship products, with multiple pure-plays. That alone is strong evidence of a distinct domain, not a subtype.
 
-**(b) Workflow materiality:** The shape is materially different from generic HR case handling. Generic `hr_cases` assumes a *known* employee, HR ownership, and an HR-visible record. Ethics intake inverts all three: the reporter may be **permanently anonymous** (two-way mailbox, no identity, no IP), the case must be **walled off from HR and line management** (SOX 301 routes to the audit committee; the subject can be a senior HR leader), it carries **chain-of-custody / immutable evidence**, statutory **acknowledgement and feedback clocks**, and an outbound **regulatory-disclosure** path. A `case_subtype` flag cannot express anonymized parties, a separate confidential routing/permission boundary, or regulatory-disclosure entities; it would smuggle a second data model and a hostile access-control regime into the HR case table.
+**(b) Workflow materiality:** The shape is materially different from generic HR case handling. Generic `hr_cases` assumes a *known* employee, HR ownership, and an HR-visible record. Ethics intake inverts all three: the reporter may be **permanently anonymous** (two-way mailbox, no identity, no IP), the case must be **walled off from HR and line management** (SOX 301 routes to the audit committee; the subject can be a senior HR leader), it carries **chain-of-custody / immutable evidence**, statutory **acknowledgment and feedback clocks**, and an outbound **regulatory-disclosure** path. A `case_subtype` flag cannot express anonymized parties, a separate confidential routing/permission boundary, or regulatory-disclosure entities; it would smuggle a second data model and a hostile access-control regime into the HR case table.
 
 ## 6. Recommendation
 

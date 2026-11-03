@@ -64,7 +64,7 @@ function masterDomainsByDataObject(index: CatalogIndex, all: AllRelationships): 
   if (m) return m;
   m = new Map();
   for (const r of all.dmdo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const dom = index.modulesById.get(r.domain_module_id as number)?.domain_id;
     if (dom == null) continue;
     let s = m.get(r.data_object_id as number);
@@ -87,7 +87,7 @@ export function buildHealthContext(base: HealthBase, domainCode: string): Health
   const dmdo = moduleIds.flatMap((id) => all.dmdoByModuleId.get(id) ?? []);
   const masterModulesByDataObject = new Map<number, number[]>();
   for (const r of dmdo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const did = r.data_object_id as number;
     const list = masterModulesByDataObject.get(did) ?? [];
     if (!list.includes(r.domain_module_id)) list.push(r.domain_module_id as number);

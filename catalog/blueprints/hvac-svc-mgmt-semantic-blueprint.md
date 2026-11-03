@@ -94,7 +94,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `crm_contacts` | `crm_contacts` | Contact | Contacts | embedded_master | `crm-acct-mgt` | Account and Contact Management | required | yes | operational_record | `:manage` | - |
 | 2 | `customer_invoices` | `customer_invoices` | Customer Invoice | Customer Invoices | embedded_master | `sub-mgmt-billing` | Recurring Billing and Dunning | required | - | operational_workflow | `:manage` | - |
@@ -116,7 +116,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -131,7 +131,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `customers` | is_party_to | `service_contracts` | one_to_many | reference | required | target | restrict | reference | - |
 | `customers` | has_contacts | `crm_contacts` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -147,15 +147,15 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | owns | `customers` | one_to_many | required | source | restrict | reference | - |
 | `users` | owns | `crm_contacts` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(none: no outbound cross-scope edges from this scope's masters or contributors)_
+_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -216,7 +216,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | FSM-DISPATCH-OPS | FIN | _(domain-level)_ | `service_work_order.completed` | _(state_change)_ | `service_work_orders` | event_stream | low | Billable hours and materials post to revenue GL. |
 | CPQ-QUOTE-BUILDER | FIN | _(domain-level)_ | `sales_quote.approved` | _(state_change)_ | `sales_quotes` | api_call | medium | Approved quote with revenue-recognition implications feeds ERP-FIN forecast and rev-rec rules engine. |
 | SUB-MGMT-BILLING | FIN | _(domain-level)_ | `customer_invoice.issued` | _(state_change)_ | `customer_invoices` | batch_sync | medium | Issued customer invoices feed AR sub-ledger in ERP-FIN. Friction during rev-rec implementations (ASC 606). |
-| CPQ-QUOTE-BUILDER | CRM | CRM-PIPELINE-MGT | `sales_quote.accepted_by_buyer` | _(signal)_ | `sales_quotes` | api_call | low | Quote acceptance advances the linked opportunity to closed-won pending signature. |
+| CPQ-QUOTE-BUILDER | CRM | CRM-PIPELINE-MGT | `sales_quote.accepted_by_buyer` | _(signal)_ | `sales_quotes` | api_call | low | Quote acceptance advances the related opportunity to closed-won pending signature. |
 | CRM-ACCT-MGT | MA | MA-CAMPAIGN-AUTHORING | `crm_contact.synced` | `synced` _(signal)_ | `crm_contacts` | batch_sync | medium | Contact updates in CRM (new contact, status change, opt-in change, account ownership) sync to MA so audience lists and campaigns stay current. Batch-sync is the typical pattern - real-time would be ideal but most stacks accept hourly or daily latency here. |
 | SUB-MGMT-BILLING | B2C-COMM | B2C-COMM-ORDER-CAPTURE | `customer_invoice.issued` | _(state_change)_ | `customer_invoices` | api_call | low | Issued invoice surfaces in the customer portal. |
 | CRM-ACCT-MGT | CPQ | CPQ-PRODUCT-CATALOG | `account.tier_changed` | _(state_change)_ | `customers` | event_stream | medium | Account tier change cascades to CPQ for price-list assignment. |
@@ -241,7 +241,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | CRM-ACCT-MGT | CRM | CRM-PIPELINE-MGT | `crm_opportunity.closed_won` | _(state_change)_ | `customers` | lifecycle_progression | low | - |
 | CRM-ACCT-MGT | B2C-COMM | B2C-COMM-ORDER-CAPTURE | `customer.signed_up` | `signed_up` _(lifecycle)_ | `customers` | event_stream | low | Storefront signup creates the canonical customer record in CRM. Low friction in B2C-native integrated stacks; medium in stitched-together stacks. |
 | CRM-ACCT-MGT | CDP | CDP-UNIFIED-PROFILE | `profile.lifecycle_changed` | _(signal)_ | `customers` | event_stream | medium | CDP-detected lifecycle stage change (new → engaged → loyal → at-risk → churned) updates the customer record in CRM. Friction comes from CDP's lifecycle model not matching CRM's account-status taxonomy. |
-| CRM-ACCT-MGT | MDM | _(domain-level)_ | `customer_golden_record.created` | `active` _(lifecycle)_ | `customers` | api_call | medium | Resolved golden ID + merged attributes; CRM links operational record. |
+| CRM-ACCT-MGT | MDM | _(domain-level)_ | `customer_golden_record.created` | `active` _(lifecycle)_ | `customers` | api_call | medium | Resolved golden ID + merged attributes; CRM relates the operational record to the golden ID. |
 | CRM-ACCT-MGT | SUB-MGMT | SUB-MGMT-SUBSCRIPTIONS | `subscription.activated` | `activated` _(lifecycle)_ | `customers` | event_stream | low | Subscription activation marks the account as an active customer in CRM, updates ARR rollups, and unlocks customer-success workflows. Low friction when same-vendor stack; medium when CRM and billing are separate. |
 | CRM-ACCT-MGT | SMM | _(domain-level)_ | `social_engagement.recorded` | `recorded` _(signal)_ | `customers` | batch_sync | medium | Social engagement enriches CRM contact records. Friction in identity-resolution across handles. |
 | CRM-ACCT-MGT | FARMER-DIRECT-SALES | FDS-CSA-MGMT | `csa_membership.activated` | `draft` → `active` _(lifecycle)_ | `customers` | api_call | low | CSA membership activation creates or enriches the underlying CRM-mastered customer record with membership status, share preferences, and pickup location. |
@@ -250,7 +250,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `crm_contacts` | embedded_master | required | CRM-ACCT-MGT (CRM) | - |
 | `customer_invoices` | embedded_master | required | SUB-MGMT-BILLING (SUB-MGMT) | - |

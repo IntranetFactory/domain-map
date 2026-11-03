@@ -10,7 +10,7 @@
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 9 items.
 
-**Neighbor discovery** (auto-derived from handoffs + cross-domain DMDO + cross-domain relationships, ranked by edge weight):
+**Neighbor discovery** (auto-derived from handoffs + cross-domain DMDO + cross-domain relationships, ranked by relationship weight):
 
 | Neighbor | Out | In | DMDO | Cross-rels | Weight | Pass shape |
 |---|---|---|---|---|---|---|
@@ -32,7 +32,7 @@
 | RE-BROKERAGE | 0 | 1 | 0 | 0 (starter host only) | 1 | Lightweight |
 | LMS | 0 | 0 | 2 (2 modules embed signature_records) | 0 | 2 | Lightweight |
 
-**Structural pass bands:** A / C / D / E / F all pass on positive checks. **M7 hard-fails** (catalog-wide within-domain incoherence across 3 masters; 8 consumer DMDO rows coexisting with sibling-module master rows). **B9 partial-fail** (5 trigger_events with empty `event_category`). **B9b partial-fail** (only 2 intra-domain cross-module handoff rows on a 5-module domain). **H1 hard-fail** (3 of 26 cross-domain handoffs tagged; all 3 `discovery_substring`; zero `agent_curated`; zero `record_status='approved'`). **E2 advisory** (one duplicate `role_modules` row for SALES-TRANSACTION-COORDINATOR on CLM-REPOSITORY). Pattern-flag positive re-evaluation (B4) confirms `has_submit_lock=true` on 4 of 5 masters, but Rule #15 notes-pollution exists on every master, every lifecycle decision was recorded in `data_objects.notes` rather than surfaced for user-approved wording.
+**Structural pass bands:** A / C / D / E / F all pass on positive checks. **M7 hard-fails** (catalog-wide within-domain incoherence across 3 masters; 8 consumer DMDO rows coexisting with sibling-module master rows). **B9 partial-fail** (5 trigger_events with empty `event_category`). **B9b partial-fail** (only 2 intra-domain cross-module handoff rows on a 5-module domain). **H1 hard-fail** (3 of 26 cross-domain handoffs tagged; all 3 `discovery_substring`; zero `agent_curated`; zero `record_status='approved'`). **E2 advisory** (one duplicate `persona_modules` row for SALES-TRANSACTION-COORDINATOR on CLM-REPOSITORY). Pattern-flag positive re-evaluation (B4) confirms `has_submit_lock=true` on 4 of 5 masters, but Rule #15 notes-pollution exists on every master, every lifecycle decision was recorded in `data_objects.notes` rather than surfaced for user-approved wording.
 
 CLM Semantius score (strict, CLM proper): approximately **90%** (approximately 44 / 49 `skill_tools` rows on `coverage_tier='platform'`). The gap is concentrated in three external tools: `detect_clause_risk`, `generate_redline`, `extract_obligations`, and the channel primitives `sign_document` (the e-signature side-effect) which is `external`. Operational score adds nothing further since none of the externals are `integration`-tier yet.
 
@@ -42,13 +42,13 @@ CLM Semantius score (strict, CLM proper): approximately **90%** (approximately 4
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S1 | **M7 (hard fail), within-domain incoherence** | Three masters carry `role='master'` in their owning module AND `role IN ('consumer','contributor')` in sibling CLM modules. `legal_contracts` (66, master in CLM-REPOSITORY 127) is `consumer + required` in CLM-AUTHORING (125), CLM-NEGOTIATION (126), CLM-OBLIGATION-MGMT (128), CLM-RENEWAL (129), 4 sibling rows. `contract_clauses` (68, master in CLM-AUTHORING 125) is `consumer + required` in CLM-NEGOTIATION (126), CLM-REPOSITORY (127), 2 sibling rows. `contract_templates` (69, master in CLM-AUTHORING 125) is `consumer + required` in CLM-NEGOTIATION (126), CLM-RENEWAL (129), 2 sibling rows. M7 rejects master + consumer in sibling modules of the same domain: you don't consume what you also master in the same scope. The agent default is DELETE the 8 consumer rows (Repository / Authoring are the authoritative homes for their respective masters; the other modules read via the canonical reference). The alternative is to promote each sibling `consumer` row to `embedded_master` if the user wants every CLM module to be standalone-deployable without its sibling. Standalone Negotiation without Repository, or standalone Obligation-Mgmt without Repository, both have no contracts to negotiate or extract obligations from, so the embedded-master path looks weak here. Surface the architectural choice as B2-S1; on user approval of DELETE, proceed in Bucket 1. | DELETE 8 `domain_module_data_objects` rows: (125, 66, consumer), (126, 66, consumer), (128, 66, consumer), (129, 66, consumer), (126, 68, consumer), (127, 68, consumer), (126, 69, consumer), (129, 69, consumer). |
+| B1-S1 | **M7 (hard fail), within-domain incoherence** | Three masters carry `held_as='master'` in their owning module AND `held_as IN ('consumer','contributor')` in sibling CLM modules. `legal_contracts` (66, master in CLM-REPOSITORY 127) is `consumer + required` in CLM-AUTHORING (125), CLM-NEGOTIATION (126), CLM-OBLIGATION-MGMT (128), CLM-RENEWAL (129), 4 sibling rows. `contract_clauses` (68, master in CLM-AUTHORING 125) is `consumer + required` in CLM-NEGOTIATION (126), CLM-REPOSITORY (127), 2 sibling rows. `contract_templates` (69, master in CLM-AUTHORING 125) is `consumer + required` in CLM-NEGOTIATION (126), CLM-RENEWAL (129), 2 sibling rows. M7 rejects master + consumer in sibling modules of the same domain: you don't consume what you also master in the same scope. The agent default is DELETE the 8 consumer rows (Repository / Authoring are the authoritative homes for their respective masters; the other modules read via the canonical reference). The alternative is to promote each sibling `consumer` row to `embedded_master` if the user wants every CLM module to be standalone-deployable without its sibling. Standalone Negotiation without Repository, or standalone Obligation-Mgmt without Repository, both have no contracts to negotiate or extract obligations from, so the embedded-master path looks weak here. Surface the architectural choice as B2-S1; on user approval of DELETE, proceed in Bucket 1. | DELETE 8 `domain_module_data_objects` rows: (125, 66, consumer), (126, 66, consumer), (128, 66, consumer), (129, 66, consumer), (126, 68, consumer), (127, 68, consumer), (126, 69, consumer), (129, 69, consumer). |
 | B1-S2 | **B9 missing event_category** | 5 trigger_events carry empty `event_category` (Rule #13 enum must be one of `lifecycle / state_change / threshold / signal`): 531 `contract_obligation.due`, 532 `contract_obligation.breached`, 533 `contract_clause.flagged`, 534 `contract_template.published`, 535 `signature_record.completed`. | PATCH: 531 → `lifecycle` (due is a recurring lifecycle stage on the obligation), 532 → `state_change`, 533 → `state_change`, 534 → `state_change`, 535 → `state_change`. |
 | B1-S3 | **B9b (partial fail), missing intra-domain cross-module handoffs** | A 5-module domain has only 2 intra-domain handoffs loaded (1209 NEGOTIATION → REPOSITORY on `signature_record.completed`; 1210 NEGOTIATION → AUTHORING on `contract_clause.flagged`). Expected from the master relationship graph and the lifecycle state machine on `legal_contracts`: (a) AUTHORING → NEGOTIATION on contract draft → in_review (verb `contract.in_review`, no event row yet, see B1-S6), (b) NEGOTIATION → REPOSITORY on `legal_contract.approved` (state 40, `domain_module_id=126` realizes, but the contract then activates in REPOSITORY context), (c) REPOSITORY → OBLIGATION-MGMT on `legal_contract.signed` (38) so obligations are auto-extracted into module 128, (d) REPOSITORY → RENEWAL on `legal_contract.active` (state 70, anchor for renewal countdown), (e) RENEWAL → REPOSITORY on `legal_contract.renewed` (37) feeding the repository with the renewal record, (f) RENEWAL → AUTHORING on `renewal.30_day_warning` if the renewal kicks off a new draft from the existing template. | Author 5 intra-domain handoff rows with `source_domain_id=target_domain_id=26`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`. Three of the five lean on the existing `legal_contract.signed` (38), `legal_contract.renewed` (37), `renewal.30_day_warning` (104) events; the AUTHORING → NEGOTIATION and NEGOTIATION → REPOSITORY pairs need new state-change events (`legal_contract.submitted_for_review` and `legal_contract.approved` respectively, see B1-S6). |
 | B1-S4 | **B9, missing trigger_events for workflow-gate states** | 4 lifecycle states have `requires_permission=true` and realize on a specific module but no matching `trigger_events` row exists: `legal_contract.approved` (state 40, module 126), `legal_contract.amended` (state 75, module 127 - existing event 176 covers this), `legal_contract.terminated` (state 90, module 127), `contract_clause.approved` (state 30, module 125, existing event 533 is `flagged` not approved), `contract_clause.deprecated` (state 50, module 125), `contract_template.approved` (state 30, module 125), `contract_template.deprecated` (state 50, module 125), `contract_obligation.satisfied` (state 40, module 128), `contract_obligation.waived` (state 60, module 128), `signature_record.voided` (state 60, module 127). 9 missing events confirmed; the existing `legal_contract.amended` (176) covers state 75. | Insert 9 `trigger_events` rows, each `event_category='state_change'`, `data_object_id` pointing at the publishing master. Use the new `legal_contract.approved` event as the trigger for B1-S3's NEGOTIATION → REPOSITORY intra-domain handoff. |
 | B1-S5 | **B10b report-only (outbound NULLs owed by other domains)** | 9 outbound handoffs carry NULL `target_domain_module_id`: 63 (SUB-MGMT), 342 (AGENCY-MGMT), 517 (CPQ), 518 (FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC), 41 (S2P), 215 (S2P), 216 (AP-AUTO). Per B10b's asymmetry rule the target module is the target domain's audit work. CLM's own side (`source_domain_module_id`) is populated on every outbound row. | Schedule b1 audits for SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, S2P, AP-AUTO to derive their `target_domain_module_id` per the standard B10b backfill procedure. |
 | B1-S6 | **B10b report-only (inbound NULLs owed by source domains)** | 9 inbound handoffs carry NULL `source_domain_module_id`: 62 (CPQ), 217 (ESIGN), 309 (RE-CRE), 339 (ACCT-PRACT-MGMT), 343 (AGENCY-MGMT), 602 (S2P), 40 (S2P), 469 (CRM, source_domain_module_id IS populated to 48, scratch this one), 482 (CPQ), 1014 (CPQ). Re-counting: 62, 217, 309, 339, 343, 602, 40, 482, 1014, 9 inbounds with NULL source FK; CLM's `target_domain_module_id` is populated on every one. | Schedule b1 audits for CPQ, ESIGN, RE-CRE, ACCT-PRACT-MGMT, AGENCY-MGMT, S2P to populate their `source_domain_module_id` on the relevant handoffs. |
-| B1-S7 | **E2 advisory, duplicate role_modules row** | `SALES-TRANSACTION-COORDINATOR` (10100) has 2 identical rows on CLM-REPOSITORY (127), both `interaction_level='secondary'`. Likely a duplicate insert during the RE-BROKERAGE starter load. | DELETE one of the two duplicate rows. The fix is mechanical, surgical CLI is sufficient. |
+| B1-S7 | **E2 advisory, duplicate persona_modules row** | `SALES-TRANSACTION-COORDINATOR` (10100) has 2 identical rows on CLM-REPOSITORY (127), both `interaction_level='secondary'`. Likely a duplicate insert during the RE-BROKERAGE starter load. | DELETE one of the two duplicate rows. The fix is mechanical, surgical CLI is sufficient. |
 | B1-S8 | **Pairwise, missing consumer DMDOs on downstream domains** | Several CLM-targeted handoffs imply consumer DMDOs on the target side that do not exist: SUB-MGMT consumes `legal_contracts` (handoffs 63, 519) but no SUB-MGMT module declares the dependency; AGENCY-MGMT consumes `legal_contracts` (342) but no AGENCY-MGMT module declares; CPQ consumes `contract_templates` (517) but no CPQ module declares; FIN consumes `legal_contracts` (518) but no FIN module declares; CSM consumes `contract_obligations` (520) but no CSM module declares; GRC consumes `contract_obligations` (521) but no GRC module declares; AP-AUTO consumes `legal_contracts` (216) but no AP-AUTO module declares. | Each target domain's b1 audit adds a `consumer` DMDO row on the relevant CLM master in the receiving module. Not CLM's fix to make; surface in this audit so the target audits can pick it up. |
 
 #### APQC TAGGING (matches the SKILL anti-pattern: prior CLM phase shipped structural and tooling fixes but zero APQC tagging)
@@ -99,7 +99,7 @@ Only 3 of 26 cross-domain handoffs carry `handoff_processes` rows. **All 3 are `
 
 #### Boundary findings per neighbor (Pass 4 pairwise reconciliation)
 
-For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff produced the following per-neighbor findings. Section 1 (existing handoffs fully wired) is a sanity check, reported as counts only. Section 2 covers NULL FK candidates (deferred to other domains' audits per B10b asymmetry). Section 3 surfaces missing handoffs the catalog implies. Section 4 surfaces boundary integrity gaps. Section 5 covers cross-domain relationship mirror checks.
+For each of the 8 heavy neighbors (relationship weight ≥3) the 5-section pairwise diff produced the following per-neighbor findings. Section 1 (existing handoffs fully wired) is a sanity check, reported as counts only. Section 2 covers NULL FK candidates (deferred to other domains' audits per B10b asymmetry). Section 3 surfaces missing handoffs the catalog implies. Section 4 surfaces boundary integrity gaps. Section 5 covers cross-domain relationship mirror checks.
 
 **S2P ↔ CLM (weight 5).** Wired pairs: 4 (CLM→S2P 41 signed→PO; CLM→S2P 215 expired→legal_contracts; S2P→CLM 40 sourcing.contract_drafted; S2P→CLM 602 sourcing_event.awarded). Section 2: handoffs 41 / 215 have NULL `target_domain_module_id` on the S2P side (S2P's B10b); 40 / 602 have NULL `source_domain_module_id` on the S2P side. Section 3: a likely missing handoff is CLM-REPOSITORY → S2P on `legal_contract.amended` (176) for purchase-order re-issue. Section 4: clean. Section 5: cross-relationship `legal_contracts triggers_creation_of purchase_orders` (502) exists; `legal_contracts triggers_review_in purchase_requisitions` (503) exists; `sourcing_events originates legal_contracts` (492) exists. All in order.
 
@@ -107,7 +107,7 @@ For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff
 
 **CRM ↔ CLM (weight 5).** Wired pairs: 2 (CLM→CRM 522 renewal.30_day_warning; CRM→CLM 469 crm_opportunity.closed_won). Section 2: both fully populated on both module FKs. Section 3: missing handoff CLM-REPOSITORY → CRM on `legal_contract.expired` (175) to update opportunity stages. Section 4: clean. Section 5: cross-relationship `legal_contracts renewal_warns crm_opportunities` (507), `crm_opportunities drafts legal_contracts` (514) exist. Healthy.
 
-**SUB-MGMT ↔ CLM (weight 4).** Wired pairs: 2 (CLM→SUB-MGMT 63 signed→customer_subscriptions; CLM→SUB-MGMT 519 signed→legal_contracts). Section 2: both have NULL `target_domain_module_id` (SUB-MGMT's B10b). Section 3: no inbound from SUB-MGMT to CLM — possible candidate: `customer_subscription.cancelled` → CLM-RENEWAL for the renewal record. Section 4: clean (legal_contracts is `consumer + contributor` not declared on any SUB-MGMT module; that surfaces as Pairwise consumer DMDO report-only, see B1-S8). Section 5: cross-relationship `legal_contracts backs customer_subscriptions` (436), `legal_contracts renewed_into customer_subscriptions` (512) exist.
+**SUB-MGMT ↔ CLM (weight 4).** Wired pairs: 2 (CLM→SUB-MGMT 63 signed→customer_subscriptions; CLM→SUB-MGMT 519 signed→legal_contracts). Section 2: both have NULL `target_domain_module_id` (SUB-MGMT's B10b). Section 3: no inbound from SUB-MGMT to CLM — possible candidate: `customer_subscription.canceled` → CLM-RENEWAL for the renewal record. Section 4: clean (legal_contracts is `consumer + contributor` not declared on any SUB-MGMT module; that surfaces as Pairwise consumer DMDO report-only, see B1-S8). Section 5: cross-relationship `legal_contracts backs customer_subscriptions` (436), `legal_contracts renewed_into customer_subscriptions` (512) exist.
 
 **PSA ↔ CLM (weight 5).** Wired pairs: 2 (CLM→PSA 138 signed→legal_contracts; PSA→CLM 1020 project_billing_milestone.reached). Section 2: 138 has both FKs populated (target_domain_module_id=86 PSA-PROJECT-DELIVERY); 1020 has NULL target FK on CLM side, this IS CLM's fix, propose to populate `target_domain_module_id=128` CLM-OBLIGATION-MGMT since milestone-reached updates an obligation. **B1-S9 candidate (in-scope, mechanical PATCH):** PATCH handoff 1020 set `target_domain_module_id=128`. Section 3: clean. Section 4: clean. Section 5: `legal_contracts seeds service_projects` (506), `project_billing_milestones updates contract_obligations` (521) exist.
 
@@ -143,7 +143,7 @@ For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff
 | B1-S4 | Insert 9 missing `trigger_events` for workflow-gate states |
 | B1-S5 | Report-only, 9 outbound NULL target_module_id, schedule audits on SUB-MGMT / AGENCY-MGMT / CPQ / FIN / CSM / GRC / S2P / AP-AUTO |
 | B1-S6 | Report-only, 9 inbound NULL source_module_id, schedule audits on CPQ / ESIGN / RE-CRE / ACCT-PRACT-MGMT / AGENCY-MGMT / S2P |
-| B1-S7 | DELETE duplicate role_modules row for SALES-TRANSACTION-COORDINATOR on CLM-REPOSITORY |
+| B1-S7 | DELETE duplicate persona_modules row for SALES-TRANSACTION-COORDINATOR on CLM-REPOSITORY |
 | B1-S8 | Report-only, 7 downstream domains need consumer DMDOs on CLM masters, schedule those audits |
 | B1-S9 | PATCH handoff 1020 set `target_domain_module_id=128` |
 | B1-H1 | APQC TAGGING, propose 26 `agent_curated` rows (REPLACE 3 weak `discovery_substring` rows + INSERT 23 new) |
@@ -154,7 +154,7 @@ For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff
 |---|---|---|---|
 | B2-S1 | **M7 architectural choice for CLM module deployability.** B1-S1 surfaces 8 sibling consumer DMDO rows that violate M7 within-domain incoherence. The agent default is DELETE (the 8 rows go away; sibling modules read `legal_contracts` / `contract_clauses` / `contract_templates` via the canonical master). The alternative is PROMOTE-to-`embedded_master` (each sibling module ships a standalone-deployable shell of the master so the module is installable without its master sibling). The choice depends on whether CLM modules are intended to be standalone-deployable in isolation. Standalone CLM-NEGOTIATION without CLM-AUTHORING (clauses + templates) has nothing to negotiate, the embedded path looks weak; standalone CLM-OBLIGATION-MGMT without CLM-REPOSITORY (legal_contracts) has nothing to extract obligations from, also weak. Recommendation: DELETE all 8 rows. | Architectural intent + deployability strategy decision; user's call. | (a) DELETE all 8 sibling consumer rows. (b) PROMOTE to embedded_master per row (specify which ones). (c) Mixed (DELETE some, PROMOTE others; specify per row). |
 | B2-S2 | **Rule #15 notes-pollution on every `data_objects` row.** All 5 CLM masters (66, 67, 68, 69, 70) carry populated `notes` recording the B4 pattern-flag reasoning (`has_submit_lock` rationale, `has_single_approver=false` rationale, multi-approver context). Rule #15 forbids auto-populated notes; the prior Rule #12 license for config-shape / pattern-flag context in `data_objects.notes` is RESCINDED. Were these notes user-approved at load time, or were they auto-populated by the loader? | Cannot tell from audit alone; load-time approval status unknown. | (a) Confirm user-approved at load time; leave in place. (b) Confirm auto-populated; PATCH all 5 rows' `notes` to empty string and log the Rule #15 incident per the audit obligation in references/skill-changelog.md. |
-| B2-S3 | **F7 channel-primitive justification.** `sign_document` (tool 42, side_effect, external) is linked on CLM-REPOSITORY system skill (198) and on the REAL-ESTATE-AGENT starter skill (220), both with empty `notes`. F7 requires the channel-primitive link be justified in `skill_tools.notes` (signing IS the workflow for these skills). Per Rule #15 the agent cannot auto-populate; per F7 the row needs the justification recorded. Two routes: (a) confirm sign_document IS the workflow and supply exact wording for `skill_tools.notes` to record the justification, or (b) the catalog supports `sign_document` as a workflow primitive without a per-skill note (treat F7 as satisfied for these two rows since the workflow-shape is self-evident). | Rule #15 vs F7 boundary judgment; user owns the call. | (a) Supply user-approved `notes` text per the 2 rows. (b) Treat F7 as satisfied via the audit conversation (record decision in this audit file, leave the skill_tools rows clean). |
+| B2-S3 | **F7 channel-primitive justification.** `sign_document` (tool 42, side_effect, external) is related on CLM-REPOSITORY system skill (198) and on the REAL-ESTATE-AGENT starter skill (220), both with empty `notes`. F7 requires the channel-primitive relationship be justified in `skill_tools.notes` (signing IS the workflow for these skills). Per Rule #15 the agent cannot auto-populate; per F7 the row needs the justification recorded. Two routes: (a) confirm sign_document IS the workflow and supply exact wording for `skill_tools.notes` to record the justification, or (b) the catalog supports `sign_document` as a workflow primitive without a per-skill note (treat F7 as satisfied for these two rows since the workflow-shape is self-evident). | Rule #15 vs F7 boundary judgment; user owns the call. | (a) Supply user-approved `notes` text per the 2 rows. (b) Treat F7 as satisfied via the audit conversation (record decision in this audit file, leave the skill_tools rows clean). |
 | B2-S4 | **B4 pattern-flag positive re-evaluation per Rule #12.** Current flags read: `legal_contracts.has_submit_lock=true`, `contract_obligations.has_submit_lock=false`, `contract_clauses.has_submit_lock=true`, `contract_templates.has_submit_lock=true`, `signature_records.has_submit_lock=true`. None has `has_personal_content=true` or `has_single_approver=true`. Questions: (a) `legal_contracts.has_personal_content` should probably be `true` since contracts carry counterparty contact info, signatory names, possibly personal addresses; (b) `signature_records.has_personal_content` could be `true` (signer names, possibly signature images / IP addresses captured at signing); (c) `contract_obligations.has_single_approver` could be `true` for the obligation owner closing the record (a single user typed action), though the audit notes say it isn't. | Pattern flags are workflow-shape judgments the user owns; the audit re-evaluates and proposes, the user decides. | Per-flag yes/no from user; capture in Decisions. |
 | B2-S5 | **E6 permission-bundle drift.** Current bundles look tier-level coherent: CONTRACT-OPS-MANAGER has `:admin` on REPOSITORY / OBLIGATION-MGMT / RENEWAL and `:manage` on AUTHORING / NEGOTIATION; LEGAL-COUNSEL has `:admin` on AUTHORING / NEGOTIATION and `:manage` on REPOSITORY. None of the workflow-gate permissions derived from lifecycle states (`approve_legal_contract`, `execute_legal_contract`, `amend_legal_contract`, `terminate_legal_contract`, `renew_legal_contract`, `approve_contract_clause`, `approve_contract_template`, `close_contract_obligation`, `mark_obligation_breached`, `waive_contract_obligation`, `void_signature_record`, `deprecate_contract_clause`, `deprecate_contract_template`) is explicitly granted, the bundles rely on `permission_hierarchy` to expand `:manage` / `:admin` to include the gates. Question: is the implicit-grant pattern intentional, or should specific gates be enumerated (e.g. `approve_legal_contract` on LEGAL-COUNSEL even though they already have `clm-negotiation:admin`)? | Hierarchy seeding state isn't introspected here; the audit can't tell whether `permission_hierarchy` already expands the gates. | (a) Confirm hierarchy expands gates, leave bundles as-is. (b) Add explicit gate grants for LEGAL-COUNSEL on `approve_*` gates. (c) Leave drift, expectation is `permission_hierarchy` covers everything. |
 | B2-S6 | **REAL-ESTATE-AGENT starter notes invariants.** Per Rule #19 invariant 1, starter `REAL-ESTATE-AGENT` (id 153) carries 7 embedded_master rows + 1 platform_builtin consumer (users 748). Both legal_contracts and signature_records appear as `embedded_master`, but the starter does NOT host the canonical master for either (they live in CLM-REPOSITORY, modules 125 / 127). The starter is hosted via `domain_module_host_domains` on CLM (host_domain_id=26) as well as on primary host RE-BROKERAGE (143). The invariant is satisfied (the canonical masters exist somewhere in CLM full modules), but the audit should confirm that the starter's lite path is intentional: should the real-estate agent's contract authoring use the full CLM-AUTHORING module's clauses / templates, or does the starter ship a simplified flow that bypasses the full clause library? | Editorial / product intent question, the audit can't decide whether the starter's lite path is correct or whether it should escalate to the full module. | (a) Starter intentionally embeds and the user accepts the lite-flow. (b) Starter should consume the full CLM-REPOSITORY rather than embedded_master (refactor needed). |
@@ -173,7 +173,7 @@ The subagent recipe was not spawned (this is a single-pass audit per orchestrato
 | `contract_renewal_records` | Ironclad, LinkSquares, Workday Evisort model the renewal record as distinct from the original contract (one parent, many renewal records). Currently `legal_contract.renewed` (event 37) transitions the original record's state but produces no new master. | CLM-RENEWAL (master) |
 | `clause_libraries` | Icertis, Sirion, ContractPodAi maintain library entities distinct from individual clauses (versioned clause sets, jurisdictional libraries). Current `contract_clauses` master conflates the library with individual clauses. | CLM-AUTHORING (master, or alias / category column on clauses) |
 | `playbooks` | Ironclad's "Playbooks" feature distinct from contract templates (negotiation guidance, fallback positions). LinkSquares "Playbooks" similar. Current `contract_templates` alias includes "playbook" but the entity may warrant its own master. | CLM-NEGOTIATION (master), promote alias to entity |
-| `risk_assessments` (CLM-scoped) | Icertis "Risk Score", Sirion "Compliance Score", ContractPodAi "Risk Detection" produce structured risk records per clause / per contract. Currently the `detect_clause_risk` tool is linked to CLM-NEGOTIATION but no `clause_risk_assessments` master records the output. | CLM-NEGOTIATION (master) |
+| `risk_assessments` (CLM-scoped) | Icertis "Risk Score", Sirion "Compliance Score", ContractPodAi "Risk Detection" produce structured risk records per clause / per contract. Currently the `detect_clause_risk` tool is related to CLM-NEGOTIATION but no `clause_risk_assessments` master records the output. | CLM-NEGOTIATION (master) |
 | `counterparties` | Icertis, LinkSquares, Agiloft model counterparties as a first-class master distinct from `crm_accounts`. Currently no counterparty entity, the relationship lives via `crm_accounts` or `vendors`. | CLM-REPOSITORY (master) or master in master module, consumer in CLM |
 | `contract_milestones` | Distinct from `contract_obligations` in Sirion, Icertis (milestones are date-driven checkpoints; obligations are deliverables). Currently the catalog folds milestones into obligations. | CLM-OBLIGATION-MGMT (potential split / sibling master) |
 | `data_protection_addenda` | GDPR / DPA compliance requires DPAs as first-class records with their own renewal cycle. Icertis, Ironclad, OneTrust have specialized DPA modules. | new compliance module candidate |
@@ -215,7 +215,7 @@ This audit surfaced 0 domain-tier candidates for `audits/_missing-domains.md`; e
 - **S3 (5 new intra-domain handoffs)** depends on S4 (needs 2 new events first).
 - **S4 (9 missing `trigger_events`)** is structural; no other dependencies.
 - **S5 / S6 (B10b report-only outbound + inbound NULLs)** schedules 6 + 6 = 12 distinct other-domain audits; not CLM's fix.
-- **S7 (DELETE duplicate role_modules row)** is mechanical; one DELETE.
+- **S7 (DELETE duplicate persona_modules row)** is mechanical; one DELETE.
 - **S8 (Pairwise missing consumer DMDOs on 7 target domains)** schedules 7 other-domain audits; not CLM's fix.
 - **S9 (PATCH handoff 1020 target_module_id=128)** is mechanical; one PATCH.
 - **H1 (26 APQC tags including 3 REPLACE candidates)** load now or in a follow-up batch?
@@ -257,7 +257,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 **Bucket 1 (4 of 11 resolved):**
 
 - **D1 (B1-S2):** APPLIED. 5 trigger_events PATCHed with `event_category`: 531 `contract_obligation.due` → `lifecycle`; 532 `contract_obligation.breached`, 533 `contract_clause.flagged`, 534 `contract_template.published`, 535 `signature_record.completed` → `state_change`.
-- **D2 (B1-S7):** APPLIED. Deleted duplicate `role_modules` row id=392 for SALES-TRANSACTION-COORDINATOR x CLM-REPOSITORY; kept id=294.
+- **D2 (B1-S7):** APPLIED. Deleted duplicate `persona_modules` row id=392 for SALES-TRANSACTION-COORDINATOR x CLM-REPOSITORY; kept id=294.
 - **D3 (B1-S9):** APPLIED. `handoffs.id=1020` (PSA `project_billing_milestone.reached` → CLM) PATCHed: `target_domain_module_id` NULL → 128 (CLM-OBLIGATION-MGMT).
 - **D4 (B1-S4):** APPLIED. 9 trigger_events inserted (ids 1456-1464, all `record_status='new'`): `legal_contract.approved`, `legal_contract.terminated`, `contract_clause.approved`, `contract_clause.deprecated`, `contract_template.approved`, `contract_template.deprecated`, `contract_obligation.satisfied`, `contract_obligation.waived`, `signature_record.voided`. Unblocks B1-S3 (intra-domain handoffs depend on the new `legal_contract.approved` event).
 
@@ -302,11 +302,11 @@ All 26 of 26 cross-domain handoffs now tagged `agent_curated`, `record_status='n
 
 All 11 Bucket 1 items in scope for CLM are already resolved. No new technical writes required. Live verification confirmed each prior decision against the database:
 
-- **B1-S1 (M7 hard fail, D5):** verified. `domain_module_data_objects` for `data_object_id IN (66, 68, 69)` across CLM modules (125, 126, 127, 128, 129) returns exactly 3 rows, each `role='master'` (legal_contracts on 127, contract_templates on 125, contract_clauses on 125). All 8 sibling consumer rows deleted as intended.
+- **B1-S1 (M7 hard fail, D5):** verified. `domain_module_data_objects` for `data_object_id IN (66, 68, 69)` across CLM modules (125, 126, 127, 128, 129) returns exactly 3 rows, each `held_as='master'` (legal_contracts on 127, contract_templates on 125, contract_clauses on 125). All 8 sibling consumer rows deleted as intended.
 - **B1-S2 (event_category PATCH, D1):** verified. Events 531=`lifecycle`, 532/533/534/535=`state_change`.
 - **B1-S3 (intra-domain handoffs, D6):** verified. 7 intra-CLM handoffs present (1209, 1210, 1331-1335), all `source_domain_id=target_domain_id=26`.
 - **B1-S4 (9 trigger_events, D4):** verified. Rows 1456-1464 present, all `event_category='state_change'`.
-- **B1-S7 (duplicate role_modules, D2):** verified. Single row id=294 for role_id=10100 x domain_module_id=127 remains.
+- **B1-S7 (duplicate persona_modules, D2):** verified. Single row id=294 for persona_id=10100 x domain_module_id=127 remains.
 - **B1-S9 (handoff 1020 target, D3):** verified. `target_domain_module_id=128`.
 - **B1-H1 (APQC tagging, D7 + follow-up):** verified. All 26 CLM-touching handoffs carry `handoff_processes` rows with `proposal_source='agent_curated'` and `record_status='new'`.
 - **B1-S5, B1-S6, B1-S8:** report-only by B10b asymmetry rule; scheduled via D8 for downstream domain audits (SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT).
@@ -332,7 +332,7 @@ Fresh structural Validate b1 pass against live state. CLM-proper footprint: 5 fu
 | A (Phase A market shape) | pass | 5 modules, 8 capabilities, 5 masters, vendor surface intact |
 | M (Phase M modules) | pass | M1 satisfied (≥1 full module); M2 satisfied (8 capabilities, 5 full modules ≥2 floor); M7 clean (every master appears exactly once across CLM full modules; sibling consumer rows deleted in D5) |
 | B5 (embedded_master integrity) | pass | starter 153 embedded_masters all point to canonical masters or platform_builtin |
-| B7 (users edges) | pass | starter has consumer row on users (DMDO 1115) |
+| B7 (relationships to `users`) | pass | starter has consumer row on users (DMDO 1115) |
 | B9 (outbound trigger_events + event_category) | partial fail | event 589 sourcing_event.awarded has empty event_category (S2P-owned event; reported via B10b asymmetry, CLM is the receiver) |
 | B9b (intra-domain handoffs) | pass | 7 intra-CLM handoffs cover authoring, negotiation, repository, obligation, renewal progressions |
 | B10b (per-module attribution) | partial fail | 10 cross-domain handoffs carry NULL on the other-domain side: outbound NULL target on 41, 215, 216, 342, 518, 519, 520, 521 (8 rows); inbound NULL source on 217, 309, 469, 1014 (4 rows); inbound NULL on both FKs 309, 339 (subset); CLM-side FKs always populated |
@@ -341,11 +341,11 @@ Fresh structural Validate b1 pass against live state. CLM-proper footprint: 5 fu
 | C (functional ownership) | pass (carry-over) |  |
 | D (UI spot-check) | not run | structural audit only |
 | E1 (≥1 role per module) | pass | 6 distinct roles across CLM-AUTHORING (5), CLM-NEGOTIATION (4), CLM-REPOSITORY (6 incl. SALES-TRANSACTION-COORDINATOR cross-bundle), CLM-OBLIGATION-MGMT (2), CLM-RENEWAL (2) |
-| E2 (no duplicate role_modules) | pass | duplicate row 392 deleted in D2; only single row 294 remains on SALES-TRANSACTION-COORDINATOR x CLM-REPOSITORY |
+| E2 (no duplicate persona_modules) | pass | duplicate row 392 deleted in D2; only single row 294 remains on SALES-TRANSACTION-COORDINATOR x CLM-REPOSITORY |
 | E3 (workflow-gate role distribution) | pass (carry-over) |  |
 | E4 (permission bundles) | partial | per B2-S5 prior audit, implicit hierarchy expansion unresolved (judgment call carry-over) |
 | E5 (cross-cutting consistency) | pass |  |
-| F1 (≥1 skill_tool per system skill) | pass | 6 system skills, all linked to skill_tools (72 rows total across CLM scope) |
+| F1 (≥1 skill_tool per system skill) | pass | 6 system skills, all related to skill_tools (72 rows total across CLM scope) |
 | F2 (1 system skill per domain_module) | pass | each of 6 domain_modules has exactly 1 `skill_type='system'` row |
 | F3 (skill_tools floor) | pass | typical 5-20 tools, all CLM skills sit in band |
 | F4 (operation_kind ↔ data_object_id invariants) | pass on sampled rows (query/mutate have data_object_id) |  |
@@ -445,13 +445,13 @@ Everything landed at `record_status='new'`.
   `operational_workflow`, contract_clauses (68) -> `catalog` (reusable clause library / reference language),
   contract_templates (69) -> `catalog` (pre-approved templates with a publish flow; Rule #12 templates-are-catalog),
   signature_records (70) -> `operational_workflow` (e-signature envelope state machine). 5 PATCHes.
-- **B1A-PHASE-P (E1):** verified live that 0 personas reached the 5 CLM modules via `role_modules`, then authored
+- **B1A-PHASE-P (E1):** verified live that 0 personas reached the 5 CLM modules via `persona_modules`, then authored
   the missing persona/RACI layer FRESH under the DERIVED (Plan 3) model (reach + RACI only; no _core
   roles/permissions/role_permissions/permission_hierarchy):
-  - **4 `domain_roles` personas** (function-anchored on the owner/contributor functions that touch CLM):
+  - **4 `personas` personas** (function-anchored on the owner/contributor functions that touch CLM):
     CONTRACT-OPS-MANAGER (#31, fn 74 Contract Operations), CONTRACT-OPS-SPECIALIST (#32, fn 74),
     LEGAL-COUNSEL (#33, fn 7 Legal), PROCUREMENT-CONTRACT-LIAISON (#34, fn 19 Procurement).
-  - **15 `role_modules` reach rows** (each persona >=2 modules; primary/secondary mix): manager reaches all 5
+  - **15 `persona_modules` reach rows** (each persona >=2 modules; primary/secondary mix): manager reaches all 5
     (REPOSITORY/OBLIGATION/RENEWAL primary, AUTHORING/NEGOTIATION secondary); specialist 4 (all primary);
     counsel 3 (AUTHORING/NEGOTIATION primary, REPOSITORY secondary); liaison 3 (all secondary). Every CLM
     module now has >=1 persona -> E1 passes.
@@ -464,7 +464,7 @@ Everything landed at `record_status='new'`.
     legal processes, CONTRACT-OPS-SPECIALIST on manage-contracts + obligations; A = CONTRACT-OPS-MANAGER on all
     four; plus C (PROCUREMENT-CONTRACT-LIAISON / LEGAL-COUNSEL) and I rows. Every R/A row resolves to a
     `process_id`-wired gate (no grant-from-nowhere; no R/A row without a wired gate). Reach-vs-derived
-    reconciliation (roles.md section 8) holds.
+    reconciliation (personas.md section 8) holds.
 - **Catalog UX (Rule #20, A4 + M8):** verified domain 26 and all 5 modules carried empty
   `catalog_tagline`/`catalog_description`, then authored buyer-voice copy (workflow + value, no vendor names,
   no em-dash, American English) and PATCHed straight in. 6 rows (1 domain + 5 modules), 12 fields. Empty-guarded
@@ -473,7 +473,7 @@ Everything landed at `record_status='new'`.
 ### Surfaced (no write; for user)
 
 - **B1A-SELF-CONTAIN (M9, destructive):** the 1 row saas_subscriptions (SMP-mastered) as
-  role=contributor/necessity=required on CLM-REPOSITORY. Converting role->embedded_master or
+  held_as=contributor/necessity=required on CLM-REPOSITORY. Converting role->embedded_master or
   necessity->optional rewrites an existing non-empty row (destructive), so left for approval. Recommended:
   set necessity=optional (lighter, truer than carrying a local SaaS-subscription shell). Moved to
   `b1a_destructive_awaiting_approval` in state.yaml.
@@ -610,7 +610,7 @@ approved in principle but not built.
 ### Kept open (carried into regenerated q-CLM.md)
 
 - **B1A-SELF-CONTAIN (a2 = a question, not a decision).** User asked how CLM can depend on saas_subscriptions and
-  whether the direction is backwards. ANSWER: it is backwards. Live read shows CLM-REPOSITORY (127) carries TWO
+  whether the direction is backward. ANSWER: it is backward. Live read shows CLM-REPOSITORY (127) carries TWO
   `contributor + required` rows - saas_subscriptions (62, mastered by SMP-RENEWAL-VENDOR 31) and software_licenses
   (58, mastered by SAM-ENTITLEMENT-MGMT 202) - each making the module non-standalone-deployable and pointing the
   dependency the wrong way. The correct direction is already modeled twice: relationship #490/#491 (legal_contracts
@@ -670,7 +670,7 @@ then loaded. All rows `record_status='new'`.
 
 Loader [.tmp_deploy/load_clm_b3_entities_2026_06_11.ts](../../.tmp_deploy/load_clm_b3_entities_2026_06_11.ts).
 Each row: `data_objects` (labels, entity_type, pattern flags, kind=domain_owned) + `domain_module_data_objects`
-master + relationships to legal_contracts + `users` edge + aliases + lifecycle states (workflow masters).
+master + relationships to legal_contracts + relationship to `users` + aliases + lifecycle states (workflow masters).
 Naming-arbitrated per Rule #9 (collisions with existing rows).
 
 | id | name | module | entity_type | necessity |
@@ -693,7 +693,7 @@ CLM-COMPLIANCE if that b2 module lands.
 
 Loader [.tmp_deploy/load_clm_b3_regulations_2026_06_11.ts](../../.tmp_deploy/load_clm_b3_regulations_2026_06_11.ts).
 Created FAR (99) + DFARS (100) regulation rows (type `other`, jurisdiction USA 3); HIPAA already existed (4).
-Linked GDPR (1) / SOX (5) / HIPAA (4) / FAR (99) / DFARS (100) to CLM (26) via `domain_regulations`, applicability
+Related GDPR (1) / SOX (5) / HIPAA (4) / FAR (99) / DFARS (100) to CLM (26) via `domain_regulations`, applicability
 `conditional` (jurisdiction/sector-gated). eIDAS (34) + ASC 606 (57) unchanged (mandatory).
 
 ### State changes
@@ -718,10 +718,10 @@ hold up" is a greenlight, not a question (Rule #21); the work should have run wi
 ### Process correction (same day) - research was loaded without a q-file
 
 Second miss, the more serious one: the b3 research was written straight into the catalog (9 masters 1048-1056 +
-5 regulation links + FAR/DFARS rows) with **no q-file**. Research-derived additions are DECISIONS to surface for
+5 regulation relationships + FAR/DFARS rows) with **no q-file**. Research-derived additions are DECISIONS to surface for
 sign-off, not silent catalog writes (the whole point of the q-/a- loop). Correction applied: a `q-CLM.md` was
 authored presenting the load as 6 decisions (q1 keep/revert the whole load; q2 counterparties master-vs-consumer;
-q3 playbooks master-vs-alias; q4 CLM-COMPLIANCE module; q5 CLM-NEGOTIATION split; q6 keep the regulation links).
+q3 playbooks master-vs-alias; q4 CLM-COMPLIANCE module; q5 CLM-NEGOTIATION split; q6 keep the regulation relationships).
 Domain set back to `feedback_needed` / `next_action_by: user`. The loaded rows remain at `record_status='new'`
 (unapproved) pending those answers; q1=b reverts the load wholesale. The Phase-B/S tooling follow-up moved to b1b
 `B1B-B3-MASTERS-COMPLETE`, blocked on the q1 keep/revert decision. The two module-splits became live q-file
@@ -739,7 +739,7 @@ because the user answered it with a question. No `record_status` flip anywhere (
 ### Resolved
 
 - **B2-B3-LOAD-REVIEW (a1 = "keep them as new", option a).** The 9 b3 masters (1048-1056), the 5 conditional
-  domain_regulations links, and the FAR/DFARS rows are KEPT as drafts at `record_status='new'`. The user's
+  domain_regulations relationships, and the FAR/DFARS rows are KEPT as drafts at `record_status='new'`. The user's
   trailing "isn't that the SOP?" is correct and rhetorical: yes, the q-/a- loop keeps research-derived
   additions at `record_status='new'` for review, and approval (any non-`new` flip) is a separate out-of-band
   step (Rule #1). No catalog write; item removed from b2. The Phase-B/S tooling follow-up is now UNBLOCKED and
@@ -754,7 +754,7 @@ because the user answered it with a question. No `record_status` flip anywhere (
   [.tmp_deploy/fix_clm_2026_06_16_playbook_alias.ts](../../.tmp_deploy/fix_clm_2026_06_16_playbook_alias.ts)
   (idempotent). Removed from b2. Grounding: Ironclad / LinkSquares model a negotiation playbook (fallback
   positions / negotiation guidance) as distinct from a document template.
-- **B2-B3-REGULATIONS (a6 = empty -> Recommended = yes).** The 5 conditional regulation links (GDPR 1, SOX 5,
+- **B2-B3-REGULATIONS (a6 = empty -> Recommended = yes).** The 5 conditional regulation relationships (GDPR 1, SOX 5,
   HIPAA 4, FAR 99, DFARS 100, all `applicability='conditional'`) and the FAR (99) + DFARS (100) regulation rows
   are kept. Already loaded at `record_status='new'`; no write. Removed from b2.
 - **B2-MOD-CLM-NEGOTIATION-SPLIT (a5 = b).** Do NOT split CLM-NEGOTIATION into CLM-REDLINING +

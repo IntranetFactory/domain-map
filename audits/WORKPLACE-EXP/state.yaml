@@ -21,19 +21,19 @@ last_audit: "2026-06-19"
 #    is modularized; visitor entities 668-675 have no master yet -> see b1b sequencing note).
 #
 # Known sequencing follow-up (NOT a user decision): WEX `booking_invitee_links` (visitor pre-reg from a
-# room booking) depends on VIS-MGMT having a visitor master; until VIS-MGMT is built, that edge stays
+# room booking) depends on VIS-MGMT having a visitor master; until VIS-MGMT is built, that relationship stays
 # unwired. Tracked here so it is not lost.
 
 b1a: []
 
 b1b:
   - id: B1B-WEX-VISMGMT-VISITOR
-    summary: "Visitor pre-registration edge depends on VIS-MGMT visitor master (not yet mastered)."
+    summary: "Visitor pre-registration relationship depends on VIS-MGMT visitor master (not yet mastered)."
     finding: >
       WEX's visitor-flow integration (e.g. booking_invitee_links: a room booking pre-registers a
       visitor) needs a VIS-MGMT visitor master. VIS-MGMT (24) has no modules wired and its visitor
       entities (668-675) have no master row yet. WEX will consume that master once VIS-MGMT is built;
-      until then the edge is unwired and visitor pre-reg is out of WEX's initial scope.
+      until then the relationship is unwired and visitor pre-reg is out of WEX's initial scope.
     blocked_by:
       - {type: domain_audit, blocking_domain: VIS-MGMT, milestone: visitor-master-built}
 

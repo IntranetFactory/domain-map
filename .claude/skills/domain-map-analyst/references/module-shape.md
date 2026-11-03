@@ -58,7 +58,7 @@ Label column: `vendor_name`.
 | `vendor_id` | reference → `vendors` | no | Nullable for internal builds / manual processes |
 | `solution_type` | enum | yes | `saas` / `on_prem` / `hybrid` / `open_source` / `internal_build` / `manual_process` |
 | `is_active_in_market` | boolean | yes | `false` for sunset / retired products |
-| `solution_kind` | enum | yes | Default `standard_solution`. Classifies non-Semantius solutions by integration role. Values: `external_connector` (system of record — SAP, NetSuite, Salesforce CRM), `action` (side-effect service — M365, Twilio, DocuSign, Stripe), `compute_service` (compute / AI / web-automation — OpenAI Platform, Anthropic API, Playwright), `standard_solution` (default; not yet integrated as a tool source). **Semantius itself is NOT in this enum** — Semantius coverage is intrinsic to `tools.operation_kind`, not modeled as a solution row. Promote a row out of `standard_solution` only when at least one `tool_solutions` row references it |
+| `solution_kind` | enum | yes | Default `standard_solution`. Classifies non-Semantius solutions by how they integrate. Values: `external_connector` (system of record — SAP, NetSuite, Salesforce CRM), `action` (side-effect service — M365, Twilio, DocuSign, Stripe), `compute_service` (compute / AI / web-automation — OpenAI Platform, Anthropic API, Playwright), `standard_solution` (default; not yet integrated as a tool source). **Semantius itself is NOT in this enum** — Semantius coverage is intrinsic to `tools.operation_kind`, not modeled as a solution row. Promote a row out of `standard_solution` only when at least one `tool_solutions` row references it |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -194,18 +194,18 @@ The data-silo map: rows here with the same `data_object_id` across multiple `sol
 
 ### `domain_data_objects`
 
-> **Under Rule #14**, once a domain has modules `domain_data_objects` is a **derived rollup** from `domain_module_data_objects` (group by `data_object_id`, strongest role wins). Don't hand-edit `domain_data_objects` for modularized domains; edit the module junction and let the rollup regenerate.
+> **Under Rule #14**, once a domain has modules `domain_data_objects` is a **derived rollup** from `domain_module_data_objects` (group by `data_object_id`, strongest `held_as` wins). Don't hand-edit `domain_data_objects` for modularized domains; edit the module junction and let the rollup regenerate.
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `domain_id` | parent → `domains` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
-| `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
-| `is_install_optional` | boolean | no | True when the domain can be installed without this entity. False, the default, means every install of the domain includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in. See SKILL.md Rule #16. |
+| `held_as` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
+| `is_install_optional` | boolean | no | True when the domain can be installed without this entity. False, the default, means every install of the domain includes it. Not related to `data_object_relationships.is_required`, which says whether a relationship's field must be filled in. See SKILL.md Rule #16. |
 | `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
-Migrated from an earlier `mastery_role` enum (`primary` / `secondary` / `derived`). `primary` mapped to `master`; the old `secondary` was a junk drawer. The current five-role enum forces an explicit choice.
+Migrated from an earlier `mastery_role` enum (`primary` / `secondary` / `derived`). `primary` mapped to `master`; the old `secondary` was a junk drawer. The current five-value enum forces an explicit choice.
 
 ### `domain_regulations`
 
@@ -267,8 +267,8 @@ Directional event-driven handoffs between two `domain_modules`, sharing a data o
 |---|---|---|---|
 | `source_domain_id` | parent → `domains` | yes | Domain emitting the trigger event |
 | `target_domain_id` | parent → `domains` | yes | Domain that receives and acts on the event |
-| `data_object_id` | parent → `data_objects` | yes | The **per-edge payload**, the artifact in flight on this specific handoff. Distinct from `trigger_events.data_object_id` (the publisher's data_object). The two columns ARE allowed to differ. |
-| `trigger_event_id` | reference → `trigger_events` | yes | FK to the published event (one event row, many subscribers). Per-edge integration metadata lives on this row; event semantics live on `trigger_events`. |
+| `data_object_id` | parent → `data_objects` | yes | The **per-handoff payload**, the artifact in flight on this specific handoff. Distinct from `trigger_events.data_object_id` (the publisher's data_object). The two columns ARE allowed to differ. |
+| `trigger_event_id` | reference → `trigger_events` | yes | FK to the published event (one event row, many subscribers). Per-handoff integration metadata lives on this row; event semantics live on `trigger_events`. |
 | `integration_pattern` | enum | yes | `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop` / `lifecycle_progression`. Default `api_call`. `lifecycle_progression` covers in-process state-transition handoffs where the consumer reads producer state directly, no message moves. |
 | `friction_level` | enum | yes | `low` / `medium` / `high`. Default `medium`. Proxy for today's maintenance cost; high friction = highest integrated-platform value |
 | `description` | multiline | yes | What actually happens at the handoff: payload, downstream consequences, known failure modes |
@@ -281,11 +281,11 @@ Label column (auto-computed): `handoff_label` = `<source_domain> → <target_dom
 
 ### `handoff_processes` (junction: `handoffs` ↔ `business_processes`)
 
-Links a directional handoff to the APQC PCF activity (or custom process) it realizes. Schema authored in `create_handoff_processes.ts`; `proposal_source` added by `add_handoff_processes_proposal_source_2026_05_29.ts`.
+Relates a directional handoff to the APQC PCF activity (or custom process) it realizes. Schema authored in `create_handoff_processes.ts`; `proposal_source` added by `add_handoff_processes_proposal_source_2026_05_29.ts`.
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `handoff_id` | parent → `handoffs` | yes | Cascade on delete. The handoff edge being linked. |
+| `handoff_id` | parent → `handoffs` | yes | Cascade on delete. The handoff being related. |
 | `process_id` | parent → `business_processes` | yes | Cascade on delete. The process activity the handoff realizes. |
 | `role` | enum | yes | `implements` (this handoff IS the activity). Default `implements`. Add values only when discovery proposes rows that clearly do not fit. |
 | `proposal_source` | enum | yes | `human_curated` / `agent_curated` / `discovery_override` / `discovery_substring`. Default `discovery_substring`. Provenance and confidence: agent-authored rows use `agent_curated` (Rule #1); `human_curated` only when the user explicitly typed the tag. Live enum is authoritative (Rule #13 enum-drift check). |
@@ -305,8 +305,9 @@ Composed unique key: `(handoff_id, process_id)`.
 | `relationship_kind` | enum | yes | `composition` / `reference` / `association` / `inheritance`. Default `reference` |
 | `relationship_verb` | string | yes | Forward verb phrase (e.g. "owns", "places", "is a") |
 | `inverse_verb` | string | yes | Reverse phrase (e.g. "is owned by", "is placed by", "is supertype of") |
-| `is_required` | boolean | yes | Whether the link's field must be filled in once both entities exist. It never forces an entity to install: "this entity must always be present" is expressed by the entity's own `is_install_optional=false` (Rule #16), not by this flag, and neither value can be derived from the other. Blueprints show it as `field_required`. Default `false` |
-| `owner_side` | enum | yes | `source` / `target`. Default `source`. NOT NULL. **Names the PARENT (lifecycle owner / cascade root) of the edge**, a domain-map catalog concept, not a Semantius platform primitive: `source` = `data_object_id` is the parent (cascades into the related object on delete); `target` = the related object is the parent. Drives the architect's delete-mode derivation downstream (composition / parent gives the Semantius `parent` FK + cascade; reference gives `reference`). **Computed:** for `one_to_many` it is always `source` and for `many_to_one` always `target`, so a written value is overwritten and it cannot disagree with the cardinality. It is set by hand only for `one_to_one`. The forward `relationship_verb` should read parent-to-child (M7, m5). Store a child-first edge (`child belongs_to parent`) from the parent's side, as `parent [has_x / belongs_to] child`, because the cardinality decides which end holds the field. |
+| `is_required` | boolean | yes | Whether the relationship's field must be filled in once both entities exist. It never forces an entity to install: "this entity must always be present" is expressed by the entity's own `is_install_optional=false` (Rule #16), not by this flag, and neither value can be derived from the other. Blueprints show it as `field_required`. Default `false` |
+| `owner_side` | enum | yes | `source` / `target`. Default `source`. NOT NULL. **Names the PARENT (lifecycle owner / cascade root) of the relationship**, a domain-map catalog concept, not a Semantius platform primitive: `source` = `data_object_id` is the parent (cascades into the related object on delete); `target` = the related object is the parent. Drives the architect's delete-mode derivation downstream (composition / parent gives the Semantius `parent` FK + cascade; reference gives `reference`). **Computed:** for `one_to_many` it is always `source` and for `many_to_one` always `target`, so a written value is overwritten and it cannot disagree with the cardinality. It is set by hand only for `one_to_one`. The forward `relationship_verb` should read parent-to-child (M7, m5). Store a child-first relationship (`child belongs_to parent`) from the parent's side, as `parent [has_x / belongs_to] child`, because the cardinality decides which end holds the field. |
+| `persona_id` | reference → `personas` | no | The kind of person who fills this relationship to `users`. Allowed only on relationships to `users` (rule `persona_only_on_users_relationship`, 99102). `clear` on delete. Read by check B7c. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -314,7 +315,7 @@ Self-references allowed (`User` directly manages `User`).
 
 ### Delete-mode derivation (B4)
 
-The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/lib/blueprint_derive.ts` and emitted as the `delete_mode` / `fk_format` columns of "5.1 Links between entities in this blueprint" and "5.2 Links to platform built-ins". The applied `ON DELETE` lands in the tenant DB at deploy.
+The delete mode is NOT stored per relationship; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/lib/blueprint_derive.ts` and emitted as the `delete_mode` / `fk_format` columns of "5.1 Relationships between entities in this blueprint" and "5.2 Relationships to platform built-ins". The applied `ON DELETE` lands in the tenant DB at deploy.
 
 | `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
 |---|---|---|---|
@@ -326,13 +327,13 @@ The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by 
 | `association` | optional | `clear` | `reference` |
 | `inheritance` | any | `restrict` | `reference` |
 
-A `many_to_many` link has no field on either entity, so `field_required` shows `-` and the two columns describe the legs of its junction table.
+A `many_to_many` relationship has no field on either entity, so `field_required` shows `-` and the two columns describe the legs of its junction table.
 
-"5.3 Links to entities outside this blueprint" has neither column, because the field is only proposed at deploy. It shows `field_required`, which applies only once both entities exist and never makes the external entity required. "5.3b Incoming links: the external entity points to this blueprint's entity" holds a row only when the field sits on the external entity, meaning the entity holding the field is not listed in this blueprint's §3. "5.3a Outgoing links: this blueprint's entity points to the external entity" holds everything else, including `many_to_many` and a field on a §3 entity with role `consumer` or `contributor`. Direction means where the link's field sits and which way it points, not the `from` / `to` columns and not `owner_side`.
+"5.3 Relationships to entities outside this blueprint" has neither column, because the field is only proposed at deploy. It shows `field_required`, which applies only once both entities exist and never makes the external entity required. "5.3b Incoming relationships: the external entity points to this blueprint's entity" holds a row only when the field sits on the external entity, meaning the entity holding the field is not listed in this blueprint's §3. "5.3a Outgoing relationships: this blueprint's entity points to the external entity" holds everything else, including `many_to_many` and a field on a §3 entity with `held_as` `consumer` or `contributor`. Direction means where the relationship's field sits and which way it points, not the `from` / `to` columns and not `owner_side`.
 
-M9 part 2 treats composition like every other link: a required link whose field sits on the in-scope entity warns, whatever its kind. A required link whose field sits on the out-of-scope entity, or a `many_to_many`, is not reported, including when the missing entity is the child of a composition.
+M9 part 2 treats composition like every other relationship: a required relationship whose field sits on the in-scope entity warns, whatever its kind. A required relationship whose field sits on the out-of-scope entity, or a `many_to_many`, is not reported, including when the missing entity is the child of a composition.
 
-`owner_side` names the **parent** endpoint (the lifecycle owner and cascade root, the "one" side of a `one_to_many`); the FK column lives on the other endpoint, the child. It does not change the mode or format and is surfaced in its own column (SKILL.md B6b). `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
+`owner_side` names the **parent** endpoint (the lifecycle owner and cascade root, the "one" side of a `one_to_many`); the FK column lives on the other endpoint, the child. It does not change the mode or format and is surfaced in its own column (SKILL.md B6b). `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live relationships as of 2026-06-01).
 
 ### `data_object_aliases`
 
@@ -374,8 +375,8 @@ Label column: `tool_name` (lowercase snake_case verb form — `send_email`, `que
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `description` | multiline | yes | |
-| `skill_type` | enum | yes | Default `system`. Values: `system` (the agent surface for a deployable unit: one per domain, plus one per starter module), `process` (orchestrates a cross-domain value stream), `role` (wraps a specific user-role workflow) |
-| `domain_id` | reference → `domains` | no | **The domain-grain anchor for a `system` skill** (`domain_module_id` NULL). Exactly one such skill per domain (Rule #17); it derives its toolset from the domain's modules' `domain_module_tools`. The `domain_required_when_skill_type_is_system` rule keys on this column. |
+| `skill_type` | enum | yes | Default `domain`. Values: `domain` (the agent surface for a domain: one per domain), `process` (orchestrates a cross-domain value stream) |
+| `domain_id` | reference → `domains` | no | **The domain-grain anchor for a `domain` skill** (`domain_module_id` NULL). Exactly one such skill per domain (Rule #17); it derives its toolset from the domain's modules' `domain_module_tools`. The `domain_required_when_skill_type_is_system` rule keys on this column. |
 | `domain_module_id` | reference → `domain_modules` | no | Set ONLY for a `system` skill on a `module_kind='starter'` module (the starter is itself a deployable unit and derives from its own `domain_module_tools`). A domain `system` skill leaves this NULL. FULL modules carry no skill. |
 | `process_id` | reference → `business_processes` | no | Set for a `process` skill (the cross-domain value stream it wraps); the skill derives its toolset from that process's `process_tools`. |
 | `record_status` | enum | yes | Default `new` |
@@ -418,7 +419,7 @@ Label column: computed `key` (`<domain_module_id>.<tool_id>`; readonly). **Uniqu
 | `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
-Label column: computed `key` (`<process_id>.<tool_id>`; readonly). **Unique** on `(process_id, tool_id)`. A `process` skill (linked via `skills.process_id`) derives its toolset from these.
+Label column: computed `key` (`<process_id>.<tool_id>`; readonly). **Unique** on `(process_id, tool_id)`. A `process` skill (related via `skills.process_id`) derives its toolset from these.
 
 > The former `skill_tools` (`skills` ↔ `tools`) junction is **RETIRED**: a tool is atomic and lives once in `tools`; requirements are relationships on the deployable unit (`domain_module_tools` / `process_tools`), and skills DERIVE their toolset. See plans/per-domain-skill-restoration.md.
 
@@ -444,7 +445,7 @@ OOTB Semantius % for domain X =
 ```
 % = (count of Z's required tools where:
        operation_kind ∈ Semantius-covered set  OR
-       at least one tool_solutions row links the tool to a solution Y has deployed)
+       at least one tool_solutions row relates the tool to a solution Y has deployed)
     / (total required tools)
 ```
 
@@ -488,8 +489,8 @@ Same capability can realize in multiple modules; same module can realize multipl
 |---|---|---|---|
 | `domain_module_id` | parent → `domain_modules` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
-| `role` | enum | yes | Same 5-value enum as `domain_data_objects`: `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. |
-| `is_install_optional` | boolean | no | True when the module can be installed without this entity. False, the default, means every install of the module includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in. See SKILL.md Rule #16. |
+| `held_as` | enum | yes | Same 5-value enum as `domain_data_objects`: `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. |
+| `is_install_optional` | boolean | no | True when the module can be installed without this entity. False, the default, means every install of the module includes it. Not related to `data_object_relationships.is_required`, which says whether a relationship's field must be filled in. See SKILL.md Rule #16. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -511,47 +512,47 @@ This junction is gone (dropped 2026-06-28; see [deprecations.md](deprecations.md
 | `state_name` | text | yes | snake_case noun-form (`draft`, `submitted`, `approved`, `closed`). Used by `permission_verb_override` derivation. |
 | `state_order` | int | yes | Ordering for the state machine; not a strict topological constraint, but the blueprint emits states in this order |
 | `is_initial` | boolean | yes | Default `false`. Exactly one state per data_object should have `is_initial=true`. |
-| `is_terminal` | boolean | yes | Default `false`. Multiple terminal states are allowed (`closed`, `cancelled`, `rejected`). |
+| `is_terminal` | boolean | yes | Default `false`. Multiple terminal states are allowed (`closed`, `canceled`, `rejected`). |
 | `requires_permission` | boolean | yes | Default `false`. TRUE = transitioning *into* this state needs an explicit permission; produces a `<module>:<verb>_<entity>` workflow gate during permission materialization. |
 | `permission_verb_override` | text | yes | Empty string unless auto-derivation produces a clumsy verb. Replaces `state_name` in the derived verb. Examples: `hired → hire_candidate`, `approved → approve_change`. |
 | `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL = state always reachable when the master is installed. Non-NULL = state realized only when that specific module is deployed (the deployer prunes unreachable states). The permission prefix at materialization time is the realizing module's `domain_module_code`. |
-| `process_id` | reference → `business_processes` | no | Nullable (Plan 3). The process this state's transition belongs to, which puts the process's RACI rows in the blueprint. On a gated state it is also the process-to-permission edge; a process does not need a gated state. Distinct from `domain_module_id` (which module realizes the gate) and from `process_raci.process_id` (which RACI row is about the process). Authored per-domain in Phase E; lets a `process_raci` Responsible/Accountable assignment resolve to the concrete gate(s) of its process. `clear` on delete. |
+| `process_id` | reference → `business_processes` | no | Nullable (Plan 3). The process this state's transition belongs to, which puts the process's RACI rows in the blueprint. On a gated state it is also the process-to-permission relationship; a process does not need a gated state. Distinct from `domain_module_id` (which module realizes the gate) and from `process_raci.process_id` (which RACI row is about the process). Authored per-domain in Phase E; lets a `process_raci` Responsible/Accountable assignment resolve to the concrete gate(s) of its process. `clear` on delete. |
 | `record_status` | enum | yes | Default `new` |
 
 Permission materialization rule (per Rule #14 + Rule #12): for each row with `requires_permission=true`, the deployer creates `permissions.permission_name = <domain_module_code>:<verb>_<entity_singular>` where `<verb>` = `permission_verb_override` if set, else `state_name`. Override collisions (e.g. `candidates.hired` and `job_applications.hired` both overriding to `hire_candidate`) legitimately collapse to one permission fired by two transitions.
 
 ---
 
-## Role layer
+## Persona layer
 
-> See [roles.md](roles.md) for the long-form rules (hard invariants, RACI realization, store-vs-derive). Schemas below. Personas and their RACI are **catalog-owned** (module 1001 `domain_map`). As of Plan 3 (2026-06-02) the catalog NO LONGER writes the `_core` `roles` / `role_permissions` / `permission_hierarchy` tables; a persona's permission BUNDLE, the hierarchy, and the permission-name mirror are DERIVED and emitted into the blueprint (emitter §9), never stored. You author REACH (`role_modules`) and RESPONSIBILITY (`process_raci`); the bundle is computed from them.
+> See [personas.md](personas.md) for the long-form rules (hard invariants, RACI realization, store-vs-derive). Schemas below. Personas and their RACI are **catalog-owned** (module 1001 `domain_map`). As of Plan 3 (2026-06-02) the catalog NO LONGER writes the `_core` `roles` / `role_permissions` / `permission_hierarchy` tables; a persona's permission BUNDLE, the hierarchy, and the permission-name mirror are DERIVED and emitted into the blueprint (emitter §9), never stored. You author REACH (`persona_modules`) and RESPONSIBILITY (`process_raci`); the bundle is computed from them.
 
-### `domain_roles` (catalog-owned persona; module 1001)
+### `personas` (catalog-owned persona; module 1001)
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `role_code` | text | yes | Natural key. `<FUNCTION-CODE>-<ROLE-NAME>` for function-scoped (`RECRUITING-RECRUITER`); bare for cross-functional (`HIRING-MANAGER`). No `slug` field and no `valid_role_slug` constraint (those were `_core` artifacts). |
-| `role_name` | text | yes | Human-friendly label; the entity's `label_column`. |
+| `persona_code` | text | yes | Natural key. `<FUNCTION-CODE>-<PERSONA-NAME>` for function-scoped (`RECRUITING-RECRUITER`); bare for cross-functional (`HIRING-MANAGER`). No `slug` field and no `valid_role_slug` constraint (those were `_core` artifacts). |
+| `persona_name` | text | yes | Human-friendly label; the entity's `label_column`. |
 | `description` | multiline | yes | What the persona does and why it exists. |
 | `business_function_id` | reference → `business_functions` | no | Nullable. NULL = cross-functional. `clear` on delete. |
 | `record_status` | enum | yes | `new` / `pending` / `approved` / `rejected`; default `new`. |
 
-Replaces the `_core` `roles` persona rows (origin `model` / `model_master`), which were deleted in Plan 3. No `notes` field (unlike the old `roles`). The catalog app's own scaffold roles (`Domain Map Viewer`/`Manager`, empty `role_code`, origin `model_master`) still live in `_core` `roles` and are platform RBAC, NOT personas.
+Replaces the `_core` `roles` persona rows (origin `model` / `model_master`), which were deleted in Plan 3. No `notes` field (unlike the old `roles`). The catalog app's own scaffold roles (`Domain Map Viewer`/`Manager`, empty `catalog_role_code`, origin `model_master`) still live in `_core` `roles` and are platform RBAC, NOT personas.
 
-### `role_modules` (junction: `domain_roles` ↔ `domain_modules`, catalog-owned)
+### `persona_modules` (junction: `personas` ↔ `domain_modules`, catalog-owned)
 
 The authored REACH layer: which modules a persona touches.
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `role_id` | parent → `domain_roles` | yes | Re-pointed from `_core` `roles` to `domain_roles` in Plan 3; format `parent`, cascade. |
+| `persona_id` | parent → `personas` | yes | Re-pointed from `_core` `roles` to `personas` in Plan 3; format `parent`, cascade. |
 | `domain_module_id` | parent → `domain_modules` | yes | cascade. |
 | `interaction_level` | enum | yes | `primary` / `secondary`. No `read_only`: a read-only touch is just the absence of a write grant in the derived bundle. |
 | `notes` | multiline | yes | |
 
-(No `record_status` on `role_modules`; `id` / `role_module_label` / `created_at` / `updated_at` are platform-managed.)
+(No `record_status` on `persona_modules`; `id` / `persona_module_label` / `created_at` / `updated_at` are platform-managed.)
 
-2-module floor: every `domain_roles` persona MUST have ≥2 `role_modules` entries. A single-module persona is a permission tier on that module, not a persona. The auto `role_module_label` composes `<role_code> on <domain_module_code>` from `domain_roles` (computed_field, recomputed on write).
+2-module floor: every `personas` persona MUST have ≥2 `persona_modules` entries. A single-module persona is a permission tier on that module, not a persona. The auto `persona_module_label` composes `<persona_code> on <domain_module_code>` from `personas` (computed_field, recomputed on write).
 
 ### `process_raci` (junction: `business_processes` ↔ polymorphic actor, catalog-owned, Plan 3)
 
@@ -560,13 +561,13 @@ The authored RESPONSIBILITY layer: who is Responsible / Accountable / Consulted 
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `process_id` | parent → `business_processes` | yes | The process the assignment is about; cascade. |
-| `actor_role_id` | reference → `domain_roles` | no | Persona actor. Nullable; cascade. |
-| `actor_skill_id` | reference → `skills` | no | Agent-skill actor. Nullable; cascade. Populated when the process-skills layer lands (deferred); the polymorphic shape is baked in now to avoid a later migration. |
+| `persona_id` | reference → `personas` | no | Persona actor. Nullable; cascade. |
+| `skill_id` | reference → `skills` | no | Agent-skill actor. Nullable; cascade. Populated when the process-skills layer lands (deferred); the polymorphic shape is baked in now to avoid a later migration. |
 | `raci` | enum | yes | `responsible` / `accountable` / `consulted` / `informed`. |
 | `consultation_blocking` | boolean | yes | For `consulted` rows: input is required (blocking) vs advisory. Default `false`. |
 
-**Exactly-one-actor** is a hard `validation_rules` (JsonLogic) entry (`exactly_one_actor`): the platform compiles it into a `BEFORE INSERT/UPDATE` trigger that raises a `check_violation` if neither or both actor FKs are set. It is a real constraint, not a soft warn. The auto `process_raci_label` composes `<process_name> / <raci> = <actor_code>`. The process-to-permission edge a Responsible/Accountable row resolves through is `data_object_lifecycle_states.process_id`.
+**Exactly-one-actor** is a hard `validation_rules` (JsonLogic) entry (`exactly_one_actor`): the platform compiles it into a `BEFORE INSERT/UPDATE` trigger that raises a `check_violation` if neither or both actor FKs are set. It is a real constraint, not a soft warn. The auto `process_raci_label` composes `<process_name> / <raci> = <actor_code>`. The process-to-permission relationship a Responsible/Accountable row resolves through is `data_object_lifecycle_states.process_id`.
 
 ### Derived RBAC: NOT stored (store-vs-derive, Plan 3)
 
-A persona's permission **bundle** (persona → permission codes), the permission **hierarchy** (`admin ⊃ manage ⊃ read` + gates), and the **permission-name mirror** are DERIVED by the emitter (§9) from the persona's `role_modules` reach + its `process_raci` gates + the entity-type write-tier policy, and emitted into the blueprint; the deployer provisions the tenant from the blueprint. The catalog does NOT create `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`, and **no loader writes to the `_core` `permissions` / `role_permissions` / `permission_hierarchy` tables** (storing derived RBAC is exactly what rotted `_core`). The 6 surviving `_core` `permissions` (`domain_map:read`/`manage`, `user:read`/`manage`, `public:read`, `admin`) are platform RBAC for the catalog app itself, not catalog content. RACI realization (no new tier): R → permission (persona) or `domain_module_tools` / `process_tools` coverage (skill); A → approval gate; C → a consultation lifecycle state (`consultation_blocking=true`) or a read grant; I → a notification side effect. See downstream-updates rows 3-5.
+A persona's permission **bundle** (persona → permission codes), the permission **hierarchy** (`admin ⊃ manage ⊃ read` + gates), and the **permission-name mirror** are DERIVED by the emitter (§9) from the persona's `persona_modules` reach + its `process_raci` gates + the entity-type write-tier policy, and emitted into the blueprint; the deployer provisions the tenant from the blueprint. The catalog does NOT create `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`, and **no loader writes to the `_core` `permissions` / `role_permissions` / `permission_hierarchy` tables** (storing derived RBAC is exactly what rotted `_core`). The 6 surviving `_core` `permissions` (`domain_map:read`/`manage`, `user:read`/`manage`, `public:read`, `admin`) are platform RBAC for the catalog app itself, not catalog content. RACI realization (no new tier): R → permission (persona) or `domain_module_tools` / `process_tools` coverage (skill); A → approval gate; C → a consultation lifecycle state (`consultation_blocking=true`) or a read grant; I → a notification side effect. See downstream-updates rows 3-5.

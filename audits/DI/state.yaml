@@ -57,7 +57,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. Surface the build; agent does not scaffold unprompted."
     finding: "Live triage 2026-06-07: DI has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / role / lifecycle / skill work applies."
-    action: "On user go-ahead (and a B2-S1 split decision), run Phase A then M then B then S to author the module set, capabilities, masters-to-modules, lifecycle states, and the single domain-grain system skill. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Personas/RACI are DEFERRED until modules exist."
+    action: "On user go-ahead (and a B2-S1 split decision), run Phase A then M then B then S to author the module set, capabilities, masters-to-modules, lifecycle states, and the single domain-grain system skill. If multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Personas/RACI are DEFERRED until modules exist."
     blocked_by:
       - {type: user_decision, ref: B2-S1}
 
@@ -117,8 +117,8 @@ b1b:
       - integration_flows
 
   - id: B1B-B8-OUTBOUND-XDOMAIN-RELS
-    summary: "Load 7 to 8 cross-domain data_object_relationships rows linking DI masters to other-domain masters per the 9 outbound handoff payloads (cluster-drafts review required)."
-    finding: "9 outbound handoffs rows but zero data_object_relationships rows linking DI masters to other-domain masters. Required edges (per handoff payloads): pipeline_run loads lakehouse_table (DATA-AI-PLAT); pipeline_run loads data_pipeline (DATA-AI-PLAT); schema_registry governs lakehouse_table (DATA-AI-PLAT); pipeline_run notifies data_quality_check (DQ); source_connector triggers data_asset (DCG); source_connector triggers dspm_scan (DSPM); sink_connector triggers dlp_review (DLP); pipeline_run informs service_incident (ITSM)."
+    summary: "Load 7 to 8 cross-domain data_object_relationships rows relating DI masters to other-domain masters per the 9 outbound handoff payloads (cluster-drafts review required)."
+    finding: "9 outbound handoffs rows but zero data_object_relationships rows relating DI masters to other-domain masters. Required relationships (per handoff payloads): pipeline_run loads lakehouse_table (DATA-AI-PLAT); pipeline_run loads data_pipeline (DATA-AI-PLAT); schema_registry governs lakehouse_table (DATA-AI-PLAT); pipeline_run notifies data_quality_check (DQ); source_connector triggers data_asset (DCG); source_connector triggers dspm_scan (DSPM); sink_connector triggers dlp_review (DLP); pipeline_run informs service_incident (ITSM)."
     blocked_by:
       - {type: user_decision, ref: cluster-drafts-review-pending}
     affected_handoffs:
@@ -182,8 +182,8 @@ b1b:
       - {type: user_decision, ref: B2-S2}
 
   - id: B1B-E-BAND-ROLES
-    summary: "Author >=3 roles touching both DI modules with function-scoped naming once modules exist. Includes role_modules, role_permissions, interaction_level, and Path A and Path B agreement."
-    finding: "Zero roles rows for any DI-affiliated business function (Data Engineering id=65 owner), zero role_modules, zero role_permissions. Once 2 modules exist (M2 satisfied), E1 mandates >=3 distinct roles. Likely roles: DATA-ENGINEER (primary across both modules); DATA-PLATFORM-ADMIN (primary on DI-TRANSFORM-DELIVER, secondary on DI-INGEST-CDC); INTEGRATION-OPERATOR (primary on DI-INGEST-CDC, secondary on DI-TRANSFORM-DELIVER); cross-cutting DATA-PLATFORM-VIEWER for read-only consumption."
+    summary: "Author >=3 roles touching both DI modules with function-scoped naming once modules exist. Includes persona_modules, role_permissions, interaction_level, and Path A and Path B agreement."
+    finding: "Zero roles rows for any DI-affiliated business function (Data Engineering id=65 owner), zero persona_modules, zero role_permissions. Once 2 modules exist (M2 satisfied), E1 mandates >=3 distinct roles. Likely roles: DATA-ENGINEER (primary across both modules); DATA-PLATFORM-ADMIN (primary on DI-TRANSFORM-DELIVER, secondary on DI-INGEST-CDC); INTEGRATION-OPERATOR (primary on DI-INGEST-CDC, secondary on DI-TRANSFORM-DELIVER); cross-cutting DATA-PLATFORM-VIEWER for read-only consumption."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 

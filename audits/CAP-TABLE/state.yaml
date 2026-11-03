@@ -17,41 +17,24 @@ last_audit: "2026-06-13"
 b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (6 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "6 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. business_function_domains C1 wiring is already in place (Finance owner; Legal + Investment Management contributor; HR consumer)."
-    action: "DEFERRED per audit policy (personas/RACI are not agent-authored without user direction). Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "6 domain_modules and 0 personas reach this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. business_function_domains C1 wiring is already in place (Finance owner; Legal + Investment Management contributor; HR consumer)."
+    action: "DEFERRED per audit policy (personas/RACI are not agent-authored without user direction). Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas: [CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN, VALUATION-ANALYST, BOARD-DIRECTOR, EMPLOYEE-EQUITY-VIEWER]
     status: deferred
 
 b1b:
-  - id: B1B-S4
-    summary: Resolve equity_grants lifecycle realization module after B2-S1 architectural choice.
-    finding: >-
-      Seven equity_grants lifecycle states (rows 112-118) carry domain_module_id=79
-      (COMP-INCENTIVES, under COMP-MGMT domain 60), not domain_module_id=21
-      (CAP-TABLE-GRANTS). This is part of the multi-master overlap surfaced in B2-S1: equity_grants
-      (158) carries TWO role='master' DMDO rows (module 79 COMP-INCENTIVES id 399 AND module 21
-      CAP-TABLE-GRANTS id 66), a single-master-per-data_object violation. CAP-TABLE-GRANTS is
-      master+required on equity_grants but realizes zero workflow-gate permissions for the entity.
-      Resolution depends on the B2-S1 decision (PATCH realization to 21, DUPLICATE, or keep-as-is)
-      and which master row survives the integrity fix.
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_masters:
-      - {data_object_id: 158, name: equity_grants, target_module_id: 21, workflow: proposed->approved->granted->vesting->exercised|forfeited|expired}
-
   - id: B1B-S7
-    summary: Phase E load - 6 roles, role_modules bundles, baseline + workflow-gate permissions.
+    summary: Phase E load - 6 roles, persona_modules bundles, baseline + workflow-gate permissions.
     finding: >-
-      Zero permissions rows on any CAP-TABLE module (modules 20-25); zero role_modules
+      Zero permissions rows on any CAP-TABLE module (modules 20-25); zero persona_modules
       bundles. Workflow-gate permissions now materialize from a larger lifecycle surface after
       the 2026-06-07 pass added gated states on option_pools (board_approved, refreshed),
       employee_equity_accounts (terminated), and asc718_expense_periods (closed). Expected role
       set: CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN, VALUATION-ANALYST, BOARD-DIRECTOR,
-      EMPLOYEE-EQUITY-VIEWER. Sequenced after B1A-PHASE-P (personas), B1B-S4 (equity_grants
-      realization module) and B2-S5 (bundle drift policy).
+      EMPLOYEE-EQUITY-VIEWER. Sequenced after B1A-PHASE-P (personas) and B2-S5 (bundle drift
+      policy).
     blocked_by:
       - {type: depends_on, ref: B1A-PHASE-P, reason: Phase E roles are the persona layer; deferred until personas are authored.}
-      - {type: depends_on, ref: B1B-S4, reason: Equity_grants lifecycle realization module determines whether the 7 workflow-gates attach to module 21 or stay on module 79.}
       - {type: user_decision, ref: B2-S5, reason: Permission-bundle drift policy (enumerate gates vs rely on hierarchy expansion) shapes role_permissions row count.}
     affected_modules: [20, 21, 22, 23, 24, 25]
 
@@ -67,22 +50,12 @@ b1b:
     status: superseded
 
   - id: B1B-S10
-    summary: Author 2 inter-domain handoffs wiring the COMP-MGMT multi-master overlap on equity_grants.
+    summary: Author the CAP-TABLE-GRANTS -> COMP-STATEMENTS handoff on equity_grant.exercised.
     finding: >-
-      Zero handoff rows exist between COMP-MGMT (60) and CAP-TABLE (162) despite the
-      multi-master DMDO arrangement on equity_grants (COMP-INCENTIVES module 79
-      master+required; COMP-STATEMENTS module 85 contributor+optional; CAP-TABLE-GRANTS
-      module 21 master+required). Two implied handoffs: (a) COMP-INCENTIVES (79) ->
-      CAP-TABLE-GRANTS (21) on a grant-proposal event (source event gated on B2-S2);
-      (b) CAP-TABLE-GRANTS (21) -> COMP-STATEMENTS (85) on equity_grant.exercised for ASC
-      718 / W-2 income surface. The equity_grant.exercised event NOW EXISTS (authored
-      2026-06-07), so part (b) is unblocked once part (a)'s source event is chosen; both
-      remain cross-domain handoffs entangled with the B2-S1 multi-master decision.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2, reason: Source event for COMP-INCENTIVES -> CAP-TABLE-GRANTS handoff (reuse offer.accepted, author new event, or no handoff) is the user's call.}
-      - {type: user_decision, ref: B2-S1, reason: The multi-master ownership decision shapes whether and how the COMP <-> CAP-TABLE handoffs are wired.}
+      CAP-TABLE-GRANTS (21) -> COMP-STATEMENTS (85) on equity_grant.exercised for the ASC 718 /
+      W-2 income surface is not wired. The other handoff this item tracked landed 2026-11-03 as
+      handoff 1606 (incentive_award.approved, COMP-INCENTIVES -> CAP-TABLE-GRANTS).
     affected_handoffs:
-      - {direction: outbound, source_domain: COMP-MGMT, target_domain: CAP-TABLE, trigger_event: gated_on_B2-S2, payload: equity_grants}
       - {direction: outbound, source_domain: CAP-TABLE, target_domain: COMP-MGMT, trigger_event: equity_grant.exercised, payload: equity_grants}
 
   - id: B1B-S11
@@ -122,7 +95,7 @@ b2:
       carries TWO handoff_processes tags: row 712 = process 354 (10.4.1 "Develop exit strategy", L3,
       coarse) AND row 713 = process 491 (1.2.3.3 "Develop merger/demerger/acquisition/exit strategy",
       L4, specific). The specific L4 tag already covers the payload; the coarse L3 tag is redundant
-      on this edge. Re-pointing reduces to deleting the coarse row 712. This is DESTRUCTIVE (a
+      on this relationship. Re-pointing reduces to deleting the coarse row 712. This is DESTRUCTIVE (a
       handoff_processes row delete) so it needs your sign-off; nothing was deleted.
     options:
       - Delete handoff_processes row 712 (the coarse process-354 tag on handoff 1044); keep row 713 (process 491).
@@ -131,37 +104,6 @@ b2:
       Handoff 1045 (-> PORT-MONIT) keeps its single process-354 tag (row 635); only handoff 1044
       carries the redundant pair. The B9d band treats a ROLL-UP/RE-TAG to a more specific same-entity
       tag as a source-side edit requiring approval; the delete is the destructive half.
-  - id: B2-S1
-    summary: Multi-master lifecycle realization for equity_grants (and the single-master integrity fix).
-    question: >-
-      equity_grants (158) carries TWO role='master' DMDO rows: module 21 CAP-TABLE-GRANTS
-      (id 66) AND module 79 COMP-INCENTIVES (id 399). This violates single-master-per-data_object.
-      The 7 lifecycle states (rows 112-118) currently realize only on module 79. Which
-      architectural option for the lifecycle, the workflow-gate permissions, and which master
-      row survives?
-    options:
-      - PATCH the 7 lifecycle states to domain_module_id=21 and demote COMP-INCENTIVES (id 399) to role=contributor so CAP-TABLE owns the workflow (the integrity fix is DESTRUCTIVE - demote a non-empty master row - so it needs your sign-off).
-      - DUPLICATE the 7 lifecycle states so both modules realize the same states with module-prefixed permissions; still requires resolving which DMDO row is the canonical master.
-      - Keep as-is (COMP owns lifecycle), accept CAP-TABLE-GRANTS is view+reconcile only, and decide separately how to resolve the dual-master row.
-    why: >-
-      Flagship vendors (Carta, Pulley, Shareworks) treat the cap-table side as source of
-      truth for grant lifecycle; option (a) matches that. The dual-master row is a real
-      integrity defect; the demotion is destructive and the M7 exception does not apply
-      because the canonical master is exactly what this decision picks.
-
-  - id: B2-S2
-    summary: Inter-domain handoff event source for COMP-INCENTIVES -> CAP-TABLE-GRANTS grant proposal.
-    question: >-
-      Which event publishes the grant proposal from the compensation-policy slice into
-      CAP-TABLE-GRANTS for the inter-domain handoff in B1B-S10 part (a)?
-    options:
-      - Reuse the existing offer.accepted event (if loaded under HCM offer-management).
-      - Author a new event compensation_policy.equity_award_assigned under COMP-INCENTIVES.
-      - Treat the multi-master DMDO as sufficient (no handoff).
-    why: >-
-      Event source choice depends on COMP-MGMT's modularization and which event the user
-      considers canonical for the proposal trigger.
-
   - id: B2-S3
     summary: Rule #15 notes-pollution on 12 domain_data_objects rows.
     question: >-
@@ -194,7 +136,7 @@ b2:
   - id: B2-S5
     summary: Permission-bundle drift policy for Phase E (B1B-S7).
     question: >-
-      When B1B-S7 lands the 6 roles + role_modules bundles, should the role_permissions
+      When B1B-S7 lands the 6 roles + persona_modules bundles, should the role_permissions
       enumerate workflow-gate permissions explicitly or rely on permission_hierarchy to
       expand baseline tiers into workflow-gates?
     options:
@@ -442,3 +384,71 @@ b3:
       transfer agent is a distinct fee-for-service category from cap-table software.
       Borderline (often bundled into cap-table software).
     vendor_evidence: [Computershare, Equiniti, AST, Continental Stock Transfer, Carta Transfer Agent, Pulley Transfer Agent]
+checks:
+  # generated by scripts/analytics/domain_health.ts --record; do not hand-edit
+  checklist_version: 3
+  run_at: "2026-11-03T15:36:08.017Z"
+  results:
+    - {id: S1, result: fail, rows: ["skills.domain_id"]}
+    - {id: S2, result: pass, rows: []}
+    - {id: S3, result: warn, rows: [772, 776, 778, 779]}
+    - {id: A1, result: pass, rows: []}
+    - {id: A2, result: pass, rows: []}
+    - {id: A3, result: pass, rows: []}
+    - {id: A4, result: agent, rows: []}
+    - {id: A5, result: agent, rows: []}
+    - {id: M1, result: pass, rows: []}
+    - {id: M2, result: pass, rows: []}
+    - {id: M4, result: pass, rows: []}
+    - {id: M5, result: pass, rows: []}
+    - {id: M6, result: pass, rows: []}
+    - {id: M7, result: pass, rows: []}
+    - {id: M8, result: agent, rows: []}
+    - {id: M9, result: warn, rows: ["rel:2200", "rel:862", "rel:868"]}
+    - {id: M10, result: agent, rows: []}
+    - {id: B1, result: pass, rows: []}
+    - {id: B2, result: pass, rows: []}
+    - {id: B3, result: pass, rows: []}
+    - {id: B4, result: agent, rows: []}
+    - {id: B5, result: pass, rows: []}
+    - {id: B6, result: agent, rows: []}
+    - {id: B6b, result: pass, rows: []}
+    - {id: B7, result: warn, rows: [772, 773, 776]}
+    - {id: B7b, result: pass, rows: []}
+    - {id: B7c, result: warn, rows: [158, 772, 779]}
+    - {id: B8, result: fail, rows: [1045]}
+    - {id: B9, result: fail, rows: ["do:776", "do:779", "event:1191", "event:1239", "event:1553", "event:1554", "event:1555", "state:1857", "state:1863", "state:1866"]}
+    - {id: B9b, result: fail, rows: ["event:1191", "event:1239", "event:1553", "event:1554", "event:1555"]}
+    - {id: B9c, result: warn, rows: [426, 427, 1189, 1190, 1191, 1553, 1554, 1555, 1556, 1557, 1558]}
+    - {id: B9d, result: delegated, rows: []}
+    - {id: B9e, result: delegated, rows: []}
+    - {id: B9f, result: pass, rows: []}
+    - {id: B10, result: pass, rows: []}
+    - {id: B10b, result: pass, rows: []}
+    - {id: B11, result: warn, rows: [772, 773, 776, 778, 779, 780]}
+    - {id: B12, result: pass, rows: []}
+    - {id: B13, result: pass, rows: []}
+    - {id: B14, result: agent, rows: []}
+    - {id: B15, result: pass, rows: []}
+    - {id: B16, result: pass, rows: []}
+    - {id: C1, result: pass, rows: []}
+    - {id: C2, result: agent, rows: []}
+    - {id: D1, result: agent, rows: []}
+    - {id: E1, result: fail, rows: []}
+    - {id: E2, result: pass, rows: []}
+    - {id: E3, result: pass, rows: []}
+    - {id: E4, result: pass, rows: []}
+    - {id: E4b, result: warn, rows: [113, 114, 117, 464, 470, 473, 1857, 1860, 1863, 1866]}
+    - {id: E4c, result: pass, rows: []}
+    - {id: E4d, result: pass, rows: []}
+    - {id: E5, result: skipped, rows: []}
+    - {id: E6, result: warn, rows: ["R6:1150", "R6:1407", "R6:1408", "R6:1409", "R6:1410", "R6:1411", "R6:1412", "R6:1413", "R6:1414", "R6:423", "R6:424", "R8:shareholder_record_edit_scope", "R8:shareholder_records"]}
+    - {id: F1, result: pass, rows: []}
+    - {id: F2, result: fail, rows: []}
+    - {id: F3, result: fail, rows: [20, 21, 22, 23, 24, 25]}
+    - {id: F4, result: pass, rows: []}
+    - {id: F5, result: fail, rows: []}
+    - {id: F6, result: skipped, rows: []}
+    - {id: F7, result: agent, rows: []}
+    - {id: F8, result: fail, rows: []}
+    - {id: H1, result: pass, rows: []}

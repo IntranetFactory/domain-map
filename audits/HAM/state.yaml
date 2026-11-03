@@ -62,8 +62,8 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
-    finding: "Live triage: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per the 2026-06-07 batch instruction, personas/RACI are DEFERRED (not authored)."
-    action: "DEFERRED. When resumed: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. Depends on B1A-S1 (lifecycle states / permissions). ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: IT-ITAM-ASSET-MANAGER (169+170), IT-ITAM-DISPOSAL-COORDINATOR (170+GRC/FIN), PROCUREMENT-HARDWARE-BUYER (170+S2P), FINANCE-FIXED-ASSET-ACCOUNTANT (170+FIN)."
+    finding: "Live triage: 2 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per the 2026-06-07 batch instruction, personas/RACI are DEFERRED (not authored)."
+    action: "DEFERRED. When resumed: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. Depends on B1A-S1 (lifecycle states / permissions). ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: IT-ITAM-ASSET-MANAGER (169+170), IT-ITAM-DISPOSAL-COORDINATOR (170+GRC/FIN), PROCUREMENT-HARDWARE-BUYER (170+S2P), FINANCE-FIXED-ASSET-ACCOUNTANT (170+FIN)."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
 
@@ -226,7 +226,7 @@ b1b:
     extra_band: B10b
 
   - id: B1B-S11
-    summary: Rewrite 6 users-edge relationship_verb values to verb-shape (DESTRUCTIVE overwrite, surfaced); shape depends on B2-S4
+    summary: Rewrite 6 relationship to users relationship_verb values to verb-shape (DESTRUCTIVE overwrite, surfaced); shape depends on B2-S4
     finding: |
       All 6 data_object_relationships rows joining users (data_object_id=748)
       to HAM masters carry noun-phrase verbs ("assigned hardware", "custodian
@@ -302,7 +302,7 @@ b2:
     why: IT-ops cluster modeling decision touching the larger HAM/UEM/MDM-EMM reconciliation conversation.
 
   - id: B2-S4
-    summary: Users-edges 256 (assigned hardware) + 257 (custodian of assets) collapse vs keep both
+    summary: Relationships to users 256 (assigned hardware) + 257 (custodian of assets) collapse vs keep both
     question: |
       Same pair (users -> hardware_assets) with two semantics: assigned-to
       (current end-user holder) vs custodian (IT staff managing on behalf of an
@@ -324,13 +324,13 @@ b2:
     why: DMDO modeling decision; resolves B1B-S10-RESIDUAL row for handoff 633.
 
   - id: B2-S6
-    summary: domain_regulations linkage scope for HAM (disposal compliance frameworks)
+    summary: domain_regulations relationship scope for HAM (disposal compliance frameworks)
     question: |
       domain_regulations is empty for HAM (confirmed live). Hardware disposal
       involves RoHS (EU 2011/65/EU), WEEE (EU 2012/19/EU), NIST SP 800-88 r1,
       GDPR Art 17, HIPAA, R2v3 and e-Stewards recycler certifications. Either
-      (a) conservative link to RoHS + WEEE + NIST 800-88 only; (b) comprehensive
-      link to all 6; or (c) defer pending ITAD market candidate triage.
+      (a) conservative relate to RoHS + WEEE + NIST 800-88 only; (b) comprehensive
+      relate to all 6; or (c) defer pending ITAD market candidate triage.
     options: [a_conservative, b_comprehensive, c_defer_pending_ITAD]
     why: Compliance scoping is the user's call; cross-informed by B3 ITAD candidate.
 
@@ -348,16 +348,16 @@ b2:
     why: APQC mapping judgment; affects review-triage quality of the H-band coverage.
 
   - id: B2-HVAC-HOST
-    summary: "HVAC-SVC-MGMT starter (module 171) is host-linked to HAM via domain_module_host_domains; likely a mis-host. DESTRUCTIVE removal, surfaced."
+    summary: "HVAC-SVC-MGMT starter (module 171) is host-related to HAM via domain_module_host_domains; likely a mis-host. DESTRUCTIVE removal, surfaced."
     question: |
-      Module 171 (HVAC-SVC-MGMT, module_kind='starter') is host-linked to HAM through
+      Module 171 (HVAC-SVC-MGMT, module_kind='starter') is host-related to HAM through
       domain_module_host_domains, but its embedded entities are an HVAC field-service business
       (technician scheduling, dispatch, servicing customer-owned installed_equipment, quoting and
-      invoicing), not IT hardware. The starter is host-linked to 6 domains (FSM, CRM, CPQ, SUB-MGMT,
-      HAM, FIN); its natural home is FSM and the HAM link is the anomaly. Remove the HAM host-link?
+      invoicing), not IT hardware. The starter is host-related to 6 domains (FSM, CRM, CPQ, SUB-MGMT,
+      HAM, FIN); its natural home is FSM and the HAM relationship is the anomaly. Remove the HAM host-relationship?
     options:
-      - "(a) DELETE the domain_module_host_domains row linking module 171 to HAM (recommended). DESTRUCTIVE, needs sign-off."
-      - "(b) Keep the link (HAM legitimately hosts the HVAC starter)."
+      - "(a) DELETE the domain_module_host_domains row relating module 171 to HAM (recommended). DESTRUCTIVE, needs sign-off."
+      - "(b) Keep the relationship (HAM legitimately hosts the HVAC starter)."
     evidence: |
       Module 171's embedded_master entities model an HVAC field-service workflow (installed_equipment's
       own description calls it a field-service asset register that work orders are performed against),
@@ -423,7 +423,7 @@ b3:
     candidate: asset_assignments
     rationale: |
       Time-bounded user-to-asset assignment record (vs the relationship row
-      which is a current-state edge). Enables history queries (who had laptop X
+      which is a current-state relationship). Enables history queries (who had laptop X
       in Q2 2024?).
     vendor_evidence: [ServiceNow Hardware Asset Management, Snipe-IT, Lansweeper]
     proposed_module: HAM-ASSET-REGISTRY

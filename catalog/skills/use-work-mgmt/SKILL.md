@@ -1,7 +1,7 @@
 ---
 name: use-work-mgmt
 description: >-
-  Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, link them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards. Use for: work management, project tracker, task tracker, to-do list, kanban, swimlane, Gantt, roadmap, sprint backlog, burndown, milestone tracking, dependency mapping, ticket queue, request queue, work intake, OKR, KPI, goal tracking, timesheets, resource allocation, capacity planning, workload balancing, creative markup, approval workflow, status rollup, PMO, BizOps, marketing ops, operations team.
+  Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, relate them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards. Use for: work management, project tracker, task tracker, to-do list, kanban, swimlane, Gantt, roadmap, sprint backlog, burndown, milestone tracking, dependency mapping, ticket queue, request queue, work intake, OKR, KPI, goal tracking, timesheets, resource allocation, capacity planning, workload balancing, creative markup, approval workflow, status rollup, PMO, BizOps, marketing ops, operations team.
 ---
 
 # use-work-mgmt skill
@@ -151,10 +151,10 @@ The DomainMap-emitted structured snapshot of this domain. Read on demand (not lo
 - Capabilities and the modules that realize them
 - Modules with their masters, embedded-masters, consumers
 - Per-master aliases, lifecycle states, and the per-entity `has_personal_content` hint
-- Intra-domain relationships and edges to platform built-ins
+- Intra-domain relationships and relationships to platform built-ins
 - Domain-level APQC process rollup (`apqc_processes_touched`) for cross-domain process queries
 - System skills and tool sets per module
-- Expected role personas with their module footprints
+- Expected personas with their module footprints
 - Catalog enum vocabularies for any column the skill might write
 
 **Treat `spec.json` as the read-only "as-designed" shape.** What this deployment actually configured lives in `state.jsonc`.

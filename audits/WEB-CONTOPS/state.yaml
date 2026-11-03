@@ -30,7 +30,7 @@ b1b:
     summary: "Author 9-to-12 intra-domain data_object_relationships between the 7 masters once lifecycle states exist."
     finding: |
       B6 hard fail. Zero intra-domain data_object_relationships between the 7 WEB-CONTOPS masters.
-      Edges pre-specified in 2026-05-30: content_audits scans web_content_inventory_records;
+      Relationships pre-specified in 2026-05-30: content_audits scans web_content_inventory_records;
       web_content_inventory_records anchors accessibility_scan_findings, broken_link_findings,
       technical_seo_findings, brand_voice_violations; content_audits produces accessibility_scan_findings,
       broken_link_findings, technical_seo_findings, brand_voice_violations; content_lifecycle_plans
@@ -140,10 +140,10 @@ b1b:
       - {handoff_id: 816, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: brand_violation.detected, payload: brand_voice_violations, null_field: both_module_fks}
       - {handoff_id: 817, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: broken_link.detected, payload: broken_link_findings, null_field: both_module_fks}
     affected_masters:
-      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: 319, workflow: cross-domain flags edge to DXP web_pages 441}
-      - {data_object_id: 688, name: technical_seo_findings, target_module_id: 320, workflow: cross-domain flags edge to DXP web_pages 441}
-      - {data_object_id: 689, name: brand_voice_violations, target_module_id: 319, workflow: cross-domain flags edge to HCMS content_entries 132}
-      - {data_object_id: 687, name: broken_link_findings, target_module_id: 320, workflow: cross-domain flags edge to HCMS content_entries 132}
+      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: 319, workflow: cross-domain flags relationship to DXP web_pages 441}
+      - {data_object_id: 688, name: technical_seo_findings, target_module_id: 320, workflow: cross-domain flags relationship to DXP web_pages 441}
+      - {data_object_id: 689, name: brand_voice_violations, target_module_id: 319, workflow: cross-domain flags relationship to HCMS content_entries 132}
+      - {data_object_id: 687, name: broken_link_findings, target_module_id: 320, workflow: cross-domain flags relationship to HCMS content_entries 132}
     vendor_evidence:
       - Siteimprove
       - Acquia Optimize
@@ -194,17 +194,17 @@ b2:
       this audit's history.md is the only record. Gates the B4 PATCH pass.
 
   - id: B2-4
-    summary: "Pick the WEB-CONTOPS regulation linkage shape (ADA + Section 508 + optional EAA / GDPR cookie-consent)."
+    summary: "Pick the WEB-CONTOPS regulation relationship shape (ADA + Section 508 + optional EAA / GDPR cookie-consent)."
     question: |
       Zero domain_regulations rows for WEB-CONTOPS. ADA (id 61) and Section 508 (id 62) exist in
       the regulations catalog. EAA (European Accessibility Act) is absent and would need a new
-      regulations row before linking. GDPR cookie-consent content scanning is a secondary edge
+      regulations row before relating. GDPR cookie-consent content scanning is a secondary relationship
       (OneTrust / Cookiebot territory) - out-of-scope for WEB-CONTOPS proper or in-scope? Now that
-      modules exist, the linkage can be module-scoped (accessibility regulations against module 319).
+      modules exist, the relationship can be module-scoped (accessibility regulations against module 319).
     options:
-      - "(a) link ADA + Section 508 only with applicability='required', defer EAA"
-      - "(b) queue EAA via a new regulations insert and link all three"
-      - "(c) include the GDPR cookie-consent edge as applicability='conditional'"
+      - "(a) relationship ADA + Section 508 only with applicability='required', defer EAA"
+      - "(b) queue EAA via a new regulations insert and relate all three"
+      - "(c) include the GDPR cookie-consent relationship as applicability='conditional'"
     why: |
       Regulation-mapping calls fall on the user; the audit can identify the gap but not
       unilaterally write domain_regulations rows with applicability qualifiers.

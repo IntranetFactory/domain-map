@@ -30,9 +30,9 @@ Note: a solution named "Conductor" already exists (id 481) but it is the **SEO/c
 | Camunda | Camunda 8 (Zeebe engine) | BPMN/DMN orchestration engine, standalone or embedded | Visionary in 2025 Gartner BOAT MQ; the reference open-core BPMN+DMN execution engine. |
 | Temporal Technologies | Temporal | Pure-play durable execution, code-first | $5B valuation (Feb 2026 Series D). Pure-play execution kernel, explicitly distinct from BPM and from low-code. Independent flagship. |
 | Orkes | Orkes Conductor (Netflix Conductor) | Microservices workflow orchestration | Commercial entity around Netflix's Conductor; powers Netflix, Tesla, Amex. Independent flagship, NOT low-code. |
-| Pegasystems | Pega Platform (Process Fabric / case mgmt) | BOAT-suite runtime (already in catalog under LCAP) | BOAT MQ Leader. Runtime engine + case mgmt + Decision Hub. Mapped to LCAP today; gets a solution_domains edge to PROCESS-ORCHESTRATION for the runtime kernel. |
-| Appian | Appian Platform (process + case) | BOAT-suite runtime (already in catalog under LCAP) | BOAT MQ Leader. Strong case management + process runtime. solution_domains edge to PROCESS-ORCHESTRATION. |
-| Bizagi | Bizagi Studio runtime | BOAT-suite low-code BPM execution (already in catalog) | Already loaded (BPA+LCAP); execution engine edge to PROCESS-ORCHESTRATION. |
+| Pegasystems | Pega Platform (Process Fabric / case mgmt) | BOAT-suite runtime (already in catalog under LCAP) | BOAT MQ Leader. Runtime engine + case mgmt + Decision Hub. Mapped to LCAP today; gets a solution_domains relationship to PROCESS-ORCHESTRATION for the runtime kernel. |
+| Appian | Appian Platform (process + case) | BOAT-suite runtime (already in catalog under LCAP) | BOAT MQ Leader. Strong case management + process runtime. solution_domains relationship to PROCESS-ORCHESTRATION. |
+| Bizagi | Bizagi Studio runtime | BOAT-suite low-code BPM execution (already in catalog) | Already loaded (BPA+LCAP); execution engine relationship to PROCESS-ORCHESTRATION. |
 | Flowable | Flowable | Standalone BPMN/DMN/CMMN engine | Independent pure-play process engine; reinforces flagship count. |
 
 ## Point-solution-market test (for PROCESS-ORCHESTRATION framing)
@@ -74,7 +74,7 @@ Capabilities (>=3, so >=2 full modules, Rule #14): BPMN process execution, human
 
 - PROC-MIN consumes `process_events` (orchestration emits the log PROC-MIN mines).
 - RPA bots are invoked as orchestration task workers.
-- LCAP / BOAT suites embed an orchestration runtime (Pega Process Fabric, Appian, Bizagi); solution_domains edges connect them.
+- LCAP / BOAT suites embed an orchestration runtime (Pega Process Fabric, Appian, Bizagi); solution_domains relationships relate them.
 - BPA publishes a process model that gets deployed as a `process_definitions` row (model -> runtime handoff).
 
 ## Compliance entities

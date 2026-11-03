@@ -15,7 +15,7 @@ q1: The build left three follow-ups that I deferred rather than auto-run: author
 - b) Hold the personas and tools; just run the pairwise reconciliation (it has no schema cost).
 - c) Hold all three for a later pass.
 
-Recommended: a, once you have spot-checked the new modules and masters in the catalog (they are all at status "new"). The persona layer is what makes the domain deployable with provisioned users; pairwise reconciliation gives every cross-domain edge concrete fix targets now that the modules exist.
+Recommended: a, once you have spot-checked the new modules and masters in the catalog (they are all at status "new"). The persona layer is what makes the domain deployable with provisioned users; pairwise reconciliation gives every cross-domain relationship concrete fix targets now that the modules exist.
 
 a1:
 

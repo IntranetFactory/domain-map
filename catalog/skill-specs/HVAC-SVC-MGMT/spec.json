@@ -55,91 +55,91 @@
       "name": "crm_contacts",
       "singular_label": "Contact",
       "plural_label": "Contacts",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CRM"
     },
     {
       "name": "customer_invoices",
       "singular_label": "Customer Invoice",
       "plural_label": "Customer Invoices",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "SUB-MGMT"
     },
     {
       "name": "customer_sites",
       "singular_label": "Customer Site",
       "plural_label": "Customer Sites",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "customers",
       "singular_label": "Customer",
       "plural_label": "Customers",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CRM"
     },
     {
       "name": "dispatch_records",
       "singular_label": "Dispatch Record",
       "plural_label": "Dispatch Records",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "field_visits",
       "singular_label": "Field Visit",
       "plural_label": "Field Visits",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "installed_equipment",
       "singular_label": "Installed Equipment Unit",
       "plural_label": "Installed Equipment",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "sales_quotes",
       "singular_label": "Sales Quote",
       "plural_label": "Sales Quotes",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CPQ"
     },
     {
       "name": "service_contracts",
       "singular_label": "Service Contract",
       "plural_label": "Service Contracts",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "service_pm_schedules",
       "singular_label": "Service PM Schedule",
       "plural_label": "Service PM Schedules",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "service_work_orders",
       "singular_label": "Service Work Order",
       "plural_label": "Service Work Orders",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "FSM"
     },
     {
       "name": "spare_parts_inventory",
       "singular_label": "Spare Part Inventory Item",
       "plural_label": "Spare Part Inventory Items",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "HAM"
     },
     {
       "name": "users",
       "singular_label": "User",
       "plural_label": "Users",
-      "role": "consumer",
+      "held_as": "consumer",
       "owning_domain": null
     }
   ],
@@ -267,7 +267,7 @@
       }
     ]
   },
-  "roles": [],
+  "personas": [],
   "enums": {
     "trigger_event_category": [
       "lifecycle",
@@ -288,7 +288,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

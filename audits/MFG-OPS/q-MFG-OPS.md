@@ -31,20 +31,20 @@ a2:
 
 ---
 
-q3: The one capability currently linked to this domain (Workforce Scheduling) is actually realized in the field-service dispatch module, not on the shop floor. How should it be handled?
+q3: The one capability currently related to this domain (Workforce Scheduling) is actually realized in the field-service dispatch module, not on the shop floor. How should it be handled?
 
 - a) Keep it, treating the capability as spanning manufacturing and workforce management by intent.
 - b) Remove it and author a Production Scheduling capability for this domain instead.
 
-Recommended: b. The domain owns production schedules (line and cell sequencing), which is a different concept from labor scheduling; once any module ships, keeping the mismatched link fails the capability-realization check.
+Recommended: b. The domain owns production schedules (line and cell sequencing), which is a different concept from labor scheduling; once any module ships, keeping the mismatched relationship fails the capability-realization check.
 
 a3:
 
 ---
 
-q4: Salesforce Manufacturing Cloud is currently linked here, but it is account-based demand forecasting and sales-agreement management, not shop-floor execution. Where does it belong?
+q4: Salesforce Manufacturing Cloud is currently related here, but it is account-based demand forecasting and sales-agreement management, not shop-floor execution. Where does it belong?
 
-- a) Keep it as a secondary link here (some run-rate-versus-commit reporting overlaps).
+- a) Keep it as a secondary relationship here (some run-rate-versus-commit reporting overlaps).
 - b) Move it to CRM only (its primary home).
 - c) Move it to a new demand-collaboration domain candidate.
 
@@ -56,7 +56,7 @@ a4:
 
 q5: The catalog has Honeywell Forge Building Operations but not the Industrial / Connected Plant variant, which is the actual MES product. Add it?
 
-- a) Add Honeywell Forge Industrial / Connected Plant as a new vendor row and link it here.
+- a) Add Honeywell Forge Industrial / Connected Plant as a new vendor row and relate it here.
 - b) Leave it as a noted gap.
 
 Recommended: a. The Connected Plant variant is a real MES entrant and belongs in the manufacturing surface.
@@ -83,7 +83,7 @@ q7: The shop-floor-case escalation currently hands off to IT Service Management 
 - b) Reroute the handoff to an internal manufacturing module once the modules exist.
 - c) Drop the handoff entirely (shop-floor cases stay in this domain and do not fan out).
 
-Recommended: a or b depending on q1. ServiceNow does model these as cases, but most MES vendors keep them distinct; the outcome decides whether the related cross-domain link to service incidents gets authored.
+Recommended: a or b depending on q1. ServiceNow does model these as cases, but most MES vendors keep them distinct; the outcome decides whether the related cross-domain relationship to service incidents gets authored.
 
 a7:
 
@@ -91,7 +91,7 @@ a7:
 
 q8: The four regulations tagged here describe the regulated-product layer (EU Cyber Resilience Act, EU Data Act, Eco-design Regulation, EU Battery Regulation), which is engineering/PLM-shaped, not shop-floor-shaped. The shop floor's audit trail wants standards like ISO 9001, IATF 16949, AS9100, ISO 13485, and FDA 21 CFR Part 11. What should happen?
 
-- a) Load three to five of the missing manufacturing standards as new regulation links.
+- a) Load three to five of the missing manufacturing standards as new regulation relationships.
 - b) Move the four existing rows to PLM, where the regulated-product layer lives.
 - c) Keep as-is: the shop floor produces the regulated artifact, so these regulations apply.
 

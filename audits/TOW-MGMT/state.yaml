@@ -99,7 +99,7 @@ b2:
       account/customer book as a first-class record because tow operators rarely
       run a separate CRM. The dominant "customer" is the motor club (AAA, Agero,
       Allstate, Urgent.ly), which is a towing-specific dispatch/billing partner
-      with no CRM analogue. embedded_master keeps TOW-MGMT deployable standalone
+      with no CRM analog. embedded_master keeps TOW-MGMT deployable standalone
       while deferring to the canonical CRM (id 69) master in a holistic
       deployment.
 
@@ -110,7 +110,7 @@ b2:
       vehicle asset from FLEET-MGMT (147)? A towing company's trucks are a
       vehicle fleet, so FLEET-MAINT could plausibly own the asset.
     options:
-      - master tow_trucks locally in TOW-DISPATCH, optional consumer link to FLEET (recommended)
+      - master tow_trucks locally in TOW-DISPATCH, optional consumer relationship to FLEET (recommended)
       - consume the vehicle asset from FLEET-MGMT
     evidence: >-
       Every towing flagship (Towbook, TRAXERO/Autura, VTS, ProTow) masters the
@@ -118,7 +118,7 @@ b2:
       wheel-lift / rotator / flatbed class, NSD/WreckMaster certification, and
       live GPS dispatch state that the generic FLEET vehicle record does not
       carry. A towing operator that also runs FLEET-MAINT can carry a consumer
-      link for maintenance, but the operational dispatch record stays local.
+      relationship for maintenance, but the operational dispatch record stays local.
 
   - id: B2-REGULATION-SCOPE
     summary: Which regulation families to seed and tag onto TOW-MGMT (floor vs stretch).

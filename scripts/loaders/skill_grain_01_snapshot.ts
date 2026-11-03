@@ -80,7 +80,7 @@ All 2767 \`skill_tools\` rows are removed across the migration, disjoint and exh
 ## Rollback
 
 Reconstruct \`skills\` from \`skills.json\` and \`skill_tools\` from \`skill_tools.json\` (POST each row
-back, preserving ids where the deployer allows, or re-key and re-link). Keep these files until the
+back, preserving ids where the deployer allows, or re-key and re-relate). Keep these files until the
 migration is verified and merged.
 `;
 writeFileSync(resolve(SNAP_DIR, "README.md"), readme);

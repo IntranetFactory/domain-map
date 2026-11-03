@@ -26,16 +26,16 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED 2026-06-07 (personas are not auto-authored)."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: HR Business Partner, People Manager, Talent Development / Talent Manager (the 3 role bundles already reaching these modules via role_permissions)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: HR Business Partner, People Manager, Talent Development / Talent Manager (the 3 role bundles already reaching these modules via role_permissions)."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
     summary: "DELETE 3 sibling consumer DMDOs (52,174), (53,174), (52,177) OR PROMOTE each to embedded_master; M7 hard-fail persists. DESTRUCTIVE; gated on B2-S1."
-    finding: "M7 within-domain incoherence: performance_reviews (174) is role='master' in module 51 AND role='consumer' in modules 52 (required) and 53 (optional). talent_calibrations (177) is role='master' in 51 AND role='consumer' in 52 (required). M7 rejects master + consumer in sibling modules of the same domain."
-    action: "On user decision (B2-S1): DELETE the 3 consumer DMDO rows via /domain_module_data_objects DELETE; OR PROMOTE each to role='embedded_master' with appropriate necessity. The DELETE route makes 52/53 read 174/177 through the canonical master on 51; the PROMOTE route ships standalone-deployable shells per module. NOT executed: destructive, never done unapproved (Rule #21)."
+    finding: "M7 within-domain incoherence: performance_reviews (174) is held_as='master' in module 51 AND held_as='consumer' in modules 52 (required) and 53 (optional). talent_calibrations (177) is held_as='master' in 51 AND held_as='consumer' in 52 (required). M7 rejects master + consumer in sibling modules of the same domain."
+    action: "On user decision (B2-S1): DELETE the 3 consumer DMDO rows via /domain_module_data_objects DELETE; OR PROMOTE each to held_as='embedded_master' with appropriate necessity. The DELETE route makes 52/53 read 174/177 through the canonical master on 51; the PROMOTE route ships standalone-deployable shells per module. NOT executed: destructive, never done unapproved (Rule #21)."
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_entities:

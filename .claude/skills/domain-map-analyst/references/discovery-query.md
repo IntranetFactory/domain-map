@@ -71,11 +71,11 @@ The rank-score formula deliberately weights *friction × function-spread*: a pro
 
 ## Drill-down format
 
-`--bucket <prefix>` returns a JSON object with the full bucket detail: list of domain codes, list of business-function names, top-3 events with counts, friction breakdown, and the auto-matched PCF row. Use this when surfacing a specific candidate to the user for skill-build prioritisation.
+`--bucket <prefix>` returns a JSON object with the full bucket detail: list of domain codes, list of business-function names, top-3 events with counts, friction breakdown, and the auto-matched PCF row. Use this when surfacing a specific candidate to the user for skill-build prioritization.
 
 ## Re-runnability
 
-The query reads live state every run — no materialised junction tables. Re-running after new handoffs land or after the trigger_events vocabulary expands automatically picks up the new substrate. If discovery latency becomes a problem later, materialise `process_handoffs` / `process_domains` junctions per the plan's open-question note.
+The query reads live state every run — no materialized junction tables. Re-running after new handoffs land or after the trigger_events vocabulary expands automatically picks up the new substrate. If discovery latency becomes a problem later, materialize `process_handoffs` / `process_domains` junctions per the plan's open-question note.
 
 ## Related references
 

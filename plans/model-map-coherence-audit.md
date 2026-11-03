@@ -28,11 +28,11 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 
 ### Blockers
 
-**B1. The blueprint, the designated byte-stable deploy contract, omits whole load-bearing layers (write tier, skills/score, market RACI, role/persona bundles, operational personas/RACI, permission_hierarchy edges, deployable closure).**
+**B1. The blueprint, the designated byte-stable deploy contract, omits whole load-bearing layers (write tier, skills/score, market RACI, role/persona bundles, operational personas/RACI, permission_hierarchy relationships, deployable closure).**
 - Property: self-contained (also complete)
 - Kind: emit
 - Evidence: `plans/extract-role-permission-catalog.md` (lines 28, 264-275) makes the emitted blueprint the single black-box contract every downstream skill consumes ("they consume blueprint artifacts, not the raw catalog tables") with a byte-identical guarantee. But `scripts/lib/catalog.ts` `loadCatalogIndex` (lines 181-203) loads only domains, data_objects, industries, modules, and `loadAllRelationships` (lines 282-291) loads dmdo/ddo/aliases/relationships/lifecycle/handoffs/host-domains, never roles, permissions, permission_hierarchy, skills, skill_tools, tools, business_functions, or business_function_domains. `scripts/generate_blueprints.ts` emits only sections 1-8 (overview, entities, aliases, relationships, cross-domain, lifecycle, permissions plus rules), never roles, market RACI, personas, skills, or a Semantius score. `computeCoverage` (line 414) is defined and never called (grep returns the definition only). Conforming downstream to this contract enshrines the missing layers, and adding them later breaks the byte-identical freeze.
-- Fix: Treat blueprint completeness as a precondition of the freeze. Extend `lib/catalog.ts` and `generate_blueprints.ts` to load and emit the per-entity write tier, the derived per-module role bundle, the module's market-RACI ownership, the system skill plus skill_tools plus per-module Semantius score, the derived permission_hierarchy edges, the deployable module closure, and (once added) operational personas plus operational RACI. Re-baseline the snapshot, and sequence the RBAC-extraction freeze AFTER the emitter is complete.
+- Fix: Treat blueprint completeness as a precondition of the freeze. Extend `lib/catalog.ts` and `generate_blueprints.ts` to load and emit the per-entity write tier, the derived per-module role bundle, the module's market-RACI ownership, the system skill plus skill_tools plus per-module Semantius score, the derived permission_hierarchy relationships, the deployable module closure, and (once added) operational personas plus operational RACI. Re-baseline the snapshot, and sequence the RBAC-extraction freeze AFTER the emitter is complete.
 
 **B2. entity_type-to-write-tier derivation is unrealized end to end: stored, never loaded, never read, never emitted.**
 - Property: self-contained, complete, logical (raised independently by the entities, lifecycle, permission-generator, and persona layers)
@@ -50,13 +50,13 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 - Property: self-contained, consistent, logical
 - Kind: derive plus invariant
 - Evidence: `data_object_relationships.owner_side` field description ("Drives the architect's delete-mode derivation downstream") delegates the output to the architect, which is reconstruction. No cascade/restrict computation exists in `scripts/` (`generate_blueprints.ts` only prints `owner_side` as a column; `catalog.ts` only selects it at line 287). Two specs disagree: `plan-generate-blueprints.md` line 82 derives from `kind` plus `necessity` ("parent gives cascade; reference plus required gives restrict; reference plus optional gives clear"), while the live `owner_side` description derives delete direction from `owner_side`. The `plan-generate-blueprints.md` formula keys on a `necessity` column and a `parent` kind value that do not exist (the real column is `is_required` boolean; the `relationship_kind` enum is composition/reference/association/inheritance). `inheritance` (0 rows) and `association` (104 rows) have no defined delete or structural behavior, so the kind-to-behavior map is non-total.
-- Fix: Pick one canonical derivation (owner_side-based, since that column is NOT NULL and fully populated). Write a total rule mapping `(relationship_kind, owner_side, is_required)` to `reference_delete_mode` for every input combination including `association` and `inheritance` (or remove `inheritance` from the enum if supertyping is out of altitude). Delete the stale `kind+necessity` formula. Emit the resolved delete-mode and the Semantius FK format (composition/parent-owner gives `parent`, reference gives `reference`) as columns in blueprint section 5 so the deployer selects the FK shape rather than reconstructing it for all 1545 reference plus 180 composition plus 104 association edges. Add the canonical mapping to `module-shape.md`.
+- Fix: Pick one canonical derivation (owner_side-based, since that column is NOT NULL and fully populated). Write a total rule mapping `(relationship_kind, owner_side, is_required)` to `reference_delete_mode` for every input combination including `association` and `inheritance` (or remove `inheritance` from the enum if supertyping is out of altitude). Delete the stale `kind+necessity` formula. Emit the resolved delete-mode and the Semantius FK format (composition/parent-owner gives `parent`, reference gives `reference`) as columns in blueprint section 5 so the deployer selects the FK shape rather than reconstructing it for all 1545 reference plus 180 composition plus 104 association relationships. Add the canonical mapping to `module-shape.md`.
 
 **B5. Operational personas have no catalog home and operational RACI has no table; the three proposed new stores have no defined join key tying persona to process to permission.**
 - Property: self-contained, complete
 - Kind: store
-- Evidence: `SKILL.md` lines 591-594 and `module-shape.md` lines 478, 502, 513 treat roles/permissions/role_permissions as platform built-ins; `plans/extract-role-permission-catalog.md` lines 5-19 confirm catalog-origin rows in `_core` are pollution and the only legitimate `_core.roles` rows are id 1 (User) and id 2 (Administrator). No persona-by-process responsibility table exists; only market RACI on `business_function_domains` (owner/contributor/consumer). `processes` link only to handoffs (`handoff_processes`) and to themselves (`parent_process_id`); there is no edge from a process to a permission, so persona-to-process and persona-to-permission are two unconnected subgraphs that never meet at the process node.
-- Fix: Add catalog-owned `domain_roles`, `domain_permissions`, `domain_role_permissions`, `domain_permission_hierarchy` in module 1001 and re-point `role_modules.role_id` at `domain_roles`. Make the operational persona equal a `roles` row (not a 4th entity). Add `role_process_raci` keyed `(role_id, process_id, raci)` with raci enum responsible/accountable/consulted/informed. Add the missing process-to-permission edge (a `process_id` on the gated lifecycle transition or on `handoff_processes`) so "persona is Responsible for process P" deterministically resolves to the permission gates P touches. Document the full persona-to-process-to-permission-to-RACI traversal as one model-resident derivation.
+- Evidence: `SKILL.md` lines 591-594 and `module-shape.md` lines 478, 502, 513 treat roles/permissions/role_permissions as platform built-ins; `plans/extract-role-permission-catalog.md` lines 5-19 confirm catalog-origin rows in `_core` are pollution and the only legitimate `_core.roles` rows are id 1 (User) and id 2 (Administrator). No persona-by-process responsibility table exists; only market RACI on `business_function_domains` (owner/contributor/consumer). `processes` relate only to handoffs (`handoff_processes`) and to themselves (`parent_process_id`); there is no relationship from a process to a permission, so persona-to-process and persona-to-permission are two separate subgraphs that never meet at the process node.
+- Fix: Add catalog-owned `personas`, `domain_permissions`, `domain_role_permissions`, `domain_permission_hierarchy` in module 1001 and re-point `persona_modules.persona_id` at `personas`. Make the operational persona equal a `roles` row (not a 4th entity). Add `role_process_raci` keyed `(persona_id, process_id, raci)` with raci enum responsible/accountable/consulted/informed. Add the missing process-to-permission relationship (a `process_id` on the gated lifecycle transition or on `handoff_processes`) so "persona is Responsible for process P" deterministically resolves to the permission gates P touches. Document the full persona-to-process-to-permission-to-RACI traversal as one model-resident derivation.
 
 **B6. `handoff_processes.proposal_source` enum lacks `agent_curated`, yet the audit procedure and authoring steps write exactly that value.**
 - Property: consistent
@@ -64,10 +64,10 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 - Evidence: `scripts/loaders/add_handoff_processes_proposal_source_2026_05_29.ts` line 81 declares the enum as `['human_curated', 'discovery_override', 'discovery_substring']`. `SKILL.md` lines 1086-1087, 1094, 1096 and line 663, plus `domain-audit-procedure.md` lines 110, 121, 123, 216, all instruct `proposal_source='agent_curated'`. A literal write of the instructed value is rejected by the enum.
 - Fix: Add `agent_curated` to the `handoff_processes.proposal_source` enum via a one-field ALTER loader, or retarget every H-band and APQC-tagging instruction to one existing value (most likely `human_curated` for analyst-authored rows). Pick one and make all four files agree.
 
-**B7. `skills.process_id` is called load-bearing for APQC linkage but is undocumented and unset.**
+**B7. `skills.process_id` is called load-bearing for APQC relationship but is undocumented and unset.**
 - Property: self-contained
 - Kind: store
-- Evidence: `discover-cross-domain-processes.md` line 5 ("`skills.process_id` became a load-bearing FK for APQC linkage") and lines 105-108 (the 3 loaded process skills sit with `process_id=NULL`). `module-shape.md` lines 331-340 list only description/skill_type/domain_id/record_status, with no `process_id`. `load_p25b_process_skills.ts` lines 171-177 inserts process skills without it.
+- Evidence: `discover-cross-domain-processes.md` line 5 ("`skills.process_id` became a load-bearing FK for APQC relationship") and lines 105-108 (the 3 loaded process skills sit with `process_id=NULL`). `module-shape.md` lines 331-340 list only description/skill_type/domain_id/record_status, with no `process_id`. `load_p25b_process_skills.ts` lines 171-177 inserts process skills without it.
 - Fix: Add `process_id` (reference to `processes`, nullable) to the documented `skills` schema in `module-shape.md`, create the field via a loader if it does not exist live, and backfill the 3 process skills to their L2/L3 PCF rows. This is the only column that closes process-skill to APQC.
 
 ### Major
@@ -105,13 +105,13 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 **M6. No invariant forbids write pattern flags or write overrides on computed (or catalog/junction) entities.**
 - Property: consistent
 - Kind: invariant
-- Evidence: `generate_blueprints.ts` lines 899-947 derive `view_all`/`manage_all`/`submit`/`approve` overrides and edit-scope rules for any `role='master'` row with `has_personal_content`/`has_submit_lock`/`has_single_approver` set, with no guard on `entity_type`. A computed entity (no write per the plan) flagged `has_submit_lock` would emit a submit gate over an entity that has no write tier. No B-band check cross-validates flags against `entity_type`.
+- Evidence: `generate_blueprints.ts` lines 899-947 derive `view_all`/`manage_all`/`submit`/`approve` overrides and edit-scope rules for any `held_as='master'` row with `has_personal_content`/`has_submit_lock`/`has_single_approver` set, with no guard on `entity_type`. A computed entity (no write per the plan) flagged `has_submit_lock` would emit a submit gate over an entity that has no write tier. No B-band check cross-validates flags against `entity_type`.
 - Fix: Add an invariant and a generator guard: pattern flags are valid only on `entity_type='operational_workflow'` and MUST be false on computed/catalog/junction/operational_record; `entity_type='computed'` implies all three flags false. Flag a violation as an audit failure and guard the emitter so no write override is emitted on a no-write entity.
 
-**M7. Composition edges disagree on which side is the parent, and composition is never cross-checked against the master/child ownership it implies.**
+**M7. Composition relationships disagree on which side is the parent, and composition is never cross-checked against the master/child ownership it implies.**
 - Property: consistent
 - Kind: invariant
-- Evidence: 16 rows have `relationship_kind=composition` AND `owner_side=target` with `one_to_many` cardinality authored child-first (e.g. 966 to 245 `belongs_to`/`has_key_results`; 980 to 243 `belongs_to`/`has_comments`). Composition implies the source composes the child, `owner_side=target` says the target owns the lifecycle, the verb reads child-to-parent, and `one_to_many` says the source is the "one" side: four signals point at different parents. No B6 check (`SKILL.md` lines 882-885) cross-checks composition edges against `domain_module_data_objects` master/child roles, so a composition edge can point a master at a child mastered by an unrelated module.
+- Evidence: 16 rows have `relationship_kind=composition` AND `owner_side=target` with `one_to_many` cardinality authored child-first (e.g. 966 to 245 `belongs_to`/`has_key_results`; 980 to 243 `belongs_to`/`has_comments`). Composition implies the source composes the child, `owner_side=target` says the target owns the lifecycle, the verb reads child-to-parent, and `one_to_many` says the source is the "one" side: four signals point at different parents. No B6 check (`SKILL.md` lines 882-885) cross-checks composition relationships against `domain_module_data_objects` master/child roles, so a composition relationship can point a master at a child mastered by an unrelated module.
 - Fix: Add a loader and audit invariant: for `relationship_kind=composition`, `owner_side` must equal the cardinality "one" side and the forward verb must read parent-to-child; normalize the 16 offending rows. Add a B6 sub-check that the composed child is mastered by the same module/domain that masters the composing parent or is a non-shared dependent.
 
 **M8. Cross-module permission collision: a master in module A whose lifecycle is realized by module B yields a gate that A omits and B emits for an entity it does not master, with no closure invariant.**
@@ -123,20 +123,20 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 **M9. The model has no concept of a deployable bundle or dependency closure: which modules a starter or persona transitively pulls in.**
 - Property: complete
 - Kind: derive
-- Evidence: `references/modules.md` line 114 states "transitive embedded_master pull-in is sufficient, no requires_modules column" and that the deployer prunes states whose `domain_module_id` references an uninstalled module at deploy time; `generate_blueprints.ts` lines 755-757 render "(needs install)" for an out-of-scope realizing module. No model entity states the install closure; `role_modules` and `domain_module_host_domains` each capture only a slice.
-- Fix: Add a derivation (and emit it) for the deployable closure: for a starter or persona, compute the transitive set of modules required via embedded_master pull-ins plus `role_modules` plus cross-domain handoff counterparties, and surface it as a "required modules" list so the deployer provisions a closed set rather than discovering missing masters at install time.
+- Evidence: `references/modules.md` line 114 states "transitive embedded_master pull-in is sufficient, no requires_modules column" and that the deployer prunes states whose `domain_module_id` references an uninstalled module at deploy time; `generate_blueprints.ts` lines 755-757 render "(needs install)" for an out-of-scope realizing module. No model entity states the install closure; `persona_modules` and `domain_module_host_domains` each capture only a slice.
+- Fix: Add a derivation (and emit it) for the deployable closure: for a starter or persona, compute the transitive set of modules required via embedded_master pull-ins plus `persona_modules` plus cross-domain handoff counterparties, and surface it as a "required modules" list so the deployer provisions a closed set rather than discovering missing masters at install time.
 
-**M10. Baseline roles (read/manage/admin role-per-module) are not derived, and the permission_hierarchy edges that make role bundles work are not emitted.**
+**M10. Baseline roles (read/manage/admin role-per-module) are not derived, and the permission_hierarchy relationships that make role bundles work are not emitted.**
 - Property: self-contained
 - Kind: derive
-- Evidence: `roles.md` sections 2-4 and `SKILL.md` lines 596-602 require every `roles` row to satisfy a 2-module floor and be hand-authored; there is no derivation yielding the per-module baseline read/manage/admin role bundle. The emitter derives baseline permissions (lines 873-875) but never baseline roles. `roles.md` lines 69-73 and `modules.md` lines 100-106 say bundles rely on `permission_hierarchy` auto-expansion (admin superset manage superset read, admin superset every gate/override), but those edges live in `_core` (pollution) and are never emitted; blueprint section 8.1 shows only an "included in :admin?" checkmark.
-- Fix: Define a total derivation: every module yields three baseline roles from its baseline permission tiers, with hand-authored cross-module roles layered as additive refinement (the 2-module floor applies only to authored personas). Derive and emit the per-module `permission_hierarchy` edge set (admin-to-manage-to-read chain plus admin-to-each-gate/override) into the catalog-owned `domain_permission_hierarchy` so the deployer selects edges rather than recomputing the closure.
+- Evidence: `personas.md` sections 2-4 and `SKILL.md` lines 596-602 require every `roles` row to satisfy a 2-module floor and be hand-authored; there is no derivation yielding the per-module baseline read/manage/admin role bundle. The emitter derives baseline permissions (lines 873-875) but never baseline roles. `personas.md` lines 69-73 and `modules.md` lines 100-106 say bundles rely on `permission_hierarchy` auto-expansion (admin superset manage superset read, admin superset every gate/override), but those relationships live in `_core` (pollution) and are never emitted; blueprint section 8.1 shows only an "included in :admin?" checkmark.
+- Fix: Define a total derivation: every module yields three baseline roles from its baseline permission tiers, with hand-authored cross-module roles layered as additive refinement (the 2-module floor applies only to authored personas). Derive and emit the per-module `permission_hierarchy` relationship set (admin-to-manage-to-read chain plus admin-to-each-gate/override) into the catalog-owned `domain_permission_hierarchy` so the deployer selects relationships rather than recomputing the closure.
 
 **M11. Market RACI is never emitted into per-module blueprints, and no invariant ties a function-scoped role to its domain's RACI owner.**
 - Property: self-contained, consistent
 - Kind: emit plus invariant
 - Evidence: `generate_blueprints.ts` renders no business_function content (grep finds `business_function` only in loaders and analytics), and the blueprints carry no owner/contributor/consumer section. No rule cross-checks `roles.business_function_id` against `business_function_domains.responsibility_type` for the domains the role's modules touch, though the audit brief names exactly that cross-check.
-- Fix: Add a "functional ownership (market RACI)" section to the emitter sourced from the stored junctions. Add a consistency invariant: for a function-scoped role, at least one domain reachable via `role_modules` must have a `business_function_domains` row for that function (or an ancestor/descendant) with `responsibility_type` in (owner, contributor); surface divergence as a drift warning.
+- Fix: Add a "functional ownership (market RACI)" section to the emitter sourced from the stored junctions. Add a consistency invariant: for a function-scoped role, at least one domain reachable via `persona_modules` must have a `business_function_domains` row for that function (or an ancestor/descendant) with `responsibility_type` in (owner, contributor); surface divergence as a drift warning.
 
 **M12. Domain function-ownership is not total; uncovered domains have no owner function, and there is no single-owner invariant.**
 - Property: logical, consistent
@@ -147,7 +147,7 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 **M13. No default persona-to-baseline-role binding at deploy time: a deployed module has no stored or derived "who gets which baseline role out of the box," though market RACI already encodes it.**
 - Property: complete
 - Kind: derive
-- Evidence: The deployer provisions three default roles per module, and baseline roles are proposed for derivation, but nothing maps which operational persona gets which tier on a fresh single-module deploy. `business_function_domains.responsibility_type` (owner/contributor/consumer) already encodes the answer and is never connected to a default role-grant.
+- Evidence: The deployer provisions three default roles per module, and baseline roles are proposed for derivation, but nothing maps which operational persona gets which tier on a fresh single-module deploy. `business_function_domains.responsibility_type` (owner/contributor/consumer) already encodes the answer and is never related to a default role-grant.
 - Fix: Define a total derivation from `responsibility_type` to a default baseline tier (owner gives admin, contributor gives manage, consumer gives read) for the functions that own/contribute-to/consume the module's domain, and emit it as the module's default role-grant table.
 
 **M14. trigger_events state fields and the lifecycle state machine are two unjoined models of the same transitions.**
@@ -162,10 +162,10 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 - Evidence: `module-shape.md` lines 333-338 anchor system skills on `domain_id` with validation rule `domain_required_when_skill_type_is_system` and omit `domain_module_id`; `SKILL.md` Rule #17, at-a-glance line 554, and F2 require exactly one system skill per `domain_modules` row via `skills.domain_module_id`. The `tools.operation_kind` enum and `data_object_id` rules (see B3) also drift. `handoff_processes` has no field-shape section in `module-shape.md` at all (its schema lives only in `create_handoff_processes.ts`), and is excluded from the at-a-glance entity count.
 - Fix: Add `domain_module_id` (required-when-system) to the `skills` manifest and demote `domain_id` to transitional; add a `handoff_processes` field-shape section (handoff_id parent, process_id reference, the `role` enum value `implements`, `proposal_source`) and count it in the at-a-glance inventory; reconcile `tools.operation_kind`/`coverage_tier` per B3. Append a `skill-changelog` entry for each.
 
-**M16. No persona-to-process link exists, so the persona-to-process-to-APQC chain is not modelable.**
+**M16. No persona-to-process relationship exists, so the persona-to-process-to-APQC chain is not modelable.**
 - Property: complete
 - Kind: store
-- Evidence: `roles` (the persona layer) joins only to `domain_modules` (`role_modules`) and permissions (`role_permissions`); `processes` link only to handoffs and self. There is no `role_processes`/`persona_processes` junction. (Subsumed by the join-key fix in B5; tracked here for the process-layer view.)
+- Evidence: `roles` (the persona layer) joins only to `domain_modules` (`persona_modules`) and permissions (`role_permissions`); `processes` relate only to handoffs and self. There is no `role_processes`/`persona_processes` junction. (Subsumed by the join-key fix in B5; tracked here for the process-layer view.)
 - Fix: Add the operational-RACI junction from B5 (`role_process_raci`), or route the chain through process skills (`role` to `skill` to `process_id`) once `skills.process_id` exists. Document persona-to-process-to-APQC in `module-shape.md` and SKILL.md.
 
 **M17. The blueprint does not emit `catalog_tagline`/`catalog_description` on `domain_modules` from any committed loader, and `domain_aliases` is authored but never read with a divergent shape.**
@@ -198,8 +198,8 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 
 **m5. `relationship_type` direction is not constrained relative to `owner_side`, leaving cardinality and ownership ambiguous.**
 - Property: logical. Kind: invariant.
-- Evidence: After `load_cluster_drafts.ts` auto-flips `many_to_one` to `one_to_many`, a `one_to_many` edge can carry `owner_side=source` OR `target` with no rule saying which is canonical (509 rows are `owner_side=target`, many authored child-first). A consumer cannot deterministically identify the "one"/parent side from stored data.
-- Fix: Enforce that for `one_to_many` edges the "one"/parent side is fixed (owner_side names the parent, forward verb reads parent-to-child) in the loader auto-flip and the B6 audit.
+- Evidence: After `load_cluster_drafts.ts` auto-flips `many_to_one` to `one_to_many`, a `one_to_many` relationship can carry `owner_side=source` OR `target` with no rule saying which is canonical (509 rows are `owner_side=target`, many authored child-first). A consumer cannot deterministically identify the "one"/parent side from stored data.
+- Fix: Enforce that for `one_to_many` relationships the "one"/parent side is fixed (owner_side names the parent, forward verb reads parent-to-child) in the loader auto-flip and the B6 audit.
 
 **m6. No stored discriminator distinguishes an intentionally-empty leadership-tier landing module from an under-loaded one; M-band skips M3; the borderline-3-capabilities case is prose only.**
 - Property: complete, consistent, logical. Kind: store.
@@ -238,7 +238,7 @@ Duplicate gaps that several layers or critics raised are merged into one entry, 
 
 **m13. PII/sensitivity footprint of a deployable is reconstructed from a single permission-shaping boolean; source-state-conditional gating cannot be expressed.**
 - Property: complete. Kind: store.
-- Evidence: `has_personal_content` is consumed only to emit `view_all`/`manage_all` permissions and an edit-scope rule; no PII classification distinct from the permission flag exists, and `domain_regulations` links to domains not to the specific data_objects that hold regulated content, so a GDPR-erasure entity set cannot be answered from the model. Lifecycle `requires_permission` is destination-state-only (`module-shape.md` lines 465-466); `trigger_events` carry from/to_state but lifecycle states do not.
+- Evidence: `has_personal_content` is consumed only to emit `view_all`/`manage_all` permissions and an edit-scope rule; no PII classification distinct from the permission flag exists, and `domain_regulations` relates to domains not to the specific data_objects that hold regulated content, so a GDPR-erasure entity set cannot be answered from the model. Lifecycle `requires_permission` is destination-state-only (`module-shape.md` lines 465-466); `trigger_events` carry from/to_state but lifecycle states do not.
 - Fix: Either elevate `has_personal_content` into a sensitivity classification (none/personal/sensitive) the blueprint emits, or add a data_object-to-regulation junction. If source-conditional gating is in altitude, add an optional `from_state` qualifier to the gate model; otherwise document destination-only as an explicit decision.
 
 ## 4. Model-map extension spec
@@ -249,15 +249,15 @@ This section turns the store, derive, emit, and invariant gaps into a concrete p
 
 Catalog-owned RBAC and persona inputs (replaces `_core` pollution; `_core` keeps only platform rows id 1/2):
 
-- `domain_roles` (the operational persona): `role_code`, `role_name`, `description`, optional `business_function_id` (function-scoping), `record_status`. The operational persona IS a `domain_roles` row, not a separate archetype entity.
+- `personas` (the operational persona): `persona_code`, `persona_name`, `description`, optional `business_function_id` (function-scoping), `record_status`. The operational persona IS a `personas` row, not a separate archetype entity.
 - `domain_permissions`: catalog-side mirror of derived permission names, populated by the emitter at materialization time (the name still resolves from the realizing module's code), `record_status`.
-- `domain_role_permissions`: `(role_id -> domain_roles, permission_id -> domain_permissions)`; grants are tier-level (read/manage/admin plus gates), consistent with hierarchy auto-expansion.
-- `domain_permission_hierarchy`: `(parent_permission_id, child_permission_id)` edges (admin superset manage superset read, admin superset each gate/override), derived per module and emitted, not hand-maintained.
-- Re-point `role_modules.role_id` at `domain_roles`.
+- `domain_role_permissions`: `(persona_id -> personas, permission_id -> domain_permissions)`; grants are tier-level (read/manage/admin plus gates), consistent with hierarchy auto-expansion.
+- `domain_permission_hierarchy`: `(parent_permission_id, child_permission_id)` relationships (admin superset manage superset read, admin superset each gate/override), derived per module and emitted, not hand-maintained.
+- Re-point `persona_modules.persona_id` at `personas`.
 
 Operational RACI (the redesign-target gap):
 
-- `role_process_raci`: `(role_id -> domain_roles, process_id -> processes, raci)` where `raci` is an enum responsible/accountable/consulted/informed. This is the operational-execution axis; market RACI on `business_function_domains` (owner/contributor/consumer) stays the org-buyer axis.
+- `role_process_raci`: `(persona_id -> personas, process_id -> processes, raci)` where `raci` is an enum responsible/accountable/consulted/informed. This is the operational-execution axis; market RACI on `business_function_domains` (owner/contributor/consumer) stays the org-buyer axis.
 
 New columns on existing entities:
 
@@ -274,10 +274,10 @@ New columns on existing entities:
 
 - `deriveWriteTier(entity_type, endpoints)` returning `{read, writeTier|null}`, total over every enum value: operational_workflow and operational_record give manage, catalog gives admin, junction gives admin-if-an-endpoint-is-catalog-else-manage (resolved from stored endpoints or a stored boolean), computed gives no write, unclassified gives no write plus a hard emitter error mirroring B13. Add `entity_type` to the `catalog.ts` SELECT and `DataObject` type first (B2).
 - A single shared `deriveGate(state, scope, module)` used by both the section-7 renderer and the section-8 permission deriver, with one canonical fallback (NULL `domain_module_id` gives the master's owning module), throwing when a `requires_permission` state resolves to no module (M1, M2).
-- Baseline-role derivation: each module yields three baseline roles from its baseline permission tiers; the `permission_hierarchy` edge set is derived and emitted (M10).
+- Baseline-role derivation: each module yields three baseline roles from its baseline permission tiers; the `permission_hierarchy` relationship set is derived and emitted (M10).
 - Default role-grant derivation from market RACI: owner gives admin, contributor gives manage, consumer gives read for the functions owning/contributing/consuming the module's domain (M13).
 - Delete-mode derivation: a total `(relationship_kind, owner_side, is_required)` to `reference_delete_mode` function, plus the Semantius FK format mapping (B4).
-- Deployable-closure derivation: transitive embedded_master plus role_modules plus cross-domain handoff counterparties (M9).
+- Deployable-closure derivation: transitive embedded_master plus persona_modules plus cross-domain handoff counterparties (M9).
 - `domain_data_objects` rollup recomputation from `domain_module_data_objects`, strongest role wins (m11).
 - `business_function_capabilities` divergence derivation (a capability gets an override row when its realizing module's owning function differs from its home-domain owner) (m12).
 - Rewrite `computeCoverage` to the canonical Semantius-score definition and wire it in (B3).
@@ -289,9 +289,9 @@ The blueprint, as the byte-stable contract (B1), must additionally carry, per mo
 - A per-entity write-tier column in section 3 and section 8 (B2).
 - The system skill, its `skill_tools` with operation_kind and coverage_tier, and the per-module Semantius score (B1, B3).
 - A "functional ownership (market RACI)" section: owner/contributor/consumer functions for the module's domain plus any capability-divergence rows (M11).
-- The derived per-module role bundle (baseline read/manage/admin plus authored cross-module roles with their `role_modules` reach) and the emitted `permission_hierarchy` edge set (M10).
+- The derived per-module role bundle (baseline read/manage/admin plus authored cross-module roles with their `persona_modules` reach) and the emitted `permission_hierarchy` relationship set (M10).
 - Operational personas and the `role_process_raci` assignments (once added) (B5).
-- The resolved delete-mode and FK format per relationship edge (B4).
+- The resolved delete-mode and FK format per relationship (B4).
 - The deployable module closure ("required modules" list) (M9).
 - `trigger_events.from_state`/`to_state` and `event_category` in section 6 (m8).
 - Cross-module gate ownership (which module realizes each gate) (M8).
@@ -301,9 +301,9 @@ The blueprint, as the byte-stable contract (B1), must additionally carry, per mo
 - `entity_type=operational_workflow` if-and-only-if it has at least one `requires_permission` lifecycle state (close the biconditional in both directions, decide and document the catalog/junction template exception) (M5).
 - Pattern flags valid only on `operational_workflow`; `computed` implies all three flags false; no write override emitted on a no-write entity (M6).
 - Exactly one `is_initial=true` and at least one `is_terminal=true` per data_object with lifecycle rows; `state_order` unique and monotonic within a state set (M4).
-- For `relationship_kind=composition`: `owner_side` equals the cardinality "one" side, the forward verb reads parent-to-child, and the composed child is mastered by the same module/domain as the parent or is a non-shared dependent (M7). For `one_to_many` edges, the parent side is fixed (m5). `inverse_verb` non-empty (m4).
+- For `relationship_kind=composition`: `owner_side` equals the cardinality "one" side, the forward verb reads parent-to-child, and the composed child is mastered by the same module/domain as the parent or is a non-shared dependent (M7). For `one_to_many` relationships, the parent side is fixed (m5). `inverse_verb` non-empty (m4).
 - For every `requires_permission` state: the realizing module and the master's owning module are the same or both in the deployable closure; within a closure each derived permission string maps to exactly one (realizing module, tier, transition) (M8).
-- For a function-scoped `domain_roles` row: its function (or an ancestor/descendant) is owner or contributor for at least one domain its modules touch (M11).
+- For a function-scoped `personas` row: its function (or an ancestor/descendant) is owner or contributor for at least one domain its modules touch (M11).
 - At most one `business_function_domains` owner row per domain (and per capability); domain ownership total (no uncovered domains) (M12).
 - `trigger_events.to_state` resolves to a real `data_object_lifecycle_states.state_name` on the same data_object; a gated-transition event corresponds to a `requires_permission` state; handoff payload mastered on the source module's side (M14, m7).
 - `source_domain_id`/`target_domain_id` agree with the module FKs (generated projection or invariant) (m7).

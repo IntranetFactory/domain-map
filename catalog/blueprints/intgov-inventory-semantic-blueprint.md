@@ -47,7 +47,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `connected_intranets` | `connected_intranets` | Connected Intranet | Connected Intranets | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `intranet_content_health_scores` | `intranet_content_health_scores` | Content Health Score | Content Health Scores | master | - | - | required | - | computed | read-only | - |
@@ -60,7 +60,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -68,11 +68,11 @@ _(none: no industry-scoped aliases for this scope)_
 | `intranet_content_types` | classifies | `intranet_content_inventory_records` | one_to_many | reference | required | source | restrict | reference | - |
 | `intranet_content_inventory_records` | is scored by | `intranet_content_health_scores` | one_to_one | composition | optional | source | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 _(none: no relationships against platform built-ins)_
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -84,11 +84,11 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | optional | none | n/a | - |
 | `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 

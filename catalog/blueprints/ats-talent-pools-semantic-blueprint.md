@@ -25,10 +25,10 @@ Curated candidate groupings for nurture and pipeline-building (`talent_pools`). 
 
 | Name | data_object | Description |
 | --- | --- | --- |
-| Candidate Tag Assignments | `candidate_tag_assignments` | Links between candidates and tags, recording who assigned each tag and when, with optional context. |
+| Candidate Tag Assignments | `candidate_tag_assignments` | Relationships between candidates and tags, recording who assigned each tag and when, with optional context. |
 | Candidate Tags | `candidate_tags` | Free-form labels applied to candidates to support segmentation, search, and pool inclusion, with name, optional category, and color. |
 | Recruiter Saved Searches | `recruiter_saved_searches` | Saved recruiter searches over the candidate database, with the filter expression, last-run time, and alert preferences. |
-| Talent Pool Memberships | `talent_pool_memberships` | Links between candidates and talent pools, carrying added date, source, status in the pool, match score, and last engagement. |
+| Talent Pool Memberships | `talent_pool_memberships` | Relationships between candidates and talent pools, carrying added date, source, status in the pool, match score, and last engagement. |
 | Talent Pools | `talent_pools` | Curated pools of candidates kept warm for future roles, such as past finalists, alumni, and hard-to-fill skill clusters. |
 | Talent Segments | `talent_segments` | Rule-based pool definitions over candidates that automatically populate membership from a saved filter. |
 | Candidates | `candidates` | People known to the recruiting organization, with or without an active application, carrying contact details, resume, tags, consent, and source. |
@@ -69,7 +69,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | catalog code | singular | plural | role | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `candidate_tag_assignments` | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | - | - | - | - | junction | `:admin` | - |
 | 2 | `candidate_tags` | `candidate_tags` | Candidate Tag | Candidate Tags | master | - | - | - | - | catalog | `:admin` | - |
@@ -87,7 +87,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 _`field_required` applies only when both entities are installed. It never makes an entity required._
 
-### 5.1 Links between entities in this blueprint
+### 5.1 Relationships between entities in this blueprint
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -98,7 +98,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | reference | no | source | clear | reference | - |
 | `candidate_tags` | applied_via | `candidate_tag_assignments` | one_to_many | reference | yes | source | restrict | reference | - |
 
-### 5.2 Links to platform built-ins (`users`)
+### 5.2 Relationships to platform built-ins (`users`)
 
 | from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -107,11 +107,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | assigned tags | `candidate_tag_assignments` | one_to_many | no | source | clear | reference | - |
 | `users` | owns | `recruiter_saved_searches` | one_to_many | yes | source | restrict | reference | - |
 
-### 5.3 Links to entities outside this blueprint
+### 5.3 Relationships to entities outside this blueprint
 
-_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-#### 5.3a Outgoing links: this blueprint's entity points to the external entity
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `talent_pools` | targets | `candidate_nurture_campaigns` | many_to_many | - | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
-#### 5.3b Incoming links: the external entity points to this blueprint's entity
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -138,7 +138,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
@@ -150,9 +150,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._
+_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
 
-| data_object | other module / domain | role | install_optional | notes |
+| data_object | other module / domain | held_as | install_optional | notes |
 | --- | --- | --- | --- | --- |
 | `talent_pools` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | embedded_master | yes | - |
 
@@ -173,7 +173,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | install_optional | catalog owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | - | ATS-CANDIDATE-CRM (ATS) | - |
 

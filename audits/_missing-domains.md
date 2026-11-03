@@ -24,7 +24,9 @@ bun run scripts/analytics/append_missing_domain.ts \
 Re-running with the same `--code` bumps `mention_count`, appends the run to
 `Surfaced by`, and updates `Most recently surfaced`. The rest of the entry
 stays untouched (vendor evidence and adjacency only widen by hand at review
-time, not by subsequent surfacers).
+time, not by subsequent surfacers). A re-run whose `--name` differs from the
+entry's name is refused, because it means two markets share one code: repeat
+the existing name for the same candidate, or pick a different `--code`.
 
 ## How to read this file
 
@@ -439,14 +441,14 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### TMS — Translation Management System
+### TRANSLATION-MGMT: Translation Management System
 
-- **Mention count:** 2
+- **Mention count:** 1
 - **First surfaced:** 2026-05-30 (HCMS audit 2026-05-30)
-- **Most recent:** 2026-05-30 (FLEET-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (HCMS audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 HCMS audit 2026-05-30
-  - 2026-05-30 FLEET-MGMT audit 2026-05-30
+- **Former code:** TMS until 2026-11-02, reassigned to Transportation Management System. Older HCMS history entries still use it for this candidate.
 - **Vendor evidence:** Smartling, Lokalise, Phrase, Crowdin, memoQ, Transifex
 - **Adjacency:** HCMS, DXP, WEB-CONTOPS, B2C-COMM, LMS
 - **Candidate capabilities:** translation memory, glossary management, machine translation orchestration, translator workbench, vendor and freelancer marketplace, in-context translation
@@ -480,7 +482,7 @@ the bottom are the resolved history.
   - 2026-05-30 DXP audit 2026-05-30
 - **Vendor evidence:** Ninetailed, Uniform, Optimizely Personalization, Dynamic Yield, Adobe Target, Mutiny
 - **Adjacency:** HCMS, DXP, MA, B2C-COMM, CDP
-- **Candidate capabilities:** audience and segment evaluation, content variant authoring, experimentation overlay, rule-based and AI personalization, edge-personalization
+- **Candidate capabilities:** audience and segment evaluation, content variant authoring, experimentation overlay, rule-based and AI personalization, relationship-personalization
 - **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -908,7 +910,7 @@ the bottom are the resolved history.
   - 2026-05-30 LEGAL-PRACT-MGMT audit 2026-05-30
 - **Vendor evidence:** Exterro Legal Hold, Onna, Zapproved, Logikcull Hold, Mitratech HoldsPro
 - **Adjacency:** LEGAL-PRACT-MGMT, LSD, EDISCOVERY, ECM, HCM
-- **Candidate capabilities:** custodian identification, hold notice issuance, custodian acknowledgement, in-place preservation, hold release, audit trail
+- **Candidate capabilities:** custodian identification, hold notice issuance, custodian acknowledgment, in-place preservation, hold release, audit trail
 - **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2565,7 +2567,7 @@ the bottom are the resolved history.
   - 2026-05-30 RET-STORE audit 2026-05-30
 - **Vendor evidence:** Zipline, Nudge, AxonifyConnect, Reflexis Q&A
 - **Adjacency:** RET-STORE, INTRANET, LMS, KNOWLEDGE-MGMT
-- **Candidate capabilities:** store-targeted messaging, acknowledgement tracking, district memos, multi-store campaigns, store-level knowledge bases
+- **Candidate capabilities:** store-targeted messaging, acknowledgment tracking, district memos, multi-store campaigns, store-level knowledge bases
 - **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2988,7 +2990,7 @@ the bottom are the resolved history.
   - 2026-05-30 NPMD audit 2026-05-30
 - **Vendor evidence:** Cisco Catalyst SD-WAN (Viptela), VMware VeloCloud, Fortinet Secure SD-WAN, Versa, Aruba EdgeConnect, Cato Networks
 - **Adjacency:** NPMD, ITOM, SECOPS, OBS
-- **Candidate capabilities:** policy-based routing, transport SLA enforcement, application-aware path selection, tunnel health monitoring, edge appliance fleet management, zero-touch provisioning
+- **Candidate capabilities:** policy-based routing, transport SLA enforcement, application-aware path selection, tunnel health monitoring, relationship appliance fleet management, zero-touch provisioning
 - **Estimated Semantius score:** ~46% strict (auto-est.): device-fleet + tunnel telemetry.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -3276,7 +3278,7 @@ the bottom are the resolved history.
   - 2026-05-30 VULN-MGMT audit 2026-05-30
 - **Vendor evidence:** XM Cyber, Picus Security, Cymulate, AttackIQ, Pentera, SafeBreach, Mandiant Attack Surface Management
 - **Adjacency:** VULN-MGMT, EASM, SECOPS, THREAT-INTEL, GRC
-- **Candidate capabilities:** attack-path analysis, breach and attack simulation, control validation, prioritised remediation routing on real exploitability, scoping and assessment of exposure programs
+- **Candidate capabilities:** attack-path analysis, breach and attack simulation, control validation, prioritized remediation routing on real exploitability, scoping and assessment of exposure programs
 - **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -3657,12 +3659,121 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
+### BROKER-TMS: Freight Brokerage TMS
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-03 (TRUCKING-TMS build 2026-11-03)
+- **Most recent:** 2026-11-03 (TRUCKING-TMS build 2026-11-03)
+- **Surfaced by:**
+  - 2026-11-03 TRUCKING-TMS build 2026-11-03
+- **Vendor evidence:** DAT Broker TMS, Tai TMS, Descartes Aljex, McLeod PowerBroker
+- **Adjacency:** TRUCKING-TMS, TMS, FREIGHT-AUDIT
+- **Candidate capabilities:** brokers with no fleet: load and carrier sales, partner carrier vetting, customer and carrier rate spread, broker transaction records
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### FREIGHT-FORWARD: Air and Ocean Freight Forwarding
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-03 (TRUCKING-TMS build 2026-11-03)
+- **Most recent:** 2026-11-03 (TRUCKING-TMS build 2026-11-03)
+- **Surfaced by:**
+  - 2026-11-03 TRUCKING-TMS build 2026-11-03
+- **Vendor evidence:** CargoWise, CargoSoft, Magaya
+- **Adjacency:** TRUCKING-TMS, TMS, GLOBAL-TRADE
+- **Candidate capabilities:** house and master bills, consolidations, booking with airlines and ocean carriers, customs documents
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### TRANSPORT-VIS: Real-Time Transportation Visibility
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-03 (TMS build 2026-11-03)
+- **Most recent:** 2026-11-03 (TMS build 2026-11-03)
+- **Surfaced by:**
+  - 2026-11-03 TMS build 2026-11-03
+- **Vendor evidence:** project44, FourKites, Shippeo, Overhaul
+- **Adjacency:** TMS, TRUCKING-TMS, TELEMATICS
+- **Candidate capabilities:** multi-carrier location tracking, predictive ETAs, exception alerts
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### YARD-MGMT: Yard Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-03 (TMS build 2026-11-03)
+- **Most recent:** 2026-11-03 (TMS build 2026-11-03)
+- **Surfaced by:**
+  - 2026-11-03 TMS build 2026-11-03
+- **Vendor evidence:** C3 Solutions, Kaleris, GoRamp, YardView
+- **Adjacency:** TMS, WMS
+- **Candidate capabilities:** gate check-in, trailer moves, yard visits, yard inventory
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### GLOBAL-TRADE: Global Trade Compliance
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-03 (TMS build 2026-11-03)
+- **Most recent:** 2026-11-03 (TMS build 2026-11-03)
+- **Surfaced by:**
+  - 2026-11-03 TMS build 2026-11-03
+- **Vendor evidence:** Oracle Global Trade Management, SAP GTS, Descartes
+- **Adjacency:** TMS, S2P, FREIGHT-FORWARD
+- **Candidate capabilities:** customs declarations, restricted party screening, trade licenses, duty calculation
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
 
 ---
 
 ## Promoted
 
 > Note: "promote-as-domain" here means research is complete and the candidate passes the point-solution-market test. It is a RECOMMENDATION. No Phase A load has been performed. Per Rule #21, new domains are market-shape decisions and are never auto-loaded; loading awaits explicit user approval.
+
+### TMS: Transportation Management System
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-02 (FLEET-MGMT audit 2026-05-30, requeued after TMS code collision with translation)
+- **Most recent:** 2026-11-02 (FLEET-MGMT audit 2026-05-30, requeued after TMS code collision with translation)
+- **Surfaced by:**
+  - 2026-11-02 FLEET-MGMT audit 2026-05-30, requeued after TMS code collision with translation
+- **Vendor evidence:** Shipwell, Alpega, FreightWise (Kuebix), Freightview, Oracle OTM, Manhattan Active TM, Infios (MercuryGate), SAP TM, Blue Yonder, e2open (WiseTech), Descartes 3G, Trimble TMS for Shippers, Transporeon (Trimble)
+- **Adjacency:** FLEET-MGMT, TELEMATICS, FREIGHT-AUDIT, TRUCKING-TMS, S2P, OMS, WMS
+- **Candidate capabilities:** carrier selection and tendering, freight rate management, load planning, shipment execution, delivery tracking
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** PASSES. Shipwell, Alpega, FreightWise, and Freightview have a shipper TMS as their flagship; Gartner has run a Magic Quadrant for at least 19 editions.
+- **Status:** promoted
+- **Decision:** promote-as-domain (2026-11-03), sibling of TRUCKING-TMS.
+- **Phase 0 report:** audits/TMS/TMS-phase0-2026-11-02.md
+- **Build status:** BUILT and loaded at record_status='new' on 2026-11-03 as domain id 194 (5 full modules). Audit artifacts at audits/TMS/. Catalog copy awaits approval in q-TMS.md.
+
+### TRUCKING-TMS: Trucking Transportation Management (Carrier TMS)
+
+- **Mention count:** 1
+- **First surfaced:** 2026-11-02 (FTL classification review 2026-11-02)
+- **Most recent:** 2026-11-02 (FTL classification review 2026-11-02)
+- **Surfaced by:**
+  - 2026-11-02 FTL classification review 2026-11-02
+- **Vendor evidence:** McLeod LoadMaster, Truckbase, PCS TMS, Alvys, Rose Rocket, Trimble (TMW.Suite, Innovative, TruckMate), Soloplan CarLo, LIS WinSped
+- **Adjacency:** FLEET-MGMT, TELEMATICS, FLEET-MAINT, ELD-COMPLIANCE, FREIGHT-AUDIT, TMS
+- **Candidate capabilities:** load and freight order management, dispatch and driver assignment, rate confirmation capture, proof of delivery, freight invoicing, driver settlement, FTL and LTL mode handling
+- **Estimated Semantius score:** _(not estimated)_
+- **Point-solution-market test:** PASSES. McLeod, Truckbase, and PCS have a carrier TMS as their flagship, self-declared; no analyst ranking surfaced.
+- **Status:** promoted
+- **Decision:** promote-as-domain (2026-11-03), sibling of TMS. FTL is a capability, not a domain.
+- **Phase 0 report:** audits/TRUCKING-TMS/TRUCKING-TMS-phase0-2026-11-02.md
+- **Build status:** BUILT and loaded at record_status='new' on 2026-11-03 as domain id 195 (7 full modules). Audit artifacts at audits/TRUCKING-TMS/. Catalog copy awaits approval in q-TRUCKING-TMS.md.
 
 ### TRAVEL-MGMT: Corporate Travel Management
 
@@ -3703,7 +3814,7 @@ the bottom are the resolved history.
 - **Candidate capabilities:** incident management, hazard analysis, regulatory permit tracking, health surveillance, OSHA/EU-OSHA reporting, contractor safety, audit and inspections
 - **Point-solution-market test:** PASSES decisively (Cority, VelocityEHS, Benchmark Gensuite independent flagships; Enablon / Sphera / Intelex sponsor-owned flagships; Verdantix benchmarks 22 vendors).
 - **Decision:** promote-as-domain (2026-06-14). Built with domain_code EHS.
-- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 174. 11 capabilities, 4 full modules (SAFETY-INCIDENT, INDUSTRIAL-HYGIENE, ENV-COMPLIANCE, AUDIT-INSPECTION), 15 masters, 5 regulations (OSHA, ISO 45001, ISO 14001, REACH, EPA-EPCRA), system skill ehs-system, 4 personas with RACI wired to real PCF nodes. Audit artifacts at audits/EHS/. Open b2 forks (module split, owner function, EHS to ESG edge) in q-EHS.md.
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 174. 11 capabilities, 4 full modules (SAFETY-INCIDENT, INDUSTRIAL-HYGIENE, ENV-COMPLIANCE, AUDIT-INSPECTION), 15 masters, 5 regulations (OSHA, ISO 45001, ISO 14001, REACH, EPA-EPCRA), system skill ehs-system, 4 personas with RACI wired to real PCF nodes. Audit artifacts at audits/EHS/. Open b2 forks (module split, owner function, EHS to ESG relationship) in q-EHS.md.
 - **Rationale:** EHS is a long-standing, separately benchmarked enterprise market upstream of ESG (supplies incident / environmental data to disclosure), not a subset of it; distinct buyer and regulated-entity set; does not fold into ESG / GRC / FSQM.
 - **Phase 0 report:** research/EHS-MGMT-phase0-2026-06-14.md
 
@@ -3716,7 +3827,7 @@ the bottom are the resolved history.
 - **Candidate capabilities:** ASC 842 compliance, IFRS 16 compliance, lease classification, ROU asset calculation, lease modification accounting, disclosure reporting
 - **Point-solution-market test:** PASSES (FinQuery, Trullion, Occupier are independent pure-plays whose flagship IS lease accounting).
 - **Decision:** promote-as-domain (2026-06-14).
-- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 175 (modules LEASE-ACCT-ACCOUNTING, LEASE-ACCT-ADMINISTRATION). 7 capabilities, 10 masters, regulations ASC-842 / IFRS-16 / SOX, system skill lease-acct-system, 3 personas with RACI on real PCF finance nodes (9.3.x). Audit artifacts at audits/LEASE-ACCT/. Open q-file forks: lease-administration mastering vs thinning to consume REAL-EST / RE-CRE; whether to add consumer DMDO links to REAL-EST / RE-CRE leases.
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 175 (modules LEASE-ACCT-ACCOUNTING, LEASE-ACCT-ADMINISTRATION). 7 capabilities, 10 masters, regulations ASC-842 / IFRS-16 / SOX, system skill lease-acct-system, 3 personas with RACI on real PCF finance nodes (9.3.x). Audit artifacts at audits/LEASE-ACCT/. Open q-file forks: lease-administration mastering vs thinning to consume REAL-EST / RE-CRE; whether to add consumer DMDO relationships to REAL-EST / RE-CRE leases.
 - **Rationale:** The ASC 842 / IFRS 16 accounting kernel (ROU assets, lease liabilities, classification, disclosures) is owned by no existing domain: REAL-EST holds leases as workplace records, RE-CRE is landlord-side commercial leases, FINOPS is cloud spend, ACCT-PLAN is a name collision (sales account planning). Distinct compliance-driven market.
 - **Phase 0 report:** audits/LEASE-ACCT/LEASE-ACCT-phase0-2026-06-14.md
 
@@ -3760,7 +3871,7 @@ the bottom are the resolved history.
 
 - **Mention count:** 2
 - **Surfaced by:** BPA audit 2026-05-30
-- **Vendor evidence:** Camunda (Camunda 8 / Zeebe), Temporal Technologies (durable execution, ~$5B Series D Feb 2026), Orkes (Netflix-origin Conductor), Flowable (BPMN / DMN / CMMN). BOAT-suite runtimes Pega / Appian / Bizagi already in catalog under LCAP (edged secondary here). AWS Step Functions as hyperscaler entrant.
+- **Vendor evidence:** Camunda (Camunda 8 / Zeebe), Temporal Technologies (durable execution, ~$5B Series D Feb 2026), Orkes (Netflix-origin Conductor), Flowable (BPMN / DMN / CMMN). BOAT-suite runtimes Pega / Appian / Bizagi already in catalog under LCAP (related secondary here). AWS Step Functions as hyperscaler entrant.
 - **Adjacency:** BPA, RPA, LCAP, PROC-MIN
 - **Candidate capabilities:** BPMN process execution engine, case management, decision modeling (DMN), human task orchestration, process automation runtime
 - **Point-solution-market test:** PASSES, but only after splitting the candidate. The iBPMS SUITE name folds (its low-code leaders Pega / Appian are already mapped to LCAP, and LCAP-WORKFLOW-AUTO is annotated "Where LCAP overlaps with BPM/iBPMS"). The distinct, unowned kernel is the durable execution RUNTIME, with three-plus independent pure-play flagships that are NOT low-code suites: Camunda, Temporal, Orkes, Flowable.
@@ -3871,8 +3982,8 @@ the bottom are the resolved history.
 - **Vendor evidence:** Hightouch, Census, RudderStack Reverse-ETL, Polytomic, Grouparoo
 - **Point-solution-market test:** FAILS as a standalone market in 2026. Census was acquired by Fivetran (rebranded "Fivetran Activations", signed May 2025); Hightouch repositioned as a Composable CDP; Polytomic markets a unified ETL + reverse-ETL + CDC platform; Grouparoo is defunct (absorbed by Airbyte); RudderStack is a CDP with reverse-ETL as a feature. No independent vendor's flagship is standalone reverse ETL, and the category never had a dedicated Gartner MQ. It dissolved into Composable CDP and broader data movement.
 - **Decision:** fold-into-existing:CDP (2026-06-07)
-- **Rationale:** The activation half of the Composable CDP market is already first-class in CDP via capability CDP-ACTIVATION ("Push audiences and traits... via reverse-ETL"), capability CDP-COMPOSABLE-WH (warehouse-native, zero-copy ingestion and activation), and the CDP-SEGMENTATION-ACTIVATION module. Hightouch already links to CDP at coverage_level=primary. The inbound ELT/ETL/replication side stays in DI (id 89). Promoting a separate domain would overlap CDP's activation module and contend for Hightouch's home.
-- **Non-blocking follow-ups (b3, not executed):** (1) add Census/Fivetran Activations, Polytomic, and RudderStack as `solutions` linked to CDP (none are in the catalog yet; only Hightouch is). (2) Optionally broaden DI's inbound-only description to acknowledge the reverse-ETL "last mile" of data movement (Fivetran Activations, Polytomic); this edits a non-empty `domains.description` and needs explicit sign-off.
+- **Rationale:** The activation half of the Composable CDP market is already first-class in CDP via capability CDP-ACTIVATION ("Push audiences and traits... via reverse-ETL"), capability CDP-COMPOSABLE-WH (warehouse-native, zero-copy ingestion and activation), and the CDP-SEGMENTATION-ACTIVATION module. Hightouch already relates to CDP at coverage_level=primary. The inbound ELT/ETL/replication side stays in DI (id 89). Promoting a separate domain would overlap CDP's activation module and contend for Hightouch's home.
+- **Non-blocking follow-ups (b3, not executed):** (1) add Census/Fivetran Activations, Polytomic, and RudderStack as `solutions` related to CDP (none are in the catalog yet; only Hightouch is). (2) Optionally broaden DI's inbound-only description to acknowledge the reverse-ETL "last mile" of data movement (Fivetran Activations, Polytomic); this edits a non-empty `domains.description` and needs explicit sign-off.
 
 ### PPM: Project and Portfolio Management
 

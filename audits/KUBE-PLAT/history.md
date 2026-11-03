@@ -55,8 +55,8 @@ Zero lifecycle states across all 8 masters routes to B12. Zero aliases on every 
 #### A, Market shape
 
 - **A1, domains metadata:** pass. `crud_percentage=15`, `business_logic` populated, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `usa_market_size_usd_m=3500`, `market_size_source_year=2025`. CRUD percentage 15 is appropriate for a distributed-systems infrastructure market.
-- **A2, capabilities linked:** fail (0 rows, need ≥3). Routes to Bucket 1 STRUCTURAL.
-- **A3, solutions linked with coverage_level:** fail (0 rows, need ≥3 with ≥1 primary). Routes to Bucket 1 STRUCTURAL.
+- **A2, capabilities related:** fail (0 rows, need ≥3). Routes to Bucket 1 STRUCTURAL.
+- **A3, solutions related with coverage_level:** fail (0 rows, need ≥3 with ≥1 primary). Routes to Bucket 1 STRUCTURAL.
 - **A4, catalog UX fields:** fail. Both `catalog_tagline` and `catalog_description` are empty strings. Per Rule #20 these need to be drafted in buyer voice, surfaced to user, then written. Routes to Bucket 2 (judgment plus Rule #20 author-then-confirm).
 - **A5, vendor records reflect current legal ownership:** skipped per default (opt-in only).
 
@@ -71,14 +71,14 @@ Zero lifecycle states across all 8 masters routes to B12. Zero aliases on every 
 
 #### B, Data-object footprint
 
-- **B1, ≥1 `master`:** pass (8 masters in `domain_data_objects`). All `role='master'`, `necessity='required'`.
+- **B1, ≥1 `master`:** pass (8 masters in `domain_data_objects`). All `held_as='master'`, `necessity='required'`.
 - **B2, labels:** pass. Every master has both `singular_label` and `plural_label`.
 - **B3, naming arbitration:** pass. All 8 masters are domain-prefixed or self-evidently compound (`kubernetes_clusters`, `cluster_node_pools`, `container_workloads`, `helm_releases`, `service_meshes`, `operator_installations`, `platform_pipelines`, `container_registries`). No bare-word claims.
 - **B4, pattern flags considered:** flags exist at default `false` for all three (`has_personal_content`, `has_submit_lock`, `has_single_approver`). No positive re-evaluation recorded yet; the defaults are correct in this domain (infrastructure objects, no PII, no submit-lock, no single-approver workflow), so this passes once re-evaluated. Routes to Bucket 1 STRUCTURAL for the positive-review confirmation.
 - **B5, embedded_master integrity:** pass (no embedded_master rows on this domain).
-- **B6, intra-domain `data_object_relationships`:** fail. Zero relationship edges among the 8 masters. Real relationships exist: `kubernetes_clusters has cluster_node_pools`, `kubernetes_clusters runs container_workloads`, `helm_releases installs container_workloads` (or `helm_releases produces container_workloads`), `operator_installations runs_on kubernetes_clusters`, `service_meshes overlays kubernetes_clusters`, `platform_pipelines deploys helm_releases` (or `platform_pipelines deploys container_workloads`), `container_registries supplies container_workloads`. Routes to Bucket 1 STRUCTURAL.
-- **B7, `users` edges (Rule #10):** fail. KUBE-PLAT masters have user-typed actors (cluster_admin on kubernetes_clusters, deployer on helm_releases and platform_pipelines, operator_owner on operator_installations, mesh_admin on service_meshes, registry_admin on container_registries). Zero edges to `users` (id 748, kind=platform_builtin) exist. Routes to Bucket 1 STRUCTURAL.
-- **B8, outbound cross-domain `data_object_relationships`:** fail. Cross-domain handoffs already exist (7 outbound). The structural mirror, `data_object_relationships` rows linking a KUBE-PLAT master to a non-KUBE-PLAT master, has zero rows. Likely missing rows (one per outbound handoff with a clean payload-to-target mapping where source and target masters live in different domains): the `container_workload.degraded` outbound to ITSM payload `service_incidents` is the clearest candidate, `container_workload.degraded` to APP-PAAS payload `container_workloads` is intra-payload so not a B8 candidate, `helm_release.deployed` to VSDP payload `helm_releases` is intra-payload, `container_image.vulnerable` to GRC payload `container_registries` is intra-payload. The relationship row owed is `container_workloads triggers service_incidents` (ITSM master). Routes to Bucket 1 STRUCTURAL.
+- **B6, intra-domain `data_object_relationships`:** fail. Zero relationships among the 8 masters. Real relationships exist: `kubernetes_clusters has cluster_node_pools`, `kubernetes_clusters runs container_workloads`, `helm_releases installs container_workloads` (or `helm_releases produces container_workloads`), `operator_installations runs_on kubernetes_clusters`, `service_meshes overlays kubernetes_clusters`, `platform_pipelines deploys helm_releases` (or `platform_pipelines deploys container_workloads`), `container_registries supplies container_workloads`. Routes to Bucket 1 STRUCTURAL.
+- **B7, relationships to `users` (Rule #10):** fail. KUBE-PLAT masters have user-typed actors (cluster_admin on kubernetes_clusters, deployer on helm_releases and platform_pipelines, operator_owner on operator_installations, mesh_admin on service_meshes, registry_admin on container_registries). Zero relationships to `users` (id 748, kind=platform_builtin) exist. Routes to Bucket 1 STRUCTURAL.
+- **B8, outbound cross-domain `data_object_relationships`:** fail. Cross-domain handoffs already exist (7 outbound). The structural mirror, `data_object_relationships` rows relating a KUBE-PLAT master to a non-KUBE-PLAT master, has zero rows. Likely missing rows (one per outbound handoff with a clean payload-to-target mapping where source and target masters live in different domains): the `container_workload.degraded` outbound to ITSM payload `service_incidents` is the clearest candidate, `container_workload.degraded` to APP-PAAS payload `container_workloads` is intra-payload so not a B8 candidate, `helm_release.deployed` to VSDP payload `helm_releases` is intra-payload, `container_image.vulnerable` to GRC payload `container_registries` is intra-payload. The relationship row owed is `container_workloads triggers service_incidents` (ITSM master). Routes to Bucket 1 STRUCTURAL.
 - **B9, outbound `trigger_events` + `handoffs` complete:** pass on event side (11 events covering most observable transitions), partial on handoff side. Some events have only one cross-domain subscriber and could fan out (see Bucket 1 APQC TAGGING and STRUCTURAL).
 - **B9b, intra-domain cross-module handoffs:** vacuously passes (single-domain landing without modules). Becomes a real check once M1 produces ≥2 modules.
 - **B10, inbound handoffs report-only:** 1 inbound only (`paas_deployment.succeeded` from APP-PAAS on `paas_deployments`). Many candidates are inbound from neighbors yet absent. Discovery procedure cannot run cleanly because KUBE-PLAT has no embedded_master, contributor, or consumer rows, so there is no "I depend on X mastered by Y" surface. The absence of dependencies is itself a real gap, KUBE-PLAT realistically consumes `services` from ITSM, `assets` from ITAM, `vulnerabilities` from VULN-MGMT, but none of these are declared. Surfaced as Bucket 2 (judgment: which neighbors should we declare consumer or embedded_master on once modules exist).
@@ -97,7 +97,7 @@ Zero lifecycle states across all 8 masters routes to B12. Zero aliases on every 
 
 #### E, Roles and permission bundling
 
-- **E1 to E6:** vacuously pass or fail. No `domain_modules` rows means no `role_modules` can exist, no `role_permissions` can target this domain's modules. Capability count is < 3 so E1 vacuously passes once modules exist (single-module domain). Routes to Bucket 2 (judgment): once M1 ships, does this domain need its own roles (cluster_admin, platform_engineer, namespace_owner) or do they inherit from APP-PAAS / generic platform-engineering roles?
+- **E1 to E6:** vacuously pass or fail. No `domain_modules` rows means no `persona_modules` can exist, no `role_permissions` can target this domain's modules. Capability count is < 3 so E1 vacuously passes once modules exist (single-module domain). Routes to Bucket 2 (judgment): once M1 ships, does this domain need its own roles (cluster_admin, platform_engineer, namespace_owner) or do they inherit from APP-PAAS / generic platform-engineering roles?
 
 #### F, Skill-layer integrity
 
@@ -106,7 +106,7 @@ Zero lifecycle states across all 8 masters routes to B12. Zero aliases on every 
 - **F3, every module-level system skill has ≥1 `skill_tools`:** vacuously fails (no module-level skills yet).
 - **F4, tool `operation_kind` ↔ `data_object_id` invariant:** pass on the legacy skill's 8 query tools: all 8 are `operation_kind='query'` with `data_object_id` set (to 448 to 455 respectively), all at `coverage_tier='platform'`. The eight tools are correctly authored even if they hang off the legacy skill.
 - **F5, Semantius score computable:** Currently uncomputable per-module (no modules). On the legacy skill alone: 8/8 = 100% strict score, but the metric is module-scoped per Rule #17, so this number does not roll up to KUBE-PLAT until the legacy is migrated.
-- **F7, channel primitives correctly used:** pass (no channel-primitive tools linked).
+- **F7, channel primitives correctly used:** pass (no channel-primitive tools related).
 
 #### H, Handoff APQC coverage
 
@@ -157,7 +157,7 @@ Vendor surface (independently named, flagship pure-play distributions and platfo
 
 From cross-domain handoffs and (the absent) DMDO cross-references. KUBE-PLAT publishes to 6 distinct domains and receives from 1.
 
-| Neighbor (code, id) | Outbound rows | Inbound rows | Cross-domain DMDO consumer-or-similar | Edge weight | Pairwise depth |
+| Neighbor (code, id) | Outbound rows | Inbound rows | Cross-domain DMDO consumer-or-similar | Relationship weight | Pairwise depth |
 |---|---|---|---|---|---|
 | ITAM (3) | 1 (cluster.provisioned → ITAM) | 0 | 0 | 1 | one-line summary |
 | ITOM (2) | 1 (node_pool.scaled → ITOM) | 0 | 0 | 1 | one-line summary |
@@ -167,13 +167,13 @@ From cross-domain handoffs and (the absent) DMDO cross-references. KUBE-PLAT pub
 | ITSM (1) | 1 (container_workload.degraded payload service_incidents) | 0 | 0 | 1 | one-line summary |
 | APP-PAAS (76) | 1 (container_workload.degraded → APP-PAAS) | 1 (paas_deployment.succeeded → KUBE-PLAT) | 0 | 2 | one-line summary |
 
-**No neighbor crosses edge weight 3 today.** Per the procedure, neighbors at weight 1 to 2 get a one-line summary in the per-neighbor diff section below; the full 5-section pairwise diff is not run on any neighbor. This is expected given the early stage of the domain; once modules ship and consumer DMDOs are declared (Bucket 2 item below), edge weights will climb.
+**No neighbor crosses relationship weight 3 today.** Per the procedure, neighbors at weight 1 to 2 get a one-line summary in the per-neighbor diff section below; the full 5-section pairwise diff is not run on any neighbor. This is expected given the early stage of the domain; once modules ship and consumer DMDOs are declared (Bucket 2 item below), relationship weights will climb.
 
 ### Pass 4, Pairwise reconciliation per neighbor (weight ≥3 only)
 
 No neighbor qualifies. **Lighter neighbor one-liners** (rolled into Boundary findings per neighbor in Bucket 1):
 
-- **APP-PAAS (edge weight 2):** bidirectional. Outbound `container_workload.degraded` lacks both module FKs (KUBE-PLAT has no module, APP-PAAS has modules but neither is resolved on this handoff row). Inbound `paas_deployment.succeeded` lacks both module FKs (APP-PAAS owes source_domain_module_id, KUBE-PLAT owes target_domain_module_id once modules ship). Surface as STRUCTURAL B10b for the KUBE-PLAT side, report-only for APP-PAAS.
+- **APP-PAAS (relationship weight 2):** bidirectional. Outbound `container_workload.degraded` lacks both module FKs (KUBE-PLAT has no module, APP-PAAS has modules but neither is resolved on this handoff row). Inbound `paas_deployment.succeeded` lacks both module FKs (APP-PAAS owes source_domain_module_id, KUBE-PLAT owes target_domain_module_id once modules ship). Surface as STRUCTURAL B10b for the KUBE-PLAT side, report-only for APP-PAAS.
 - **ITAM (weight 1), OBS (1), VSDP (1), GRC (1), ITOM (1), ITSM (1):** all outbound only, all missing source_domain_module_id (KUBE-PLAT side). Target_domain_module_id is resolved on ITAM and ITSM but null on OBS, VSDP, GRC, ITOM. The target-side nulls are report-only for those domains' B10b passes.
 
 ### Bucket 1, In-scope confirmed gaps
@@ -185,13 +185,13 @@ No neighbor qualifies. **Lighter neighbor one-liners** (rolled into Boundary fin
 | B1-S1 | M1, A2, A3 (gate) | Zero `domain_modules`, zero `capability_domains`, zero `solution_domains`. Domain is structurally a placeholder. | Author the Phase-A and Phase-M shape: 1 or 2 modules (Bucket 2 chooses 1 vs 2), 5 to 8 capabilities, ≥3 solutions with ≥1 primary. Default proposal: 2 modules (`KUBE-PLAT-DISTRIBUTION-OPS`, `KUBE-PLAT-WORKLOAD-OPS`) with capabilities such as `KUBE-PLAT-CLUSTER-LIFECYCLE`, `KUBE-PLAT-WORKLOAD-LIFECYCLE`, `KUBE-PLAT-HELM-DELIVERY`, `KUBE-PLAT-OPERATOR-LIFECYCLE`, `KUBE-PLAT-MULTI-CLUSTER-MGMT`, `KUBE-PLAT-CLUSTER-OBSERVABILITY-INTEG`, `KUBE-PLAT-DAY2-OPS`, plus the Phase-A solutions (Red Hat OpenShift, Rancher, Tanzu, Mirantis Kubernetes Engine, plus selected hyperscaler managed K8s as secondary). |
 | B1-S2 | A4 (Rule #20) | Both `catalog_tagline` and `catalog_description` are empty. | Draft both in buyer voice, surface to user per Rule #20 before writing. Default tagline draft (for user review, not for direct write): `"Production Kubernetes distributions with day-2 operations and multi-cluster management."` Default description: 2 to 3 paragraphs covering buyer workflow (cluster provisioning, fleet management, day-2 ops, integrated CI/CD), buyer value (production-grade K8s without building a platform team), buyer differentiation versus hyperscaler managed services. **Do NOT write until user reviews per Rule #20.** Routes to Bucket 2 as judgment item too. |
 | B1-S3 | B4 | Pattern-flag review. All three flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) at default `false` on every master. The defaults are likely correct (no PII, no submit-lock, no single-approver), but the audit must positively record the re-evaluation. | Confirm in chat: "all three flags are correctly false on all 8 KUBE-PLAT masters". No notes write per Rule #15. |
-| B1-S4 | B6 | Zero intra-domain `data_object_relationships` among the 8 masters. | Author edges: (a) `kubernetes_clusters has cluster_node_pools` (required, owner_side=source, parent), (b) `kubernetes_clusters runs container_workloads` (required, owner_side=source, reference), (c) `helm_releases produces container_workloads` (required, owner_side=source, reference), (d) `operator_installations runs_on kubernetes_clusters` (required, owner_side=target, reference), (e) `service_meshes overlays kubernetes_clusters` (required, owner_side=target, reference), (f) `platform_pipelines deploys helm_releases` (required, owner_side=source, reference), (g) `container_registries supplies container_workloads` (required, owner_side=source, reference). 7 edges. Load via cluster-drafts pattern. |
-| B1-S5 | B7 (Rule #10) | Zero `users` edges. KUBE-PLAT masters with user-typed actors: kubernetes_clusters (cluster_admin), helm_releases (deployer), platform_pipelines (pipeline_owner), operator_installations (operator_owner), service_meshes (mesh_admin), container_registries (registry_admin), container_workloads (workload_owner), cluster_node_pools (node_pool_owner). | Author 8 edges to `users` (id 748, kind=platform_builtin), one per master, verb derived per actor role. Load per Rule #10. |
-| B1-S6 | B8 | Zero outbound cross-domain `data_object_relationships`. The clean payload-to-target mapping today is `container_workloads triggers service_incidents` for handoff 763 (KUBE-PLAT → ITSM on `container_workload.degraded`, payload = ITSM's `service_incidents`). | Author 1 edge: `container_workloads triggers service_incidents` (owner_side=source, is_required=false). The remaining outbound handoffs have payload = the KUBE-PLAT master itself (intra-payload, not a B8 candidate). |
+| B1-S4 | B6 | Zero intra-domain `data_object_relationships` among the 8 masters. | Author relationships: (a) `kubernetes_clusters has cluster_node_pools` (required, owner_side=source, parent), (b) `kubernetes_clusters runs container_workloads` (required, owner_side=source, reference), (c) `helm_releases produces container_workloads` (required, owner_side=source, reference), (d) `operator_installations runs_on kubernetes_clusters` (required, owner_side=target, reference), (e) `service_meshes overlays kubernetes_clusters` (required, owner_side=target, reference), (f) `platform_pipelines deploys helm_releases` (required, owner_side=source, reference), (g) `container_registries supplies container_workloads` (required, owner_side=source, reference). 7 relationships. Load via cluster-drafts pattern. |
+| B1-S5 | B7 (Rule #10) | Zero relationships to `users`. KUBE-PLAT masters with user-typed actors: kubernetes_clusters (cluster_admin), helm_releases (deployer), platform_pipelines (pipeline_owner), operator_installations (operator_owner), service_meshes (mesh_admin), container_registries (registry_admin), container_workloads (workload_owner), cluster_node_pools (node_pool_owner). | Author 8 relationships to `users` (id 748, kind=platform_builtin), one per master, verb derived per actor role. Load per Rule #10. |
+| B1-S6 | B8 | Zero outbound cross-domain `data_object_relationships`. The clean payload-to-target mapping today is `container_workloads triggers service_incidents` for handoff 763 (KUBE-PLAT → ITSM on `container_workload.degraded`, payload = ITSM's `service_incidents`). | Author 1 relationship: `container_workloads triggers service_incidents` (owner_side=source, is_required=false). The remaining outbound handoffs have payload = the KUBE-PLAT master itself (intra-payload, not a B8 candidate). |
 | B1-S7 | B10b | All 7 outbound handoffs have `source_domain_module_id=null` because KUBE-PLAT has no module. Five of seven also have `target_domain_module_id=null` (the inbound APP-PAAS handoff likewise). | Becomes a deterministic patch once M1 lands. Per-handoff source_domain_module_id resolves to the KUBE-PLAT module that masters the trigger_event's data_object. Target-side nulls (OBS, VSDP, GRC, ITOM, APP-PAAS) are report-only for those domains' B10b passes. |
 | B1-S8 | B11 | Zero aliases on 8 masters. Cross-vendor synonyms exist on `kubernetes_clusters` ("k8s cluster", "control plane", "OpenShift cluster", "Rancher cluster", "Tanzu cluster" as solution-name aliases), `container_workloads` ("Pod", "Deployment", "StatefulSet", "DaemonSet", "Job" as primitive aliases), `helm_releases` ("Helm chart release", "Tanzu Application package"), `operator_installations` ("Kubernetes Operator", "OperatorHub install"), `container_registries` ("OCI registry", "image registry"). | Draft ≥1 alias_type row per master where a real synonym exists. Bundle into cluster-drafts pattern. Surface count proposal: ~12 alias rows. |
 | B1-S9 | B12 (Rule #12) | Zero lifecycle states across 8 masters. Real workflows: kubernetes_clusters (planned, provisioning, available, upgrading, draining, decommissioned), helm_releases (planned, deploying, deployed, upgrading, rolling_back, uninstalled), container_workloads (pending, running, degraded, failed, succeeded), operator_installations (installing, installed, upgrading, uninstalled), platform_pipelines (queued, running, succeeded, failed), service_meshes (planned, installed, updating), container_registries (registered, scanning, available), cluster_node_pools (planned, scaling, available, draining, removed). | Author state machines for all 8 masters (initial state, terminal states, workflow gates with `requires_permission=true` where appropriate, `permission_verb_override` for non-obvious verbs). M5's `domain_module_id` populated for each state once M1 ships and the realizing module is known. |
-| B1-S10 | F1 (legacy skill) | Skill id 78 `kube-plat-system` is a legacy domain-level system skill (`domain_module_id` null, kebab-system naming convention) with 8 platform query tools attached. Acceptable transitional state per F1, but **must be DELETEd once module-level system skills are authored per Rule #17 and F2**. The 8 tools (556 to 563) are correctly typed and stay; re-link to the new module-level skill or two. | Track for the post-modularization fix-load: rename or DELETE skill 78 once new `<module_code_lower>_agent` skill rows exist; relink the 8 query tools via fresh `skill_tools` rows on the new skill or split across two modules. No write in this audit. |
+| B1-S10 | F1 (legacy skill) | Skill id 78 `kube-plat-system` is a legacy domain-level system skill (`domain_module_id` null, kebab-system naming convention) with 8 platform query tools attached. Acceptable transitional state per F1, but **must be DELETEd once module-level system skills are authored per Rule #17 and F2**. The 8 tools (556 to 563) are correctly typed and stay; re-relate to the new module-level skill or two. | Track for the post-modularization fix-load: rename or DELETE skill 78 once new `<module_code_lower>_agent` skill rows exist; re-relate the 8 query tools via fresh `skill_tools` rows on the new skill or split across two modules. No write in this audit. |
 
 #### MISSING (compliance-mandated entities)
 
@@ -245,7 +245,7 @@ Inbound (covered for completeness; APQC tag is owed by the source domain too):
 6. **Promote SERVICE-MESH to its own domain (queued candidate).** `service_meshes` currently masters here but Istio / Linkerd are pure-play vendors with distinct buyer. Options: (a) promote (DELETE `service_meshes` master row, add to SERVICE-MESH after Phase 0 vets the domain), (b) keep as KUBE-PLAT master with `embedded_master` shells in SERVICE-MESH later, (c) defer until SERVICE-MESH is loaded.
 7. **Promote CONT-REG to its own domain (queued candidate).** Same shape: `container_registries` could move to a registry-specialist domain (Harbor, JFrog Artifactory) or stay as a KUBE-PLAT-adjacent cluster artifact.
 8. **F1 legacy skill handling.** Skill id 78 `kube-plat-system` is in the transitional state F1 explicitly permits. Options: (a) leave it alone until module-level skills are authored (default; aligns with F1 timing), (b) rename to `kube_plat_agent` now so the naming convention is correct even before modularization (cosmetic), (c) DELETE now and pause until modules ship (creates a temporary regression on the existing 8 platform query tools, which would also need deletion).
-9. **Parent domain link.** KUBE-PLAT.parent_domain_id = 76 (APP-PAAS). Verify intent: is APP-PAAS the right parent (K8s is the substrate APP-PAAS sits on), or should the parent be a more-generic "Cloud Native Platform" domain that does not yet exist? Likely keep APP-PAAS.
+9. **Parent domain relationship.** KUBE-PLAT.parent_domain_id = 76 (APP-PAAS). Verify intent: is APP-PAAS the right parent (K8s is the substrate APP-PAAS sits on), or should the parent be a more-generic "Cloud Native Platform" domain that does not yet exist? Likely keep APP-PAAS.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -306,7 +306,7 @@ These are NOT in-scope for KUBE-PLAT's fix-load. They are observations the user 
 
 Applied the truly-technical subset of Bucket 1 from the 2026-05-30 audit. Two phases ran via loader `.tmp_deploy/fix_kube_plat_b1_technical_2026_05_31.ts`:
 
-- **Phase R, Rule #10 user-edges (B1-S5).** Inserted 8 `data_object_relationships` rows linking `users` (id 748, `kind=platform_builtin`) to each KUBE-PLAT master with the audit-specified actor verb. All rows: `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`, `record_status=new`. New row ids 1531 to 1538.
+- **Phase R, Rule #10 relationships to `users` (B1-S5).** Inserted 8 `data_object_relationships` rows relating `users` (id 748, `kind=platform_builtin`) to each KUBE-PLAT master with the audit-specified actor verb. All rows: `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`, `record_status=new`. New row ids 1531 to 1538.
   - 1531: users → kubernetes_clusters (administered clusters / is_administered_by)
   - 1532: users → cluster_node_pools (owned node pools / is_owned_by)
   - 1533: users → container_workloads (owned workloads / is_owned_by)
@@ -325,8 +325,8 @@ Per the subagent prompt's defer rules:
 - **B1-S1** (modules, capabilities, solutions): new entities, gated on Bucket 2 #2 modularization decision.
 - **B1-S2** (catalog UX wording): Rule #20 author-then-confirm.
 - **B1-S3** (pattern flag positive review): chat-surface only, no DB write needed (defaults are correct).
-- **B1-S4** (intra-domain `data_object_relationships`): not Rule #10 user-edges; intra-master edges are out of the technical-only fix scope.
-- **B1-S6** (outbound cross-domain `data_object_relationships`): not user-edges; same reason as B1-S4.
+- **B1-S4** (intra-domain `data_object_relationships`): not Rule #10 relationships to `users`; intra-master relationships are out of the technical-only fix scope.
+- **B1-S6** (outbound cross-domain `data_object_relationships`): not relationships to `users`; same reason as B1-S4.
 - **B1-S7** (B10b FK PATCHes for `source_domain_module_id`): not derivable; KUBE-PLAT still has zero `domain_modules` rows. Becomes fixable post B1-S1.
 - **B1-S8** (aliases): audit does not pre-specify exact `alias_name` tuples (only approximate string lists). Defer per "bulk data_object_aliases inserts unless audit pre-specifies exact tuples".
 - **B1-S9** (lifecycle states): new entities, also gated on M1 for `data_object_lifecycle_states.domain_module_id`.
@@ -350,7 +350,7 @@ No JWT errors. No `notes` writes (Rule #15). No vendor names in any text field (
 
 ### Summary
 
-Validate b1 structural re-audit covering S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H. Run after the 2026-05-31 Continuation that closed B1-S5 (Rule #10 users edges, ids 1531-1538) and the H1 APQC tagging pass (ids 288-295). No new Phase 0 work since the 2026-05-30 baseline. Domain remains structurally early-stage: 8 master data_objects, 0 modules, 0 capabilities, 0 solutions, 0 regulations, 0 lifecycle states, 0 aliases, 0 intra-domain or outbound cross-domain `data_object_relationships`, 11 trigger_events, 7 outbound + 1 inbound cross-domain handoffs (all tagged via H1), 1 legacy domain-level system skill (id 78 `kube-plat-system`) with 8 platform-tier query tools.
+Validate b1 structural re-audit covering S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H. Run after the 2026-05-31 Continuation that closed B1-S5 (Rule #10 relationships to `users`, ids 1531-1538) and the H1 APQC tagging pass (ids 288-295). No new Phase 0 work since the 2026-05-30 baseline. Domain remains structurally early-stage: 8 master data_objects, 0 modules, 0 capabilities, 0 solutions, 0 regulations, 0 lifecycle states, 0 aliases, 0 intra-domain or outbound cross-domain `data_object_relationships`, 11 trigger_events, 7 outbound + 1 inbound cross-domain handoffs (all tagged via H1), 1 legacy domain-level system skill (id 78 `kube-plat-system`) with 8 platform-tier query tools.
 
 - **Bucket 1 (agent-fixable, deterministic):** 1 item (B1-EV1, trigger_event categories backfill). Every other 2026-05-30 Bucket 1 STRUCTURAL row is now blocked (b1b) on Bucket 2 #2 (modularization) or on Rule #20 / Rule #15 / Rule #18 author-then-confirm gates.
 - **Bucket 2 (user judgment):** 9 items carried forward from 2026-05-30, unchanged.
@@ -415,9 +415,9 @@ New S3 finding: every trigger_event row carries `event_category=""` (empty strin
 - **B3:** pass (no bare-word names).
 - **B4:** all three flags at default `false` on every master. Positively re-confirmed in this audit: infrastructure objects, no PII, no submit-lock, no single-approver. No notes write per Rule #15. PASS.
 - **B5:** pass (no embedded_master rows).
-- **B6:** fail (0 intra-domain edges). 7 edges enumerated in 2026-05-30 B1-S4 still owed. Blocked (b1b) on B6 verb-tuple approval (out of technical-only fix scope, edges enumerated but never written without surfacing per Rule #1).
-- **B7:** PASS (Rule #10 users edges loaded 2026-05-31, ids 1531-1538, all 8 masters covered).
-- **B8:** fail. 0 outbound cross-domain edges. The clean payload-to-target candidate from 2026-05-30 B1-S6 (`container_workloads triggers service_incidents` for handoff 763) still owed. Blocked (b1b) on user approval of the edge.
+- **B6:** fail (0 intra-domain relationships). 7 relationships enumerated in 2026-05-30 B1-S4 still owed. Blocked (b1b) on B6 verb-tuple approval (out of technical-only fix scope, relationships enumerated but never written without surfacing per Rule #1).
+- **B7:** PASS (Rule #10 relationships to `users` loaded 2026-05-31, ids 1531-1538, all 8 masters covered).
+- **B8:** fail. 0 outbound cross-domain relationships. The clean payload-to-target candidate from 2026-05-30 B1-S6 (`container_workloads triggers service_incidents` for handoff 763) still owed. Blocked (b1b) on user approval of the relationship.
 - **B9:** event side complete (11 events covering observable transitions on every master). Handoff side complete on the source-domain side for every event (each event has >=1 outbound handoff). But every trigger_event row has empty `event_category` (S3 finding) -- routes to B1-EV1.
 - **B9b:** vacuously passes (<2 modules so the check does not apply yet).
 - **B10:** REPORT-ONLY. 1 inbound (handoff 753, APP-PAAS -> KUBE-PLAT on `paas_deployment.succeeded`, payload 464 `paas_deployments`). No additional inbound candidates derivable: KUBE-PLAT has zero embedded_master / contributor / consumer rows so the two-query inbound-discovery procedure produces no candidate list.
@@ -444,7 +444,7 @@ New S3 finding: every trigger_event row carries `event_category=""` (empty strin
 - **F2 / F3:** vacuously fail (no module-level skills yet). Blocked on M1.
 - **F4:** pass on the legacy skill's 8 tools.
 - **F5:** uncomputable per-module (no modules). Legacy skill alone: 8/8 = 100% strict.
-- **F7:** pass (no channel-primitive tools linked).
+- **F7:** pass (no channel-primitive tools related).
 
 #### H, Handoff APQC coverage
 
@@ -463,7 +463,7 @@ No fresh market-surface subagent run in this audit (the 2026-05-30 baseline stil
 
 Re-derived from current `handoffs` rows (unchanged since 2026-05-30):
 
-| Neighbor (code, id) | Outbound | Inbound | Edge weight |
+| Neighbor (code, id) | Outbound | Inbound | Relationship weight |
 |---|---|---|---|
 | ITAM (3) | 1 (handoff 799) | 0 | 1 |
 | ITOM (2) | 1 (handoff 761) | 0 | 1 |
@@ -473,11 +473,11 @@ Re-derived from current `handoffs` rows (unchanged since 2026-05-30):
 | ITSM (1) | 1 (handoff 763) | 0 | 1 |
 | APP-PAAS (76) | 1 (handoff 759) | 1 (handoff 753) | 2 |
 
-No neighbor crosses edge weight 3. Pairwise reconciliation is a one-line summary per neighbor.
+No neighbor crosses relationship weight 3. Pairwise reconciliation is a one-line summary per neighbor.
 
 ### Pass 4, Pairwise reconciliation
 
-No neighbor at edge weight >=3. Lighter neighbors:
+No neighbor at relationship weight >=3. Lighter neighbors:
 
 - **APP-PAAS (weight 2):** both handoffs (759 outbound, 753 inbound) lack module FKs on both sides. KUBE-PLAT side gated on Bucket 2 #2; APP-PAAS side report-only for APP-PAAS B10b.
 - **ITAM, OBS, VSDP, GRC, ITOM, ITSM (weight 1 each):** all outbound only. KUBE-PLAT side missing source_domain_module_id (gated on M1). Target-side nulls on OBS, VSDP, GRC, ITOM are report-only for those domains' B10b passes.
@@ -498,8 +498,8 @@ Every other 2026-05-30 Bucket 1 STRUCTURAL item is now classified `b1b` blocked:
 
 - **B1-S1** (M1 + A2 + A3): blocked on Bucket 2 #2 (modularization decision).
 - **B1-S2** (A4 catalog UX): blocked on Bucket 2 #1 (Rule #20 wording approval).
-- **B1-S4** (B6 intra-domain edges): blocked on B6 verb-tuple approval.
-- **B1-S6** (B8 outbound cross-domain edges): blocked on B6/B8 verb-tuple approval.
+- **B1-S4** (B6 intra-domain relationships): blocked on B6 verb-tuple approval.
+- **B1-S6** (B8 outbound cross-domain relationships): blocked on B6/B8 verb-tuple approval.
 - **B1-S7** (B10b source-side FKs): blocked on B1-S1 (no modules exist to target).
 - **B1-S8** (B11 aliases): blocked on Rule #18 review of vendor-shaped alias tuples.
 - **B1-S9** (B12 lifecycle states): blocked on B1-S1.
@@ -517,7 +517,7 @@ Carried forward unchanged from 2026-05-30:
 6. **Promote SERVICE-MESH to its own domain (queued candidate).**
 7. **Promote CONT-REG to its own domain (queued candidate).**
 8. **F1 legacy skill 78 (`kube-plat-system`) handling.** Leave (default) / rename to `kube_plat_agent` / DELETE.
-9. **Parent domain link.** KUBE-PLAT.parent_domain_id=76 (APP-PAAS) confirmed appropriate.
+9. **Parent domain relationship.** KUBE-PLAT.parent_domain_id=76 (APP-PAAS) confirmed appropriate.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -549,7 +549,7 @@ Unchanged from 2026-05-30 baseline:
 
 - No DB writes performed (read-only structural audit).
 - B1-S3 (B4 pattern-flag positive re-evaluation) resolved in chat: all three flags correctly `false` on all 8 KUBE-PLAT masters.
-- B1-S5 (Rule #10 users edges) verified loaded in the 2026-05-31 Continuation, ids 1531-1538.
+- B1-S5 (Rule #10 relationships to `users`) verified loaded in the 2026-05-31 Continuation, ids 1531-1538.
 - H1 APQC tagging verified loaded in the 2026-05-31 Continuation, ids 288-295.
 - One new deterministic Bucket 1 item surfaced (B1-EV1, trigger_event categories).
 - No JWT errors. No notes writes (Rule #15). No vendor names in non-commerce text (Rule #18).
@@ -586,7 +586,7 @@ State-driven Validate run (SKILL.md Rule #21) against `audits/KUBE-PLAT/state.ya
 
 - **B2-MODULARIZATION** (1 vs 2 modules) - gates the entire unbuilt build (B1B-S1) and the module-dependent cascade (B1B-S7 source FKs, B1B-S9 lifecycle domain_module_id, B1B-S8 solution_term aliases, E1 role floor).
 - **B1B-S1 / B1A-BUILD (unbuilt)** - 0 modules / 0 capabilities / 0 solutions. Per build-policy the agent does not scaffold an unbuilt domain; the build is surfaced and the cascade left, gated on B2-MODULARIZATION.
-- **B2-EDGE-TUPLES** - verb/cardinality/owner_side tuples for the 7 intra-domain edges (B1B-S4) and the 1 clean cross-domain edge container_workloads->service_incidents for handoff 763 (B1B-S6) need approval before write (Rule #1).
+- **B2-RELATIONSHIP-TUPLES** - verb/cardinality/owner_side tuples for the 7 intra-domain relationships (B1B-S4) and the 1 clean cross-domain relationship container_workloads->service_incidents for handoff 763 (B1B-S6) need approval before write (Rule #1).
 - **B2-ALIAS-TUPLES** - remaining vendor-brand / solution_term aliases (B1B-S8) need exact tuples + solution ids (solutions do not exist yet).
 - **B2-REGULATIONS, B2-CONSUMER-DMDOS, B2-ROLES-SCOPE, B2-PARENT-DOMAIN** - carried-forward judgment calls.
 - **B2-APQC-APPROVAL** - 8 agent_curated handoff_processes (ids 288-295) at `record_status='new'`; user opt-in to approve (Rule #1, agent never self-approves).
@@ -597,13 +597,13 @@ State-driven Validate run (SKILL.md Rule #21) against `audits/KUBE-PLAT/state.ya
 
 ### Left (untouched)
 
-- **b1b blocked:** B1B-S4, B1B-S6 (on B2-EDGE-TUPLES); B1B-S7, B1B-S9 (on B1B-S1 modules); B1B-S8 vendor-brand aliases (on B2-ALIAS-TUPLES + Phase A solutions).
+- **b1b blocked:** B1B-S4, B1B-S6 (on B2-RELATIONSHIP-TUPLES); B1B-S7, B1B-S9 (on B1B-S1 modules); B1B-S8 vendor-brand aliases (on B2-ALIAS-TUPLES + Phase A solutions).
 - **b3 backlog:** 10 speculative entity candidates (cluster_namespaces, cluster_rbac_policies, cluster_network_policies, cluster_resource_quotas, cluster_addons, cluster_upgrade_plans, cluster_etcd_backups, cluster_audit_logs, cluster_storage_classes, cluster_custom_resource_definitions) pending Phase 0.
 - **Superseded:** B1B-S10-LEGACY-SKILL / per-module skill-grain items, retired per the 2026-06-06 per-domain-skill restoration header (kept atop state.yaml).
 
 ### Report-only owed by other domains (unchanged)
 
-APP-PAAS B10b (source FK on 753); OBS/VSDP/GRC/ITOM B10b (target FKs on 760/762/764/761); ITAM/APP-PAAS/ITSM B8 mirror edges; VULN-MGMT B9 scan-result-back candidate.
+APP-PAAS B10b (source FK on 753); OBS/VSDP/GRC/ITOM B10b (target FKs on 760/762/764/761); ITAM/APP-PAAS/ITSM B8 mirror relationships; VULN-MGMT B9 scan-result-back candidate.
 
 ### Notes on this audit
 
@@ -627,4 +627,4 @@ Verdicts (per (process, owner)): 1 RESOLVED, 1 ORPHAN, 5 UNOWNED.
 - ORPHAN: 8.7.5.9 "Triage IT service delivery incidents" (pid 1299), service_incidents on handoff 763 (KUBE-PLAT -> ITSM). Owner = ITSM (master exists, domain unbuilt). Routed an additive b2 item B2-B9D-OWN-1299 + question into ITSM's audit files (state.yaml hygiene carve-out (b)). The resolver found the ITSM-side item already present (added 2026-06-13 from another sender's boundary; the owner-side question dedupes by (process, owner)), so the KUBE-PLAT boundary is already reconciled on the ITSM side. The --write run additively synced ITSM's full owner-side B9d backlog (it also materialized the already-footnoted q16/q17 = B2-B9D-OWN-370, B2-B9D-OWN-1293 bodies); purely additive, no deletions, no record_status touched.
 - UNOWNED (5): 8.7.6.4 (pid 1304) cluster_node_pools/kubernetes_clusters -> ITOM/OBS (761, 760); 8.7.6.5 (pid 1305) container_workloads -> APP-PAAS (759); 8.7.6.7 (pid 1307) container_registries -> GRC (764); 8.7.7.3 (pid 1311) paas_deployments -> KUBE-PLAT inbound (753); 8.7.7.4 (pid 1312) kubernetes_clusters -> ITAM (799). Each carried entity has a legacy domain_data_objects master (domain 81) but NO domain_module_data_objects master row, because KUBE-PLAT has zero modules. The resolver reads ownership at module grain, so it cannot route these until B1B-S1 (modules) lands. Recorded as extra_b9d on B1B-S7; clears automatically once the unbuilt build runs (gated on B2-MODULARIZATION). Not a new gap, a symptom of the already-surfaced unbuilt state. Surfaced for the sender, not dropped.
 
-No ROLL-UPs, no MIS-TAGs. No catalog/database writes. No record_status changes (Rule #1). B1A-B9D-VERIFY resolved and removed from state.yaml (b1a block now empty). next_action_by flipped agent -> user: everything still open is b1b (blocked on B2-MODULARIZATION / B2-EDGE-TUPLES / B2-ALIAS-TUPLES) or b2 user decisions, all already in the current q-KUBE-PLAT.md. No q-file refresh needed (no b1a/b1b ever appear there; the b2/b3 set is unchanged).
+No ROLL-UPs, no MIS-TAGs. No catalog/database writes. No record_status changes (Rule #1). B1A-B9D-VERIFY resolved and removed from state.yaml (b1a block now empty). next_action_by flipped agent -> user: everything still open is b1b (blocked on B2-MODULARIZATION / B2-RELATIONSHIP-TUPLES / B2-ALIAS-TUPLES) or b2 user decisions, all already in the current q-KUBE-PLAT.md. No q-file refresh needed (no b1a/b1b ever appear there; the b2/b3 set is unchanged).

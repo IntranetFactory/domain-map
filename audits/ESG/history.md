@@ -64,9 +64,9 @@ S3 verdict: every master has at least one trigger_event (good), but zero lifecyc
 | B2 | singular/plural labels | pass (all 9) | none |
 | B3 | naming arbitration | pass (all 9 are prefixed or domain-noun phrases; no canonical bare-word claims needed) | none |
 | B4 | pattern flags considered | UNCERTAIN (all flags false-by-default; no positive audit recorded; `esg_disclosures` likely needs `has_submit_lock=true`, `esg_targets` arguably `has_single_approver=true` for executive sign-off) | B1-S5 (STRUCTURAL) |
-| B5 | embedded_master integrity | pass (no embedded_master rows; consumer/contributor rows point at suppliers, supplier_qualifications, financial_plans which carry `domain_data_objects.role=master` rows in SUP-LIFE / EPM / MDM) | none |
+| B5 | embedded_master integrity | pass (no embedded_master rows; consumer/contributor rows point at suppliers, supplier_qualifications, financial_plans which carry `domain_data_objects.held_as=master` rows in SUP-LIFE / EPM / MDM) | none |
 | B6 | intra-domain relationships | FAIL (zero rows across 9 masters; no `emission_factor -> emissions_record`, no `activity_data -> emissions_record`, no `esg_target -> esg_metric`, no `esg_disclosure -> esg_metric / facility_emissions`, no `facility_emissions -> emissions_record`) | B1-S6 (STRUCTURAL) |
-| B7 | users edges | FAIL (zero rows across 9 masters; multiple masters carry human-typed actors: disclosure preparer, target owner, initiative sponsor, factor library steward) | B1-S7 (STRUCTURAL) |
+| B7 | relationships to `users` | FAIL (zero rows across 9 masters; multiple masters carry human-typed actors: disclosure preparer, target owner, initiative sponsor, factor library steward) | B1-S7 (STRUCTURAL) |
 | B8 | outbound cross-domain relationships | FAIL (only 1 row, `supplier_esg_assessments updates supplier_qualifications`; 7 of 8 outbound handoffs lack a mirroring relationship row) | B1-S8 (STRUCTURAL) |
 | B9 | trigger_events + outbound handoffs | partial pass: 10 events cover the masters reasonably, but 3 events (ids 933 / 934 / 935) carry `event_category=""` (empty string outside the `lifecycle / state_change / threshold / signal` enum) | B1-S9 (STRUCTURAL) |
 | B9b | intra-domain cross-module handoffs | vacuous (zero modules) | none |
@@ -83,7 +83,7 @@ S3 verdict: every master has at least one trigger_event (good), but zero lifecyc
 | F3 | skill_tools >= 1 | pass-by-accident (`esg-system` has 16 `skill_tools`) | none |
 | F4 | operation_kind <-> data_object_id invariant | pass (15 query/mutate rows carry `data_object_id`; `generate_text` is compute with NULL) | none |
 | F5 | Semantius score computable | uncomputable until F2 (no module anchor); strict score on the legacy skill is 15/16 = 94% (`generate_text` is external) | folded |
-| F7 | channel abstractions | vacuous (no channel primitives linked) | none |
+| F7 | channel abstractions | vacuous (no channel primitives related) | none |
 | H1 | APQC tags on cross-domain handoffs | FAIL (zero `handoff_processes` rows across 9 cross-domain handoffs; the volume target is 5-7 `agent_curated` proposals) | B1-S14 (APQC TAGGING) |
 
 ### Pass 2, Market audit (semantic)
@@ -135,9 +135,9 @@ EHS-MGMT is already in the queue (REAL-EST + FSQM surfacers); not re-surfaced he
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges sourced from `handoffs` + `domain_data_objects` dependencies (DMDO is empty because there are no ESG modules):
+Cross-domain relationships sourced from `handoffs` + `domain_data_objects` dependencies (DMDO is empty because there are no ESG modules):
 
-| Neighbor | Edge type | Weight | Notes |
+| Neighbor | Relationship type | Weight | Notes |
 | --- | --- | --- | --- |
 | AUDIT (16) | handoffs out (3) | 3 | emissions_records ingested, esg_disclosures submitted_for_assurance, esg_initiatives launched |
 | GRC (15) | handoffs out (2) | 2 | esg_targets breached, emission_factors updated |
@@ -146,7 +146,7 @@ Cross-edges sourced from `handoffs` + `domain_data_objects` dependencies (DMDO i
 | REAL-EST (141) | handoff in (1) | 1 | inbound utility_meter_reading.published |
 | TPRM (19) | handoff out (1) | 1 | supplier_esg_assessments score_updated also fanned to TPRM |
 | FINOPS (41) | handoff out (1) | 1 | activity_data.recorded targeted at FINOPS (looks like target mis-routing; see Bucket 2 #5) |
-| MDM (87) | DMDO conflict | cross-only | catalog-wide M7 hard fail: `suppliers` (data_object_id 206) carries `domain_data_objects.role=master` in BOTH SUP-LIFE and MDM; surfaced for SUP-LIFE / MDM owners, not blocking ESG's pass |
+| MDM (87) | DMDO conflict | cross-only | catalog-wide M7 hard fail: `suppliers` (data_object_id 206) carries `domain_data_objects.held_as=master` in BOTH SUP-LIFE and MDM; surfaced for SUP-LIFE / MDM owners, not blocking ESG's pass |
 
 Pass 4 deep dive runs against AUDIT (weight 3), GRC (weight 2), SUP-LIFE (weight 3). Others get one-line summaries.
 
@@ -184,7 +184,7 @@ ESG consumes 2 SUP-LIFE entities (suppliers required-consumer, supplier_qualific
 2. **NULL module FK candidates**: both sides stay NULL until ESG modules ship; SUP-LIFE side likewise depends on SUP-LIFE modularization.
 3. **Missing handoffs the catalog implies**: SUP-LIFE owes ESG outbound on `supplier.onboarded` (so ESG can request initial sustainability assessment) and on `supplier_qualification.updated` (so ESG can refresh scoring inputs). Both go to report-only.
 4. **Boundary integrity gaps**: `suppliers` (206) is multi-mastered between SUP-LIFE and MDM. Surface as report-only for SUP-LIFE / MDM owners.
-5. **Cross-domain `data_object_relationships`**: 1 row exists (`supplier_esg_assessments updates supplier_qualifications`). Missing inverse direction (supplier_qualifications -> supplier_esg_assessments) and `suppliers -> supplier_esg_assessments` ownership edge.
+5. **Cross-domain `data_object_relationships`**: 1 row exists (`supplier_esg_assessments updates supplier_qualifications`). Missing inverse direction (supplier_qualifications -> supplier_esg_assessments) and `suppliers -> supplier_esg_assessments` ownership relationship.
 
 B->A (SUP-LIFE to ESG): 0 handoffs published. Two implied (see section 3 above) and routed to SUP-LIFE B9.
 
@@ -208,7 +208,7 @@ Diff:
 - **TPRM (1 handoff out)**: `supplier_esg_assessment.score_updated` (event 256) also fans to TPRM (handoff 278, friction=high). High friction needs justification at human review (does TPRM consume the full assessment or just a risk-band signal?). Cross-domain relationship row missing.
 - **FINOPS (1 handoff out)**: `activity_data.recorded` (event 934) -> FINOPS (handoff 851). Looks like mis-targeting (FINOPS in this catalog is "Cloud Financial Operations", not financial planning). Surface as Bucket 2 question: should target be EPM, not FINOPS, given ESG also consumes EPM's `financial_plans`?
 - **REAL-EST (1 inbound)**: `utility_meter_reading.published` (event 284) lands on ESG; payload `utility_meter_readings` (350) has no ESG consumer DMDO row (because ESG has no modules). When ESG-CARBON-ACCOUNTING module ships, a `consumer + required` DMDO row on `utility_meter_readings` should land alongside.
-- **EPM (DMDO dep only)**: ESG consumes `financial_plans` (37). No handoff exists in either direction; either the consumer link is speculative scope-creep or EPM owes outbound on `financial_plan.updated`. See Bucket 2 #2.
+- **EPM (DMDO dep only)**: ESG consumes `financial_plans` (37). No handoff exists in either direction; either the consumer relationship is speculative scope-creep or EPM owes outbound on `financial_plan.updated`. See Bucket 2 #2.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -220,7 +220,7 @@ Diff:
 | B1-M2 | `double_materiality_assessments` | ESG-DISCLOSURE-REPORTING | CSRD ESRS 1 | Two-axis (impact + financial materiality) assessment is a CSRD entry-condition; sub-records per topic, stakeholder input, materiality threshold. |
 | B1-M3 | `esg_disclosure_taxonomies` | ESG-DISCLOSURE-REPORTING | CSRD ESRS, ISSB, GRI, SASB | Tag library for XBRL / ESRS / GRI / SASB mappings; one row per taxonomy + version + concept; required for Workiva / Persefoni / Envizi-style multi-framework reporting. |
 | B1-M4 | `regulatory_change_records` | ESG-DISCLOSURE-REPORTING | CSRD, SEC Climate, CBAM | Tracking of statutory updates that change disclosure or measurement requirements; Sphera / Diligent / Workiva all master this. |
-| B1-M5 | `esg_audit_evidence` | ESG-DISCLOSURE-REPORTING | CSRD assurance, SOX-adjacent | Audit-trail evidence rows linked to disclosure assertions; assurance providers require these as part of the engagement walkthrough. |
+| B1-M5 | `esg_audit_evidence` | ESG-DISCLOSURE-REPORTING | CSRD assurance, SOX-adjacent | Audit-trail evidence rows related to disclosure assertions; assurance providers require these as part of the engagement walkthrough. |
 
 #### MISSING (universal-vendor entities, non-regulatory)
 
@@ -228,8 +228,8 @@ Diff:
 | --- | --- | --- | --- |
 | B1-U1 | `scope3_categories` | ESG-CARBON-ACCOUNTING | GHG Protocol Scope 3 lists 15 categories; the catalog needs a typed reference to which category an emissions_records or supplier survey rolls up to. Universal across all 7 flagships. |
 | B1-U2 | `emission_calculation_runs` | ESG-CARBON-ACCOUNTING | Each calculation pass against an emission_factor + activity_data set produces a versioned run; required for recalculation history (Persefoni / Watershed / Envizi all master this). |
-| B1-U3 | `carbon_credit_purchases` | ESG-CARBON-ACCOUNTING | Offset / removal credit purchases linked to emissions_records; Persefoni, Watershed, NZC, Sphera carry this; required to support "net" disclosures. |
-| B1-U4 | `renewable_energy_certificates` | ESG-CARBON-ACCOUNTING | RECs / GOs / I-RECs linked to facility_emissions for Scope 2 market-based reporting. Universal. |
+| B1-U3 | `carbon_credit_purchases` | ESG-CARBON-ACCOUNTING | Offset / removal credit purchases related to emissions_records; Persefoni, Watershed, NZC, Sphera carry this; required to support "net" disclosures. |
+| B1-U4 | `renewable_energy_certificates` | ESG-CARBON-ACCOUNTING | RECs / GOs / I-RECs related to facility_emissions for Scope 2 market-based reporting. Universal. |
 
 #### STRUCTURAL band failures
 
@@ -240,9 +240,9 @@ Diff:
 | B1-S3 | A4 / Rule 20 | `catalog_tagline` and `catalog_description` are both empty. | Draft buyer-voice text (workflow + value), surface to user before writing per Rule 20 (do not overwrite if non-empty; here both are empty so initial fill is allowed with explicit review). |
 | B1-S4 | M1 (blocking) | Zero `domain_modules` rows. Cascades to M2 / M4 / M5 / M6 / M7 / B-band DMDO checks / E-band / F2-F5. | Hand-author the module set. Proposed 4 modules: ESG-CARBON-ACCOUNTING (masters: emissions_records, emission_factors, activity_data_records, facility_emissions + new scope3_categories, emission_calculation_runs, carbon_credit_purchases, renewable_energy_certificates), ESG-DISCLOSURE-REPORTING (masters: esg_disclosures + new assurance_engagements, double_materiality_assessments, esg_disclosure_taxonomies, regulatory_change_records, esg_audit_evidence), ESG-PERFORMANCE-MGMT (masters: esg_targets, esg_metrics, esg_initiatives), ESG-SUPPLIER-SUSTAINABILITY (masters: supplier_esg_assessments + new scope3_supplier_surveys). 4 modules cleanly cover the surface; 5 if PROD-CARBON-FOOTPRINT becomes a sub-domain rather than a separate domain. |
 | B1-S5 | B4 | Pattern flags all default-false; no positive audit recorded. Candidates: `esg_disclosures` (`has_submit_lock=true` after `submitted_for_assurance`), `esg_targets` (`has_single_approver=true` for executive sign-off), `facility_emissions` (`has_submit_lock=true` on period close), `assurance_engagements` (`has_single_approver=true` for lead auditor). | PATCH the four masters; record consideration in the audit (not in `notes`, per Rule 15). |
-| B1-S6 | B6 | Zero intra-domain `data_object_relationships` across the 9 masters. Required edges: `emission_factors applies_to emissions_records`, `activity_data_records sources emissions_records`, `facility_emissions rolls_up emissions_records`, `esg_targets governs esg_metrics`, `esg_metrics summarizes emissions_records`, `esg_disclosures reports esg_metrics`, `esg_disclosures reports facility_emissions`, `esg_initiatives drives esg_targets`. | Author 8 to 10 edges (verb + inverse_verb + cardinality + relationship_kind + is_required + owner_side); load via the cluster-drafts pattern. |
-| B1-S7 | B7 / Rule 10 | Zero `users` edges across the 9 masters. Required edges: `esg_disclosures preparer / approver`, `esg_targets owner / approver`, `esg_initiatives sponsor`, `emission_factors steward`, `assurance_engagements lead_auditor`, `facility_emissions reporter`, `supplier_esg_assessments assessor`. | Author 7 to 9 user-edges per Rule 10. |
-| B1-S8 | B8 | Only 1 outbound cross-domain `data_object_relationships` row (supplier_esg_assessments updates supplier_qualifications). 7 of 8 cross-domain handoffs lack a mirroring relationship row. | Author the missing rows alongside Pass 4 findings: `emissions_records evidences audit_engagements`, `esg_disclosures filed_under audit_engagements`, `esg_initiatives reviewed_in audit_engagements`, `esg_targets surfaces_to risk_registers (GRC)`, `emission_factors derived_from regulatory_policies (GRC)`, `supplier_esg_assessments feeds tprm_supplier_risk_records (TPRM)`, plus the disputed activity_data -> EPM / FINOPS edge after Bucket 2 #5 resolves. |
+| B1-S6 | B6 | Zero intra-domain `data_object_relationships` across the 9 masters. Required relationships: `emission_factors applies_to emissions_records`, `activity_data_records sources emissions_records`, `facility_emissions rolls_up emissions_records`, `esg_targets governs esg_metrics`, `esg_metrics summarizes emissions_records`, `esg_disclosures reports esg_metrics`, `esg_disclosures reports facility_emissions`, `esg_initiatives drives esg_targets`. | Author 8 to 10 relationships (verb + inverse_verb + cardinality + relationship_kind + is_required + owner_side); load via the cluster-drafts pattern. |
+| B1-S7 | B7 / Rule 10 | Zero relationships to `users` across the 9 masters. Required relationships: `esg_disclosures preparer / approver`, `esg_targets owner / approver`, `esg_initiatives sponsor`, `emission_factors steward`, `assurance_engagements lead_auditor`, `facility_emissions reporter`, `supplier_esg_assessments assessor`. | Author 7 to 9 relationships to `users` per Rule 10. |
+| B1-S8 | B8 | Only 1 outbound cross-domain `data_object_relationships` row (supplier_esg_assessments updates supplier_qualifications). 7 of 8 cross-domain handoffs lack a mirroring relationship row. | Author the missing rows alongside Pass 4 findings: `emissions_records evidences audit_engagements`, `esg_disclosures filed_under audit_engagements`, `esg_initiatives reviewed_in audit_engagements`, `esg_targets surfaces_to risk_registers (GRC)`, `emission_factors derived_from regulatory_policies (GRC)`, `supplier_esg_assessments feeds tprm_supplier_risk_records (TPRM)`, plus the disputed activity_data -> EPM / FINOPS relationship after Bucket 2 #5 resolves. |
 | B1-S9 | B9 / Rule 13 | 3 trigger_events (ids 933, 934, 935) carry `event_category=""` (empty string outside enum `lifecycle / state_change / threshold / signal`). | PATCH event_category to `lifecycle` for `activity_data.recorded` (id 934) and `esg_initiative.launched` (id 935); PATCH `emission_factor.updated` (id 933) to `state_change`. |
 | B1-S10 | B10b | All 9 ESG-touching handoffs (8 outbound + 1 inbound) carry NULL `source_domain_module_id` and NULL `target_domain_module_id`. ESG source side is blocked by M1; ESG target side (one row 293) waits for ESG modules to ship. | PATCH after B1-S4 lands; deterministic derivation per B10b procedure. Target-side NULLs on the other domains' rows are report-only. |
 | B1-S11 | B11 | Zero `data_object_aliases` rows across 9 masters. Recommended aliases per master are listed in the B11 finding row above (e.g. emissions_records as "GHG records / scope1+2+3 records"; esg_disclosures as "sustainability reports / CSRD reports / 10-K climate disclosures"). | Draft alias rows (alias_name + alias_type); bundle into a focused loader. |
@@ -276,7 +276,7 @@ B1-S14 = the APQC TAGGING block above (counted as one B1 line item per project c
 ### Bucket 2, Surface-for-user (judgment calls)
 
 1. **Capability-domain split for ESG.** Should "carbon accounting" and "ESG disclosure reporting" be one capability or two? Vendors split (Watershed = accounting-first; Workiva = disclosure-first; Persefoni = both). Independent of Bucket 3.
-2. **`financial_plans` consumer link.** ESG consumes `financial_plans` (data_object 37, mastered in EPM) as `consumer + required`. No handoff exists in either direction. Options: (a) keep, and request EPM B9 to publish `financial_plan.updated` outbound to ESG (so sustainability-linked financial planning has a real edge), (b) downgrade to `optional` and document as forward-looking, (c) remove as scope-creep. Independent of Bucket 3.
+2. **`financial_plans` consumer relationship.** ESG consumes `financial_plans` (data_object 37, mastered in EPM) as `consumer + required`. No handoff exists in either direction. Options: (a) keep, and request EPM B9 to publish `financial_plan.updated` outbound to ESG (so sustainability-linked financial planning has a real relationship), (b) downgrade to `optional` and document as forward-looking, (c) remove as scope-creep. Independent of Bucket 3.
 3. **Pattern flag positive review on 4 masters.** B1-S5 proposes flags for `esg_disclosures` (has_submit_lock), `esg_targets` (has_single_approver), `facility_emissions` (has_submit_lock), `assurance_engagements` (has_single_approver). User confirms or vetoes each.
 4. **Modularization recommendation acceptance.** B1-S4 proposes 4 modules. Acceptance options: (a) approve the 4-module shape, (b) collapse PERFORMANCE-MGMT into DISCLOSURE-REPORTING and ship 3 modules, (c) split SUPPLIER-SUSTAINABILITY into its own SUSTAIN-PROC domain (Bucket 3 candidate). The choice changes how Bucket 3 vetting routes.
 5. **Handoff 851 target re-routing (`activity_data.recorded` -> FINOPS).** FINOPS in this catalog is Cloud Financial Operations. Options: (a) re-target to EPM (financial planning) if the intent was sustainability-linked planning, (b) remove the handoff if the workflow stays internal to ESG, (c) keep if the catalog's FINOPS scope was extended at some point and the routing is correct. The APQC tag in B1-S14 defers until this resolves.
@@ -321,7 +321,7 @@ These are observations the user can act on by scheduling audits of the owning do
 | REAL-EST | B10b + B9 | REAL-EST -> ESG handoff (293) NULL on both module FKs; REAL-EST also owns the outbound side (event 284, `utility_meter_reading.published`). |
 | SUP-LIFE | B9 | SUP-LIFE owes outbound on `supplier.onboarded` (so ESG can request initial sustainability assessment) and on `supplier_qualification.updated`. |
 | EPM | B9 | EPM owes outbound on `financial_plan.updated` to ESG (depending on Bucket 2 #2 resolution). |
-| SUP-LIFE / MDM | M7 | Catalog-wide hard fail: `suppliers` (data_object_id 206) is mastered in BOTH SUP-LIFE and MDM via `domain_data_objects.role=master`. The deployer cannot pick a canonical owner. Decision belongs to SUP-LIFE / MDM owners (preference: MDM masters, SUP-LIFE embedded_master), not to ESG. |
+| SUP-LIFE / MDM | M7 | Catalog-wide hard fail: `suppliers` (data_object_id 206) is mastered in BOTH SUP-LIFE and MDM via `domain_data_objects.held_as=master`. The deployer cannot pick a canonical owner. Decision belongs to SUP-LIFE / MDM owners (preference: MDM masters, SUP-LIFE embedded_master), not to ESG. |
 | AUDIT | B8 | Inbound (AUDIT -> ESG) relationship row 293 exists (`reviews esg_disclosures`); the inverse (ESG `submitted_to` AUDIT) is missing on AUDIT's B8. |
 
 ## 2026-05-31, Continuation: B1 technical fixes
@@ -349,8 +349,8 @@ Loader: [.tmp_deploy/fix_esg_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_esg_
 | B1-S4 | New modules (blocking gate; modularization shape is Bucket 2 #4). |
 | B1-S5 | Pattern flag flips; explicitly deferred per subagent scope. |
 | B1-S6 | New intra-domain `data_object_relationships`; audit lists candidate verbs but not pre-specified tuples with row ids. |
-| B1-S7 | New users-edges `data_object_relationships`; audit names candidate roles but does not pre-specify tuples per Rule #10. |
-| B1-S8 | New cross-domain `data_object_relationships`; audit lists candidate edges but not pre-specified tuples. |
+| B1-S7 | New relationships to `users` `data_object_relationships`; audit names candidate roles but does not pre-specify tuples per Rule #10. |
+| B1-S8 | New cross-domain `data_object_relationships`; audit lists candidate relationships but not pre-specified tuples. |
 | B1-S10 | B10b FK PATCHes blocked: ESG source side requires modules to exist (gated on B1-S4); target sides are owned by other domains' B10b audits. |
 | B1-S11 | New `data_object_aliases`; audit lists candidate aliases descriptively, no pre-specified tuples. |
 | B1-S12 | New `data_object_lifecycle_states`; new rows beyond the technical scope. Also interacts with Bucket 2 #6. |
@@ -397,7 +397,7 @@ ESG is still a pre-modular domain. M1 hard-fails (zero `domain_modules`), which 
 | B4 | pattern flags considered | UNCERTAIN (all default-false; positive review still owed on 4 masters) | B1-S5 / Bucket 2 #3 |
 | B5 | embedded_master integrity | pass (no embedded_master rows; suppliers (206) is multi-mastered SUP-LIFE+MDM, report-only) | none |
 | B6 | intra-domain `data_object_relationships` | FAIL (zero rows across 9 masters) | B1-S6 |
-| B7 | `users` edges | FAIL (zero rows) | B1-S7 |
+| B7 | relationships to `users` | FAIL (zero rows) | B1-S7 |
 | B8 | outbound cross-domain `data_object_relationships` | FAIL (1/8 covered: only `supplier_esg_assessments updates supplier_qualifications`) | B1-S8 |
 | B9 | outbound trigger_events + handoffs | pass (10 events, 3 enum-backfilled this cycle) | none |
 | B9b | intra-domain cross-module handoffs | vacuous (zero modules) | folded into B1-S4 |
@@ -424,7 +424,7 @@ Carried forward from 2026-05-30 (none resolved this audit beyond the three close
 - B1-S4 (modules: ESG-CARBON-ACCOUNTING / ESG-DISCLOSURE-REPORTING / ESG-PERFORMANCE-MGMT / ESG-SUPPLIER-SUSTAINABILITY; blocking gate; intersects Bucket 2 #4)
 - B1-S5 (pattern flag positive review on 4 masters; intersects Bucket 2 #3)
 - B1-S6 (8-10 intra-domain `data_object_relationships`)
-- B1-S7 (7-9 users-edges per Rule #10)
+- B1-S7 (7-9 relationships to `users` per Rule #10)
 - B1-S8 (7 missing cross-domain `data_object_relationships`)
 - B1-S10 (B10b source-side PATCH; blocked by B1-S4)
 - B1-S11 (aliases across 9 masters)
@@ -435,7 +435,7 @@ Carried forward from 2026-05-30 (none resolved this audit beyond the three close
 ### Bucket 2 (pending, unchanged)
 
 1. Capability-domain split: carbon accounting vs. ESG disclosure reporting as one capability or two.
-2. `financial_plans` consumer link justification (keep + ask EPM for outbound, downgrade, or remove).
+2. `financial_plans` consumer relationship justification (keep + ask EPM for outbound, downgrade, or remove).
 3. Pattern flag positive review on 4 masters (esg_disclosures, esg_targets, facility_emissions, assurance_engagements).
 4. Modularization acceptance: 4-module shape vs. 3-module collapse vs. 5-module split (depends on Bucket 3 #5 / #6).
 5. Handoff 851 target re-routing (FINOPS vs. EPM vs. delete; B1-S14 already provisionally tagged 851 -> 1802 in the prior continuation, so resolution may update that PCF row).
@@ -497,24 +497,24 @@ Loader: [.tmp_deploy/2026-06-07_esg_state_driven_execute.ts](../../.tmp_deploy/2
 - **B1A-S11 (B11 aliases)**: inserted 21 generic-synonym `data_object_aliases` rows across all 9
   masters (alias_type='synonym', is_preferred=false). No vendor product names; framework terms
   (GHG Records, CSRD Reports, Climate Disclosures, Net Zero Commitments) allowed. (21 INSERTs.)
-- **B1A-S6 (B6 intra-domain relationships)**: inserted 8 `data_object_relationships` edges between
+- **B1A-S6 (B6 intra-domain relationships)**: inserted 8 `data_object_relationships` rows between
   ESG masters exactly per the S6 verbs: emission_factors applies_to emissions_records;
   activity_data_records sources emissions_records; facility_emissions rolls_up emissions_records
   (composition); esg_targets governs esg_metrics; esg_metrics summarizes emissions_records;
   esg_disclosures reports esg_metrics; esg_disclosures reports facility_emissions; esg_initiatives
   drives esg_targets. All one_to_many, owner_side=source. (8 INSERTs.) Pre-flight confirmed 0
-  existing intra-ESG edges (the 4 pre-existing edges touching ESG masters are all cross-domain).
+  existing intra-ESG relationships (the 4 pre-existing relationships touching ESG masters are all cross-domain).
 
 ### Surfaced (no write; needs user decision or has a blocker)
 
-- **All b2 (B2-1..B2-6)**: capability split (B2-1), financial_plans consumer link (B2-2), pattern
+- **All b2 (B2-1..B2-6)**: capability split (B2-1), financial_plans consumer relationship (B2-2), pattern
   flag review (B2-3), modularization shape (B2-4, the blocking build decision), handoff 851 target
   (B2-5), emission_factors lifecycle (B2-6, now largely resolved toward config-shape by the
   entity_type=catalog classification).
 - **B1A-S8 (cross-domain relationships)**: NOT executed. Three named target endpoints do not exist
   in the catalog (`risk_registers`, `regulatory_policies`, `tprm_supplier_risk_records`) -> defer to
-  Discover. Only `audit_engagements` (293) exists; the three AUDIT edges are authorable but left with
-  the build/S7 modeling tier. The 851 edge is blocked on B2-5.
+  Discover. Only `audit_engagements` (293) exists; the three AUDIT relationships are authorable but left with
+  the build/S7 modeling tier. The 851 relationship is blocked on B2-5.
 - **B1B-S13 (DESTRUCTIVE)**: any DELETE of legacy esg-system skill id 13 / its skill_tools needs
   approval and re-framing under the 2026-06-06 supersession (esg-system may BE the single domain-grain
   skill, not a relic; skill_tools is what retires).
@@ -526,7 +526,7 @@ Loader: [.tmp_deploy/2026-06-07_esg_state_driven_execute.ts](../../.tmp_deploy/2
 
 ### Left (untouched)
 
-- **B1A-S7 (users-edges, Rule #10)**: left with the build (modeling tier authored at build time
+- **B1A-S7 (relationships to `users`, Rule #10)**: left with the build (modeling tier authored at build time
   alongside the Phase-B preview). users data_object resolved live as id 748 (platform_builtin).
 - **B1A-M1..M5, B1A-U1..U4**: new entities routed to non-existent modules; part of the build, gated
   on B2-4 / B1B-S4.

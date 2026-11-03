@@ -18,13 +18,13 @@ a1:
 
 ---
 
-q2: Which capability should the room-reservation module be linked to?
+q2: Which capability should the room-reservation module be related to?
 
-- a) Link it to the existing space-optimization capability (matches how desk booking and analytics are already linked).
-- b) Create a new, more granular meeting-room-management capability and link that instead.
+- a) Relate it to the existing space-optimization capability (matches how desk booking and analytics are already related).
+- b) Create a new, more granular meeting-room-management capability and relate that instead.
 - c) A mix (specify per module).
 
-Recommended: a. Linking to the existing space-optimization capability matches the current pattern and avoids forcing the same new-capability split onto desk booking. Some workplace platforms market desk and room as one workflow, others split them, so this is a judgment call.
+Recommended: a. Relating to the existing space-optimization capability matches the current pattern and avoids forcing the same new-capability split onto desk booking. Some workplace platforms market desk and room as one workflow, others split them, so this is a judgment call.
 
 a2:
 

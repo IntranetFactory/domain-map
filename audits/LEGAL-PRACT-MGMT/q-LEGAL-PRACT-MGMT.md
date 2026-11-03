@@ -7,8 +7,8 @@ Run a law firm's day-to-day practice from one place: open and manage client matt
 
 q1: (answer this first) Are the sibling legal modules (Time and Billing, Trust Accounting, Court Docketing) meant to be sold and deployed on their own, or do they always ship together with Matter Management?
 
-- a) Standalone-deployable: each module carries its own local shell of the shared matter and invoice records (promote the 4 shared "consumer" links to embedded_master).
-- b) Always co-installed: Matter Management and Time and Billing are the single source of truth, so the duplicate "consumer" links are deleted.
+- a) Standalone-deployable: each module carries its own local shell of the shared matter and invoice records (promote the 4 shared "consumer" relationships to embedded_master).
+- b) Always co-installed: Matter Management and Time and Billing are the single source of truth, so the duplicate "consumer" relationships are deleted.
 
 Recommended: b. Every flagship vendor bundles matters, billing, trust, and docketing as one suite, not as a la carte modules. This choice is destructive either way (delete rows, or overwrite the role on existing rows) and it drives the matter, invoice, and intra-domain handoff fixes underneath it, so it unlocks the rest of the build.
 
@@ -32,12 +32,12 @@ a3:
 
 ---
 
-q4: Two client-contact links on the Intake/Conflict and Matter Management modules point at the firm-wide CRM contact record, which breaks each module's self-containment. How should they be resolved?
+q4: Two client-contact relationships on the Intake/Conflict and Matter Management modules point at the firm-wide CRM contact record, which breaks each module's self-containment. How should they be resolved?
 
 - a) Give each module its own local contact shell (convert to embedded_master).
-- b) Make the contact link optional, so the module works without it (set necessity to optional).
+- b) Make the contact relationship optional, so the module works without it (set necessity to optional).
 
-Recommended: a. A local contact shell keeps each module standalone while still reusing the shared CRM master when it is co-installed. This rewrites an existing link, so it is a destructive change that needs your sign-off.
+Recommended: a. A local contact shell keeps each module standalone while still reusing the shared CRM master when it is co-installed. This rewrites an existing relationship, so it is a destructive change that needs your sign-off.
 
 a4:
 
@@ -109,7 +109,7 @@ a11:
 
 q6: Every flagship law-firm platform ships four matter-scoped records that are not modeled yet: matter documents, key dates and deadlines, matter parties (with their roles), and legal tasks. Should I research and add the ones that hold up? (yes/no)
 
-Recommended: yes, but additive and can happen after the modules exist. The strongest one is matter deadlines, whose absence is a malpractice-tail risk; matter parties is the next, since conflict checking cannot work cleanly without role-typed party edges.
+Recommended: yes, but additive and can happen after the modules exist. The strongest one is matter deadlines, whose absence is a malpractice-tail risk; matter parties is the next, since conflict checking cannot work cleanly without role-typed party relationships.
 
 a6:
 

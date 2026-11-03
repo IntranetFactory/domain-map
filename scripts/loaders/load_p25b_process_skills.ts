@@ -1,6 +1,6 @@
 // P2.5B — Process-skill tool requirements (3 candidates from P1.7).
 //
-// Inserts 3 new skills with skill_type='process' and links each to its required tools.
+// Inserts 3 new skills with skill_type='process' and relates each to its required tools.
 //
 // Approach:
 //   - For each process skill, the candidate plan file lists the involved domains.
@@ -77,7 +77,7 @@ const [domains, tools, allSkills, ddo, allST] = await Promise.all([
   get(`/domains?select=id,domain_code&limit=10000`),
   get(`/tools?select=id,tool_name,operation_kind,data_object_id&limit=10000`),
   get(`/skills?select=id,skill_name,skill_type&limit=10000`),
-  get(`/domain_data_objects?role=eq.master&select=domain_id,data_object_id&limit=20000`),
+  get(`/domain_data_objects?held_as=eq.master&select=domain_id,data_object_id&limit=20000`),
   get(`/skill_tools?select=skill_id,tool_id&limit=30000`),
 ]);
 
@@ -200,7 +200,7 @@ for (const p of plans) {
     stRows.push({ skill_id: sid, tool_id: tool.id, requirement_level: "required" });
   }
 }
-console.log(`>>> Inserting ${stRows.length} skill_tools rows (${dups} already linked)`);
+console.log(`>>> Inserting ${stRows.length} skill_tools rows (${dups} already related)`);
 await insertChunked("/skill_tools", stRows);
 
 console.log(`\nMode: ${APPLY ? "APPLY (writes done)" : "DRY-RUN (no writes)"}`);

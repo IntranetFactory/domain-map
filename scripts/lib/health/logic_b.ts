@@ -9,9 +9,9 @@
 //   phase_p_triage.ts         B13  isUnclassified / checkEntityTypeClassified
 //   validate_cross_domain.ts  q1   B10b outbound (checkHandoffModuleAttribution)
 //                             q2   B10b inbound  (checkHandoffModuleAttribution)
-//                             q3   B9 rule event_not_publishable (isPublishableBy, PUBLISH_ROLES)
+//                             q3   B9 rule event_not_publishable (isPublishableBy, PUBLISH_HELD_AS)
 //                             q5   B9 rule event_no_handoff, orphan half (no lifecycle either)
-//   be_spelling_sweep.ts      B16  BE_AE_MAP / fixBritishSpelling / BE_*_COLUMNS
+//   be_spelling_sweep.ts      B16  checkBritishSpelling (the map and columns: scripts/lib/british_spelling.ts)
 //
 // Conventions:
 //   - Every function returns a non-empty list. A clean result is one `pass` finding whose detail
@@ -23,6 +23,8 @@
 //     (trigger_events), "state:40" (data_object_lifecycle_states), "handoff:398", "rel:810"
 //     (data_object_relationships), and B16 uses "<table>:<id>".
 
+import { BE_AE_MAP, fixBritishSpelling, scanBritishSpelling, type SpellingColumns, type SpellingHit } from "../british_spelling.ts";
+import { raciLetter } from "../catalog_invariants.ts";
 import type { Finding } from "./types.ts";
 
 export type RowId = number | string;
@@ -45,7 +47,7 @@ export type MasterRow = {
 export type DmdoRow = {
   domain_module_id: number;
   data_object_id: number;
-  role: string; // master | embedded_master | contributor | consumer | derived
+  held_as: string; // master | embedded_master | contributor | consumer | derived
   is_install_optional?: boolean | null;
 };
 
@@ -196,10 +198,10 @@ export function checkBareWordNaming(masters: MasterRow[]): Finding[] {
 // B5. embedded_master integrity (Rule #11), plus the B10 "unowned dependencies" rule
 // =====================================================================================
 
-export const DEPENDENCY_ROLES = new Set(["embedded_master", "contributor", "consumer"]);
+export const DEPENDENCY_HELD_AS = new Set(["embedded_master", "contributor", "consumer"]);
 
 export type DependencyOwnerOptions = {
-  hasMaster: (dataObjectId: number) => boolean; // a role='master' dmdo row anywhere in the catalog
+  hasMaster: (dataObjectId: number) => boolean; // a held_as='master' dmdo row anywhere in the catalog
   isBuiltin: (dataObjectId: number) => boolean; // data_objects.kind = 'platform_builtin'
   nameOf?: NameOf;
   moduleLabel?: Label;
@@ -211,7 +213,7 @@ export type DependencyOwnerOptions = {
 export function checkDependencyOwners(rows: DmdoRow[], opts: DependencyOwnerOptions): Finding[] {
   const nameOf = opts.nameOf ?? defaultName;
   const mod = opts.moduleLabel ?? defaultModule;
-  const deps = rows.filter((r) => DEPENDENCY_ROLES.has(r.role));
+  const deps = rows.filter((r) => DEPENDENCY_HELD_AS.has(r.held_as));
   const orphan = deps.filter((r) => !opts.hasMaster(r.data_object_id) && !opts.isBuiltin(r.data_object_id));
   const out: Finding[] = [];
   const describe = (g: DmdoRow[]) => {
@@ -220,10 +222,10 @@ export function checkDependencyOwners(rows: DmdoRow[], opts: DependencyOwnerOpti
       rows: [...byDo.keys()].sort(byNum),
       items: [...byDo.entries()]
         .sort((a, b) => a[0] - b[0])
-        .map(([id, rs]) => `${nameOf(id)} (${rs.map((r) => `${r.role}${r.is_install_optional ? "/install optional" : ""} @ ${mod(r.domain_module_id)}`).join(", ")})`),
+        .map(([id, rs]) => `${nameOf(id)} (${rs.map((r) => `${r.held_as}${r.is_install_optional ? "/install optional" : ""} @ ${mod(r.domain_module_id)}`).join(", ")})`),
     };
   };
-  const emb = orphan.filter((r) => r.role === "embedded_master");
+  const emb = orphan.filter((r) => r.held_as === "embedded_master");
   if (emb.length) {
     const d = describe(emb);
     out.push({
@@ -233,7 +235,7 @@ export function checkDependencyOwners(rows: DmdoRow[], opts: DependencyOwnerOpti
       detail: `${d.rows.length} embedded_master(s) with no canonical master anywhere and not platform_builtin (rows = data_object ids; fix: add the owner's master row or drop the embed): ${listOf(d.items)}`,
     });
   }
-  const other = orphan.filter((r) => r.role !== "embedded_master");
+  const other = orphan.filter((r) => r.held_as !== "embedded_master");
   if (other.length) {
     const d = describe(other);
     out.push({
@@ -254,80 +256,178 @@ export function checkDependencyOwners(rows: DmdoRow[], opts: DependencyOwnerOpti
 // B6. intra-domain relationships populated (mechanical half)
 // =====================================================================================
 
-// Rows: data_object ids. Self-edges (a master related to itself) do not connect it to another
+// Rows: data_object ids. Self-relationships (a master related to itself) do not relate it to another
 // master. Whether an isolated master belongs to the primary workflow is the judgment half, so a
-// single isolated master is `warn`; a domain with >= 2 masters and NO intra edge at all is `fail`.
-export function checkIntraDomainEdges(masterIds: number[], rels: RelRow[], opts: { nameOf?: NameOf } = {}): Finding[] {
+// single isolated master is `warn`; a domain with >= 2 masters and NO intra-domain relationship at all is `fail`.
+export function checkIntraDomainRelationships(masterIds: number[], rels: RelRow[], opts: { nameOf?: NameOf } = {}): Finding[] {
   const nameOf = opts.nameOf ?? defaultName;
   const set = new Set(masterIds);
-  if (set.size < 2) return [pass("B6", `${set.size} master(s): no in-domain pair to connect`)];
+  if (set.size < 2) return [pass("B6", `${set.size} master(s): no in-domain pair to relate`)];
   const intra = rels.filter((r) => set.has(r.data_object_id) && set.has(r.related_data_object_id) && r.data_object_id !== r.related_data_object_id);
-  const connected = new Set<number>();
+  const related = new Set<number>();
   for (const r of intra) {
-    connected.add(r.data_object_id);
-    connected.add(r.related_data_object_id);
+    related.add(r.data_object_id);
+    related.add(r.related_data_object_id);
   }
-  const isolated = [...set].filter((id) => !connected.has(id)).sort(byNum);
+  const isolated = [...set].filter((id) => !related.has(id)).sort(byNum);
   if (intra.length === 0) {
     return [{ id: "B6", result: "fail", rows: isolated, detail: `no intra-domain data_object_relationships among ${set.size} masters (rows = data_object ids)` }];
   }
-  if (isolated.length === 0) return [pass("B6", `${intra.length} intra-domain edges connect all ${set.size} masters (rows = data_object ids)`)];
+  if (isolated.length === 0) return [pass("B6", `${intra.length} intra-domain relationships relate all ${set.size} masters (rows = data_object ids)`)];
   return [
     {
       id: "B6",
       result: "warn",
       rows: isolated,
-      detail: `${isolated.length} of ${set.size} masters have no edge to another in-domain master (rows = data_object ids; allowed only with a notes justification): ${listOf(isolated.map(nameOf))}`,
+      detail: `${isolated.length} of ${set.size} masters have no relationship to another in-domain master (rows = data_object ids; allowed only with a notes justification): ${listOf(isolated.map(nameOf))}`,
     },
   ];
 }
 
 // =====================================================================================
-// B7. users edges populated (mechanical half)
+// B7. relationships to users populated (mechanical half)
 // =====================================================================================
 
-// entity_types that carry a user-typed actor in practice. catalog / junction / computed masters
-// are not listed (a users edge there is the exception, not the rule).
-export const USER_ACTOR_ENTITY_TYPES = new Set(["operational_workflow", "operational_record", "unclassified", ""]);
+// entity_types that carry a user-typed person in practice. catalog / junction / computed masters
+// are not listed (a relationship to users there is the exception, not the rule).
+export const USER_PERSON_ENTITY_TYPES = new Set(["operational_workflow", "operational_record", "unclassified", ""]);
 
 // Rows: data_object ids. Either direction counts (master -> users and users -> master).
-export function checkUserEdgePresence(masters: MasterRow[], rels: RelRow[], usersId: number, opts: { nameOf?: NameOf } = {}): Finding[] {
+export function checkUserRelationshipPresence(masters: MasterRow[], rels: RelRow[], usersId: number, opts: { nameOf?: NameOf } = {}): Finding[] {
   const nameOf = opts.nameOf ?? defaultName;
   const ids = new Set(masters.map((m) => m.id));
-  const withEdge = new Set<number>();
+  const withRelationship = new Set<number>();
   for (const r of rels) {
-    if (r.data_object_id === usersId && ids.has(r.related_data_object_id)) withEdge.add(r.related_data_object_id);
-    else if (r.related_data_object_id === usersId && ids.has(r.data_object_id)) withEdge.add(r.data_object_id);
+    if (r.data_object_id === usersId && ids.has(r.related_data_object_id)) withRelationship.add(r.related_data_object_id);
+    else if (r.related_data_object_id === usersId && ids.has(r.data_object_id)) withRelationship.add(r.data_object_id);
   }
   if (masters.length === 0) return [pass("B7", "no masters (see B1)")];
   const workflow = masters.filter((m) => norm(m.entity_type) === "operational_workflow");
-  if (withEdge.size === 0 && workflow.length > 0) {
+  if (withRelationship.size === 0 && workflow.length > 0) {
     return [
       {
         id: "B7",
         result: "fail",
         rows: workflow.map((m) => m.id).sort(byNum),
-        detail: `no users edge on any of ${masters.length} masters, ${workflow.length} of them operational_workflow (a workflow always has a user actor, Rule #10; rows = data_object ids)`,
+        detail: `no relationship to users on any of ${masters.length} masters, ${workflow.length} of them operational_workflow (a workflow always has a user-typed person, Rule #10; rows = data_object ids)`,
       },
     ];
   }
-  const missing = masters.filter((m) => !withEdge.has(m.id) && USER_ACTOR_ENTITY_TYPES.has(norm(m.entity_type))).sort((a, b) => a.id - b.id);
-  if (missing.length === 0) return [pass("B7", `${withEdge.size} of ${masters.length} masters carry a users edge; no operational master lacks one (rows = data_object ids)`)];
+  const missing = masters.filter((m) => !withRelationship.has(m.id) && USER_PERSON_ENTITY_TYPES.has(norm(m.entity_type))).sort((a, b) => a.id - b.id);
+  if (missing.length === 0) return [pass("B7", `${withRelationship.size} of ${masters.length} masters carry a relationship to users; no operational master lacks one (rows = data_object ids)`)];
   return [
     {
       id: "B7",
       result: "warn",
       rows: missing.map((m) => m.id),
-      detail: `${missing.length} operational master(s) with no users edge (rows = data_object ids; catalog / junction / computed masters not listed): ${listOf(missing.map((m) => nameOf(m.id)))}`,
+      detail: `${missing.length} operational master(s) with no relationship to users (rows = data_object ids; catalog / junction / computed masters not listed): ${listOf(missing.map((m) => nameOf(m.id)))}`,
     },
   ];
+}
+
+// =====================================================================================
+// B7c. each Responsible and Accountable persona of a row-scoped master has a relationship to users
+// =====================================================================================
+
+export type PersonaRelRow = RelRow & { persona_id?: number | null };
+export type RaciPersonaRow = { process_id: number; raci: string; persona_id?: number | null };
+
+export type PersonaRelationshipInput = {
+  masters: MasterRow[]; // the domain's masters; only has_personal_content ones are in scope
+  rels: PersonaRelRow[]; // relationships to users touching a master, either direction
+  states: { data_object_id: number; process_id?: number | null }[]; // lifecycle rows of the masters
+  raci: RaciPersonaRow[]; // any process_raci rows; filtered to each entity's processes inside
+  usersId: number;
+  nameOf?: NameOf;
+  personaLabel?: (personaId: number) => string;
+};
+
+// Rows: data_object ids. A row-scope rule filters on the person a relationship to users holds, so a
+// persona who works the entity needs a relationship of its own or it sees nothing. Severity stops at
+// warn, because a view_all grant can satisfy the same need and only an agent can read that prose
+// (the judgment half in checks_b.ts). An entity with no R or A persona, or with no persona_id on any
+// of its relationships to users, was not checked at all: it is reported as such and never passes.
+export function checkPersonaRelationships(x: PersonaRelationshipInput): Finding[] {
+  const nameOf = x.nameOf ?? defaultName;
+  const personaOf = x.personaLabel ?? ((id: number) => `persona ${id}`);
+  const scoped = x.masters.filter((m) => m.has_personal_content === true).sort((a, b) => a.id - b.id);
+  if (scoped.length === 0) return [pass("B7c", "no row-scoped masters (has_personal_content)")];
+
+  const processesByEntity = new Map<number, Set<number>>();
+  for (const s of x.states) {
+    if (s.process_id == null) continue;
+    const set = processesByEntity.get(s.data_object_id) ?? new Set<number>();
+    set.add(s.process_id);
+    processesByEntity.set(s.data_object_id, set);
+  }
+  const raPersonasByProcess = new Map<number, Set<number>>();
+  for (const r of x.raci) {
+    const letter = raciLetter(r.raci);
+    if (r.persona_id == null || (letter !== "R" && letter !== "A")) continue; // a skill row has no persona_id
+    const set = raPersonasByProcess.get(r.process_id) ?? new Set<number>();
+    set.add(r.persona_id);
+    raPersonasByProcess.set(r.process_id, set);
+  }
+  const relationshipPersonasByEntity = new Map<number, Set<number>>();
+  for (const r of x.rels) {
+    if (r.persona_id == null) continue;
+    const entity = r.data_object_id === x.usersId ? r.related_data_object_id : r.data_object_id;
+    const set = relationshipPersonasByEntity.get(entity) ?? new Set<number>();
+    set.add(r.persona_id);
+    relationshipPersonasByEntity.set(entity, set);
+  }
+
+  const missing: string[] = [];
+  const missingRows: number[] = [];
+  const notChecked: string[] = [];
+  const notCheckedRows: number[] = [];
+  let checkedPersonas = 0;
+  for (const m of scoped) {
+    const needed = new Set([...(processesByEntity.get(m.id) ?? [])].flatMap((pid) => [...(raPersonasByProcess.get(pid) ?? [])]));
+    const filled = relationshipPersonasByEntity.get(m.id);
+    if (needed.size === 0) {
+      notChecked.push(`${nameOf(m.id)} (no Responsible or Accountable persona on its processes)`);
+      notCheckedRows.push(m.id);
+      continue;
+    }
+    if (!filled) {
+      notChecked.push(`${nameOf(m.id)} (no persona_id on any relationship to users)`);
+      notCheckedRows.push(m.id);
+      continue;
+    }
+    checkedPersonas += needed.size;
+    const gaps = [...needed].filter((p) => !filled.has(p)).sort(byNum);
+    if (gaps.length > 0) {
+      missing.push(...gaps.map((p) => `${nameOf(m.id)}: ${personaOf(p)}`));
+      missingRows.push(m.id);
+    }
+  }
+
+  const out: Finding[] = [];
+  if (missing.length > 0) {
+    out.push({
+      id: "B7c",
+      result: "warn",
+      rows: missingRows,
+      detail: `${missing.length} of ${checkedPersonas} Responsible or Accountable persona(s) have no relationship to users on the row-scoped master they work (rows = data_object ids; a view_all grant can satisfy it, see the judgment): ${listOf(missing)}`,
+    });
+  }
+  if (notChecked.length > 0) {
+    out.push({
+      id: "B7c",
+      result: "warn",
+      rows: notCheckedRows,
+      detail: `not checked: ${notChecked.length} of ${scoped.length} row-scoped master(s) (rows = data_object ids): ${listOf(notChecked)}`,
+    });
+  }
+  return out.length > 0 ? out : [pass("B7c", `${scoped.length} row-scoped masters checked, ${checkedPersonas} Responsible or Accountable persona(s), each with a relationship to users`)];
 }
 
 // =====================================================================================
 // B8. cross-domain relationships, outbound only (+ report-only inbound owed by the source)
 // =====================================================================================
 
-export type CrossEdgeInput = {
+export type CrossRelationshipInput = {
   domainId: number;
   masterIds: Set<number>;
   handoffs: HandoffRow[]; // any handoffs; filtered to this domain's boundary inside
@@ -341,13 +441,13 @@ export type CrossEdgeInput = {
 
 // Rows: handoff ids. A "clean payload -> target mapping" (SKILL.md B8): the event's entity is one
 // of this domain's masters, the payload is a different entity, mastered by the TARGET domain,
-// not one of this domain's masters, not platform_builtin. It needs the edge
-// `<event entity> -> <payload>`. Missing outbound edges fail (this domain owes them); the mirror
+// not one of this domain's masters, not platform_builtin. It needs the relationship
+// `<event entity> -> <payload>`. Missing outbound relationships fail (this domain owes them); the mirror
 // image on inbound handoffs is owed by the source domain's B8, so it is report-only (`warn`).
-export function checkCrossDomainEdges(x: CrossEdgeInput): Finding[] {
+export function checkCrossDomainRelationships(x: CrossRelationshipInput): Finding[] {
   const nameOf = x.nameOf ?? defaultName;
   const code = x.domainCode ?? defaultDomain;
-  const edges = new Set(x.rels.map((r) => `${r.data_object_id}|${r.related_data_object_id}`));
+  const relationshipKeys = new Set(x.rels.map((r) => `${r.data_object_id}|${r.related_data_object_id}`));
   type Gap = { from: number; to: number; other: number; handoffs: number[] };
   const scan = (outbound: boolean) => {
     const gaps = new Map<string, Gap>();
@@ -366,7 +466,7 @@ export function checkCrossDomainEdges(x: CrossEdgeInput): Finding[] {
       if (!x.masterIds.has(mine) || x.masterIds.has(theirs)) continue;
       if (!x.masterDomains(theirs)?.has(other)) continue;
       clean++;
-      if (edges.has(`${ev}|${payload}`)) continue;
+      if (relationshipKeys.has(`${ev}|${payload}`)) continue;
       const k = `${ev}|${payload}|${other}`;
       const g = gaps.get(k) ?? { from: ev, to: payload, other, handoffs: [] };
       g.handoffs.push(h.id);
@@ -393,7 +493,7 @@ export function checkCrossDomainEdges(x: CrossEdgeInput): Finding[] {
       detail: `report-only, owed by ${code(src)} B8 (inbound; rows = handoff ids): ${listOf(gs.map((g) => `${nameOf(g.from)} -> ${nameOf(g.to)} (handoff ${g.handoffs.join(", ")})`))}`,
     });
   }
-  if (out.length === 0) out.push(pass("B8", `${o.considered} outbound cross-domain handoffs, ${o.clean} clean payload -> target mappings, all edged (rows = handoff ids)`));
+  if (out.length === 0) out.push(pass("B8", `${o.considered} outbound cross-domain handoffs, ${o.clean} clean payload -> target mappings, all with a relationship (rows = handoff ids)`));
   return out;
 }
 
@@ -402,15 +502,15 @@ export function checkCrossDomainEdges(x: CrossEdgeInput): Finding[] {
 // =====================================================================================
 
 // SKILL.md B9: a state named like a published verb needs an `<entity>.<state>` event even when
-// it is not gated. `cancelled` is SKILL.md's own (BE) spelling; both spellings are matched.
-export const PUBLISHED_VERB_STATES = new Set(["approved", "signed", "accepted", "canceled", "cancelled", "closed", "hired", "terminated"]);
+// it is not gated.
+export const PUBLISHED_VERB_STATES = new Set(["approved", "signed", "accepted", "canceled", "closed", "hired", "terminated"]);
 
-// validate_cross_domain.ts q3: roles that may publish an event about an entity (consumer-only
+// validate_cross_domain.ts q3: held_as values that may publish an event about an entity (consumer-only
 // is excluded: a domain does not publish events about something it only reads).
-export const PUBLISH_ROLES = new Set(["master", "embedded_master", "contributor", "derived"]);
+export const PUBLISH_HELD_AS = new Set(["master", "embedded_master", "contributor", "derived"]);
 
 export function isPublishableBy(dmdoRows: DmdoRow[], dataObjectId: number): boolean {
-  return dmdoRows.some((r) => r.data_object_id === dataObjectId && PUBLISH_ROLES.has(r.role));
+  return dmdoRows.some((r) => r.data_object_id === dataObjectId && PUBLISH_HELD_AS.has(r.held_as));
 }
 
 // An event "covers" a state when it fires on the same entity and its to_state, or the segment
@@ -514,7 +614,7 @@ export function checkOutboundEvents(x: OutboundEventsInput): Finding[] {
       id: "B9",
       result: "fail",
       rows: unpublishable.map((h) => `handoff:${h.id}`),
-      detail: `${unpublishable.length} outbound handoff(s) fire an event on an entity this domain holds in no publishing role (validate_cross_domain q3): ${listOf(unpublishable.map((h) => `handoff ${h.id} ${nameOf(x.eventEntity(h.trigger_event_id as number) as number)} -> ${code(h.target_domain_id)}`))}`,
+      detail: `${unpublishable.length} outbound handoff(s) fire an event on an entity this domain holds with no publishing held_as value (validate_cross_domain q3): ${listOf(unpublishable.map((h) => `handoff ${h.id} ${nameOf(x.eventEntity(h.trigger_event_id as number) as number)} -> ${code(h.target_domain_id)}`))}`,
     });
   }
 
@@ -638,7 +738,7 @@ export function checkIntraDomainHandoffs(x: IntraHandoffInput): Finding[] {
 
 export type InboundCoverageInput = {
   domainId: number;
-  deps: DmdoRow[]; // dmdo rows on this domain's modules (non-dependency roles are ignored)
+  deps: DmdoRow[]; // dmdo rows on this domain's modules (non-dependency held_as values are ignored)
   masterIds: Set<number>;
   masterDomains: (dataObjectId: number) => Set<number> | undefined;
   isBuiltin: (dataObjectId: number) => boolean; // built-ins have no owner and owe no handoff
@@ -647,7 +747,7 @@ export type InboundCoverageInput = {
   nameOf?: NameOf;
 };
 
-const ROLE_STRENGTH = ["master", "embedded_master", "contributor", "consumer", "derived"];
+const HELD_AS_STRENGTH = ["master", "embedded_master", "contributor", "consumer", "derived"];
 
 // Rows: data_object ids (the dependency owed). Discovery reads domain_module_data_objects only
 // (the deprecated domain_data_objects rollup is never read). An entity this domain masters on any
@@ -658,10 +758,10 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
   const inbound = x.handoffs.filter((h) => h.target_domain_id === x.domainId && h.source_domain_id !== x.domainId);
   const fromDomains = new Set(inbound.map((h) => h.source_domain_id));
   const deps = groupBy(
-    x.deps.filter((r) => DEPENDENCY_ROLES.has(r.role) && !x.masterIds.has(r.data_object_id) && !x.isBuiltin(r.data_object_id)),
+    x.deps.filter((r) => DEPENDENCY_HELD_AS.has(r.held_as) && !x.masterIds.has(r.data_object_id) && !x.isBuiltin(r.data_object_id)),
     (r) => r.data_object_id,
   );
-  type Owed = { owner: number; doId: number; role: string; install: string };
+  type Owed = { owner: number; doId: number; held_as: string; install: string };
   const owed: Owed[] = [];
   let unowned = 0;
   for (const [doId, rs] of [...deps.entries()].sort((a, b) => a[0] - b[0])) {
@@ -670,11 +770,11 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
       unowned++;
       continue;
     }
-    const strongest = [...rs].sort((a, b) => ROLE_STRENGTH.indexOf(a.role) - ROLE_STRENGTH.indexOf(b.role))[0];
+    const strongest = [...rs].sort((a, b) => HELD_AS_STRENGTH.indexOf(a.held_as) - HELD_AS_STRENGTH.indexOf(b.held_as))[0];
     const install = rs.some((r) => !r.is_install_optional) ? "always installed" : "install optional";
     for (const owner of owners) {
       const hit = inbound.some((h) => h.source_domain_id === owner && h.data_object_id === doId);
-      if (!hit) owed.push({ owner, doId, role: strongest.role, install });
+      if (!hit) owed.push({ owner, doId, held_as: strongest.held_as, install });
     }
   }
   const out: Finding[] = [
@@ -688,7 +788,7 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
       id: "B10",
       result: "warn",
       rows: os.map((o) => o.doId),
-      detail: `report-only: ${code(owner)} B9 owes outbound on ${os.length} dependenc(ies) (rows = data_object ids): ${listOf(os.map((o) => `${nameOf(o.doId)} (${o.role} + ${o.install})`))}`,
+      detail: `report-only: ${code(owner)} B9 owes outbound on ${os.length} dependenc(ies) (rows = data_object ids): ${listOf(os.map((o) => `${nameOf(o.doId)} (${o.held_as} + ${o.install})`))}`,
     });
   }
   return out;
@@ -855,7 +955,7 @@ export function conditionalToken(name: string): string | null {
 // user-recorded kept-required decision, neither of which the catalog stores.
 export function checkConditionalMasters(rows: DmdoRow[], opts: { nameOf: NameOf; moduleLabel?: Label }): Finding[] {
   const mod = opts.moduleLabel ?? defaultModule;
-  const req = rows.filter((r) => r.role === "master" && !r.is_install_optional);
+  const req = rows.filter((r) => r.held_as === "master" && !r.is_install_optional);
   const hits = req.filter((r) => conditionalToken(opts.nameOf(r.data_object_id)) != null);
   if (hits.length === 0) return [pass("B14", `${req.length} master + always installed row(s), none matching a statute token (rows = data_object ids)`)];
   const ids = [...new Set(hits.map((r) => r.data_object_id))].sort(byNum);
@@ -890,191 +990,22 @@ export function checkPersonalContentClass(masters: MasterRow[]): Finding[] {
 }
 
 // =====================================================================================
-// B16. no British-English spellings (curated map from be_spelling_sweep.ts)
+// B16. no British spellings (the word map, columns and scanning live in ../british_spelling.ts)
 // =====================================================================================
 
-// Confirmed -ize verb STEMS (text before "ise"). Each stem+suffix below is a real BE form whose AE
-// spelling swaps `is` for `iz`; AE-native -ise words (enterprise, comprise, surprise, advertise,
-// supervise, franchise, ...) are NOT here, so they are never generated.
-const IZE_STEMS = [
-  "organ", "priorit", "categor", "optim", "normal", "standard", "central", "decentral", "util",
-  "special", "visual", "synchron", "author", "capital", "final", "material", "monet", "digit",
-  "mobil", "harmon", "custom", "minim", "maxim", "emphas", "summar", "recogn", "real", "character",
-  "commercial", "industrial", "legitim", "familiar", "regular", "modern", "formal", "neutral",
-  "rational", "revital", "stabil", "steril", "subsid", "apolog", "colon", "critic", "homogen",
-  "hospital", "hypothes", "motor", "patron", "penal", "pressur", "public", "random", "scrutin",
-  "sensit", "social", "symbol", "sympath", "theor", "marginal", "liberal", "fertil", "civil",
-  "item", "global", "local", "computer", "personal", "token",
-];
-const IZE_SUFFIXES: [string, string][] = [
-  ["ise", "ize"], ["ised", "ized"], ["ising", "izing"], ["ises", "izes"],
-  ["isation", "ization"], ["isations", "izations"], ["iser", "izer"], ["isers", "izers"],
-  ["isable", "izable"], ["isational", "izational"], ["isationally", "izationally"],
-];
+export { BE_AE_MAP, fixBritishSpelling, scanBritishSpelling };
 
-// -yse verbs. "analyses" is deliberately omitted: it is also the AE plural of "analysis".
-const YSE: [string, string][] = [
-  ["analyse", "analyze"], ["analysed", "analyzed"], ["analysing", "analyzing"], ["analyser", "analyzer"],
-  ["paralyse", "paralyze"], ["paralysed", "paralyzed"], ["paralysing", "paralyzing"],
-  ["catalyse", "catalyze"], ["catalysed", "catalyzed"], ["catalysing", "catalyzing"],
-];
+export type SpellingScope = { table: string; rows: Record<string, unknown>[] };
 
-// Explicit pairs (whole-word, case-insensitive). Grouped only for readability.
-const EXPLICIT: [string, string][] = [
-  // -our -> -or
-  ["behaviour", "behavior"], ["behaviours", "behaviors"], ["behavioural", "behavioral"],
-  ["colour", "color"], ["colours", "colors"], ["coloured", "colored"], ["colouring", "coloring"], ["colourful", "colorful"],
-  ["favour", "favor"], ["favours", "favors"], ["favoured", "favored"], ["favourite", "favorite"], ["favourites", "favorites"], ["favourable", "favorable"],
-  ["flavour", "flavor"], ["flavours", "flavors"],
-  ["honour", "honor"], ["honours", "honors"], ["honoured", "honored"],
-  ["labour", "labor"], ["laboured", "labored"],
-  ["neighbour", "neighbor"], ["neighbours", "neighbors"], ["neighbouring", "neighboring"],
-  ["rumour", "rumor"], ["rumours", "rumors"], ["vapour", "vapor"], ["vigour", "vigor"], ["odour", "odor"],
-  ["harbour", "harbor"], ["valour", "valor"], ["savour", "savor"], ["endeavour", "endeavor"], ["endeavours", "endeavors"],
-  ["splendour", "splendor"], ["demeanour", "demeanor"], ["candour", "candor"], ["clamour", "clamor"],
-  ["parlour", "parlor"], ["fervour", "fervor"], ["rigour", "rigor"], ["rigours", "rigors"], ["saviour", "savior"],
-  // -re -> -er
-  ["centre", "center"], ["centres", "centers"], ["centred", "centered"], ["centring", "centering"],
-  ["theatre", "theater"], ["theatres", "theaters"], ["fibre", "fiber"], ["fibres", "fibers"],
-  ["calibre", "caliber"], ["metre", "meter"], ["metres", "meters"], ["litre", "liter"], ["litres", "liters"],
-  ["spectre", "specter"], ["lustre", "luster"], ["sombre", "somber"], ["meagre", "meager"], ["sabre", "saber"],
-  ["kilometre", "kilometer"], ["centimetre", "centimeter"], ["millimetre", "millimeter"],
-  // -ence/-ense, -ise/-ice (nouns/verbs that change c<->s)
-  ["licence", "license"], ["licences", "licenses"], ["defence", "defense"], ["defences", "defenses"],
-  ["offence", "offense"], ["offences", "offenses"], ["pretence", "pretense"],
-  ["practise", "practice"], ["practised", "practiced"], ["practising", "practicing"],
-  // -logue -> -log
-  ["catalogue", "catalog"], ["catalogues", "catalogs"], ["catalogued", "cataloged"], ["cataloguing", "cataloging"],
-  ["dialogue", "dialog"], ["dialogues", "dialogs"], ["analogue", "analog"], ["analogues", "analogs"],
-  // BE double-L -> AE single-L
-  ["cancelled", "canceled"], ["cancelling", "canceling"], ["canceller", "canceler"], ["cancellation", "cancellation"],
-  ["modelling", "modeling"], ["modelled", "modeled"], ["modeller", "modeler"],
-  ["labelling", "labeling"], ["labelled", "labeled"], ["labeller", "labeler"],
-  ["signalling", "signaling"], ["signalled", "signaled"],
-  ["travelling", "traveling"], ["travelled", "traveled"], ["traveller", "traveler"], ["travellers", "travelers"],
-  ["fuelling", "fueling"], ["fuelled", "fueled"], ["levelling", "leveling"], ["levelled", "leveled"],
-  ["totalling", "totaling"], ["totalled", "totaled"], ["channelling", "channeling"], ["channelled", "channeled"],
-  ["counselling", "counseling"], ["counselled", "counseled"], ["counsellor", "counselor"], ["counsellors", "counselors"],
-  ["dialling", "dialing"], ["dialled", "dialed"], ["funnelling", "funneling"], ["funnelled", "funneled"],
-  ["marvelled", "marveled"], ["parcelled", "parceled"], ["pencilled", "penciled"], ["rivalled", "rivaled"],
-  ["jewellery", "jewelry"], ["jeweller", "jeweler"],
-  // BE single-L -> AE double-L
-  ["fulfil", "fulfill"], ["fulfils", "fulfills"], ["fulfilment", "fulfillment"], ["fulfilments", "fulfillments"],
-  ["enrol", "enroll"], ["enrols", "enrolls"], ["enrolment", "enrollment"], ["enrolments", "enrollments"],
-  ["instalment", "installment"], ["instalments", "installments"], ["instil", "instill"], ["instils", "instills"],
-  ["skilful", "skillful"], ["wilful", "willful"], ["distil", "distill"], ["distils", "distills"],
-  // misc
-  ["programme", "program"], ["programmes", "programs"], ["grey", "gray"], ["greyscale", "grayscale"],
-  ["ageing", "aging"], ["judgement", "judgment"], ["judgements", "judgments"],
-  ["acknowledgement", "acknowledgment"], ["acknowledgements", "acknowledgments"],
-  ["manoeuvre", "maneuver"], ["manoeuvres", "maneuvers"], ["mould", "mold"], ["moulds", "molds"],
-  ["smoulder", "smolder"], ["draught", "draft"], ["plough", "plow"],
-  ["sceptical", "skeptical"], ["sceptic", "skeptic"], ["scepticism", "skepticism"],
-  ["cheque", "check"], ["cheques", "checks"], ["chequebook", "checkbook"], ["kerb", "curb"],
-  ["tyre", "tire"], ["tyres", "tires"], ["speciality", "specialty"], ["specialities", "specialties"],
-  ["storey", "story"], ["storeys", "stories"], ["cosy", "cozy"], ["dependant", "dependent"], ["dependants", "dependents"],
-  ["whilst", "while"], ["amongst", "among"], ["focussed", "focused"], ["focussing", "focusing"],
-  ["co-ordinate", "coordinate"], ["co-ordination", "coordination"], ["co-operate", "cooperate"], ["co-operation", "cooperation"],
-  ["benefitted", "benefited"], ["benefitting", "benefiting"], ["organisational", "organizational"],
-];
-
-export const BE_AE_MAP = new Map<string, string>();
-for (const stem of IZE_STEMS) for (const [be, ae] of IZE_SUFFIXES) BE_AE_MAP.set(stem + be, stem + ae);
-for (const [be, ae] of YSE) BE_AE_MAP.set(be, ae);
-for (const [be, ae] of EXPLICIT) if (be !== ae) BE_AE_MAP.set(be, ae);
-
-// Single whole-word, case-insensitive matcher over every BE key (longest first).
-const BE_KEYS = [...BE_AE_MAP.keys()].sort((a, b) => b.length - a.length).map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-const BE_RE = new RegExp(`\\b(${BE_KEYS.join("|")})\\b`, "gi");
-
-function applyCase(match: string, ae: string): string {
-  if (match === match.toUpperCase() && match !== match.toLowerCase()) return ae.toUpperCase();
-  if (match[0] === match[0].toUpperCase()) return ae[0].toUpperCase() + ae.slice(1);
-  return ae;
-}
-
-// Returns the AE text and each old->new substitution made.
-export function fixBritishSpelling(text: string): { fixed: string; hits: string[] } {
-  const hits: string[] = [];
-  const fixed = text.replace(BE_RE, (m) => {
-    const ae = BE_AE_MAP.get(m.toLowerCase());
-    if (!ae) return m;
-    const out = applyCase(m, ae);
-    if (out !== m) hits.push(`${m}->${out}`);
-    return out;
-  });
-  return { fixed, hits };
-}
-
-// AUTOFIX: prose columns we author (be_spelling_sweep.ts patches them on --write).
-// Differences from the sweep's original map, all three dead entries there (its `select=*` simply
-// never returned them; an explicit select would 42703): naming_authority_rationale lives on
-// data_objects (domains has no such column), domain_modules has no `notes` column, and the APQC
-// table is business_processes (`processes` is the platform built-in, whose text column is `name`).
-// Checked against /fields on 2026-11-01.
-export const BE_AUTOFIX_COLUMNS: Record<string, string[]> = {
-  domains: ["domain_name", "description", "business_logic", "catalog_tagline", "catalog_description", "notes"],
-  domain_modules: ["domain_module_name", "description", "catalog_tagline", "catalog_description", "specification_requirements"],
-  data_objects: ["singular_label", "plural_label", "description", "naming_authority_rationale", "notes"],
-  capabilities: ["capability_name", "description"],
-  handoffs: ["description", "notes"],
-  // state / event vocabulary is free text cross-referenced only within the lifecycle + event
-  // model, so it is safe to fix as long as state_name / to_state / from_state move together.
-  trigger_events: ["description", "event_name", "to_state", "from_state"],
-  data_object_aliases: ["alias_name", "notes"],
-  data_object_lifecycle_states: ["description", "notes", "state_name", "permission_verb_override"],
-  business_functions: ["business_function_name", "description"],
-  domain_roles: ["role_name", "description"],
-  skills: ["description", "trigger_keywords"],
-  tools: ["description"],
-};
-
-// REPORT-ONLY: natural keys / codes (renames cascade to FKs) and externally-sourced names
-// (APQC processes, statutes, vendor / solution proper names). Listed, never auto-changed.
-export const BE_REPORT_COLUMNS: Record<string, string[]> = {
-  domains: ["domain_code"],
-  domain_modules: ["domain_module_code"],
-  data_objects: ["data_object_name"],
-  capabilities: ["capability_code"],
-  domain_roles: ["role_code"],
-  tools: ["tool_name"],
-  skills: ["skill_name"],
-  business_processes: ["process_name", "description"],
-  regulations: ["regulation_name", "description"],
-  solutions: ["solution_name", "description", "notes"],
-  vendors: ["vendor_name", "description", "notes"],
-  industries: ["industry_name"],
-};
-
-export type SpellingHit = { table: string; id: number; column: string; hits: string[]; autofix: boolean };
-
-export function scanBritishSpelling(
-  table: string,
-  rows: Record<string, unknown>[],
-  cols: { autofix?: Record<string, string[]>; report?: Record<string, string[]> } = {},
-): SpellingHit[] {
-  const auto = (cols.autofix ?? BE_AUTOFIX_COLUMNS)[table] ?? [];
-  const report = (cols.report ?? BE_REPORT_COLUMNS)[table] ?? [];
-  const out: SpellingHit[] = [];
-  for (const row of rows) {
-    for (const [list, autofix] of [[auto, true], [report, false]] as const) {
-      for (const column of list) {
-        const v = row[column];
-        if (typeof v !== "string" || v.length === 0) continue;
-        const { hits } = fixBritishSpelling(v);
-        if (hits.length) out.push({ table, id: row.id as number, column, hits, autofix });
-      }
-    }
-  }
-  return out;
-}
-
-// Rows: "<table>:<id>". AUTOFIX hits fail (be_spelling_sweep.ts --write fixes them); hits in
-// identifier / external-name columns are `warn` (manual judgment: a rename cascades, a brand may
-// legitimately carry a BE token).
-export function checkBritishSpelling(scope: { table: string; rows: Record<string, unknown>[] }[]): Finding[] {
-  const hits = scope.flatMap((s) => scanBritishSpelling(s.table, s.rows));
+// Rows: "<table>:<id>". In this domain's rows, a British word in prose fails (be_spelling_sweep.ts --write fixes it) and a
+// British word in a name, a code or an identifier token warns (a rename is a manual decision, and the allow-list in
+// british_spelling.ts covers real brands). Rows no single domain owns (`catalogWide`) warn, because they should not
+// fail one domain's check; be_spelling_sweep.ts --check is where they fail the build.
+export function checkBritishSpelling(scope: SpellingScope[], opts: { columns?: SpellingColumns; catalogWide?: SpellingScope[] } = {}): Finding[] {
+  const hits = scope.flatMap((s) => scanBritishSpelling(s.table, s.rows, opts.columns));
+  const wide = (opts.catalogWide ?? []).flatMap((s) => scanBritishSpelling(s.table, s.rows, opts.columns));
   const rowCount = scope.reduce((n, s) => n + s.rows.length, 0);
+  const wideCount = (opts.catalogWide ?? []).reduce((n, s) => n + s.rows.length, 0);
   const fmt = (h: SpellingHit) => `${h.table}.${h.column} id=${h.id}: ${h.hits.join(", ")}`;
   const rowsOf = (hs: SpellingHit[]) => [...new Set(hs.map((h) => `${h.table}:${h.id}`))].sort();
   const auto = hits.filter((h) => h.autofix);
@@ -1093,9 +1024,20 @@ export function checkBritishSpelling(scope: { table: string; rows: Record<string
       id: "B16",
       result: "warn",
       rows: rowsOf(report),
-      detail: `${report.length} REPORT-only hit(s) in identifier columns (manual: renames cascade): ${listOf(report.map(fmt))}`,
+      detail: `${report.length} REPORT-only hit(s) in names and identifiers (manual: a rename cascades): ${listOf(report.map(fmt))}`,
     });
   }
-  if (out.length === 0) out.push(pass("B16", `${rowCount} row(s) across ${scope.length} table(s) scanned, no British-English spelling (rows = <table>:<id>)`));
+  if (wide.length) {
+    out.push({
+      id: "B16",
+      result: "warn",
+      rows: rowsOf(wide),
+      detail: `${wide.length} hit(s) in catalog-wide rows no single domain owns (fix: be_spelling_sweep.ts): ${listOf(wide.map(fmt))}`,
+    });
+  }
+  if (out.length === 0) {
+    const across = (opts.catalogWide ?? []).length ? `, plus ${wideCount} catalog-wide row(s) across ${opts.catalogWide!.length} table(s)` : "";
+    out.push(pass("B16", `${rowCount} row(s) across ${scope.length} table(s) scanned${across}, no British spelling (rows = <table>:<id>)`));
+  }
   return out;
 }

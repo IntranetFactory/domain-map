@@ -3,14 +3,14 @@
 ## What this domain is
 Build the worker-skill substrate every other talent system reads from. Curate the ontology, validate per-worker proficiency, and serve gap signals to learning, mobility, and planning.
 
-Maintain the skills ontology and competency models in one place (parent/child/related/equivalent edges, proficiency scales, role profiles), then build a validated skill profile for each worker through self-assessment, peer endorsement, and automated inference. From there, surface skill gaps and feed clean signals out to your learning, talent-mobility, and workforce-planning systems.
+Maintain the skills ontology and competency models in one place (parent/child/related/equivalent relationships, proficiency scales, role profiles), then build a validated skill profile for each worker through self-assessment, peer endorsement, and automated inference. From there, surface skill gaps and feed clean signals out to your learning, talent-mobility, and workforce-planning systems.
 
 ---
 
 q1: (answer this first) How should Skills Management be shaped: keep the two modules it has, or carve out a third sub-module for ontology versioning?
 
 - a) Keep the two-module shape (Taxonomy and Profile) for now, and defer the split decision until the speculative entities have been vetted.
-- b) Pre-commit now to a third module (SKILLS-MGMT-ONTOLOGY-VERSIONING) shaped around taxonomy versioning and ontology edges.
+- b) Pre-commit now to a third module (SKILLS-MGMT-ONTOLOGY-VERSIONING) shaped around taxonomy versioning and ontology relationships.
 - c) Hold everything (including approving the two missing masters below) until the speculative entity list is vetted.
 
 Recommended: a. The specialist vendors all package taxonomy versioning as a release surface on the same ontology product, not as a separately bounded module: Lightcast Open Skills ships monthly versions behind a /versions/{version} API on the one taxonomy, TechWolf exposes taxonomy snapshots inside its Skills Engine, and 365Talents pins profiles to a release of the same skills platform. None of them carve versioning out as its own module, so a third SKILLS-MGMT-ONTOLOGY-VERSIONING module is premature until the speculative versioning entities (B3-1 taxonomy_versions, B3-7 inference_models, B3-8 governance_policies) actually land; (c) needlessly stalls two already-confirmed masters.
@@ -19,9 +19,9 @@ a1:
 
 ---
 
-q2: Should I add the two confirmed missing masters, skill_proficiency_levels (the proficiency-scale vocabulary) and skill_relationships (the ontology edge table), to the Taxonomy module now? (yes/no)
+q2: Should I add the two confirmed missing masters, skill_proficiency_levels (the proficiency-scale vocabulary) and skill_relationships (the ontology relationship table), to the Taxonomy module now? (yes/no)
 
-Recommended: yes. Both are confirmed across all five specialist vendors and the ontology cannot be navigated without the edge table; the proficiency scale has no anchor table today. Additive, so it does not wait on the split decision.
+Recommended: yes. Both are confirmed across all five specialist vendors and the ontology cannot be navigated without the relationship table; the proficiency scale has no anchor table today. Additive, so it does not wait on the split decision.
 
 a2:
 

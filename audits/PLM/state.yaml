@@ -29,8 +29,8 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass (personas are not auto-authored)."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (4 RBAC roles exist as `roles`, but no operational `domain_roles` personas.)"
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (4 RBAC roles exist as `roles`, but no operational `personas` personas.)"
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     deferred_reason: "Persona / RACI authoring is held for a dedicated persona pass (not part of the bulk state-driven execute). Candidate personas (function-anchored under R&D / Product Engineering): Design Engineer, CAD / PDM Librarian, Manufacturing Engineer, Engineering Change Manager / CAB Chair, Regulatory Affairs Specialist, Requirements Engineer."
     extra_phase_p_triage: "2026-06-02"
 
@@ -61,16 +61,16 @@ b1b:
   - id: B1B-SUPPLIERS-UNOWNED-MASTER
     summary: "suppliers (206) is contributor in PLM-COMPLIANCE but no domain in the catalog masters it."
     finding: |
-      DMDO row 314 has `data_object_id=206, role=contributor, necessity=required`
-      in PLM-COMPLIANCE 69. `/domain_module_data_objects?data_object_id=eq.206&role=eq.master`
+      DMDO row 314 has `data_object_id=206, held_as=contributor, necessity=required`
+      in PLM-COMPLIANCE 69. `/domain_module_data_objects?data_object_id=eq.206&held_as=eq.master`
       returns 0 rows catalog-wide. `data_objects.kind='domain_owned'` on row 206
       (not platform_builtin). Rule #11's strict integrity check only fires on
       `embedded_master`, so this is not a hard B5 fail, but it remains a latent
-      boundary edge: the dependency is unowned. When S2P or a future SUP-LIFE /
+      boundary relationship: the dependency is unowned. When S2P or a future SUP-LIFE /
       supplier-master domain authors the canonical `master` row, the existing
       `contributor` row will sit alongside correctly.
     blocked_by:
-      - {type: catalog_addition, scope: domains, trigger: "S2P or a SUP-LIFE/supplier-master domain authors role='master' on suppliers (data_object_id=206)"}
+      - {type: catalog_addition, scope: domains, trigger: "S2P or a SUP-LIFE/supplier-master domain authors held_as='master' on suppliers (data_object_id=206)"}
     affected_entities: [suppliers]
     affected_modules: [69]
 
@@ -242,7 +242,7 @@ b3:
     candidate: "PLM-PORTFOLIO module covering engineering program / portfolio surface (engineering_projects, engineering_deliverables, program_milestones)."
     rationale: |
       All 4 PLM flagships ship a program-planning surface above engineering-core
-      (Program Planning / Project Link / Project Management / Program Management).
+      (Program Planning / Project Relationship / Project Management / Program Management).
       Currently the PLM domain has no such module. Could be a deliberate scope
       decision (PLM-as-engineering-substrate, leaving program-management to SPM /
       PROD-MGMT), but every flagship treats it as in-scope. If included, this

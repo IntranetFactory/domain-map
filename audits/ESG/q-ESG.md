@@ -31,13 +31,13 @@ a2:
 
 ---
 
-q3: ESG consumes EPM-owned financial plans as a required input, but nothing publishes that data to ESG in either direction. How should that link be handled?
+q3: ESG consumes EPM-owned financial plans as a required input, but nothing publishes that data to ESG in either direction. How should that relationship be handled?
 
 - a) Keep it, and ask EPM to publish a "financial plan updated" handoff outbound to ESG.
 - b) Downgrade it to optional and document it as forward-looking.
 - c) Remove it as scope creep.
 
-Recommended: a. The link is real for forward-looking disclosures, but it only works if EPM actually emits the update; keeping it plus requesting the publish closes the loop. Pick (b) if you want a leaner deployability story for smaller tenants.
+Recommended: a. The relationship is real for forward-looking disclosures, but it only works if EPM actually emits the update; keeping it plus requesting the publish closes the loop. Pick (b) if you want a leaner deployability story for smaller tenants.
 
 a3:
 

@@ -24,5 +24,5 @@ const ph: Array<{ including_permission_id: number; included_permission_id: numbe
 const phTouchCatalog = ph.filter((e) => catalogPermIds.has(e.including_permission_id) || catalogPermIds.has(e.included_permission_id)).length;
 console.log(`permission_hierarchy: ${ph.length} total | touch a catalog permission: ${phTouchCatalog}`);
 
-const rm: Array<{ id: number }> = await pg("GET", "/role_modules?select=id&limit=50000");
-console.log(`role_modules: ${rm.length} total`);
+const rm: Array<{ id: number }> = await pg("GET", "/persona_modules?select=id&limit=50000");
+console.log(`persona_modules: ${rm.length} total`);

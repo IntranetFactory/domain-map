@@ -46,7 +46,7 @@ a3:
 
 ---
 
-q4: You asked whether regulations can be optional so EU operators do not import US rules and vice versa. Yes, they can: each regulation link carries its own applicability, so a tenant only imports what applies to its jurisdiction. On that basis, which set should Fleet carry?
+q4: You asked whether regulations can be optional so EU operators do not import US rules and vice versa. Yes, they can: each regulation relationship carries its own applicability, so a tenant only imports what applies to its jurisdiction. On that basis, which set should Fleet carry?
 
 - a) Floor plus stretch, all conditional: FMCSA 391/395/396, IFTA, IRP, FMCSA Clearinghouse (US), plus GASB 87, SOX, EU Mobility Package, ADR, Eurovignette (EU/other), each applied only where it applies.
 - b) Floor required, stretch conditional.

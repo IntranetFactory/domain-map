@@ -77,7 +77,7 @@ b2:
       consuming a cross-cutting route capability would lose the settlement and par-replenishment
       semantics. (Industry-term collision noted: WorkWave also markets a product called RouteManager;
       the textile vendors do not integrate it, they ship their own.) Master here; optionally expose
-      vehicle/asset and driver hours-of-service edges to FLEET-MGMT, but do not consume route execution.
+      vehicle/asset and driver hours-of-service relationships to FLEET-MGMT, but do not consume route execution.
 
   - id: B2-UNIFORM-VS-LINEN
     summary: Uniform rental and flat-linen (hospitality/healthcare) rental in one domain, or a meaningful split.
@@ -130,7 +130,7 @@ b3:
     rationale: >-
       Route drivers running CDL vehicles are subject to DOT/FMCSA hours-of-service (49 CFR 395) and
       driver-qualification-file (49 CFR 391) rules. These are additive compliance entities for the
-      route_delivery module. They could alternatively be edges exposed to FLEET-MGMT (which already
+      route_delivery module. They could alternatively be relationships exposed to FLEET-MGMT (which already
       models driver records); surface the choice when the domain is built. Non-blocking, never a split.
     vendor_evidence: [ABS, Textile Technologies, LinenTech]
     proposed_module: route_delivery

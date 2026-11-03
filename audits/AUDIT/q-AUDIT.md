@@ -15,7 +15,7 @@ q1: (answer this first) How should Audit Management be split into modules (the s
 
 - b) Three modules: Universe and Risk (audit universe and audit-scoped risk assessment), Fieldwork (engagements, work papers, control tests, walkthroughs, evidence), and Issues and Reporting (findings, responses, recommendations, reports, follow-up actions).
 
-Recommended: a. The two-module split is the vendor-majority cut. Four of the five flagships run the whole plan-to-report lifecycle on one engagement spine and split only at the planning-vs-issues seam: AuditBoard's OpsAudit covers planning through fieldwork through findings through reporting in one product (SOXHUB and RiskOversight are separate SOX-testing and risk-register surfaces, not a fieldwork-vs-issues split); TeamMate+ is a single end-to-end product "from establishing annual plans ... to closing the audit and follow up"; Workiva runs internal audit, SOX, and ESG assurance on one connected data layer; ServiceNow IRM treats audit as one workflow (plans group engagements, engagements carry tasks and observations). Only Diligent HighBond separates fieldwork (its Projects app) from issue management (its Results app) at the product-surface level, which is the case for three modules. Three modules give cleaner staff-auditor-vs-director role surfaces but roughly double the cross-module handoffs (about 8 vs about 3), and no flagship except HighBond reinforces the universe/risk-vs-fieldwork seam. This choice drives every module, capability, lifecycle owner, and per-module link below it, so it unlocks the rest of the build.
+Recommended: a. The two-module split is the vendor-majority cut. Four of the five flagships run the whole plan-to-report lifecycle on one engagement spine and split only at the planning-vs-issues seam: AuditBoard's OpsAudit covers planning through fieldwork through findings through reporting in one product (SOXHUB and RiskOversight are separate SOX-testing and risk-register surfaces, not a fieldwork-vs-issues split); TeamMate+ is a single end-to-end product "from establishing annual plans ... to closing the audit and follow up"; Workiva runs internal audit, SOX, and ESG assurance on one connected data layer; ServiceNow IRM treats audit as one workflow (plans group engagements, engagements carry tasks and observations). Only Diligent HighBond separates fieldwork (its Projects app) from issue management (its Results app) at the product-surface level, which is the case for three modules. Three modules give cleaner staff-auditor-vs-director role surfaces but roughly double the cross-module handoffs (about 8 vs about 3), and no flagship except HighBond reinforces the universe/risk-vs-fieldwork seam. This choice drives every module, capability, lifecycle owner, and per-module relationship below it, so it unlocks the rest of the build.
 
 a1:
 
@@ -117,7 +117,7 @@ q11: Audit has five heavy neighbor domains (GRC, finance, performance management
 - b) Defer it to a follow-up audit
 - c) Run it only for the two heaviest neighbors (GRC and finance)
 
-Recommended: b. The domain has no modules yet, so cross-module reconciliation mostly produces empty-link noise today. Defer until the build lands.
+Recommended: b. The domain has no modules yet, so cross-module reconciliation mostly produces empty-relationship noise today. Defer until the build lands.
 
 a11:
 

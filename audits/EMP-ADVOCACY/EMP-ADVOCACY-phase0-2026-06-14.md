@@ -76,7 +76,7 @@ Entity names snake_case_plural, vendor-neutral (Rule #18). Prefixed `advocacy_*`
 | advocacy_content_streams | Config (topic/feed channels) | x | x | x | x | x | Core | content-distribution |
 | advocacy_shares | Master (an employee's reshare action) | x | x | x | x | x | Core | content-distribution |
 | advocate_profiles | Master (user-typed advocate, HCM employee) | x | x | x | x | x | Core | content-distribution |
-| advocacy_social_accounts | Junction (advocate's linked LinkedIn/X/FB) | x | x | x | x | x | Core | content-distribution |
+| advocacy_social_accounts | Junction (advocate's related LinkedIn/X/FB) | x | x | x | x | x | Core | content-distribution |
 | advocacy_suggested_posts | Config (pre-written share copy) | x | x | x | x | x | Core | content-distribution |
 | advocacy_internal_newsletters | Engagement (digest of content to advocates) | x | x | x | x |  | Common | content-distribution |
 | advocacy_points_ledger | Junction (points earned per action) | x | x | x | x | x | Core | gamification-analytics |
@@ -94,13 +94,13 @@ Not a heavily regulated market. `advocacy_content_approvals` covers brand/regula
 
 ## Modularization hypothesis (>=2 full modules, Rule #14)
 
-- **EMP-ADVOCACY-CONTENT-DISTRIBUTION** — curate brand content and broadcast it to employees, who reshare to their personal networks. Masters: advocacy_programs, advocacy_content, advocacy_shares, advocate_profiles, advocacy_campaigns. Carries the share workflow + content lifecycle + advocate onboarding/social-account linking.
+- **EMP-ADVOCACY-CONTENT-DISTRIBUTION** — curate brand content and broadcast it to employees, who reshare to their personal networks. Masters: advocacy_programs, advocacy_content, advocacy_shares, advocate_profiles, advocacy_campaigns. Carries the share workflow + content lifecycle + advocate onboarding/social-account relating.
 - **EMP-ADVOCACY-GAMIFICATION-ANALYTICS** — incentivize and measure advocacy. Masters: advocacy_leaderboards, advocacy_rewards. Carries points ledger, advocate/influencer scoring, reach/EMV metrics, and share-to-revenue attribution (outbound handoff to SMM attribution and REV-INTEL).
 
-Cross-domain edges: consume HCM `employees` (advocate is HCM employee); consume SMM brand `content`; outbound: advocacy share -> SMM social attribution, advocacy reach/EMV -> REV-INTEL; relate to EMP-EXP (engaged employees) and INTRANET (internal comms seam). Advocate is user-typed (Rule #10).
+Cross-domain relationships: consume HCM `employees` (advocate is HCM employee); consume SMM brand `content`; outbound: advocacy share -> SMM social attribution, advocacy reach/EMV -> REV-INTEL; relate to EMP-EXP (engaged employees) and INTRANET (internal comms seam). Advocate is user-typed (Rule #10).
 
 ## B3 / follow-ups (non-blocking)
 
 - b3: customer/partner advocacy (Influitive/PostBeyond seam) is a separate idea, not part of this domain.
-- b3: social-selling pipeline depth (Seismic/EveryoneSocial angle) leans toward SALES-ENG; keep attribution edge only.
+- b3: social-selling pipeline depth (Seismic/EveryoneSocial angle) leans toward SALES-ENG; keep attribution relationship only.
 - Note for SMM: its description's "influencer/advocacy programs" clause should be narrowed to influencer-only once EMP-ADVOCACY lands (controller decision; not done here).

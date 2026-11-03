@@ -33,7 +33,7 @@ b1b:
     finding: >-
       Zero data_object_lifecycle_states rows across all 6 SMM masters. Workflow-bearing
       state machines per audit observation, social_posts (draft -> submitted ->
-      approved -> scheduled -> published / failed / cancelled), social_messages
+      approved -> scheduled -> published / failed / canceled), social_messages
       (new -> triaged -> assigned -> responded / escalated -> closed), influencers
       (prospect -> outreach -> contracted -> active -> terminated), social_accounts
       (pending_connection -> active -> expired -> disconnected). social_listening_topics
@@ -48,7 +48,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: has_submit_lock / has_single_approver on social_posts shape the gate-state requires_permission flags}
     affected_masters:
-      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: draft->submitted->approved->scheduled->published/failed/cancelled}
+      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: draft->submitted->approved->scheduled->published/failed/canceled}
       - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: new->triaged->assigned->responded/escalated->closed}
       - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: prospect->outreach->contracted->active->terminated}
       - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: pending_connection->active->expired->disconnected}
@@ -216,10 +216,10 @@ b2:
     question: >-
       SMM (id 106) currently has parent_domain_id=69 (CRM). Flagship vendor
       taxonomies (Hootsuite, Sprout, Sprinklr) position SMM as a sibling of CRM,
-      not a child; the parent linkage looks like a pre-modular artifact.
+      not a child; the parent relationship looks like a pre-modular artifact.
     options:
       - (a) PATCH parent_domain_id to NULL (SMM stands alone)
-      - (b) Re-parent to a different leadership domain (if a MARTECH leadership tier exists, link there)
+      - (b) Re-parent to a different leadership domain (if a MARTECH leadership tier exists, relationship there)
       - (c) Confirm CRM parent is intentional (rare; vendor analytics treat them as siblings)
     why: >-
       The CRM parentage shapes how the catalog navigation and breadcrumbs render;
@@ -228,7 +228,7 @@ b2:
     extra_first_seen: "2026-05-31"
 
   - id: B2-REGULATION-SET
-    summary: Which regulations to link to SMM via domain_regulations?
+    summary: Which regulations to relate to SMM via domain_regulations?
     question: >-
       The market is regulated under FTC Influencer Disclosure (Endorsement Guides),
       GDPR, CCPA, COPPA, EU DSA. Which subset should ship as domain_regulations
@@ -238,8 +238,8 @@ b2:
       - (expanded) Add COPPA + EU DSA
       - (defer) Leave domain_regulations empty until Phase 0 vendor pass establishes compliance shape per market
     why: >-
-      Regulatory linkage is a policy decision; the catalog's existing convention
-      is to link load-bearing regulators, not every conceivable framework.
+      Regulatory relationship is a policy decision; the catalog's existing convention
+      is to relate load-bearing regulators, not every conceivable framework.
     extra_gating_for:
       - B1B-REGULATIONS
     extra_origin_id: B1-2026-05-31-C

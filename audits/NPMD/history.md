@@ -13,7 +13,7 @@
   - `domain_data_objects` (legacy rollup): 8 masters, all `master + required`: `network_flow_records`, `network_paths`, `network_performance_metrics`, `network_performance_alerts`, `network_interfaces`, `saas_application_performance`, `network_topology_snapshots`, `network_baseline_thresholds`.
   - `domain_module_data_objects`: **0 rows** (B-band partial: legacy rollup exists but the modularization junction is empty, follows from M1).
   - `data_object_lifecycle_states` for the 8 masters: **0 rows** (B12 fail).
-  - `data_object_relationships` (intra-domain, users edges, cross-domain): **0 rows** (B6, B7, B8 fail).
+  - `data_object_relationships` (intra-domain, relationships to `users`, cross-domain): **0 rows** (B6, B7, B8 fail).
   - `data_object_aliases` on the 8 masters: **0 rows** (B11 fail; `network_flow_records` and `saas_application_performance` are non-self-explanatory).
   - `trigger_events`: 9 rows authored on the 8 masters (one master, `network_interfaces`, carries 2 events; `network_paths` carries 1; `network_baseline_thresholds` carries 1).
   - `handoffs` outbound (source_domain_id=82): 6 rows, all `source_domain_module_id IS NULL` (B10b fail uniformly because M1 leaves nothing to attribute to). Targets: AIOPS (1), OBS (1), DEM (1), CMDB (1, has target_module=109), ITSM (2, both have target_module=38). One trigger event has no handoff at all (`network_path.degraded`, id 657), two events on `network_interfaces` have one handoff for `down` only (`flapping` event 661 has no handoff), one terminal-looking event has no handoff (`network_baseline_threshold.recalculated` 664).
@@ -22,7 +22,7 @@
   - `business_function_domains`: 1 row (IT Infrastructure as owner; C1 passes).
   - `domain_regulations`: 0 rows. NPMD is largely outside statutory framework but the audit should record this explicitly (no clear regulation gap).
   - `skills`: 1 row, `npmd-system` (id 87), `skill_type='system'`, `domain_module_id IS NULL` (F1 fail - legacy domain-level system skill that needs to be retired once module-level skills exist). 8 `skill_tools` rows, all `query_<entity>` for the 8 masters, all `coverage_tier='platform'`, all `requirement_level='required'`.
-  - `roles` / `role_modules` / `role_permissions` for NPMD: 0 / 0 / 0 (E1-E6 vacuously pass while M1 fails, since the 2-module floor blocks role authoring anyway).
+  - `roles` / `persona_modules` / `role_permissions` for NPMD: 0 / 0 / 0 (E1-E6 vacuously pass while M1 fails, since the 2-module floor blocks role authoring anyway).
   - `domain_aliases`: 0 rows.
 
 - **Vendor-surface basis** (flagship vendors enumerated for the semantic pass): Cisco ThousandEyes (synthetic + BGP + internet path; SaaS performance leader), Kentik (NetFlow at scale, peering and CDN visibility), Catchpoint (synthetic + last-mile DEM, ISP and CDN observability), NETSCOUT nGeniusONE (packet-broker + application-aware NPM, telco-grade), Broadcom DX NetOps (large-enterprise device and flow), LiveAction LiveNX (SD-WAN-aware enterprise NPM). Vendor surface inferred from public product documentation; no formal Phase 0 doc has been run for NPMD.
@@ -75,7 +75,7 @@ Proposed module split (subject to user review under Bucket 2):
 
 | Module code | Module name | Masters | Capabilities realized |
 |---|---|---|---|
-| `NPMD-FLOW-ANALYSIS` | NetFlow / sFlow / IPFIX flow analysis | `network_flow_records`, `network_interfaces` | flow-analysis, interface-utilisation |
+| `NPMD-FLOW-ANALYSIS` | NetFlow / sFlow / IPFIX flow analysis | `network_flow_records`, `network_interfaces` | flow-analysis, interface-utilization |
 | `NPMD-PATH-TRACING` | Path tracing and topology | `network_paths`, `network_topology_snapshots` | path-tracing, topology-snapshotting, bgp-route-monitoring |
 | `NPMD-METRICS-ALERTS` | Performance metrics, baselines, alerts | `network_performance_metrics`, `network_performance_alerts`, `network_baseline_thresholds` | metric-collection, dynamic-baseline, performance-alerting |
 | `NPMD-SAAS-INTERNET-PERF` | SaaS and internet performance | `saas_application_performance` | synthetic-monitoring, saas-performance |
@@ -87,9 +87,9 @@ Proposed module split (subject to user review under Bucket 2):
 - **B3** FAIL. None of the 8 masters has been arbitrated against Rule #9 collisions. All 8 are `<prefix>_<noun>` shapes so the prefix path is open, but `is_canonical_bare_word=false` and `naming_authority_rationale=''` are the database defaults (i.e. no positive review). Specifically: `network_interfaces` collides on the bare word `interfaces` (likely a software/UI concept elsewhere); `saas_application_performance` overlaps `application_performance` which is the APM domain headline. Surface to user before any rename.
 - **B4** FAIL (audit obligation). All three pattern flags are false on all 8 masters; flags must be positively re-evaluated, not left at default. None of these masters appear to carry personal content, submit locks, or single-approver workflow (they are signal streams), so the expected post-review state is `false` across all three on all 8 - but the audit needs to record the positive review.
 - **B5** PASS (no `embedded_master` rows exist - 0/0).
-- **B6** FAIL. 0 intra-domain `data_object_relationships` rows. Expected edges: `network_paths` traverses `network_interfaces`; `network_performance_alerts` raised_from `network_performance_metrics`; `network_performance_metrics` derived_from `network_flow_records`; `network_baseline_thresholds` applies_to `network_performance_metrics`; `network_topology_snapshots` contains `network_interfaces`; `saas_application_performance` correlated_with `network_paths`.
-- **B7** FAIL. 0 `users` edges. Expected (per Rule #10): `network_performance_alerts` -> `users` (alert_acknowledger, owner), `network_baseline_thresholds` -> `users` (threshold_owner), `saas_application_performance` -> `users` (saas_application_owner, in this catalog's `users` only).
-- **B8** FAIL (outbound only). Six outbound `handoffs` exist; zero corresponding `data_object_relationships` rows. Cross-domain payload edges expected:
+- **B6** FAIL. 0 intra-domain `data_object_relationships` rows. Expected relationships: `network_paths` traverses `network_interfaces`; `network_performance_alerts` raised_from `network_performance_metrics`; `network_performance_metrics` derived_from `network_flow_records`; `network_baseline_thresholds` applies_to `network_performance_metrics`; `network_topology_snapshots` contains `network_interfaces`; `saas_application_performance` correlated_with `network_paths`.
+- **B7** FAIL. 0 relationships to `users`. Expected (per Rule #10): `network_performance_alerts` -> `users` (alert_acknowledger, owner), `network_baseline_thresholds` -> `users` (threshold_owner), `saas_application_performance` -> `users` (saas_application_owner, in this catalog's `users` only).
+- **B8** FAIL (outbound only). Six outbound `handoffs` exist; zero corresponding `data_object_relationships` rows. Cross-domain payload relationships expected:
   - `network_flow_records spawns aiops_signals` (NPMD -> AIOPS)
   - `network_performance_metrics emits telemetry_streams` (NPMD -> OBS)
   - `saas_application_performance degrades digital_experience_sessions` (NPMD -> DEM)
@@ -113,7 +113,7 @@ Not run as part of this audit pass; agent only loads after user approval.
 
 #### E. Roles and permission bundling
 
-All E1-E6 vacuously pass because M1 fail blocks role authoring (2-module floor). Once modules ship, expected roles: `NETWORK-OPS-NOC-ENGINEER` (`role_modules` across all NPMD modules), `NETWORK-OPS-NETWORK-ARCHITECT` (primary on `NPMD-PATH-TRACING` and `NPMD-METRICS-ALERTS`).
+All E1-E6 vacuously pass because M1 fail blocks role authoring (2-module floor). Once modules ship, expected roles: `NETWORK-OPS-NOC-ENGINEER` (`persona_modules` across all NPMD modules), `NETWORK-OPS-NETWORK-ARCHITECT` (primary on `NPMD-PATH-TRACING` and `NPMD-METRICS-ALERTS`).
 
 #### F. Skill-layer integrity
 
@@ -160,9 +160,9 @@ Vendor surface union across Cisco ThousandEyes / Kentik / Catchpoint / NETSCOUT 
 
 ### Pass 3 - Neighbor discovery
 
-Edge weights via outbound handoffs (inbound is 0):
+Relationship weights via outbound handoffs (inbound is 0):
 
-| Neighbor | Edge weight | Source |
+| Neighbor | Relationship weight | Source |
 | --- | --- | --- |
 | ITSM | 2 | handoffs 650 (`network_performance_alert.raised`), 652 (`network_interface.down`) - both -> ITSM-INCIDENT-MGMT |
 | AIOPS | 1 | handoff 649 (`network_flow_record.anomalous_pattern`) |
@@ -170,7 +170,7 @@ Edge weights via outbound handoffs (inbound is 0):
 | CMDB | 1 | handoff 654 (`network_topology_snapshot.updated`) -> CMDB-SERVICE-MAPPING (id 109) |
 | DEM | 1 | handoff 653 (`saas_application_performance.degraded`) |
 
-No neighbor reaches edge weight >= 3; per the audit procedure, all five neighbors get one-line summaries rather than full 5-section diffs.
+No neighbor reaches relationship weight >= 3; per the audit procedure, all five neighbors get one-line summaries rather than full 5-section diffs.
 
 #### Pairwise summaries (weight 1-2)
 
@@ -191,14 +191,14 @@ No neighbor at weight >= 3; full 5-section diff skipped per procedure.
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-S1 | M1 | Zero `domain_modules` rows. Until modules exist, M2-M7, B-band DMDO writes, B9b, E1-E6, F2-F5 cannot pass. | Author 4-module split (`NPMD-FLOW-ANALYSIS`, `NPMD-PATH-TRACING`, `NPMD-METRICS-ALERTS`, `NPMD-SAAS-INTERNET-PERF`) and load via a Phase-A loader. Default to 4 modules pending Bucket 2 decision. |
-| B1-S2 | A2 | Zero `capability_domains` rows. | Author 5-8 capabilities (`flow-analysis`, `path-tracing`, `bgp-route-monitoring`, `metric-collection`, `dynamic-baseline`, `performance-alerting`, `synthetic-monitoring`, `saas-performance`) and link via `capability_domains` + `domain_module_capabilities`. |
+| B1-S2 | A2 | Zero `capability_domains` rows. | Author 5-8 capabilities (`flow-analysis`, `path-tracing`, `bgp-route-monitoring`, `metric-collection`, `dynamic-baseline`, `performance-alerting`, `synthetic-monitoring`, `saas-performance`) and relate via `capability_domains` + `domain_module_capabilities`. |
 | B1-S3 | A3 | Zero `solution_domains` rows; no NPM solutions in the catalog. | Add `vendors` + `solutions` for Cisco ThousandEyes, Kentik, Catchpoint, NETSCOUT nGeniusONE, Broadcom DX NetOps, LiveAction LiveNX, plus `solution_domains` with coverage_level. |
 | B1-S4 | A4 | `catalog_tagline` and `catalog_description` empty. | Draft both per Rule #20 buyer voice. Surface to user before write. |
 | B1-S5 | B3 | None of 8 masters has been arbitrated under Rule #9. `network_interfaces` and `saas_application_performance` have collision risk (bare-word `interfaces` and overlap with APM, respectively). | Decide per master: prefix is already in place, just stamp `is_canonical_bare_word=false` after positive review and capture per-master review evidence outside `notes` (Rule #15). |
 | B1-S6 | B4 | Pattern flags `has_personal_content`, `has_submit_lock`, `has_single_approver` are default-false on all 8 masters with no positive review. | Record positive review per master; expected post-review state is `false` across all flags on all 8 (signal-stream masters have none of these patterns). |
-| B1-S7 | B6 | 0 intra-domain `data_object_relationships` edges. | Author 6 edges: `network_paths traverses network_interfaces`, `network_performance_alerts raised_from network_performance_metrics`, `network_performance_metrics derived_from network_flow_records`, `network_baseline_thresholds applies_to network_performance_metrics`, `network_topology_snapshots contains network_interfaces`, `saas_application_performance correlated_with network_paths`. Cardinality and required-side per draft loader. |
-| B1-S8 | B7 | 0 `users` edges (Rule #10). | Author 3 edges: `network_performance_alerts -> users` (alert_acknowledger), `network_baseline_thresholds -> users` (threshold_owner), `saas_application_performance -> users` (application_owner). |
-| B1-S9 | B8 | 0 cross-domain (outbound) `data_object_relationships` for 6 outbound handoffs. | Author 5 edges (`network_flow_records spawns aiops_signals`, `network_performance_metrics emits telemetry_streams`, `saas_application_performance degrades digital_experience_sessions`, `network_topology_snapshots reconciles configuration_items`, `network_performance_alerts triggers service_incidents`, `network_interfaces triggers service_incidents`). NOTE: some target masters (`aiops_signals`, `telemetry_streams`, `digital_experience_sessions`) may not exist; gate the load on existence and route missing targets to the right domain's audit. |
+| B1-S7 | B6 | 0 intra-domain `data_object_relationships` rows. | Author 6 relationships: `network_paths traverses network_interfaces`, `network_performance_alerts raised_from network_performance_metrics`, `network_performance_metrics derived_from network_flow_records`, `network_baseline_thresholds applies_to network_performance_metrics`, `network_topology_snapshots contains network_interfaces`, `saas_application_performance correlated_with network_paths`. Cardinality and required-side per draft loader. |
+| B1-S8 | B7 | 0 relationships to `users` (Rule #10). | Author 3 relationships: `network_performance_alerts -> users` (alert_acknowledger), `network_baseline_thresholds -> users` (threshold_owner), `saas_application_performance -> users` (application_owner). |
+| B1-S9 | B8 | 0 cross-domain (outbound) `data_object_relationships` for 6 outbound handoffs. | Author 5 relationships (`network_flow_records spawns aiops_signals`, `network_performance_metrics emits telemetry_streams`, `saas_application_performance degrades digital_experience_sessions`, `network_topology_snapshots reconciles configuration_items`, `network_performance_alerts triggers service_incidents`, `network_interfaces triggers service_incidents`). NOTE: some target masters (`aiops_signals`, `telemetry_streams`, `digital_experience_sessions`) may not exist; gate the load on existence and route missing targets to the right domain's audit. |
 | B1-S10 | B9 | 2 trigger events without `handoffs` rows: `network_path.degraded` (657) and `network_interface.flapping` (661). | Author both: `network_path.degraded` -> AIOPS + ITSM (event_stream + api_call); `network_interface.flapping` -> ITSM (api_call). `network_baseline_threshold.recalculated` (664) acceptable as leaf (no subscriber). |
 | B1-S11 | B10b | All 6 outbound handoffs have `source_domain_module_id IS NULL`. Three (AIOPS, OBS, DEM) also have target NULL because those domains have no modules. | After M1 fix, run module-attribution backfill per `backfill_ats_handoff_modules_2026_05_23.ts` pattern. Source attribution maps event data_object -> NPMD module (per proposed split). Target NULLs for AIOPS / OBS / DEM are report-only on those domains. |
 | B1-S12 | B11 | 0 `data_object_aliases` for 8 masters. | Author 12+ alias rows per the entity list in B11. |
@@ -231,7 +231,7 @@ No neighbor at weight >= 3; full 5-section diff skipped per procedure.
    - description (3 paragraphs): paragraph 1 (workflow: collect flow records and path traces, baseline performance, raise alerts), paragraph 2 (SaaS / internet leg: track third-party performance from your users' perspective), paragraph 3 (handoffs: ticket on ITSM, signal AIOPS / OBS, reconcile CMDB topology).
 7. **Regulations - intentional zero?** NPMD currently has zero `domain_regulations`. Most NPM tools are not directly regulated, but FedRAMP and PCI-DSS scope-of-monitoring obligations apply when NPMD covers payment-card traffic or federal-cloud workloads. Options: (a) leave at zero (NPM is regulation-adjacent, not regulation-driven), (b) add PCI-DSS scope-of-monitoring as an applicable regulation. Independent.
 8. **F1 legacy skill (id 87, `npmd-system`) - migrate or delete outright.** The 8 existing `skill_tools` rows on id 87 are all `query_<entity>` and all `coverage_tier='platform'`. Options: (a) delete id 87 after authoring 4 per-module skills (B1-S14 default), (b) keep id 87 as a transitional domain-level skill while gradually authoring per-module skills. Bucket 1 currently assumes (a).
-9. **C1 contributors / consumers.** `IT Infrastructure` is owner. Add `IT Operations / NOC` as contributor? Add `Security` as consumer (NDR / threat-hunting on NetFlow)? Functional spine already has both functions; question is whether to record the link.
+9. **C1 contributors / consumers.** `IT Infrastructure` is owner. Add `IT Operations / NOC` as contributor? Add `Security` as consumer (NDR / threat-hunting on NetFlow)? Functional spine already has both functions; question is whether to record the relationship.
 
 ### Bucket 3 - Phase 0 pending (speculative)
 
@@ -252,7 +252,7 @@ Phase 0 vendor research would also clarify how synthetic_tests relate to DEM `di
 ### Cross-bucket dependencies
 
 - **Bucket 2 #2 (saas_application_performance vs DEM)** depends on Bucket 3 vendor research (which view does each flagship vendor's primary product master?). If user picks the **vetted route** for Bucket 3, hold this Bucket 2 item until research lands. If user picks **eyeball** or skips, Bucket 2 #2 is independent.
-- **Bucket 1 B1-S9 (cross-domain relationships)** depends on Bucket 2 #2 (which target master the SaaS-degradation edge points at).
+- **Bucket 1 B1-S9 (cross-domain relationships)** depends on Bucket 2 #2 (which target master the SaaS-degradation relationship points at).
 - **Bucket 1 B1-S1 (M1 fix - modularization)** depends on Bucket 2 #1 (4-module vs 2-module split). Default in Bucket 1 is 4-module; user can rebalance.
 - **Bucket 1 B1-S15 (F2/F3 per-module system skills)** depends on Bucket 1 B1-S1 settling (modules must exist first).
 - **Bucket 1 B1-S2 / B1-S3 (capabilities, solutions)** are independent of each other and of Bucket 2 / 3.
@@ -269,7 +269,7 @@ Phase 0 vendor research would also clarify how synthetic_tests relate to DEM `di
 - **AIOPS M1** (id 6) owes a `domain_modules` row + `target_domain_module_id` backfill on handoff 649 (`network_flow_record.anomalous_pattern`). Likely target module: an AIOPS-CORRELATION or AIOPS-ANOMALY-DETECTION module once authored.
 - **OBS M1** (id 7) owes a `domain_modules` row + `target_domain_module_id` backfill on handoff 651 (`network_performance_metric.threshold_breached`). Likely target module: an OBS-METRICS module.
 - **DEM M1** (id 83) owes a `domain_modules` row + `target_domain_module_id` backfill on handoff 653 (`saas_application_performance.degraded`). Tightly coupled to Bucket 2 #2 (NPMD <-> DEM scope question).
-- **AIOPS B8 / B10b inbound** (id 6) owes a `data_object_relationship` row on the AIOPS side of the `network_flow_records -> aiops_signals` edge once authored on NPMD's side. (Standard symmetric B8 pattern; tracked under AIOPS's own audit.)
+- **AIOPS B8 / B10b inbound** (id 6) owes a `data_object_relationship` row on the AIOPS side of the `network_flow_records -> aiops_signals` relationship once authored on NPMD's side. (Standard symmetric B8 pattern; tracked under AIOPS's own audit.)
 - **OBS B8 / B10b inbound** (id 7) owes the symmetric on `telemetry_streams`.
 - **DEM B8 / B10b inbound** (id 83) owes the symmetric on `digital_experience_sessions` (or whatever target master is settled in Bucket 2 #2).
 - **CMDB B8 inbound** (id 4) - handoff 654 -> CMDB-SERVICE-MAPPING already has target module; CMDB's audit owes the symmetric relationship row `configuration_items reconciled_by network_topology_snapshots`.
@@ -290,7 +290,7 @@ Loader: [.tmp_deploy/fix_npmd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_npm
 
 ### Applied (3 fixes, all pre-flight and post-flight verified)
 
-- **B1-S8 (B7 user-edges, Rule #10).** Inserted 3 `data_object_relationships` rows pointing the named owner-side users edges off the three NPMD masters that need one. All use `relationship_type=one_to_one`, `relationship_kind=reference`, `owner_side=target`, `is_required=false`, `record_status=new` (default), `notes=''` (default).
+- **B1-S8 (B7 relationships to `users`, Rule #10).** Inserted 3 `data_object_relationships` rows pointing the named owner-side relationships to `users` off the three NPMD masters that need one. All use `relationship_type=one_to_one`, `relationship_kind=reference`, `owner_side=target`, `is_required=false`, `record_status=new` (default), `notes=''` (default).
   - id 1732: `network_performance_alerts` (541) `is_acknowledged_by` / `acknowledges` `users` (748)
   - id 1733: `network_baseline_thresholds` (545) `is_owned_by` / `owns` `users` (748)
   - id 1734: `saas_application_performance` (543) `is_owned_by` / `owns` `users` (748)
@@ -308,8 +308,8 @@ Loader: [.tmp_deploy/fix_npmd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_npm
 - **Catalog voice (B1-S4).** `catalog_tagline` and `catalog_description` are Rule #20 buyer-voice writes; agent drafts, user approves verbatim before write. Drafts exist in Bucket 2 #6 but no approval yet.
 - **Pattern flag review (B1-S6).** Even confirming flags as `false` is a positive-review write the user must approve; surfaced but not applied.
 - **Naming arbitration (B1-S5).** `is_canonical_bare_word` / `naming_authority_rationale` stamps are Rule #9 user-gated decisions; audit explicitly says "Surface to user before any rename."
-- **Intra-domain relationships (B1-S7).** Six audit-pre-specified intra-domain edges (not Rule #10 user-edges) sit outside the technical filter, which licenses only Rule #10 user-edges for inserts.
-- **Cross-domain relationships (B1-S9).** Audit says "gate the load on existence and route missing targets" plus Bucket 2 #2 (NPMD vs DEM scope) gates the SaaS-degradation edge.
+- **Intra-domain relationships (B1-S7).** Six audit-pre-specified intra-domain relationships (not Rule #10 relationships to `users`) sit outside the technical filter, which licenses only Rule #10 relationships to `users` for inserts.
+- **Cross-domain relationships (B1-S9).** Audit says "gate the load on existence and route missing targets" plus Bucket 2 #2 (NPMD vs DEM scope) gates the SaaS-degradation relationship.
 - **Missing handoffs (B1-S10).** New `handoffs` rows are outside the technical filter (only `handoff_processes` inserts are technical).
 - **B10b module-attribution backfill (B1-S11).** No NPMD modules exist, so no `source_domain_module_id` is derivable from existing modules. Target-side NULLs (AIOPS/OBS/DEM) are owed by those domains' own M1 work.
 - **Aliases (B1-S12).** Bucket 2 #5 says alias_name is freeform and the user wants to refine; no audit-pre-specified exact tuples.
@@ -324,7 +324,7 @@ Loader: [.tmp_deploy/fix_npmd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_npm
 
 ## 2026-05-31, Audit
 
-Structural Validate b1 pass against live state. Confirms the 2026-05-31 fix-loop deltas (3 user-edges, 5 APQC tags new + 1 already-tagged, notes revert on handoff 654), re-classifies the remaining open work under v2 schema buckets.
+Structural Validate b1 pass against live state. Confirms the 2026-05-31 fix-loop deltas (3 relationships to `users`, 5 APQC tags new + 1 already-tagged, notes revert on handoff 654), re-classifies the remaining open work under v2 schema buckets.
 
 ### Summary
 
@@ -337,7 +337,7 @@ Structural Validate b1 pass against live state. Confirms the 2026-05-31 fix-loop
   - `domain_data_objects`: 8 masters, all `master + required`: 538 `network_flow_records`, 539 `network_paths`, 540 `network_performance_metrics`, 541 `network_performance_alerts`, 542 `network_interfaces`, 543 `saas_application_performance`, 544 `network_topology_snapshots`, 545 `network_baseline_thresholds`.
   - `domain_module_data_objects`: 0 rows (downstream of M1).
   - `data_objects` flags / arbitration: all 8 carry `is_canonical_bare_word=false`, `naming_authority_rationale=''`, pattern flags all false-by-default (B3, B4 unchanged).
-  - `data_object_relationships`: 3 rows present (the 2026-05-31 user-edges fix): id 1732 (541 -> 748 users, is_acknowledged_by), 1733 (545 -> 748, is_owned_by), 1734 (543 -> 748, is_owned_by). B7 now passes. B6 still 0 intra-domain master-to-master rows. B8 still 0 outbound cross-domain rows.
+  - `data_object_relationships`: 3 rows present (the 2026-05-31 `users` relationships fix): id 1732 (541 -> 748 users, is_acknowledged_by), 1733 (545 -> 748, is_owned_by), 1734 (543 -> 748, is_owned_by). B7 now passes. B6 still 0 intra-domain master-to-master rows. B8 still 0 outbound cross-domain rows.
   - `data_object_aliases`: 0 rows (B11 fail unchanged).
   - `data_object_lifecycle_states`: 0 rows (B12 fail unchanged).
   - `trigger_events`: 9 rows. Three events have no handoff: 657 `network_path.degraded`, 661 `network_interface.flapping`, 664 `network_baseline_threshold.recalculated` (leaf, acceptable). All 9 carry `event_category=''` (Rule #13 vocabulary unset; cleanup item).
@@ -347,13 +347,13 @@ Structural Validate b1 pass against live state. Confirms the 2026-05-31 fix-loop
   - `business_function_domains`: 1 row (IT Infrastructure as owner; C1 passes). 0 contributors / consumers loaded (Bucket 2 item carried).
   - `domain_regulations`: 0 rows (no regulation loaded; Bucket 2 item carried).
   - `skills`: 1 row, `npmd-system` (id 87), `skill_type=system`, `domain_module_id IS NULL` (F1 fail unchanged). 8 `skill_tools` rows, all `query_<entity>` (operation_kind=query, data_object_id set), all `coverage_tier=platform`, all `requirement_level=required`. F4 invariant satisfied on every row; F7 vacuously passes (no channel primitives).
-  - `roles` / `role_modules` / `role_permissions`: 0 / 0 / 0 (E1-E5 vacuously pass while M1 fails).
+  - `roles` / `persona_modules` / `role_permissions`: 0 / 0 / 0 (E1-E5 vacuously pass while M1 fails).
 
 - Bucket 1 (in-scope, agent fixable): 15 items (5 agent-solvable, 10 blocked on user judgment or prerequisite).
 - Bucket 2 (surface-for-user, judgment): 9 items.
 - Bucket 3 (Phase 0 pending, speculative): 7 items.
 
-Pass-level verdict: the 2026-05-31 technical fix-loop closed B7 (user-edges) and H1 (APQC tags). Notes pollution on handoff 654 was reverted. The structural backbone remains gated on M1 (modularization decision in Bucket 2 #1) and on Phase 0 vendor research (Bucket 3). Once the user picks a module split, B1-S1 unblocks B1-S15 (per-module skills) and B1-S11 (B10b backfill on the NPMD side). Capabilities (A2) and solutions (A3) are independent and agent-authorable from the proposed list pending user approval.
+Pass-level verdict: the 2026-05-31 technical fix-loop closed B7 (relationships to `users`) and H1 (APQC tags). Notes pollution on handoff 654 was reverted. The structural backbone remains gated on M1 (modularization decision in Bucket 2 #1) and on Phase 0 vendor research (Bucket 3). Once the user picks a module split, B1-S1 unblocks B1-S15 (per-module skills) and B1-S11 (B10b backfill on the NPMD side). Capabilities (A2) and solutions (A3) are independent and agent-authorable from the proposed list pending user approval.
 
 ### Vendor surface basis
 
@@ -397,7 +397,7 @@ Proposed module split (carried from 2026-05-30; gated on Bucket 2 #1):
 
 | Module code | Module name | Masters | Capabilities realized |
 |---|---|---|---|
-| `NPMD-FLOW-ANALYSIS` | NetFlow / sFlow / IPFIX flow analysis | `network_flow_records`, `network_interfaces` | flow-analysis, interface-utilisation |
+| `NPMD-FLOW-ANALYSIS` | NetFlow / sFlow / IPFIX flow analysis | `network_flow_records`, `network_interfaces` | flow-analysis, interface-utilization |
 | `NPMD-PATH-TRACING` | Path tracing and topology | `network_paths`, `network_topology_snapshots` | path-tracing, topology-snapshotting, bgp-route-monitoring |
 | `NPMD-METRICS-ALERTS` | Performance metrics, baselines, alerts | `network_performance_metrics`, `network_performance_alerts`, `network_baseline_thresholds` | metric-collection, dynamic-baseline, performance-alerting |
 | `NPMD-SAAS-INTERNET-PERF` | SaaS and internet performance | `saas_application_performance` | synthetic-monitoring, saas-performance |
@@ -406,11 +406,11 @@ Proposed module split (carried from 2026-05-30; gated on Bucket 2 #1):
 
 - **B1** PASS (8 masters).
 - **B5** PASS (no `embedded_master` rows).
-- **B7** PASS (3 user-edges loaded 2026-05-31: 1732, 1733, 1734 cover the audit-specified set on 541 / 543 / 545).
+- **B7** PASS (3 relationships to `users` loaded 2026-05-31: 1732, 1733, 1734 cover the audit-specified set on 541 / 543 / 545).
 - **B3** FAIL. None of the 8 masters has been arbitrated under Rule #9. Collision risk on `network_interfaces` (bare-word `interfaces`) and `saas_application_performance` (overlap with APM domain headline). Prefix path is open; needs positive review.
 - **B4** FAIL (audit obligation). Pattern flags all false-by-default; no positive review has been recorded. Expected post-review state is `false` across all three on all 8 (signal-stream masters carry none of these patterns) but the review must happen.
-- **B6** FAIL. 0 intra-domain `data_object_relationships` rows between masters. Six audit-pre-specified edges still owed: `network_paths traverses network_interfaces`, `network_performance_alerts raised_from network_performance_metrics`, `network_performance_metrics derived_from network_flow_records`, `network_baseline_thresholds applies_to network_performance_metrics`, `network_topology_snapshots contains network_interfaces`, `saas_application_performance correlated_with network_paths`.
-- **B8** FAIL (outbound only). 0 cross-domain outbound `data_object_relationships` rows. Six edges expected to mirror the six outbound handoffs; some target masters (`aiops_signals`, `telemetry_streams`, `digital_experience_sessions`) may not exist yet and have to be existence-gated before the load.
+- **B6** FAIL. 0 intra-domain `data_object_relationships` rows between masters. Six audit-pre-specified relationships still owed: `network_paths traverses network_interfaces`, `network_performance_alerts raised_from network_performance_metrics`, `network_performance_metrics derived_from network_flow_records`, `network_baseline_thresholds applies_to network_performance_metrics`, `network_topology_snapshots contains network_interfaces`, `saas_application_performance correlated_with network_paths`.
+- **B8** FAIL (outbound only). 0 cross-domain outbound `data_object_relationships` rows. Six relationships expected to mirror the six outbound handoffs; some target masters (`aiops_signals`, `telemetry_streams`, `digital_experience_sessions`) may not exist yet and have to be existence-gated before the load.
 - **B9** PARTIAL. 9 trigger events; 6 handoffs. Missing: 657 `network_path.degraded` and 661 `network_interface.flapping` carry no handoff. 664 `network_baseline_threshold.recalculated` acceptable as leaf.
 - **B9b** N/A while module count < 2.
 - **B10** REPORT-ONLY. 0 inbound handoffs; NPMD declares no consumer dependencies, so the discovery query yields zero owed inbound rows. Re-confirmed.
@@ -436,8 +436,8 @@ E1-E5 vacuously pass while M1 fails (2-module floor blocks role authoring).
 
 - **F1** FAIL. Legacy `npmd-system` (id 87) with `domain_module_id IS NULL` persists. Will become obsolete once per-module skills exist; DELETE conditional on B1-S15 landing.
 - **F2 - F5** vacuously fail downstream of M1.
-- **F4** invariant holds on every linked tool row (8 `query` rows, all with `data_object_id` set).
-- **F7** vacuously passes (no channel primitives linked).
+- **F4** invariant holds on every related tool row (8 `query` rows, all with `data_object_id` set).
+- **F7** vacuously passes (no channel primitives related).
 
 #### H. APQC tagging
 
@@ -451,9 +451,9 @@ Highest-confidence MISSING: `synthetic_tests`, `synthetic_test_runs`, `bgp_route
 
 ### Pass 3, Neighbor discovery
 
-Edge weights via outbound handoffs (inbound is 0); unchanged from 2026-05-30:
+Relationship weights via outbound handoffs (inbound is 0); unchanged from 2026-05-30:
 
-| Neighbor | Edge weight | Source |
+| Neighbor | Relationship weight | Source |
 | --- | --- | --- |
 | ITSM | 2 | 650, 652 -> ITSM-INCIDENT-MGMT (38) |
 | AIOPS | 1 | 649 |
@@ -461,7 +461,7 @@ Edge weights via outbound handoffs (inbound is 0); unchanged from 2026-05-30:
 | CMDB | 1 | 654 -> CMDB-SERVICE-MAPPING (109) |
 | DEM | 1 | 653 |
 
-No neighbor reaches edge weight >= 3; one-line summaries only. Cross-domain `data_object_relationships` rows still missing for all five (carried under Bucket 1 B1-S9).
+No neighbor reaches relationship weight >= 3; one-line summaries only. Cross-domain `data_object_relationships` rows still missing for all five (carried under Bucket 1 B1-S9).
 
 ### Pass 4, Pairwise reconciliation
 
@@ -474,13 +474,13 @@ No neighbor at weight >= 3; full 5-section diff skipped per procedure.
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-M1 | M1 | Zero `domain_modules` rows. Until modules exist, M2-M8, B-band DMDO writes, B9b, E1-E5, F2-F5 cannot pass. | Author module split (default 4-module proposal) and load via a Phase-A loader. Pending Bucket 2 #1. |
-| B1-A2 | A2 | Zero `capability_domains` rows. | Author 5-8 capabilities and link via `capability_domains` + `domain_module_capabilities`. |
+| B1-A2 | A2 | Zero `capability_domains` rows. | Author 5-8 capabilities and relate via `capability_domains` + `domain_module_capabilities`. |
 | B1-A3 | A3 | Zero `solution_domains` rows; no NPM solutions in catalog. | Add `vendors` + `solutions` for Cisco ThousandEyes, Kentik, Catchpoint, NETSCOUT nGeniusONE, Broadcom DX NetOps, LiveAction LiveNX, plus `solution_domains` with coverage_level. |
 | B1-A4 | A4 | `catalog_tagline` and `catalog_description` empty. | Draft per Rule #20 buyer voice; user approves verbatim before write. |
 | B1-B3 | B3 | None of 8 masters has been arbitrated under Rule #9. | Per-master: stamp `is_canonical_bare_word=false` after positive review and capture per-master evidence outside `notes`. |
 | B1-B4 | B4 | Pattern flags default-false on all 8 masters with no positive review. | Record positive review per master; expected post-review state is `false` across all flags on all 8. |
-| B1-B6 | B6 | 0 intra-domain `data_object_relationships` edges between masters. | Author 6 edges per the carried list. |
-| B1-B8 | B8 | 0 cross-domain (outbound) `data_object_relationships` for 6 outbound handoffs. | Author up to 6 edges; existence-gate against target masters; route missing targets to those domains' audits. |
+| B1-B6 | B6 | 0 intra-domain `data_object_relationships` rows between masters. | Author 6 relationships per the carried list. |
+| B1-B8 | B8 | 0 cross-domain (outbound) `data_object_relationships` for 6 outbound handoffs. | Author up to 6 relationships; existence-gate against target masters; route missing targets to those domains' audits. |
 | B1-B9 | B9 | 2 trigger events without `handoffs` rows: 657 `network_path.degraded`, 661 `network_interface.flapping`. | Author both: `network_path.degraded` -> AIOPS + ITSM; `network_interface.flapping` -> ITSM. 664 acceptable as leaf. |
 | B1-B10B | B10b | All 6 outbound handoffs have `source_domain_module_id IS NULL`. | After M1 fix, run module-attribution backfill (pattern: `backfill_ats_handoff_modules_2026_05_23.ts`). Target NULLs for AIOPS / OBS / DEM are report-only on those domains. |
 | B1-B11 | B11 | 0 `data_object_aliases` for 8 masters. | Author 12+ alias rows pending user approval (alias_name is freeform, Bucket 2 #5 carries refinement). |
@@ -522,7 +522,7 @@ Universal vendor entities surfaced by the semantic pass; Phase 0 vetting would c
 ### Cross-bucket dependencies
 
 - Bucket 2 #2 (SaaS vs DEM) depends on Bucket 3 vendor research; if user picks the vetted route for Bucket 3, hold Bucket 2 #2 until research lands.
-- Bucket 1 B1-B8 depends on Bucket 2 #2 (target master for the SaaS-degradation edge).
+- Bucket 1 B1-B8 depends on Bucket 2 #2 (target master for the SaaS-degradation relationship).
 - Bucket 1 B1-M1 depends on Bucket 2 #1 (4-module vs 2-module split).
 - Bucket 1 B1-F1 / B1-F2 depend on Bucket 1 B1-M1.
 - Bucket 1 B1-B10B depends on B1-M1 (NPMD side) and on AIOPS / OBS / DEM authoring their own modules (target side, report-only).
@@ -597,7 +597,7 @@ obligations. What remains is user-owned (b2) or gated on the build (b1b) or RETI
   network_flow_records feeds network_performance_metrics (1:M); network_performance_metrics
   is_baselined_by network_baseline_thresholds (1:1); network_topology_snapshots contains
   network_interfaces (M:N); saas_application_performance correlated_with network_paths (M:N). The
-  three child->parent edges were oriented parent-first to honor the catalog cardinality convention
+  three child->parent relationships were oriented parent-first to honor the catalog cardinality convention
   (enum admits only one_to_one / one_to_many / many_to_many; no many_to_one).
 - **Missing handoffs (B1A-B9): 3 rows.** 657 network_path.degraded -> AIOPS (event_stream, payload
   network_paths) and -> ITSM (api_call, payload service_incidents); 661 network_interface.flapping
@@ -624,7 +624,7 @@ obligations. What remains is user-owned (b2) or gated on the build (b1b) or RETI
   This one decision unblocks the entire build cascade (A2 capabilities, A3 vendors/solutions, B10b
   source-module backfill on 9 handoffs, roles, domain_module_tools, module-anchoring the alert lifecycle).
 - **B2-SAAS-VS-DEM**: where saas_application_performance masters (keep in NPMD / move to DEM / split).
-  Gates the B1B-B8 SaaS-degradation cross-domain edge target.
+  Gates the B1B-B8 SaaS-degradation cross-domain relationship target.
 - **B2-NETWORK-DEVICES**: how NPMD models network devices (master / embedded_master / consume CMDB CIs).
 - **B2-NAMING-ARBIT** (B1B-B3): naming arbitration for network_interfaces (bare-word "interfaces") and
   saas_application_performance (overlaps APM "application_performance"). is_canonical_bare_word /
@@ -632,7 +632,7 @@ obligations. What remains is user-owned (b2) or gated on the build (b1b) or RETI
 - **B2-REGULATIONS**: intentional zero domain_regulations vs add PCI-DSS / FedRAMP scope-of-monitoring.
 - **B2-FUNCTIONAL-RACI**: owner (IT Infrastructure, fn 58) already recorded; add IT Operations/NOC
   contributor and/or Security consumer? Resolve the exact NOC / Security business_function_id before write.
-- **Personas / RACI (Phase P)**: DEFERRED, not authored. NPMD is unbuilt, so persona/role_modules/
+- **Personas / RACI (Phase P)**: DEFERRED, not authored. NPMD is unbuilt, so persona/persona_modules/
   process_raci work does not apply until the module set ships. Candidate personas once built:
   Network Operations / NOC Engineer, Network Architect.
 

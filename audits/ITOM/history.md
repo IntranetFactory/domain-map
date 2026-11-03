@@ -53,7 +53,7 @@ None.
 
 ### Summary
 
-- Current footprint: 4 mastered `data_objects` (monitoring_events, monitoring_alerts, monitoring_policies, capacity_records) + 1 contributor (service_incidents on ITSM), 7 `trigger_events`, 4 outbound and 9 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 1 intra-domain `data_object_relationships` row (none between ITOM masters), 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 `domain_aliases`, 0 module-anchored system skills (1 legacy domain-level skill `itom-system` at `skills.id=74` with 6 `skill_tools` rows), 0 roles in `role_modules` (cannot exist without modules), 6 capability links across `capability_domains`.
+- Current footprint: 4 mastered `data_objects` (monitoring_events, monitoring_alerts, monitoring_policies, capacity_records) + 1 contributor (service_incidents on ITSM), 7 `trigger_events`, 4 outbound and 9 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 1 intra-domain `data_object_relationships` row (none between ITOM masters), 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 `domain_aliases`, 0 module-anchored system skills (1 legacy domain-level skill `itom-system` at `skills.id=74` with 6 `skill_tools` rows), 0 roles in `persona_modules` (cannot exist without modules), 6 capability relationships across `capability_domains`.
 - Vendor-surface basis (flagship vendors enumerated for the semantic pass): ServiceNow IT Operations Management (Event Mgmt, Service Mapping, Cloud Insights), BMC Helix Operations Management, Micro Focus / OpenText Operations Bridge (OBM), IBM Tivoli Monitoring / Instana Infra, Datadog Infrastructure Monitoring, BMC Control-M (workload automation reference for the job-sched capability), Rundeck (runbook automation reference). Compliance overlay is light, primary controls overlap with SOC 2 availability and ISO 20000.
 - **Bucket 1 (in-scope, agent fixable):** 18 items.
 - **Bucket 2 (surface-for-user, judgment):** 5 items.
@@ -104,20 +104,20 @@ Every master has zero lifecycle states (B12 fail across the board) and zero alia
 - **M1 FAIL (BLOCKING)** zero `domain_modules` rows. Six capabilities live on the domain with no realizing module, every downstream band is degraded. Surface as `B1-S4` (modularization plan), the most consequential single fix on this audit.
 - **M2** with capability count = 6, the >=2 modules floor applies; cannot be checked until M1 lands. Subsumed under `B1-S4`.
 - **M4-M7** unrunnable on the module dimension: no modules exist. **BUT** M7 has a catalog-wide hard fail orthogonal to M1 (see below).
-- **M7 FAIL (catalog-wide hard fail)** `monitoring_alerts` (id 85) and `monitoring_policies` (id 86) each have a `role='master'` row in `domain_data_objects` for BOTH ITOM (id 2) AND RMM (id 130, Remote Monitoring and Management). Two masters per data_object catalog-wide breaks the deployer / blueprint emitter. RMM has zero `domain_modules` rows of its own, so the conflict is at the legacy-rollup layer only; the fix nonetheless requires picking a canonical owner. Surface as `B2-S1` (judgment call).
+- **M7 FAIL (catalog-wide hard fail)** `monitoring_alerts` (id 85) and `monitoring_policies` (id 86) each have a `held_as='master'` row in `domain_data_objects` for BOTH ITOM (id 2) AND RMM (id 130, Remote Monitoring and Management). Two masters per data_object catalog-wide breaks the deployer / blueprint emitter. RMM has zero `domain_modules` rows of its own, so the conflict is at the legacy-rollup layer only; the fix nonetheless requires picking a canonical owner. Surface as `B2-S1` (judgment call).
 - **B1 PASS** 4 master rows.
 - **B2 PASS** every master has singular_label and plural_label populated. Note: the labels `Event` / `Alert` are unprefixed even though the data_object names carry the `monitoring_` prefix. Cosmetic only, no rule fails.
 - **B3 PASS** every master is prefixed (no bare-word), `is_canonical_bare_word=false`, no rationale required.
 - **B4 FAIL** every master has all three pattern flags `false` by default; no positive audit re-evaluation has happened. Plausibly: `monitoring_policies` has `has_submit_lock=true` (policy version commits are typically immutable after activation), `monitoring_alerts` has `has_single_approver=false` (machine-generated, never approved), `capacity_records` has `has_personal_content=false`. Surface as `B2-S2` for the user to evaluate per master.
 - **B5 PASS** zero `embedded_master` rows held by ITOM, nothing to validate locally. Cross-check: ITOM-mastered `monitoring_alerts` is `embedded_master` in `ITSM-EVENT-MGMT` (module 42) and `consumer` in `ITSM-INCIDENT-MGMT` (module 38) and `MSP-PSA-SVC-DESK` (module 137), all correctly pointing at ITOM as canonical owner.
-- **B6 FAIL** zero `data_object_relationships` edges where both ends are ITOM masters. Implied edges all missing:
+- **B6 FAIL** zero `data_object_relationships` rows where both ends are ITOM masters. Implied relationships all missing:
   - `monitoring_events spawns monitoring_alerts` (event correlation rolls up to alert),
   - `monitoring_policies governs monitoring_events` (the policy is the rule set generating the event),
   - `monitoring_policies governs monitoring_alerts` (threshold logic in the policy),
   - `capacity_records produces monitoring_events` (capacity exhaustion fires an event),
   - `monitoring_policies governs capacity_records` (capacity thresholds and forecasting horizons in the policy).
   Surface as `B1-S5`.
-- **B7 FAIL** zero `users` edges. Expected actors: monitoring engineer (creator on `monitoring_policies`), on-call analyst (assignee on `monitoring_alerts`), capacity planner (creator on `capacity_records`), policy approver (approver on `monitoring_policies`). Surface as `B1-S6`.
+- **B7 FAIL** zero relationships to `users`. Expected actors: monitoring engineer (creator on `monitoring_policies`), on-call analyst (assignee on `monitoring_alerts`), capacity planner (creator on `capacity_records`), policy approver (approver on `monitoring_policies`). Surface as `B1-S6`.
 - **B8 FAIL** zero outbound cross-domain `data_object_relationships`. The 4 outbound handoffs all carry payloads with clean source-master to target-payload mappings, none has its mirror relationship row:
   - handoff 28 (ITOM->ITSM, monitoring_event.alert_triggered, payload service_incidents): expect `monitoring_events triggers service_incidents`.
   - handoff 53 (ITOM->AIOPS, events.burst_detected, payload event_correlations): expect `monitoring_events feeds event_correlations`.
@@ -150,7 +150,7 @@ Every master has zero lifecycle states (B12 fail across the board) and zero alia
 - **C1 PASS** 1 owner (`IT Infrastructure`) + 1 contributor (`Software Engineering`).
 - **C2 PASS** no overrides recorded; ITOM-RUNBOOK and ITOM-JOB-SCHED arguably diverge to a Platform Engineering or DataOps contributor function but no override is mandated (the domain-level RACI covers them).
 - **D1** UI spot-check, none of the legacy seed data has been loaded with `record_status='approved'` (all default to `new`).
-- **E1-E6 FAIL** vacuously: zero modules means no `role_modules` rows can exist. No persona is bundled against ITOM today. Surface combined as `B1-S12` (deferred until M1 lands; routine for cross-cutting roles like NOC Engineer, Site Reliability Engineer, Capacity Planner).
+- **E1-E6 FAIL** vacuously: zero modules means no `persona_modules` rows can exist. No persona is bundled against ITOM today. Surface combined as `B1-S12` (deferred until M1 lands; routine for cross-cutting roles like NOC Engineer, Site Reliability Engineer, Capacity Planner).
 - **F1 FAIL** legacy domain-level system skill `itom-system` (skills.id=74, `domain_module_id=null`) exists. Once modules ship, this must retire in favor of per-module system skills. Surface as `B1-S13`.
 - **F2 FAIL** module count = 0, expected `skill_type='system'` rows = 0; current is 1 misanchored (`domain_id=2, domain_module_id=null`). Cannot satisfy F2 without M1.
 - **F3 PASS** the legacy skill has 6 `skill_tools` rows: 4 query primitives (`query_events`, `query_alerts`, `query_monitoring_policies`, `query_capacity_records`) plus 2 channel tools (`send_email`, `post_chat_message`). Functionally minimal but anchored on the wrong skill (domain-level instead of module-level).
@@ -176,7 +176,7 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 | infra_health_scores | Common | Per-CI / per-service rolling health scores ITOM rolls up. BMC Helix scoreCard, ServiceNow Cloud Insights health. MISSING. |
 | service_maps | Specialist | Already mastered in CMDB / DISCOVERY (id 79); ITOM should consume. Surface-confirmed dependency. |
 | alert_routing_rules | Common | Routing logic from alert -> recipient -> incident channel; distinct from `monitoring_policies` (rule logic) vs `alert_routing_rules` (destination logic). MISSING. |
-| runbook_definitions | Specialist | Reusable automation runbooks linked to alert classes. Per Rule #19 / ITPA candidate this likely belongs in the queued ITPA candidate domain. Decision question for B3-S1 (Bucket 3). |
+| runbook_definitions | Specialist | Reusable automation runbooks related to alert classes. Per Rule #19 / ITPA candidate this likely belongs in the queued ITPA candidate domain. Decision question for B3-S1 (Bucket 3). |
 | job_definitions | Specialist | Workload-automation job specs (Control-M cyclic jobs, AutoSys boxes). Likely belongs in the queued WORKLOAD-AUTO candidate. Decision question for B3-S2 (Bucket 3). |
 | capacity_forecasts | Common | First-class forecast records distinct from individual `capacity_records` datapoints. Datadog Forecasts, ServiceNow Cloud Insights forecast, BMC TrueSight Capacity Optimization. MISSING. |
 | ml_baselines | Specialist | Statistical baselines used in capacity planning, overlaps with AIOPS `anomaly_detections`. Decision question for B3-S3 (Bucket 3). |
@@ -197,13 +197,13 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 
 ### Pass 3, Neighbor discovery
 
-Auto-discovered from `handoffs` source + target edges plus the M7 catalog conflict.
+Auto-discovered from `handoffs` source + target relationships plus the M7 catalog conflict.
 
-| Neighbor | Outbound | Inbound | DMDO cross-refs | Edge weight | Notes |
+| Neighbor | Outbound | Inbound | DMDO cross-refs | Relationship weight | Notes |
 | --- | --- | --- | --- | --- | --- |
 | AIOPS | 2 | 3 | 1 (event_correlations payload, mastered in AIOPS) | 5 | Heavy; reconcile (Pass 4). |
 | ITSM | 1 | 0 | 1 (service_incidents contributor) | 2 | Reconcile (Pass 4, lighter pass). |
-| RMM | 0 | 0 | 2 catalog-wide master conflicts on monitoring_alerts + monitoring_policies | 2 | Pure M7 conflict, no handoff edges. Surfaced as `B2-S1`. |
+| RMM | 0 | 0 | 2 catalog-wide master conflicts on monitoring_alerts + monitoring_policies | 2 | Pure M7 conflict, no handoffs. Surfaced as `B2-S1`. |
 | DCIM | 0 | 2 | 0 | 2 | Light, one-line summary. |
 | DISCOVERY | 0 | 1 | 1 (DISCOVERY masters service_maps that ITOM consumes implicitly) | 2 | Light. |
 | OBS | 0 | 1 | 0 | 1 | Light. |
@@ -213,15 +213,15 @@ Auto-discovered from `handoffs` source + target edges plus the M7 catalog confli
 
 ### Pass 4, Pairwise reconciliation
 
-Run the 5-section diff against neighbors with edge weight >= 3 (AIOPS only). ITSM gets a lighter pass because of structural importance even though edge weight is 2. RMM gets a structural-only pass because the conflict is M7-shaped not handoff-shaped. Other neighbors at weight 1-2 are summarized inline.
+Run the 5-section diff against neighbors with relationship weight >= 3 (AIOPS only). ITSM gets a lighter pass because of structural importance even though relationship weight is 2. RMM gets a structural-only pass because the conflict is M7-shaped not handoff-shaped. Other neighbors at weight 1-2 are summarized inline.
 
 #### Boundary findings per neighbor
 
-##### AIOPS (edge weight 5)
+##### AIOPS (relationship weight 5)
 
 1. **Existing handoffs, fully wired.** Zero. The two existing outbounds (53, 619) and three existing inbounds (59, 605, 607) have `source_domain_module_id=null` and `target_domain_module_id=null` on the ITOM side because ITOM has no modules (M1 blocks). AIOPS also has no modules per its own audit (M1 blocks symmetrically). Section is empty, but the upstream gap is M1 on both sides.
 2. **Existing handoffs with NULL module FK.** All 5 are in this bucket. PATCHable only once both sides modularize. Surfaced as `B1-S9` for ITOM-side once M1 lands.
-3. **Missing handoffs the catalog implies should exist.** Per AIOPS audit Bucket 3, the AIOPS market surface includes `change_correlations` (linking events to change_requests) which would publish a handoff into ITSM via Change Mgmt, not back to ITOM. Within the ITOM<->AIOPS boundary specifically: AIOPS publishes `monitoring_event.suppressed` (existing handoff 59 mis-named under trigger 78 `noise.suppression_applied`). After the trigger 78 rename to `monitoring_event.suppression_applied`, that handoff's `data_object_id` should re-point at the AIOPS-mastered `alert_suppression_rules` payload (id 722) instead of `monitoring_events` (id 84), because AIOPS owns the suppression logic and ITOM consumes the suppression decision. Surface as `B1-S8` extension under the trigger 78 PATCH.
+3. **Missing handoffs the catalog implies should exist.** Per AIOPS audit Bucket 3, the AIOPS market surface includes `change_correlations` (relating events to change_requests) which would publish a handoff into ITSM via Change Mgmt, not back to ITOM. Within the ITOM<->AIOPS boundary specifically: AIOPS publishes `monitoring_event.suppressed` (existing handoff 59 mis-named under trigger 78 `noise.suppression_applied`). After the trigger 78 rename to `monitoring_event.suppression_applied`, that handoff's `data_object_id` should re-point at the AIOPS-mastered `alert_suppression_rules` payload (id 722) instead of `monitoring_events` (id 84), because AIOPS owns the suppression logic and ITOM consumes the suppression decision. Surface as `B1-S8` extension under the trigger 78 PATCH.
 4. **Boundary integrity gaps.** Handoff 53 payload `event_correlations` (id 93) is correctly AIOPS-mastered. Handoff 59 payload `monitoring_events` (id 84) is correctly ITOM-mastered. No B5 integrity defects.
 5. **Cross-domain `data_object_relationships` mirror check.** Zero rows exist on either side of the AIOPS<->ITOM boundary. Expected:
   - `monitoring_events feeds event_correlations` (ITOM->AIOPS, owner_side=target),
@@ -229,7 +229,7 @@ Run the 5-section diff against neighbors with edge weight >= 3 (AIOPS only). ITS
   - `alert_suppression_rules suppresses monitoring_events` (AIOPS->ITOM, owner_side=source).
   ITOM owes rows 1 and 2 under `B1-S7`; AIOPS owes row 3 under its own B8.
 
-##### ITSM (edge weight 2, structural importance)
+##### ITSM (relationship weight 2, structural importance)
 
 1. **Existing handoffs, fully wired.** Handoff 28 (ITOM->ITSM, monitoring_event.alert_triggered -> service_incidents, target_module=38 ITSM-INCIDENT-MGMT). Source module on ITOM side is null pending M1. Otherwise clean.
 2. **NULL module FK on source side.** Handoff 28 needs `source_domain_module_id` set to the (yet to be created) ITOM-INFRA-MON module. PATCHable post-M1; surfaced as `B1-S9`.
@@ -237,9 +237,9 @@ Run the 5-section diff against neighbors with edge weight >= 3 (AIOPS only). ITS
 4. **Boundary integrity gaps.** None.
 5. **Cross-domain `data_object_relationships` mirror check.** Relationship 193 (`service_incidents correlates_to monitoring_alerts`, owner_side=target) exists. Mirror direction (`monitoring_alerts triggered incident`) is captured by the existing inverse_verb. The handoff 28 payload mapping `monitoring_events -> service_incidents` is NOT mirrored as a relationship row; expected `monitoring_events triggers service_incidents` under B8; surfaced as `B1-S7`.
 
-##### Lighter neighbors (edge weight 1-2, one-line summaries)
+##### Lighter neighbors (relationship weight 1-2, one-line summaries)
 
-- **RMM (catalog conflict, no edges):** ITOM and RMM both `master` rows on `monitoring_alerts` and `monitoring_policies` in legacy `domain_data_objects`. RMM has zero modules. Decision in `B2-S1`: ITOM is the canonical owner (larger market, broader vendor surface); RMM should demote both rows to `embedded_master` (or DELETE if RMM later master-ships a distinctly-shaped `rmm_monitoring_alerts`). The decision affects the eventual RMM audit; surface as report-only for RMM.
+- **RMM (catalog conflict, no relationships):** ITOM and RMM both `master` rows on `monitoring_alerts` and `monitoring_policies` in legacy `domain_data_objects`. RMM has zero modules. Decision in `B2-S1`: ITOM is the canonical owner (larger market, broader vendor surface); RMM should demote both rows to `embedded_master` (or DELETE if RMM later master-ships a distinctly-shaped `rmm_monitoring_alerts`). The decision affects the eventual RMM audit; surface as report-only for RMM.
 - **DCIM (2 inbound):** Handoffs 673 (`dc_environmental_reading.threshold_breached`) and 681 (`dc_rack.capacity_threshold_breached`) carry DCIM-owned payloads into ITOM. Both have `target_domain_module_id=null` (M1 blocks). DCIM owes nothing further; the receiving DMDO row on `dc_environmental_readings` (552) and `dc_racks` (546) does not exist on ITOM either - ITOM would need a `consumer` DMDO row once M1 lands. Surface as `B1-S18` (consumer DMDO authoring as part of the M1 module bring-up).
 - **DISCOVERY (1 inbound):** Handoff 50 (`device.requires_monitoring` -> monitoring_policies) is fine in shape, but trigger 45 needs the rename per `B1-S8`. After rename, the inbound payload mapping stays clean.
 - **OBS (1 inbound):** Handoff 54 (`monitoring_alert.threshold_breached`) carries an ITOM-mastered payload but with OBS as source. This is structurally odd: OBS is observability-platform (Prometheus / Grafana / Honeycomb / Lightstep style); the threshold breach happens in OBS but the payload entity is ITOM's `monitoring_alerts`. Probable intended shape: OBS-published trigger should fire on an OBS-mastered entity (likely `observability_alerts` or `obs_alerts`), and the handoff payload then becomes the OBS entity that ITOM consumes as a contributor. Surface as `B2-S3` for the user to decide whether trigger 6's `data_object_id` should re-anchor on the OBS side.
@@ -254,17 +254,17 @@ Run the 5-section diff against neighbors with edge weight >= 3 (AIOPS only). ITS
 | ID | Finding | Current | Proposed fix |
 | --- | --- | --- | --- |
 | B1-S1 | A1, `domains.business_logic` contains a U+2014 em-dash | "...impact analysis [EM-DASH] engine-led..." | PATCH to replace em-dash with comma or sentence break |
-| B1-S2 | A3, only 1 solution linked (ServiceNow) | 1 solution | Extend `solution_domains` with BMC Helix Operations Management, OpenText Operations Bridge, IBM Instana Infrastructure, Datadog Infrastructure Monitoring; coverage_level per vendor |
+| B1-S2 | A3, only 1 solution related (ServiceNow) | 1 solution | Extend `solution_domains` with BMC Helix Operations Management, OpenText Operations Bridge, IBM Instana Infrastructure, Datadog Infrastructure Monitoring; coverage_level per vendor |
 | B1-S3 | A4, `catalog_tagline` and `catalog_description` empty | both empty | Draft per Rule #20 buyer-voice, surface to user BEFORE writing |
 | B1-S4 | M1 / M2 / M4, zero `domain_modules` | 0 modules | Author >=3 full modules: ITOM-INFRA-MON (events + alerts + policies), ITOM-CAPACITY (capacity_records + capacity_forecasts), ITOM-LOG-AGG (log aggregation if kept, otherwise fold into ITOM-INFRA-MON); plus consider ITOM-RUNBOOK-AUTO and ITOM-JOB-SCHED unless promoted to the queued ITPA / WORKLOAD-AUTO candidate domains (see `B2-S5`) |
-| B1-S5 | B6, zero intra-domain `data_object_relationships` | 0 edges between ITOM masters | Author 5 edges (events->alerts, policies->events, policies->alerts, capacity->events, policies->capacity) |
-| B1-S6 | B7, zero `users` edges from ITOM masters | 0 user edges | Author monitoring_policy.author, monitoring_policy.approver, monitoring_alert.assignee, capacity_record.collected_by |
-| B1-S7 | B8, zero outbound cross-domain relationships | 0 edges | Author 3 mirror rows for handoffs 28, 53, 620 |
+| B1-S5 | B6, zero intra-domain `data_object_relationships` | 0 relationships between ITOM masters | Author 5 relationships (events->alerts, policies->events, policies->alerts, capacity->events, policies->capacity) |
+| B1-S6 | B7, zero relationships to `users` from ITOM masters | 0 relationships to `users` | Author monitoring_policy.author, monitoring_policy.approver, monitoring_alert.assignee, capacity_record.collected_by |
+| B1-S7 | B8, zero outbound cross-domain relationships | 0 relationships | Author 3 mirror rows for handoffs 28, 53, 620 |
 | B1-S8 | B9, trigger event description / naming defects | 5 events affected | PATCH descriptions for triggers 6, 53; rename trigger 45 (`device.requires_monitoring` -> `monitoring_policy.coverage_requested`); rename trigger 78 (`noise.suppression_applied` -> `monitoring_event.suppression_applied`) AND re-anchor `data_object_id` on the AIOPS side per Pass 4 AIOPS Section 3; set `event_category` for triggers 634 (`threshold`), 635 (`signal`) |
 | B1-S9 | B10b, all ITOM-side per-module FKs null | 13 of 13 | PATCH via the deterministic backfill helper once M1 lands |
 | B1-S10 | B11, zero aliases | 0 alias rows | Author 4-5 aliases per master (see B11 list above) |
 | B1-S11 | B12, zero lifecycle states | 0 states | Author state machines per B12 above; flag `requires_permission=true` on monitoring_policy.activated, capacity_record.forecast_published |
-| B1-S12 | E1-E6, no roles bundled | 0 role_modules | Author NOC Engineer, Site Reliability Engineer, Capacity Planner once M1 lands; cross-functional, no business_function_id required for SRE |
+| B1-S12 | E1-E6, no roles bundled | 0 persona_modules | Author NOC Engineer, Site Reliability Engineer, Capacity Planner once M1 lands; cross-functional, no business_function_id required for SRE |
 | B1-S13 | F1, retire legacy domain-level `itom-system` skill | 1 row | DELETE after per-module system skills exist |
 | B1-S14 | F7, channel primitives used as defaults | send_email + post_chat_message both `required` | Re-anchor on `notify_person` (and `notify_team` for broadcast) once per-module Phase S authoring lands |
 | B1-S15 | B9 subsumed, missing state-change events on policy / alert lifecycle | several missing | Author trigger_events for monitoring_policy.activated, monitoring_policy.deprecated, monitoring_alert.acknowledged, monitoring_alert.resolved, capacity_record.forecast_published as part of B12 |
@@ -359,12 +359,12 @@ Applied the deterministic B1 items from the 2026-05-30 audit that do not require
 ### Applied
 
 - **B1-S1** PATCH `domains.business_logic` on ITOM (id=2): replaced the U+2014 em-dash with a comma (CLAUDE.md violation). Manual follow-up PATCH removed the double-space artifact from the em-dash's surrounding spaces. Final value: `Event management, capacity calculations, and topology-aware impact analysis, engine-led; service-mapping master data is the smaller part.`
-- **B1-S6** INSERT 4 `data_object_relationships` user-edges (Rule #10) from `users` (id 748) to ITOM masters:
+- **B1-S6** INSERT 4 `data_object_relationships` relationships to `users` (Rule #10) from `users` (id 748) to ITOM masters:
   - `users` -[authored_monitoring_policies]-> `monitoring_policies` (86)
   - `users` -[approved_monitoring_policies]-> `monitoring_policies` (86)
   - `users` -[assigned_monitoring_alerts]-> `monitoring_alerts` (85)
   - `users` -[collected_capacity_records]-> `capacity_records` (87)
-  All `owner_side='source'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, matching the live convention sampled from existing user-edges.
+  All `owner_side='source'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, matching the live convention sampled from existing relationships to `users`.
 - **B1-S8** PATCH 6 `trigger_events` rows:
   - 6 `monitoring_alert.threshold_breached`: description rewritten (templated default replaced).
   - 45: RENAME `device.requires_monitoring` -> `monitoring_policy.coverage_requested`; description rewritten.
@@ -407,7 +407,7 @@ None.
 ## 2026-05-31, Audit
 
 ### Summary
-- Current footprint: 4 mastered data_objects (monitoring_events 84, monitoring_alerts 85, monitoring_policies 86, capacity_records 87) + 1 contributor (service_incidents 47 on ITSM), 7 trigger_events, 4 outbound + 9 inbound cross-domain handoffs, **0 `domain_modules`**, 0 `domain_module_data_objects`, 5 `data_object_relationships` (4 user-edges from Continuation + 1 cross-domain ITSM correlate), 0 `data_object_lifecycle_states`, 16 `data_object_aliases`, 0 `domain_regulations`, 0 `domain_aliases`, 1 legacy domain-level `skills` row (`itom-system` id=74, `domain_module_id=null`) with 6 `skill_tools` rows, 0 `role_modules` (cannot exist without modules), 6 `capability_domains` rows, 1 `solution_domains` row (ServiceNow ITOM).
+- Current footprint: 4 mastered data_objects (monitoring_events 84, monitoring_alerts 85, monitoring_policies 86, capacity_records 87) + 1 contributor (service_incidents 47 on ITSM), 7 trigger_events, 4 outbound + 9 inbound cross-domain handoffs, **0 `domain_modules`**, 0 `domain_module_data_objects`, 5 `data_object_relationships` (4 relationships to `users` from Continuation + 1 cross-domain ITSM correlate), 0 `data_object_lifecycle_states`, 16 `data_object_aliases`, 0 `domain_regulations`, 0 `domain_aliases`, 1 legacy domain-level `skills` row (`itom-system` id=74, `domain_module_id=null`) with 6 `skill_tools` rows, 0 `persona_modules` (cannot exist without modules), 6 `capability_domains` rows, 1 `solution_domains` row (ServiceNow ITOM).
 - APQC coverage: 13/13 handoffs tagged (was 2/13 on 2026-05-30), 0 `record_status='approved'`. Catalog-quality headline = 0 approved.
 - Bucket 1 (in-scope, agent fixable): 12 items still pending.
 - Bucket 2 (surface-for-user, judgment): 5 items unchanged.
@@ -416,7 +416,7 @@ None.
 ### Resolutions confirmed against live state
 The 2026-05-31 Continuation cleared 5 items, verified live:
 - B1-S1 (A1 em-dash in `domains.business_logic`) RESOLVED. Live value clean.
-- B1-S6 (B7 user-edges) RESOLVED. 4 rows present (ids 1836-1839).
+- B1-S6 (B7 relationships to `users`) RESOLVED. 4 rows present (ids 1836-1839).
 - B1-S8 (B9 trigger event defects) RESOLVED. All 6 triggers patched: 6, 53 descriptions rewritten; 45 renamed to `monitoring_policy.coverage_requested`; 78 renamed to `monitoring_event.suppression_applied`; 634 set to `threshold`; 635 set to `signal`.
 - B1-S10 (B11 aliases) RESOLVED. 16 alias rows present across the 4 masters.
 - B1-S16 (H1 APQC tagging) SUBSTANTIALLY RESOLVED. 13/13 handoffs now carry `handoff_processes` rows, but all 13 sit at `record_status='new'`. Catalog-quality headline (`approved` count) remains 0. Routed to b1b under blocker `H1-APPROVAL` pending user review of the proposed PCF assignments.
@@ -436,14 +436,14 @@ S1 unchanged from 2026-05-30: zero `domain_modules` is still the only structural
 - **A4 FAIL** unchanged. Both `catalog_tagline` and `catalog_description` still empty. Tracked under B1-S3.
 - **M1 FAIL (BLOCKING)** unchanged. 0 `domain_modules`. Tracked under B1-S4.
 - **M2/M4/M5/M6/M7-per-module** unrunnable.
-- **M7 (catalog-wide cross-domain master conflict)** FAIL unchanged. ITOM (id 2) AND RMM (id 130) both `role='master'` in `domain_data_objects` on data_object_id 85 (monitoring_alerts) and 86 (monitoring_policies). Tracked under B2-S1.
+- **M7 (catalog-wide cross-domain master conflict)** FAIL unchanged. ITOM (id 2) AND RMM (id 130) both `held_as='master'` in `domain_data_objects` on data_object_id 85 (monitoring_alerts) and 86 (monitoring_policies). Tracked under B2-S1.
 - **B1 PASS.** 4 master rows.
 - **B2 PASS.** All masters have singular/plural labels.
 - **B3 PASS.**
 - **B4 FAIL** unchanged. All three pattern flags false-by-default on all 4 masters; positive re-evaluation not performed. Tracked under B2-S2.
 - **B5 PASS.**
 - **B6 FAIL** unchanged. Still 0 intra-domain master-master `data_object_relationships`. Tracked under B1-S5.
-- **B7 PASS.** 4 user-edges authored 2026-05-31.
+- **B7 PASS.** 4 relationships to `users` authored 2026-05-31.
 - **B8 FAIL** unchanged. 0 outbound cross-domain mirror relationships for handoffs 28, 53, 619, 620. Tracked under B1-S7.
 - **B9 PASS.** All 7 trigger_events patched. Note: trigger 78 still anchors `data_object_id=84` (ITOM monitoring_events) per Continuation defer; re-anchor to an AIOPS-owned suppression entity remains pending under B2-S3a.
 - **B9b** vacuously passes (no modules).
@@ -453,7 +453,7 @@ S1 unchanged from 2026-05-30: zero `domain_modules` is still the only structural
 - **B12 FAIL** unchanged. 0 lifecycle states across all 4 masters. Tracked under B1-S11.
 - **C1 PASS.** Owner `IT Infrastructure` + contributor `Software Engineering` confirmed structurally; light query needed to confirm membership shape but no regression.
 - **C2 PASS.**
-- **E1-E6 FAIL** unchanged. 0 role_modules. Tracked under B1-S12 (blocked by B1-S4).
+- **E1-E6 FAIL** unchanged. 0 persona_modules. Tracked under B1-S12 (blocked by B1-S4).
 - **F1 FAIL** unchanged. Legacy `itom-system` (id 74) still anchored at `domain_module_id=null`. Tracked under B1-S13 (blocked by B1-S4).
 - **F2 FAIL** unchanged. 1 system skill misanchored, 0 per-module system skills.
 - **F3 PASS** legacy skill has 6 `skill_tools` rows.
@@ -466,14 +466,14 @@ S1 unchanged from 2026-05-30: zero `domain_modules` is still the only structural
 
 Items resolved 2026-05-31 (S1, S6, S8, S10) dropped. Remainder unchanged from 2026-05-30 narrative; full text in that section. Continued items below carry the same finding text and resolution path:
 
-- **B1-S2** A3 vendor solutions thin (only ServiceNow ITOM linked). Pending vendor-research load.
+- **B1-S2** A3 vendor solutions thin (only ServiceNow ITOM related). Pending vendor-research load.
 - **B1-S3** A4 `catalog_tagline` and `catalog_description` empty. Rule #20 requires user-approved wording before write.
 - **B1-S4** M1 zero `domain_modules`. BLOCKING; downstream S9/S12/S13/S14/S18 all gate on this.
 - **B1-S5** B6 zero intra-domain master-master `data_object_relationships`. Verb / cardinality / owner_side tuples not pre-specified; routed to user.
 - **B1-S7** B8 zero outbound cross-domain mirror relationships for handoffs 28, 53, 619, 620.
 - **B1-S9** B10b 12 ITOM-side per-module FKs null. Blocked by B1-S4.
 - **B1-S11** B12 zero lifecycle states across 4 masters.
-- **B1-S12** E1-E6 no role_modules. Blocked by B1-S4.
+- **B1-S12** E1-E6 no persona_modules. Blocked by B1-S4.
 - **B1-S13** F1 retire legacy `itom-system` skill (id 74). Blocked by B1-S4 + Phase S.
 - **B1-S14** F7 channel primitives as required defaults. Blocked by Phase S authoring.
 - **B1-S15** B9 missing state-change events for policy/alert/capacity lifecycle. Subsumed under B1-S11.
@@ -511,11 +511,11 @@ None.
 
 ## 2026-06-02 Audit (modularization)
 
-Scope: modules + entity assignment ONLY (reuse existing entities). Resolved the BLOCKING M1 gap (B1-S4 / B1B-S4) by authoring the ITOM `domain_modules` set, linking all 6 existing capabilities, and assigning all 5 existing data_objects at their existing role+necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_itom_2026-06-02.ts` (idempotent, TS + Bun, run from project root; verified no-op on second run).
+Scope: modules + entity assignment ONLY (reuse existing entities). Resolved the BLOCKING M1 gap (B1-S4 / B1B-S4) by authoring the ITOM `domain_modules` set, relating all 6 existing capabilities, and assigning all 5 existing data_objects at their existing role+necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_itom_2026-06-02.ts` (idempotent, TS + Bun, run from project root; verified no-op on second run).
 
 ### Catalog-wide master pre-check (high risk, run rigorously)
 
-Queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for each intended master BEFORE writing:
+Queried `/domain_module_data_objects?data_object_id=eq.<id>&held_as=eq.master` for each intended master BEFORE writing:
 
 - monitoring_events (84): zero master rows catalog-wide -> ITOM masters it.
 - monitoring_alerts (85): zero master rows catalog-wide -> ITOM masters it. (The 2026-05-30 B2-S1 / M7 conflict with RMM was at the legacy `domain_data_objects` rollup layer; at the `domain_module_data_objects` layer there is no competing master, so ITOM masters cleanly. RMM still owes its rollup demotion under B2-S1.)
@@ -545,7 +545,7 @@ Module-count note (Rule #14): capability count is 6, so the >=2 full-modules flo
 
 ### Deferred / not in scope (unchanged, now partially unblocked by module bring-up)
 
-The module set unblocks the M1-gated items for future passes: B1B-S9 (per-module handoff FK backfill, 12 ITOM-side FKs), B1B-S12 (role_modules: NOC Engineer, SRE, Capacity Planner), B1B-S13 (retire legacy `itom-system` skill id 74 once per-module system skills exist), B1B-S14 (re-anchor channel primitives on notify_person / notify_team), B1B-S18 (consumer DMDO rows for inbound foreign-mastered payloads). Per-module system skills (Rule #17 -> F2/F3) and catalog UX taglines (A4 / Rule #20, B1B-S3) are NOT yet authored. These are tracked in state.yaml. No new entities, relationships, or skills were created on this pass per scope.
+The module set unblocks the M1-gated items for future passes: B1B-S9 (per-module handoff FK backfill, 12 ITOM-side FKs), B1B-S12 (persona_modules: NOC Engineer, SRE, Capacity Planner), B1B-S13 (retire legacy `itom-system` skill id 74 once per-module system skills exist), B1B-S14 (re-anchor channel primitives on notify_person / notify_team), B1B-S18 (consumer DMDO rows for inbound foreign-mastered payloads). Per-module system skills (Rule #17 -> F2/F3) and catalog UX taglines (A4 / Rule #20, B1B-S3) are NOT yet authored. These are tracked in state.yaml. No new entities, relationships, or skills were created on this pass per scope.
 
 ### JWT errors
 None. One transient `SERVER_CONNECTION_FAILED` (500 from the MCP endpoint) on the first loader run; retried successfully on reconnect. Not a JWT audience error.
@@ -564,7 +564,7 @@ omit `record_status` (DB default `new`); no `notes` columns written.
 ### B1A-CONSUMER-DMDO - DONE
 
 INSERT 8 `domain_module_data_objects` consumer rows on module 267 (ITOM-INFRA-MON), all
-`role='consumer'`, `necessity='optional'` (Rule #16-A: foreign-mastered enrichment reads;
+`held_as='consumer'`, `necessity='optional'` (Rule #16-A: foreign-mastered enrichment reads;
 ITOM's core monitoring workflow runs without them; required-only-when-present per the
 necessity/is_required orthogonality). All 8 payloads are monitoring/event/infra-shaped, so
 all landed on 267 (none capacity-shaped):
@@ -660,8 +660,8 @@ target is AIOPS's; 620 target is SPM's). Out of ITOM scope - not touched.
 
 Did not author. The action's persona-to-module mapping pins each persona to a SINGLE module
 (NOC Engineer -> 267, SRE -> 267, Capacity Planner -> 268, Automation/Ops -> 269), which
-violates the hard 2-module floor (roles.md / E2: every `domain_roles` persona needs >=2
-`role_modules` entries; a single-module persona is a permission tier, not a persona). A valid
+violates the hard 2-module floor (personas.md / E2: every `personas` persona needs >=2
+`persona_modules` entries; a single-module persona is a permission tier, not a persona). A valid
 Phase E pass requires deciding each persona's full multi-module reach plus `process_raci`
 responsibility and `data_object_lifecycle_states.process_id` wiring; ITOM has zero lifecycle
 states (B1B-S11 is user_decision-blocked), so no gated process exists for R/A assignments to

@@ -19,7 +19,7 @@ b1a:
     summary: 2 cross-domain inbound ITSM handoffs have no clean PCF match; defer to Discover Pass 3
     finding: >
       H1 execute pass 2026-06-07 tagged 9 of the 11 genuinely-untagged ITSM cross-domain handoffs
-      (the prior 16-id snapshot was stale: handoff 9 is a non-ITSM Onboarding->HRSD edge already
+      (the prior 16-id snapshot was stale: handoff 9 is a non-ITSM Onboarding->HRSD relationship already
       tagged, and 140/177/642/644 were already tagged). The remaining 2 have no clean PCF match and
       are scope-creep candidates, not mechanical lookups:
         - handoff 843 (Data Loss Prevention -> ITSM-INCIDENT-MGMT, trigger dlp_incident.blocked):
@@ -31,7 +31,7 @@ b1a:
       Both publish payload service_incidents (47) onto module 38 after the 2026-05-29 backfill.
     action: >
       Do NOT bulk-assign PCF 1299. Defer both to Discover Pass 3 / source-domain scope review (DLP
-      and Healthcare Patient Operations own whether the edge belongs to ITSM at all). If the edges
+      and Healthcare Patient Operations own whether the relationship belongs to ITSM at all). If the relationships
       survive scope review, tag at that point.
     affected_handoffs:
       - {handoff_id: 843, source_domain: DLP, target_domain: ITSM, trigger_event: dlp_incident.blocked}
@@ -39,8 +39,8 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer. DEFERRED (personas not auto-authored)."
-    finding: "8 domain_modules and 0 domain_roles reaching this domain via role_modules (confirmed 2026-06-16: role_modules on modules 38-45 returns []). Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. The 2026-05-31 audit's recorded 4 roles (IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR / 19 role_modules) no longer reach the modules; treat the domain as 0-persona for E1."
-    action: "DEFERRED per audit contract (personas/RACI are not auto-authored). Candidate personas if/when authored: IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-PROBLEM-MANAGER, IT-KNOWLEDGE-AUTHOR, END-USER-REQUESTER. Wire role_modules across the 8 modules + process_raci rows. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "8 domain_modules and 0 personas reaching this domain via persona_modules (confirmed 2026-06-16: persona_modules on modules 38-45 returns []). Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. The 2026-05-31 audit's recorded 4 roles (IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR / 19 persona_modules) no longer reach the modules; treat the domain as 0-persona for E1."
+    action: "DEFERRED per audit contract (personas/RACI are not auto-authored). Candidate personas if/when authored: IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-PROBLEM-MANAGER, IT-KNOWLEDGE-AUTHOR, END-USER-REQUESTER. Wire persona_modules across the 8 modules + process_raci rows. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
 
 b1b:
   - id: B1B-B9D-OWN-REALIZE
@@ -70,8 +70,8 @@ b1b:
       - {type: depends_on, ref: B1A-PHASE-P, reason: "no persona pool yet; R/A cannot be authored until ITSM has personas reaching its modules"}
 
   - id: B1B-B9b
-    summary: B9b intra-domain cross-module handoff rows absent for ITSM; new trigger_events required for each edge
-    finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain edges (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical.
+    summary: B9b intra-domain cross-module handoff rows absent for ITSM; new trigger_events required for each relationship
+    finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain relationships (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical.
     blocked_by:
       - {type: depends_on, ref: trigger-event-authoring-session, reason: creative pass; eight intra-domain trigger events need event_name + payload + condition editorial choice}
 

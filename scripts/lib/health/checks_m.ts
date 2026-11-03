@@ -84,16 +84,16 @@ export const M_CHECKS: Check[] = [
     run: async (ctx) => {
       const states = masterLifecycle(ctx).filter((s: any) => s.requires_permission === true);
       // The realizer may sit in any module (a re-prefixed gate on another domain's shell), so the
-      // role lookup is catalog-wide.
-      const roles = new Map<string, string[]>();
+      // held_as lookup is catalog-wide.
+      const heldAs = new Map<string, string[]>();
       for (const r of ctx.all.dmdo) {
         const k = `${r.domain_module_id}|${r.data_object_id}`;
-        const a = roles.get(k) ?? [];
-        a.push(r.role);
-        roles.set(k, a);
+        const a = heldAs.get(k) ?? [];
+        a.push(r.held_as);
+        heldAs.set(k, a);
       }
       return checkGateRealizers(states, {
-        rolesAt: (mid, doId) => roles.get(`${mid}|${doId}`) ?? [],
+        heldAsAt: (mid, doId) => heldAs.get(`${mid}|${doId}`) ?? [],
         moduleExists: (mid) => ctx.index.modulesById.has(mid),
         fullModuleCount: ctx.modules.filter((m) => m.module_kind !== "starter").length,
         nameOf: ctx.doName,
@@ -116,9 +116,9 @@ export const M_CHECKS: Check[] = [
     run: async (ctx) => {
       const dmdo = await dmdoWithIds(ctx);
       const domainRows = dmdo.filter((r) => ctx.moduleIdSet.has(r.domain_module_id));
-      const masters = [...new Set(domainRows.filter((r) => r.role === "master").map((r) => r.data_object_id))].sort((a, b) => a - b);
+      const masters = [...new Set(domainRows.filter((r) => r.held_as === "master").map((r) => r.data_object_id))].sort((a, b) => a - b);
       return checkSingleMaster(
-        { masters, catalogMasterRows: dmdo.filter((r) => r.role === "master"), domainRows },
+        { masters, catalogMasterRows: dmdo.filter((r) => r.held_as === "master"), domainRows },
         { nameOf: ctx.doName, moduleCode: (id) => ctx.moduleCode(id), moduleDomainCode: (id) => moduleDomainCode(ctx, id) },
       );
     },
@@ -146,7 +146,7 @@ export const M_CHECKS: Check[] = [
       const domainRows = dmdo.filter((r) => ctx.moduleIdSet.has(r.domain_module_id));
       const masterModulesByDataObject = new Map<number, number[]>();
       for (const r of dmdo) {
-        if (r.role !== "master") continue;
+        if (r.held_as !== "master") continue;
         const a = masterModulesByDataObject.get(r.data_object_id) ?? [];
         a.push(r.domain_module_id);
         masterModulesByDataObject.set(r.data_object_id, a);
@@ -172,7 +172,7 @@ export const M_CHECKS: Check[] = [
         nameOf: ctx.doName,
         moduleCode: (id) => ctx.moduleCode(id),
         domainCode: (id) => ctx.index.domainsById.get(id)?.domain_code ?? `domain ${id}`,
-        counts: { rows: domainRows.length, requiredEdges: touching.length, modules: ctx.modules.length },
+        counts: { rows: domainRows.length, requiredRelationships: touching.length, modules: ctx.modules.length },
       });
     },
   },

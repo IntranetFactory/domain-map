@@ -16,7 +16,7 @@ last_audit: "2026-06-06"
 
 # b1a fully resolved 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
 #   B1A-SKILL-SPLIT  - DONE: deleted orphan skill 67; created 3 per-module system
-#                      skills 351/352/353; re-linked 6 query tools by mastering module.
+#                      skills 351/352/353; re-related 6 query tools by mastering module.
 #   B1A-MUTATE-TOOLS - DONE: created 10 mutate tools 1723-1732 (coverage_tier=platform,
 #                      data_object_id set) + 10 skill_tools; 16 skill_tools total.
 #   B1A-CATALOG-UX   - DONE: wrote catalog_tagline + catalog_description on 260/261/262.
@@ -83,7 +83,7 @@ b1b:
   - id: B1B-S7
     summary: "Pairwise gap: 3 candidate cross-domain handoffs implied by the relationship graph; source FK now placeable but inserts out of modularization scope."
     finding: >
-      The data_object_relationships graph carries cross-domain edges with no matching handoffs row:
+      The data_object_relationships graph carries cross-domain relationships with no matching handoffs row:
       (a) content_entries 132 re_renders/embargoes/purges cdn_cache_invalidations 441 and content_releases 133
       triggers_build_of/invalidates_cache_of 441, no handoff with cdn_cache_invalidations payload exists;
       (b) content_entries feeds web_pages 116 and refreshes customer_journeys 385, no handoff on
@@ -124,7 +124,7 @@ b1b:
       layer (EU EAA 2025, US ADA Title III). Regulations is a catalog-wide shared master; rows should be
       added against confirmed regulation ids, not invented.
     action: >
-      Once the regulations master namespace is confirmed, INSERT domain_regulations rows linking HCMS
+      Once the regulations master namespace is confirmed, INSERT domain_regulations rows relating HCMS
       (and the relevant modules: GDPR -> HCMS-AUTHORING 261 personal-data fields; WCAG -> HCMS-DELIVERY 262
       delivery layer) to the GDPR and WCAG regulation rows.
     blocked_by:
@@ -164,7 +164,7 @@ b2:
     question: >
       The 2026-06-02 modularization chose the 3-module split (option a). Option (c) carved a dedicated
       HCMS-LOCALIZATION module around content_locales plus a future translation_jobs master (B3-E6) with
-      TMS integration anchors. content_locales currently lives in HCMS-AUTHORING 261. If translation_jobs
+      translation-management integration anchors. content_locales currently lives in HCMS-AUTHORING 261. If translation_jobs
       lands, promote to a 4th module?
     options:
       - "(a) Keep content_locales in HCMS-AUTHORING; do not split (current state)."
@@ -226,7 +226,7 @@ b3:
   - id: B3-E6
     candidate: translation_jobs
     rationale: >
-      HCMS-I18N 135 capability exists; TMS integrations make translation jobs first-class workflow records.
+      HCMS-I18N 135 capability exists; translation-management integrations make translation jobs first-class workflow records.
       Lands in HCMS-AUTHORING or anchors the candidate HCMS-LOCALIZATION module (B2-LOCALIZATION-SPLIT).
     vendor_evidence: [Contentstack, Contentful, Storyblok, Smartling, Lokalise, Phrase]
     proposed_module: HCMS-AUTHORING
@@ -262,7 +262,7 @@ b3:
     vendor_evidence: [Contentstack, Contentful, Storyblok, Ninetailed, Uniform]
     proposed_module: HCMS-DELIVERY
   - id: B3-D1
-    candidate: "TMS, Translation Management System (candidate domain)"
+    candidate: "TRANSLATION-MGMT, Translation Management System (candidate domain)"
     rationale: >
       Queued in audits/_missing-domains.md. Adjacency to HCMS via translation_jobs (B3-E6) workflow.
     vendor_evidence: [Smartling, Lokalise, Phrase, Crowdin, memoQ, Transifex]

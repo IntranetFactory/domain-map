@@ -19,7 +19,7 @@ type Domain = { id: number; domain_code: string; domain_name: string };
 type Skill = { id: number; skill_name: string; skill_type: string; domain_id: number | null };
 type Tool = { id: number; tool_name: string; operation_kind: string; data_object_id: number | null };
 type DO = { id: number; data_object_name: string };
-type DDO = { domain_id: number; data_object_id: number; role: string };
+type DDO = { domain_id: number; data_object_id: number; held_as: string };
 
 async function call(body: any): Promise<any[]> {
   const p = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
@@ -161,7 +161,7 @@ async function refresh(): Promise<void> {
     get(`/data_objects?select=id,data_object_name&limit=10000`) as Promise<DO[]>,
     get(`/tools?select=id,tool_name,operation_kind&limit=10000`) as Promise<Tool[]>,
     get(`/skills?select=id,skill_name,skill_type,domain_id&limit=10000`) as Promise<Skill[]>,
-    get(`/domain_data_objects?select=domain_id,data_object_id,role&role=eq.master&limit=20000`) as Promise<DDO[]>,
+    get(`/domain_data_objects?select=domain_id,data_object_id,held_as&held_as=eq.master&limit=20000`) as Promise<DDO[]>,
     get(`/skill_tools?select=skill_id,tool_id&limit=20000`) as Promise<{skill_id:number;tool_id:number}[]>,
   ]);
   domainByCode = new Map(domains.map(d => [d.domain_code, d.id]));
@@ -173,7 +173,7 @@ async function refresh(): Promise<void> {
   skillDomainIds = new Set(skills.filter(s => s.skill_type === "system" && s.domain_id != null).map(s => s.domain_id as number));
   mastersByDomain = new Map();
   for (const r of ddo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const n = doNameById.get(r.data_object_id);
     if (!n) continue;
     const arr = mastersByDomain.get(r.domain_id) ?? [];

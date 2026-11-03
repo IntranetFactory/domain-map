@@ -24,14 +24,14 @@ Audit of the existing junction (28 domains, 78 rows) confirms the prior design w
 
 | # | Decision | Detail |
 |---|---|---|
-| 1 | Same table | Reuse `domain_modules` with a discriminator (`module_kind` enum). Do not introduce a parallel `starter_kits` table. Keeps `skills` / `tools` / `permissions` / `role_modules` plumbing free. |
+| 1 | Same table | Reuse `domain_modules` with a discriminator (`module_kind` enum). Do not introduce a parallel `starter_kits` table. Keeps `skills` / `tools` / `permissions` / `persona_modules` plumbing free. |
 | 2 | Cross-domain hosting | `domain_modules.domain_id` becomes nullable when `module_kind='starter'`. `domain_module_host_domains` carries the list of domains the starter touches (every domain whose data_object the starter embeds). |
 | 3 | Retire `domain_starter_modules` | Wholesale removal via `delete_entity`. No salvage, no per-row review. The 78 rows are generic install-order prose with no preservation value. |
 | 4 | Starter invariants | Six rules, listed below. Invariant #1 enforced as a Semantius `validation_rules` entry using `set_record`; loader pre-flight remains as a redundant author-time guard. |
 | 5 | Permissions after upgrade | Starter's three baseline permissions stick around after the tenant upgrades to the full module. Provisional, revisit after first real starter ships. |
 | 6 | Skills after upgrade | Tenant manages cleanup. Catalog ships both the starter's system skill and (after upgrade) the full module's system skill. Deployer does not auto-swap. |
 | 7 | Naming convention | No mandatory prefix. Authors pick `<DOMAIN>-LITE`, `<DOMAIN>-STARTER`, `REAL-ESTATE-AGENT`, etc. The `module_kind` discriminator carries the structural signal. |
-| 8 | Industry linkage | Deferred. `domain_module_industries` junction is the cheap option when persona-shaped starters need industry discoverability. Revisit after the third persona starter ships. |
+| 8 | Industry relationship | Deferred. `domain_module_industries` junction is the cheap option when persona-shaped starters need industry discoverability. Revisit after the third persona starter ships. |
 | 9 | `domain_module_host_domains` semantics for starters | Mechanical: every domain whose embedded data_object's canonical master lives in some full module on that domain. No editorial layer. Discoverability follows from the data. |
 
 ---
@@ -48,7 +48,7 @@ Relax `domain_id` to nullable via `update_field`, then add a row-level validatio
 
 ### 2. `domain_module_data_objects` table
 
-Author invariant #1 as a `validation_rules` entry on the `domain_module_data_objects` entity (set via `update_entity`). Uses `set_record` to load the parent `domain_modules` row and throws when the parent is a starter and the role is `master` or `derived`:
+Author invariant #1 as a `validation_rules` entry on the `domain_module_data_objects` entity (set via `update_entity`). Uses `set_record` to load the parent `domain_modules` row and throws when the parent is a starter and the held_as is `master` or `derived`:
 
 ```json
 {
@@ -59,9 +59,9 @@ Author invariant #1 as a `validation_rules` entry on the `domain_module_data_obj
       "if": [
         {"and": [
           {"==": [{"var": "dm.module_kind"}, "starter"]},
-          {"in": [{"var": "role"}, ["master", "derived"]]}
+          {"in": [{"var": "held_as"}, ["master", "derived"]]}
         ]},
-        {"throw_error": "Starter modules cannot master data_objects (role must be embedded_master, consumer, or contributor)."},
+        {"throw_error": "Starter modules cannot master data_objects (held_as must be embedded_master, consumer, or contributor)."},
         true
       ]
     }]
@@ -87,8 +87,8 @@ After the emitter no longer references it (see § "Rollout sequence" for orderin
 
 Every loader that touches a `domain_modules` row with `module_kind='starter'` MUST validate before any insert / update:
 
-1. **Role restricted.** `domain_module_data_objects.role ∈ ('embedded_master', 'consumer', 'contributor')`. Never `master`, never `derived`. Enforced platform-side by the `set_record` validation rule above; loader pre-flight is the redundant author-time guard.
-2. **Canonical master exists.** Every `embedded_master` row points at a data_object that has a `role='master'` row in some full module somewhere in the catalog, OR the data_object is `kind='platform_builtin'`. (Rule #11 already covers this; we enforce the same rule for starters.)
+1. **`held_as` restricted.** `domain_module_data_objects.held_as ∈ ('embedded_master', 'consumer', 'contributor')`. Never `master`, never `derived`. Enforced platform-side by the `set_record` validation rule above; loader pre-flight is the redundant author-time guard.
+2. **Canonical master exists.** Every `embedded_master` row points at a data_object that has a `held_as='master'` row in some full module somewhere in the catalog, OR the data_object is `kind='platform_builtin'`. (Rule #11 already covers this; we enforce the same rule for starters.)
 3. **No lifecycle states authored.** No inserts into `data_object_lifecycle_states` from a starter load. Lifecycle is the canonical master's contract. The starter's blueprint renders inherited states (emitter change, § below); the catalog rows live on the master only.
 4. **Baseline permissions only, exactly three rows.** The starter ships `<starter_code>:read`, `<starter_code>:manage`, `<starter_code>:admin` with `tier ∈ ('baseline-read', 'baseline-manage', 'baseline-admin')`. No `workflow-gate` permissions from a starter load.
 5. **`domain_module_capabilities` allowed.** A starter realizes a subset of capabilities; this is the marketing surface. Same shape as full modules.
@@ -162,7 +162,7 @@ Insert after Rule #17 (before the at-a-glance):
 
 ### Anti-patterns section additions
 
-- Authoring a `module_kind='starter'` row with a `role='master'` `domain_module_data_objects` entry. Starters never master. If the module needs to master, it is not a starter; promote to `module_kind='full'`.
+- Authoring a `module_kind='starter'` row with a `held_as='master'` `domain_module_data_objects` entry. Starters never master. If the module needs to master, it is not a starter; promote to `module_kind='full'`.
 - Authoring `data_object_lifecycle_states` from a starter load. Lifecycle is the canonical master's contract; starter blueprints inherit and render, never author.
 - Authoring workflow-gate permissions on a starter. Starters ship three baseline-tier permissions and nothing else.
 

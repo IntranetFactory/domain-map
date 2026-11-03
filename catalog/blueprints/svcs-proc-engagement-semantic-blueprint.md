@@ -67,7 +67,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `services_engagements` | `services_engagements` | Services Engagement | Services Engagements | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `services_proposals` | `services_proposals` | Services Proposal | Services Proposals | master | - | - | optional | - | operational_workflow | `:manage` | - |
@@ -83,11 +83,11 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 _(none: no relationships with both endpoints inside the scope)_
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -97,15 +97,15 @@ _(none: no relationships with both endpoints inside the scope)_
 | `users` | approves | `rate_cards` | one_to_many | optional | source | clear | reference | - |
 | `users` | owns | `suppliers` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(none: no outbound cross-scope edges from this scope's masters or contributors)_
+_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -175,7 +175,7 @@ _(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `legal_contracts` | consumer | optional | CLM-REPOSITORY (CLM) | - |
 | `rate_cards` | consumer | optional | CWM-WORKER-SOURCING (CWM) | - |

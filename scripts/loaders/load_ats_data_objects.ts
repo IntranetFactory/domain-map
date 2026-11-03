@@ -40,7 +40,7 @@ const dataObjects = [
     singular_label: "Job Requisition",
     plural_label: "Job Requisitions",
     display_label: "Job Requisition",
-    description: "Approved request to hire for a specific role. The master ATS work item, carries headcount, level, location, hiring manager, recruiter, and status (draft / open / on_hold / filled / cancelled).",
+    description: "Approved request to hire for a specific role. The master ATS work item, carries headcount, level, location, hiring manager, recruiter, and status (draft / open / on_hold / filled / canceled).",
   },
   {
     data_object_name: "job_postings",
@@ -82,7 +82,7 @@ const dataObjects = [
     singular_label: "Talent Pool",
     plural_label: "Talent Pools",
     display_label: "Talent Pool",
-    description: "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters).",
+    description: "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medalists, alumni, target-school grads, hard-to-fill skill clusters).",
   },
   {
     data_object_name: "interviews",
@@ -180,7 +180,7 @@ async function main() {
     console.log(`  inserting ${juncRows.length} new domain_data_objects rows (${existingJunc.length} existed)`);
     await call({ method: "POST", path: "/domain_data_objects", body: juncRows });
   } else {
-    console.log(`  domain_data_objects: all ATS links already present`);
+    console.log(`  domain_data_objects: all ATS relationships already present`);
   }
 
   // Verify
@@ -188,7 +188,7 @@ async function main() {
     method: "GET",
     path: `/domain_data_objects?domain_id=eq.${ATS_DOMAIN_ID}&select=data_object_id,mastery_role`,
   });
-  console.log(`\nFinal: ${all.length} total data_objects, ${finalJunc.length} ATS links`);
+  console.log(`\nFinal: ${all.length} total data_objects, ${finalJunc.length} ATS relationships`);
 }
 
 await main();

@@ -161,7 +161,7 @@ Rationale: EHS is a long-standing, separately benchmarked Gartner/Verdantix ente
 
 - Possible discretionary additive entities once promoted: "permit-to-work" as a first-class entity distinct from regulatory environmental permits; "management of change (MOC)" for process-industry buyers; "SIF precursor / leading indicator" records.
 - Master-data sharing review: sites/establishments overlap REAL-EST; contractors/vendors and chemicals are cross-domain master candidates. Worth a master-promotion check during deployment, not at triage.
-- Adjacency note for future: EHS emissions/incident outputs are an explicit upstream feed into ESG disclosure; a documented relationship edge EHS -> ESG would be worth recording.
+- Adjacency note for future: EHS emissions/incident outputs are an explicit upstream feed into ESG disclosure; a documented relationship EHS -> ESG would be worth recording.
 
 ---
 

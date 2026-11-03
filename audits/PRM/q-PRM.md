@@ -19,7 +19,7 @@ q1: (answer this first) How should Partner Relationship Management be split into
 
 - d) 7 modules: the six above plus an Affiliate Partnerships module (only if affiliate stays inside PRM, see q7).
 
-Recommended: a. The flagship classic-PRM platforms converge on these four workflow pillars: Oracle PRM and Channeltivity both ship partner-org + deal-registration + MDF + enablement as the core, and Impartner/Magentrix add scorecards/QBRs on top. Note this 4-module shape already INCLUDES partner training (in Enablement, see q4) and channel commissions (in Funds & Incentives, see q5) because the vendor evidence puts both inside PRM, not outside it. The b/c/d shapes only apply if you overrule the q2/q3/q7 carve-outs. This choice gates the modules, capabilities, masters, and every link below it.
+Recommended: a. The flagship classic-PRM platforms converge on these four workflow pillars: Oracle PRM and Channeltivity both ship partner-org + deal-registration + MDF + enablement as the core, and Impartner/Magentrix add scorecards/QBRs on top. Note this 4-module shape already INCLUDES partner training (in Enablement, see q4) and channel commissions (in Funds & Incentives, see q5) because the vendor evidence puts both inside PRM, not outside it. The b/c/d shapes only apply if you overrule the q2/q3/q7 carve-outs. This choice gates the modules, capabilities, masters, and every relationship below it.
 
 a1:
 

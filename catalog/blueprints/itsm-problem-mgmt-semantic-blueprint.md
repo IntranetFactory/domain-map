@@ -28,10 +28,10 @@ Root-cause analysis, known-error tracking, and corrective action for recurring o
 
 | Name | data_object | Description |
 | --- | --- | --- |
-| Problems | `service_problems` | Root-cause records for recurring or related incidents, with known-error workarounds and links to the fix that will resolve them. |
+| Problems | `service_problems` | Root-cause records for recurring or related incidents, with known-error workarounds and relationships to the fix that will resolve them. |
 | Configuration Items | `configuration_items` | Canonical records of IT things under management: servers, containers, applications, services, network devices, databases, and cloud resources. |
 | Locations | `locations` | Physical or organizational locations referenced across the system, used to place and group other records. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 
 ```mermaid
 flowchart TD
@@ -61,7 +61,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `service_problems` | `service_problems` | Problem | Problems | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `configuration_items` | `configuration_items` | Configuration Item | Configuration Items | embedded_master | `cmdb-core` | CMDB Core Repository | required | - | operational_workflow | `:manage` | - |
@@ -74,14 +74,14 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 | `locations` | rolls_up_to | `locations` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -91,7 +91,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 | `locations` | houses | `users` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -104,7 +104,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `service_problems` | documented_in | `knowledge_articles` | one_to_many | optional | none | n/a | - |
 | `root_cause_analyses` | informs | `service_problems` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -171,13 +171,13 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ITSM-PROBLEM-MGMT | AIOPS | AIOPS-PREDICTIVE-INTELLIGENCE | `root_cause.identified` | `identified` _(signal)_ | `service_problems` | api_call | medium | Confirmed RCA seeds an ITSM problem record (the long-lived root-cause artifact) and links it to the incident(s) that triggered it. Friction sits in the human-in-the-loop confirmation step - most AIOps RCAs need analyst sign-off before they reach problem-management. |
+| ITSM-PROBLEM-MGMT | AIOPS | AIOPS-PREDICTIVE-INTELLIGENCE | `root_cause.identified` | `identified` _(signal)_ | `service_problems` | api_call | medium | Confirmed RCA seeds an ITSM problem record (the long-lived root-cause artifact) and relates it to the incident(s) that triggered it. Friction sits in the human-in-the-loop confirmation step: most AIOps RCAs need analyst sign-off before they reach problem-management. |
 | CMDB-CORE | DISCOVERY | _(domain-level)_ | `ci.discovered` | `discovered` _(signal)_ | `configuration_items` | event_stream | low | Discovered devices reconcile against the existing CMDB and either match (update existing CI), promote (create new CI), or queue for manual review (ambiguous match). Low friction when DISCOVERY and CMDB are same-vendor; medium otherwise. |
 | CMDB-CORE | RMM | RMM-AGENT-MGMT | `ci_endpoint.discovered` | `discovered` _(signal)_ | `configuration_items` | api_call | high | RMM contributes CI attributes (OS, installed services, network config) to the CMDB. Failure modes: CMDB receives the same logical CI from multiple discovery sources (RMM, AD, agent-less scans, cloud APIs) with conflicting attribute values; reconciliation rules are CMDB-vendor-specific and rarely fully cover RMM's payload shape. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `configuration_items` | embedded_master | required | CMDB-CORE (CMDB) | - |
 | `locations` | embedded_master | optional | IWMS-LOCATION-MASTER (IWMS) | - |
@@ -204,7 +204,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `itsm-problem-mgmt:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `itsm-problem-mgmt:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `itsm-problem-mgmt:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `itsm-problem-mgmt:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 

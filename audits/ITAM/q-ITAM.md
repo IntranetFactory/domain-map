@@ -77,9 +77,9 @@ a7:
 
 ---
 
-q8: Should the two substrate capabilities (Normalization and Reconciliation) be renamed to domain-neutral names and linked as cross-cutting across the five sub-domains (HAM, SAM, SMP, FINOPS, EAM)?
+q8: Should the two substrate capabilities (Normalization and Reconciliation) be renamed to domain-neutral names and related as cross-cutting across the five sub-domains (HAM, SAM, SMP, FINOPS, EAM)?
 
-- a) Rename to Asset Normalization and Asset Reconciliation and add cross-cutting links to all five sub-domains.
+- a) Rename to Asset Normalization and Asset Reconciliation and add cross-cutting relationships to all five sub-domains.
 - b) Keep them ITAM-prefixed; the behavior is genuinely scoped to the umbrella domain.
 
 Recommended: a. Both describe substrate behaviors the sub-domains share, and spanning five domains clears the cross-cutting threshold. The rename overwrites existing values, so it needs your call.

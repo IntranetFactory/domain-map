@@ -19,8 +19,8 @@ b1a: []
 b1b:
   - id: B1B-PHASE-P
     summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per current audit policy (do not author personas)."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI authoring is deferred by audit policy; not executed. 2026-06-13: reclassified from b1a to b1b (a deferred action is not agent-actionable); parked behind the audit-policy deferral."
-    action: "DEFER. Do NOT author. When picked up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Enterprise Architect, Application Owner, Portfolio Manager (3 domain_roles already exist as RBAC roles: ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER and can anchor the persona layer)."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI authoring is deferred by audit policy; not executed. 2026-06-13: reclassified from b1a to b1b (a deferred action is not agent-actionable); parked behind the audit-policy deferral."
+    action: "DEFER. Do NOT author. When picked up: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Enterprise Architect, Application Owner, Portfolio Manager (3 personas already exist as RBAC roles: ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER and can anchor the persona layer)."
     blocked_by:
       - {type: user_decision, ref: audit_policy_persona_deferral}
     extra_phase_p_triage: "2026-06-02"
@@ -28,7 +28,7 @@ b1b:
   - id: B1B-M7
     summary: M7 within-domain incoherence on data_objects 267 (enterprise_applications) + 269 (technology_platforms) carrying master in module 103 AND consumer-required in module 104; awaits user pick on DELETE vs. promote-to-embedded_master before any write.
     finding: |
-      M7 within-domain hard fail (carry from 2026-05-29 B1-S1; reconfirmed live 2026-06-07). Both 267 (enterprise_applications) and 269 (technology_platforms) hold role='master', necessity='required' in domain_module_id=103 AND role='consumer', necessity='required' in domain_module_id=104. The M7 rule rejects this: same data_object_id with role='master' in module A AND role IN ('consumer','contributor') in module B of the same domain is incoherent ("you don't consume what you also master in the same scope"). The catalog-wide single-master check passes; this is the within-domain branch.
+      M7 within-domain hard fail (carry from 2026-05-29 B1-S1; reconfirmed live 2026-06-07). Both 267 (enterprise_applications) and 269 (technology_platforms) hold held_as='master', necessity='required' in domain_module_id=103 AND held_as='consumer', necessity='required' in domain_module_id=104. The M7 rule rejects this: same data_object_id with held_as='master' in module A AND held_as IN ('consumer','contributor') in module B of the same domain is incoherent ("you don't consume what you also master in the same scope"). The catalog-wide single-master check passes; this is the within-domain branch.
     blocked_by:
       - {type: user_decision, ref: B2-M7-OPTION}
     affected_modules: [103, 104]
@@ -37,9 +37,9 @@ b1b:
       DELETE the two consumer DMDO rows in module 104 (data_object_id 267 and 269). Rationalization's whole purpose is to score what Registry inventories; standalone Rationalization without Registry has nothing to score, so promote-to-embedded_master is unnecessary. (DESTRUCTIVE; never executed unapproved.)
 
   - id: B1B-B9b
-    summary: Zero intra-domain handoffs between APM-PORTFOLIO-REGISTRY (103) and APM-RATIONALIZATION (104); 4 expected lifecycle_progression edges (2 each direction) are blocked on B1B-M7 resolution.
+    summary: Zero intra-domain handoffs between APM-PORTFOLIO-REGISTRY (103) and APM-RATIONALIZATION (104); 4 expected lifecycle_progression relationships (2 each direction) are blocked on B1B-M7 resolution.
     finding: |
-      B9b hard fail (carry from 2026-05-29 B1-S5; reconfirmed live 2026-06-07: zero rows with source_domain_id=target_domain_id=10). Four expected intra-domain edges: 103->104 on enterprise_application.onboarded so Rationalization picks up new apps to score; 103->104 on technology_platform.registered so Rationalization picks up new platforms to fit-assess; 104->103 on application_value.recalculated so Registry can drive sunset decisions; 104->103 on technology_fit.assessment_completed so Registry can drive decline/retire on platforms.
+      B9b hard fail (carry from 2026-05-29 B1-S5; reconfirmed live 2026-06-07: zero rows with source_domain_id=target_domain_id=10). Four expected intra-domain relationships: 103->104 on enterprise_application.onboarded so Rationalization picks up new apps to score; 103->104 on technology_platform.registered so Rationalization picks up new platforms to fit-assess; 104->103 on application_value.recalculated so Registry can drive sunset decisions; 104->103 on technology_fit.assessment_completed so Registry can drive decline/retire on platforms.
     blocked_by:
       - {type: depends_on, ref: B1B-M7, reason: M7 outcome shapes whether Rationalization references Registry's masters via consumer DMDOs or embedded_master shells; handoff shape and source/target module IDs follow that decision.}
     affected_modules: [103, 104]
@@ -104,7 +104,7 @@ b2:
   - id: B2-M7-OPTION
     summary: M7 within-domain incoherence on 267 + 269. Pick DELETE the consumer-required DMDOs in module 104, or promote them to embedded_master.
     question: |
-      Module 104 (APM-RATIONALIZATION) carries role='consumer', necessity='required' on data_object_id 267 (enterprise_applications) and 269 (technology_platforms). These same data_objects are already mastered in sibling module 103 (APM-PORTFOLIO-REGISTRY). M7 within-domain coherence rejects this combination. Two valid resolutions exist with different deployability semantics. Which?
+      Module 104 (APM-RATIONALIZATION) carries held_as='consumer', necessity='required' on data_object_id 267 (enterprise_applications) and 269 (technology_platforms). These same data_objects are already mastered in sibling module 103 (APM-PORTFOLIO-REGISTRY). M7 within-domain coherence rejects this combination. Two valid resolutions exist with different deployability semantics. Which?
     options:
       - DELETE-consumer-rows. Rationalization always co-installs with Portfolio Registry. The master row in 103 is authoritative for the whole domain; the consumer rows in 104 are redundant. (2026-05-29 audit recommendation.)
       - Promote-to-embedded_master. Rationalization is meant to be standalone-deployable. 104 ships its own shells of enterprise_applications + technology_platforms; runtime demotion (embedded_master -> consumer of 103's master) kicks in when 103 is co-deployed.

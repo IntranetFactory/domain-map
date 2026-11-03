@@ -50,8 +50,8 @@ Vacuous (zero masters; B1 exemption).
 #### A-band
 
 - **A1, domains metadata.** Pass. All 7 business-meaningful columns populated and within enum bands (crud_percentage 35 reflects the ML-heavy nature of the market).
-- **A2, capabilities linked.** Pass. 7 capabilities: `CONVERSATION-INTEL`, `DEAL-SCORING`, `REVENUE-FORECASTING`, `PIPELINE-INSPECTION`, `COACHING-CALL-REVIEW`, `ACTIVITY-CAPTURE`, `MARKET-SIGNAL-EXTRACTION`.
-- **A3, solutions linked.** Pass. 8 solutions, all with coverage_level set, all primary.
+- **A2, capabilities related.** Pass. 7 capabilities: `CONVERSATION-INTEL`, `DEAL-SCORING`, `REVENUE-FORECASTING`, `PIPELINE-INSPECTION`, `COACHING-CALL-REVIEW`, `ACTIVITY-CAPTURE`, `MARKET-SIGNAL-EXTRACTION`.
+- **A3, solutions related.** Pass. 8 solutions, all with coverage_level set, all primary.
 - **A4, catalog UX fields.** FAIL. Both `catalog_tagline` and `catalog_description` are empty strings. See Bucket 1 `B1-A1`.
 - **A5, vendor ownership refresh.** Skipped (opt-in, not requested). Worth noting: Chorus by ZoomInfo (formerly Chorus.ai) is correctly named in the catalog as a ZoomInfo-vended solution.
 
@@ -190,9 +190,9 @@ The Revenue Intelligence market has a recognizable union surface across Gong, Cl
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges with other domains, ranked by edge weight (handoff count + DMDO dependency count):
+Cross-domain relationships with other domains, ranked by relationship weight (handoff count + DMDO dependency count):
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Edge weight | Notes |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Relationship weight | Notes |
 |---|---|---|---|---|---|
 | CRM | 1 (207) | 3 (201, 473, 528) | n/a (no DMDO surface yet) | 4 | Heaviest neighbor. Deal-risk + pipeline-health analytics over CRM opportunities is the canonical REV-INTEL ↔ CRM boundary. |
 | SALES-ENG | 0 | 2 (476, 477) | n/a | 2 | Conversation-intelligence ownership question lives here. |
@@ -201,23 +201,23 @@ Cross-edges with other domains, ranked by edge weight (handoff count + DMDO depe
 | CDP | 0 | 0 | n/a | 0 | Conceptual: customer-level engagement scores could inform CDP enrichment; not loaded. |
 | EPM | 0 | 0 | n/a | 0 | Revenue forecasts feed the EPM close cycle; not loaded. |
 
-Default deep-dive threshold (edge weight ≥ 3) is met only for CRM. Per the prompt, lighter neighbors get a one-line summary instead of the full 5-section diff. All pairwise diffs are also gated on `B1-M1` resolving (both module FKs on every handoff are NULL today).
+Default deep-dive threshold (relationship weight ≥ 3) is met only for CRM. Per the prompt, lighter neighbors get a one-line summary instead of the full 5-section diff. All pairwise diffs are also gated on `B1-M1` resolving (both module FKs on every handoff are NULL today).
 
 ### Pass 4, Pairwise reconciliation per neighbor
 
-**CRM (edge weight 4):** Both sides' module FKs are missing for REV-INTEL (zero modules); the CRM side is fully modularized. The 4 handoffs share the same payload (`crm_opportunities`) and span 4 distinct trigger_events:
+**CRM (relationship weight 4):** Both sides' module FKs are missing for REV-INTEL (zero modules); the CRM side is fully modularized. The 4 handoffs share the same payload (`crm_opportunities`) and span 4 distinct trigger_events:
 
 1. **Section 1, Existing handoffs fully wired.** Zero rows. None of the 4 REV-INTEL ↔ CRM handoffs has all four module FKs resolved.
 2. **Section 2, Existing handoffs with NULL module FK.** All 4 rows. Handoff 207 (REV-INTEL → CRM on `deal_risk.escalated`) has `source_domain_module_id=NULL` (REV-INTEL side) and `target_domain_module_id=48` (CRM-PIPELINE-MGT). Handoff 528 (CRM → REV-INTEL on the same trigger event) has the inverse and is also a suspected duplicate-direction defect (`B2-D1`). Handoffs 201 and 473 (CRM → REV-INTEL on closed_lost and stage_changed) have `source_domain_module_id=48` resolved and `target_domain_module_id=NULL`. Once REV-INTEL ships modules per `B1-M1`, the target module on 201 / 473 / 528 attributes to `REV-INTEL-DEAL-SCORING` (deal-risk scoring consumes opportunity-stage events) or `REV-INTEL-PIPELINE-INSPECTION` (depending on which way the modularization decision lands in `B2-M1`).
 3. **Section 3, Missing handoffs the catalog implies should exist.** The CRM side does not yet author any `data_object_relationships` row mirroring handoff 207 (REV-INTEL → CRM). Once REV-INTEL has a master `deal_risk_scores` (or `crm_opportunities` carries a `deal_risk_score_id` FK), a relationship `crm_opportunities scored_by deal_risk_scores` would mirror the handoff. Report-only on CRM's side.
 4. **Section 4, Boundary integrity gaps (B5 routing).** REV-INTEL declares no `embedded_master` or `consumer` rows on `crm_opportunities`. The platform-vs-silos analysis (Signal 2) cannot read this boundary correctly until REV-INTEL ships at least a `consumer + optional` DMDO on `crm_opportunities` in `REV-INTEL-DEAL-SCORING` and `REV-INTEL-PIPELINE-INSPECTION`. Gated on `B1-M1`.
-5. **Section 5, Cross-domain `data_object_relationships` mirror check.** Zero rows in either direction. Once REV-INTEL has masters, edges `deal_risk_scores scores crm_opportunities` and `revenue_forecasts forecasts crm_opportunities` are expected. Gated on `B1-M1`.
+5. **Section 5, Cross-domain `data_object_relationships` mirror check.** Zero rows in either direction. Once REV-INTEL has masters, relationships `deal_risk_scores scores crm_opportunities` and `revenue_forecasts forecasts crm_opportunities` are expected. Gated on `B1-M1`.
 
-**SALES-ENG (edge weight 2):** One-line summary. Pairwise blocked: SALES-ENG itself has zero modules (separate audit, SALES-ENG.md). Both handoffs (476, 477) leave REV-INTEL's `target_domain_module_id` NULL and SALES-ENG's `source_domain_module_id` NULL. Pairwise reconciliation surfaces the `conversation_intelligence_records` master-ownership question (Bucket 2 `B2-O1`) but cannot proceed until both sides modularize.
+**SALES-ENG (relationship weight 2):** One-line summary. Pairwise blocked: SALES-ENG itself has zero modules (separate audit, SALES-ENG.md). Both handoffs (476, 477) leave REV-INTEL's `target_domain_module_id` NULL and SALES-ENG's `source_domain_module_id` NULL. Pairwise reconciliation surfaces the `conversation_intelligence_records` master-ownership question (Bucket 2 `B2-O1`) but cannot proceed until both sides modularize.
 
-**SALES-PERF (edge weight 1):** One-line summary. Pairwise blocked: SALES-PERF also has zero modules (already audited 2026-05-30). Handoff 208 has both module FKs NULL; resolution requires both REV-INTEL and SALES-PERF to ship modules first.
+**SALES-PERF (relationship weight 1):** One-line summary. Pairwise blocked: SALES-PERF also has zero modules (already audited 2026-05-30). Handoff 208 has both module FKs NULL; resolution requires both REV-INTEL and SALES-PERF to ship modules first.
 
-**BI, CDP, EPM (edge weight 0):** No pairwise to run. Surfaces as expected-future-edges in Bucket 3.
+**BI, CDP, EPM (relationship weight 0):** No pairwise to run. Surfaces as expected-future-relationships in Bucket 3.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -332,7 +332,7 @@ Skipped (Pass 4 pairwise gated on `B1-M1` for the CRM neighbor; SALES-ENG and SA
 - **CRM B10b owes target_domain_module_id on handoff 207.** Once REV-INTEL ships modules per `B1-M1`, the CRM side already has its `target_domain_module_id=48` (CRM-PIPELINE-MGT) resolved on 207; the source-side `source_domain_module_id` on REV-INTEL's side resolves at the same time. Symmetric with REV-INTEL's `B1-S1`.
 - **SALES-PERF B10b owes target_domain_module_id on handoff 208.** SALES-PERF has zero modules (already audited 2026-05-30, queued as `B1-M1` there). Resolves when SALES-PERF modularizes.
 - **SALES-ENG B10b owes source_domain_module_id on handoffs 476 and 477.** SALES-ENG has zero modules; resolves when SALES-ENG modularizes.
-- **CRM, SALES-ENG, SALES-PERF cross-domain `data_object_relationships` mirrors.** Once REV-INTEL masters `deal_risk_scores`, `revenue_forecasts`, and `captured_activities`, each of those neighbors should carry mirror edges (`crm_opportunities scored_by deal_risk_scores`, `crm_opportunities forecast_by revenue_forecasts`, `customers engaged_via captured_activities`). Surfaces when each neighbor is next validated. Today: cannot author because REV-INTEL has no master to point at.
+- **CRM, SALES-ENG, SALES-PERF cross-domain `data_object_relationships` mirrors.** Once REV-INTEL masters `deal_risk_scores`, `revenue_forecasts`, and `captured_activities`, each of those neighbors should carry mirror relationships (`crm_opportunities scored_by deal_risk_scores`, `crm_opportunities forecast_by revenue_forecasts`, `customers engaged_via captured_activities`). Surfaces when each neighbor is next validated. Today: cannot author because REV-INTEL has no master to point at.
 - **SALES-ENG B2-O1 mirror.** If `B2-O1` resolves to option (b) or (c) (REV-INTEL masters `conversation_intelligence_records` or both), SALES-ENG's own audit will need a parallel DMDO refactor on its side. Routine, blocked on B2-O1 decision.
 - **PMM domain candidate.** If Bucket 3 candidate #5 lands and MARKET-SIGNAL-EXTRACTION folds into PMM, the candidate-queue entry `PMM` (already pending review from the PROD-MGMT audit 2026-05-30) updates with REV-INTEL as an adjacency.
 
@@ -405,7 +405,7 @@ Unchanged from 2026-05-30. Six pure-play revenue-intelligence specialists (Gong,
 
 #### A-band
 - A1: PASS. crud_percentage=35, business_logic populated, min_org_size `20 s <500`, cost_band `$$$`, certification_required=false, usa_market_size_usd_m=1500, market_size_source_year=2024.
-- A2: PASS. 7 capabilities linked (CONVERSATION-INTEL, DEAL-SCORING, REVENUE-FORECASTING, PIPELINE-INSPECTION, COACHING-CALL-REVIEW, ACTIVITY-CAPTURE, MARKET-SIGNAL-EXTRACTION).
+- A2: PASS. 7 capabilities related (CONVERSATION-INTEL, DEAL-SCORING, REVENUE-FORECASTING, PIPELINE-INSPECTION, COACHING-CALL-REVIEW, ACTIVITY-CAPTURE, MARKET-SIGNAL-EXTRACTION).
 - A3: PASS. 8 solutions, all coverage_level=primary.
 - A4: FAIL. Both catalog_tagline and catalog_description are empty strings. See B1-A1.
 
@@ -420,7 +420,7 @@ Unchanged from 2026-05-30. Six pure-play revenue-intelligence specialists (Gong,
 
 #### B-band (in-scope items only: B5, B7, B9, B9b, B10b, B11, B12)
 - B5: vacuous. No `embedded_master` rows for REV-INTEL.
-- B7: vacuous. No domain-owned masters to attach `users` edges to.
+- B7: vacuous. No domain-owned masters to attach `users` relationships to.
 - B9: vacuous. REV-INTEL publishes 2 outbound handoffs (207, 208) but owns zero `trigger_events`. The events fire on `crm_opportunities` (CRM-mastered) and live on CRM by Phase D. B2-T1 covers the analytics-side events question for when masters land.
 - B9b: vacuous. Zero modules, no intra-domain cross-module surface.
 - B10b: FAIL.
@@ -580,7 +580,7 @@ All other band results carry forward unchanged (per-band detail below).
 
 ### Market audit (semantic), neighbor discovery, pairwise
 
-Vendor surface unchanged from 2026-05-30 (Gong, Clari, Chorus by ZoomInfo, People.ai, BoostUp.ai, Aviso AI, Salesforce Einstein Conversation Insights, Atrium; all 8 primary). Under the new rule the dominant finding flips from "every entity MISSING but the domain is exempt, so informational" to "every entity MISSING and the domain must be built." The Pass-2 surface and 6-module hypothesis stand as the build proposal pending B2-M1. CRM (edge weight 4) remains the only deep-dive neighbor; SALES-ENG (2) and SALES-PERF (1) get one-line summaries. All pairwise reconciliation stays gated on B1B-M1 (every REV-INTEL-side module FK is NULL today). No change from 2026-05-31.
+Vendor surface unchanged from 2026-05-30 (Gong, Clari, Chorus by ZoomInfo, People.ai, BoostUp.ai, Aviso AI, Salesforce Einstein Conversation Insights, Atrium; all 8 primary). Under the new rule the dominant finding flips from "every entity MISSING but the domain is exempt, so informational" to "every entity MISSING and the domain must be built." The Pass-2 surface and 6-module hypothesis stand as the build proposal pending B2-M1. CRM (relationship weight 4) remains the only deep-dive neighbor; SALES-ENG (2) and SALES-PERF (1) get one-line summaries. All pairwise reconciliation stays gated on B1B-M1 (every REV-INTEL-side module FK is NULL today). No change from 2026-05-31.
 
 ### Disposition
 
@@ -613,7 +613,7 @@ A continuation audit opened against the "unbuilt, gated on B2-M1" state.yaml abo
 
 ### Reconciled band results (live)
 
-PASS: A1, A2, A3; M1, M2, M4, M5, M6, M7; B1 (now master-bearing and built), B2 (all 16 masters carry singular/plural labels), B3, B5, B6 (rich intra-domain master-to-master edges), B7 (8 users edges on actor-bearing masters), B8 (cross-domain edges deal_risk_scores->crm_opportunities, revenue_forecasts->crm_opportunities, captured_activities->crm_opportunities), B11 (aliases on the cross-vendor-synonym masters), B12 (all 4 operational_workflow masters carry valid module-anchored state machines), B13 (all masters classified), B14; C1, C2; F1-F4, F7. H1 6 of 6 cross-domain handoffs tagged (agent_curated, new). Five gaps remained at audit open (A4, M8, B9, B9b, E1) and were all closed this pass.
+PASS: A1, A2, A3; M1, M2, M4, M5, M6, M7; B1 (now master-bearing and built), B2 (all 16 masters carry singular/plural labels), B3, B5, B6 (rich intra-domain master-to-master relationships), B7 (8 relationships to `users` on actor-bearing masters), B8 (cross-domain relationships deal_risk_scores->crm_opportunities, revenue_forecasts->crm_opportunities, captured_activities->crm_opportunities), B11 (aliases on the cross-vendor-synonym masters), B12 (all 4 operational_workflow masters carry valid module-anchored state machines), B13 (all masters classified), B14; C1, C2; F1-F4, F7. H1 6 of 6 cross-domain handoffs tagged (agent_curated, new). Five gaps remained at audit open (A4, M8, B9, B9b, E1) and were all closed this pass.
 
 F5 Semantius scores (strict, informational): COACHING 100% (7/7 platform); DEAL-INTEL 89% (compute_deal_risk_score external); FORECAST 86% (compute_revenue_forecast); ACTIVITY-CAPTURE 80% (fetch_email_activity); CONVERSATION 63% (transcribe_audio, classify_text, detect_sentiment). The non-platform tools are exactly the ML/transcription primitives expected for a conversation-and-scoring market; not gaps.
 
@@ -625,7 +625,7 @@ Loader `.tmp_deploy/fix_rev_intel_completion_2026_06_02.ts` (idempotent; re-run 
 2. **M8 — module catalog UX.** PATCHed catalog_tagline + catalog_description on all 5 modules (buyer voice; Rule #20 user-approved; skip-if-non-empty guard).
 3. **B9 / B2-T1 — analytics-side trigger events (resolved as "add events + re-anchor").** Re-anchored event 167 (deal_risk.escalated -> deal_risk_score.escalated; data_object 100 -> deal_risk_scores 1008) and 168 (pipeline_health.degraded -> 1008). Inserted 9 new events on REV-INTEL masters: deal_risk_score.changed (1008), revenue_forecast.recalculated (1010), forecast_submission.submitted/locked (1011), deal_warning.acknowledged/cleared (1009), coaching_session.completed (1014), conversation_action_item.done (1006), captured_activity.captured (1017). to_state aligned to the lifecycle state_name on each gated event (B9c).
 4. **B9b — intra-domain cross-module handoffs.** Inserted 4 rows (integration_pattern lifecycle_progression, friction_level low): CONVERSATION (186) -> DEAL-INTEL (187) and CONVERSATION (186) -> COACHING (189) on conversation_intelligence.insight_published (469, payload 124); ACTIVITY-CAPTURE (190) -> DEAL-INTEL (187) on captured_activity.captured (payload 1017); DEAL-INTEL (187) -> FORECAST (188) on deal_risk_score.changed (payload 1008). These mirror the embedded_master cross-module dependencies (124 embedded in 187/189; 1017 in 187; 1008 in 188).
-5. **E-band — personas + reach + RACI.** 4 personas: SALES-MANAGER (Sales 21), SALES-OPS-REVOPS-ANALYST (Sales Operations 52), SALES-REP (Sales 21), ENABLEMENT-COACH (cross-functional, NULL). 14 role_modules reach rows (each persona >= 2 modules: SM 4, RevOps 4, Rep 4, Coach 2; interaction_level set on all). Custom process CUSTOM-REVINTEL-CALL-COACHING (2018, source_framework custom). process_id wired on 5 gated lifecycle states: forecast_submissions submitted/locked -> 687 (Generate sales forecast); deal_warnings acknowledged/cleared -> 712 (Manage opportunity pipeline); coaching_sessions completed -> 2018. 8 process_raci rows, each gated process carrying >= 1 Responsible + 1 Accountable (687: R Sales Rep / A Sales Manager / C RevOps Analyst; 712: R+A Sales Manager / C RevOps Analyst; 2018: R Enablement Coach / A Sales Manager).
+5. **E-band — personas + reach + RACI.** 4 personas: SALES-MANAGER (Sales 21), SALES-OPS-REVOPS-ANALYST (Sales Operations 52), SALES-REP (Sales 21), ENABLEMENT-COACH (cross-functional, NULL). 14 persona_modules reach rows (each persona >= 2 modules: SM 4, RevOps 4, Rep 4, Coach 2; interaction_level set on all). Custom process CUSTOM-REVINTEL-CALL-COACHING (2018, source_framework custom). process_id wired on 5 gated lifecycle states: forecast_submissions submitted/locked -> 687 (Generate sales forecast); deal_warnings acknowledged/cleared -> 712 (Manage opportunity pipeline); coaching_sessions completed -> 2018. 8 process_raci rows, each gated process carrying >= 1 Responsible + 1 Accountable (687: R Sales Rep / A Sales Manager / C RevOps Analyst; 712: R+A Sales Manager / C RevOps Analyst; 2018: R Enablement Coach / A Sales Manager).
 6. **B2-C1 — RevOps function-spine (additive, lowest risk).** Created business_function Revenue Operations (86, top-level, parent NULL). Added it as a contributor on REV-INTEL (business_function_domains); Sales Operations (52) stays owner.
 
 ### Disposition
@@ -635,20 +635,20 @@ REV-INTEL is built and passes every in-scope band. status -> passed. The whole p
 - **Report-only neighbor catch-up (b1b):** CRM owes its mirror cross-domain data_object_relationships (crm_opportunities scored_by/forecast_by deal_risk_scores/revenue_forecasts) + source-side APQC tags on inbound handoffs; SALES-ENG owes source_domain_module_id on 476/477 (unmodularized) + source-side APQC; SALES-PERF owes target_domain_module_id on 208 (unmodularized). Each resolves when that domain is audited.
 - **Revisit-if-ships (b1b, catalog_addition):** B3-3 (forecast roll-up could re-home to an EPM sales-planning domain if one ships) and B3-5 (MARKET-SIGNAL-EXTRACTION could fold into PMM if it ships). The build settled both as REV-INTEL-owned for now; B3-1/2/4/6 are settled by the build (conversation split done; coaching kept in REV-INTEL; activity-capture kept as a REV-INTEL module; CRM-AI-COPILOT boundary holds).
 
-UI: https://tests.semantius.app/domain_map/domain_modules , /trigger_events , /handoffs , /domain_roles , /process_raci
+UI: https://tests.semantius.app/domain_map/domain_modules , /trigger_events , /handoffs , /personas , /process_raci
 
 ### Pass 4 — pairwise reconciliation (now unblocked by the build)
 
 Pass 4 was gated through every prior audit (REV-INTEL had no modules, so every boundary FK was NULL). With modules + masters in place it ran this pass.
 
-**REV-INTEL <-> CRM (edge weight 4, deep dive):**
+**REV-INTEL <-> CRM (relationship weight 4, deep dive):**
 - Section 1 (fully wired): all 3 cross-domain handoffs now have all four module FKs resolved. 207 (REV-INTEL->CRM deal_risk_score.escalated) source REV-INTEL-DEAL-INTEL (187) / target CRM-PIPELINE-MGT (48); 201 (closed_lost) and 473 (stage_changed) CRM->REV-INTEL source 48 / target 187. This was the headline gap in every prior pass (zero wired); now closed.
 - Section 2 (NULL module FK): none for the CRM pair.
 - Section 4 (boundary integrity): clean. REV-INTEL embedded_masters crm_opportunities (CRM-mastered); CRM-PIPELINE-MGT consumes conversation_intelligence_records (REV-INTEL-mastered, required). No orphan references.
-- Section 5 (cross-domain relationships): the edges deal_risk_scores scores crm_opportunities, revenue_forecasts forecasts crm_opportunities, captured_activities attributed_to crm_opportunities all exist as single bidirectional rows (authored from REV-INTEL B8). No MISSING-RELATIONSHIP.
-- CRM-owed (report-only, both optional): (a) a consumer DMDO on deal_risk_scores (1008) in CRM-PIPELINE-MGT if CRM chooses to surface the score on the opportunity (handoff 207's payload is crm_opportunities, CRM's own master, so the minimal model is already satisfied without it); (b) source-side APQC tags on inbound handoffs 201 / 473. Both resolve when CRM is audited; REV-INTEL's side of this boundary is complete. (Corrects the imprecise "CRM owes mirror edges" wording in b1b N1 of the prior state.yaml.)
+- Section 5 (cross-domain relationships): the relationships deal_risk_scores scores crm_opportunities, revenue_forecasts forecasts crm_opportunities, captured_activities attributed_to crm_opportunities all exist as single bidirectional rows (authored from REV-INTEL B8). No MISSING-RELATIONSHIP.
+- CRM-owed (report-only, both optional): (a) a consumer DMDO on deal_risk_scores (1008) in CRM-PIPELINE-MGT if CRM chooses to surface the score on the opportunity (handoff 207's payload is crm_opportunities, CRM's own master, so the minimal model is already satisfied without it); (b) source-side APQC tags on inbound handoffs 201 / 473. Both resolve when CRM is audited; REV-INTEL's side of this boundary is complete. (Corrects the imprecise "CRM owes mirror relationships" wording in b1b N1 of the prior state.yaml.)
 
-**SALES-ENG (edge weight 2), SALES-PERF (edge weight 1):** one-line summaries; pairwise blocked because each has zero domain_modules. Handoffs 476/477 (SALES-ENG->REV-INTEL) carry source_domain_module_id=NULL; 208 (REV-INTEL->SALES-PERF) carries target_domain_module_id=NULL. REV-INTEL's side of all three is set. Tracked as b1b N2 / N3; resolve when those domains modularize.
+**SALES-ENG (relationship weight 2), SALES-PERF (relationship weight 1):** one-line summaries; pairwise blocked because each has zero domain_modules. Handoffs 476/477 (SALES-ENG->REV-INTEL) carry source_domain_module_id=NULL; 208 (REV-INTEL->SALES-PERF) carries target_domain_module_id=NULL. REV-INTEL's side of all three is set. Tracked as b1b N2 / N3; resolve when those domains modularize.
 
 Net: REV-INTEL's 4-pass Validate is complete. No REV-INTEL-side fixes remain on any boundary.
 

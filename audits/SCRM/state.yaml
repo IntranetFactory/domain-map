@@ -48,7 +48,7 @@ b2:
       Sayari Map, Resilinc multi-tier map). Those sub-tier nodes have no SRM supplier_master record
       by definition, so a consume-suppliers-only model (b) cannot represent the graph the vendors
       sell. The vendor surface masters a node entity distinct from the direct-supplier master, with
-      the known direct suppliers linked back to SRM (option a). The SRM supplier master stays the
+      the known direct suppliers related back to SRM (option a). The SRM supplier master stays the
       single master for direct suppliers (Rule M7); SCRM embeds it and adds the indirect nodes.
 
   - id: B2-SCRM-FORCED-LABOR

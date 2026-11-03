@@ -26,7 +26,7 @@ import {
   toolPairingProblem,
   type ModuleLite,
   type PersonaRow,
-  type RoleModuleRow,
+  type PersonaModuleRow,
   type SkillRow,
   type ToolRow,
   type Verdict,
@@ -58,14 +58,14 @@ describe("C1 function ownership", () => {
 // ---------------------------------------------------------------- E1 / E2 / E3
 
 const persona = (id: number, fn: number | null, record_status: string | null = "new"): PersonaRow => ({ id, business_function_id: fn, record_status });
-const rm = (id: number, role_id: number, domain_module_id: number, interaction_level: string | null = "primary"): RoleModuleRow => ({ id, role_id, domain_module_id, interaction_level });
+const rm = (id: number, persona_id: number, domain_module_id: number, interaction_level: string | null = "primary"): PersonaModuleRow => ({ id, persona_id, domain_module_id, interaction_level });
 
 describe("E1 persona set and coverage", () => {
   const personas = [persona(1, 34), persona(2, null), persona(3, 34, "archived"), persona(4, 99)];
-  const roleModules = [rm(10, 2, 500), rm(11, 2, 501), rm(12, 3, 500), rm(13, 4, 900), rm(14, 4, 901)];
+  const personaModules = [rm(10, 2, 500), rm(11, 2, 501), rm(12, 3, 500), rm(13, 4, 900), rm(14, 4, 901)];
 
   test("union of owning-function personas and module reach; tombstoned personas drop out", () => {
-    const p = domainPersonas({ moduleIds: [500, 501], ownerFunctionIds: [34], personas, roleModules });
+    const p = domainPersonas({ moduleIds: [500, 501], ownerFunctionIds: [34], personas, personaModules });
     expect(p).toEqual({ reach: [2], functionScoped: [1], all: [1, 2] });
     expect(isLivePersona({ record_status: "Deleted" })).toBe(false);
     expect(isLivePersona({ record_status: null })).toBe(true);
@@ -97,7 +97,7 @@ describe("E1 persona set and coverage", () => {
 });
 
 describe("E2 2-module floor", () => {
-  test("a persona with one role_modules row fails; rows = domain_roles ids", () => {
+  test("a persona with one persona_modules row fails; rows = personas ids", () => {
     expect(shape(checkPersonaFloor([1, 2], [rm(1, 1, 500), rm(2, 1, 501), rm(3, 2, 500)]))).toEqual(["fail:2"]);
   });
   test("every persona at >= 2 passes; no personas is vacuous", () => {
@@ -107,7 +107,7 @@ describe("E2 2-module floor", () => {
 });
 
 describe("E3 interaction_level", () => {
-  test("null and off-enum values fail; rows = role_modules ids; other personas' rows are out of scope", () => {
+  test("null and off-enum values fail; rows = persona_modules ids; other personas' rows are out of scope", () => {
     const rows = [rm(1, 1, 500), rm(2, 1, 501, null), rm(3, 1, 502, "read_only"), rm(4, 9, 500, null)];
     expect(shape(checkInteractionLevels([1], rows))).toEqual(["fail:2,3"]);
   });

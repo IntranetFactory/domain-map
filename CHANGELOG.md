@@ -9,7 +9,7 @@ Repo-wide log of meaningful changes: emitted artifacts whose shape consumers dep
 Emitted by [scripts/emit_domain_map.ts](scripts/emit_domain_map.ts) from the live Semantius catalog. Reads go through [scripts/lib/catalog.ts](scripts/lib/catalog.ts) and the local cache. One run writes three files under `catalog/`:
 
 - `domain-map.json` — domains + modules topology, now with `personas[]` and `processes[]` at both the domain grain and nested per module.
-- `personas.json` — every catalog persona (`domain_roles`), with its business function and the modules / domains its `role_modules` reach touches.
+- `personas.json` — every catalog persona (`personas`), with its business function and the modules / domains its `persona_modules` reach touches.
 - `processes.json` — only the processes USED somewhere in the catalog (the `processes` table is the full ~2k-row APQC PCF framework; this is the in-use subset).
 
 ### Commands
@@ -67,9 +67,9 @@ By default the emitter forces a cache refresh on every run (it IS the regenerate
 - `catalog_release` is a **domain-level only** field (the nullable `date` `domains.catalog_release` column straight from the catalog): the scheduled web-site-catalog release date as an ISO `YYYY-MM-DD` string, or `null` if not scheduled. Persistent value on the row itself, not a derived flag. (Replaced the former boolean `catalog` flag, which existed on both domains and modules.) Modules carry no `catalog_release`.
 - **Release gate (all four artifacts).** By default `domain-map.json`, `personas.json`, `processes.json`, and `business-functions.json` are all restricted to **released** domains (a domain whose `catalog_release` is set and on or before the emit date) and the data related to them: `domain-map.json` lists only released domains with `related_domains` / `related_modules` pruned to the released set, `personas.json` / `business-functions.json` keep only personas/functions touching a released domain, and `processes.json` keeps only processes attributed to a released domain. Pass `--all` to drop the filter and emit every domain (the full internal topology). Because `catalog_release` is the public web-site-catalog go-live date, "released" means "live on the public catalog", so the default output is the public set and `--all` is the internal/full set.
 - `related_domains[]` sorted, self-excluded, computed as the union of:
-  - other domains touching one of this domain's `data_objects` (any role; reaches through both `domain_data_objects` and `domain_module_data_objects` for modules hosted on the domain), and
+  - other domains touching one of this domain's `data_objects` (any held_as; reaches through both `domain_data_objects` and `domain_module_data_objects` for modules hosted on the domain), and
   - handoff neighbors (any row in `handoffs` where this domain is on either side).
-- `personas[]` (domain and module grain) sorted by `code`, deduped. Attached via the `role_modules` REACH edge (persona ↔ module). A module lists every persona whose reach touches it; a domain lists the union across its hosted modules. `interaction_level` is `primary` / `secondary`, and when a persona reaches a domain through several modules the **strongest** level wins (primary > secondary). Only the concrete `role_modules` edge is used (not the aspirational `business_function` coverage), so domains whose persona layer (Phase E) has not been authored yet show `"personas": []`.
+- `personas[]` (domain and module grain) sorted by `code`, deduped. Attached via the `persona_modules` REACH relationship (persona ↔ module). A module lists every persona whose reach touches it; a domain lists the union across its hosted modules. `interaction_level` is `primary` / `secondary`, and when a persona reaches a domain through several modules the **strongest** level wins (primary > secondary). Only the concrete `persona_modules` relationship is used (not the aspirational `business_function` coverage), so domains whose persona layer (Phase E) has not been authored yet show `"personas": []`.
 - `processes[]` (domain and module grain) sorted by `key`, deduped, each tagged with `via`:
   - `via: "gate"` — a module realizes the process as a lifecycle gate (`data_object_lifecycle_states.process_id` + `domain_module_id`). "Owns / runs it." Rolled up to the domain across its modules.
   - `via: "handoff"` — the process implements one of the unit's handoffs (`handoff_processes` → `handoffs` endpoints). Module grain uses the handoff's module endpoints (which can be NULL, skipped); domain grain uses the always-present domain endpoints, so the domain list is the more complete of the two.
@@ -99,8 +99,8 @@ By default the emitter forces a cache refresh on every run (it IS the regenerate
 }
 ```
 
-- Every `domain_roles` row (the full persona set), sorted by `code`. `modules[]` / `domains[]` are the reverse of the `role_modules` reach (domains derived from the reached modules' host domains).
-- `processes[]` is the persona's responsibility edge from `process_raci` (`actor_role_id` = this persona), sorted by `key`. `raci` is the full enum word (`responsible` / `accountable` / `consulted` / `informed`). Only personas with authored RACI rows have a non-empty list; the rest are `[]`. This is the inverse of `personas[]` in `processes.json`.
+- Every `personas` row (the full persona set), sorted by `code`. `modules[]` / `domains[]` are the reverse of the `persona_modules` reach (domains derived from the reached modules' host domains).
+- `processes[]` is the persona's responsibility relationship from `process_raci` (`persona_id` = this persona), sorted by `key`. `raci` is the full enum word (`responsible` / `accountable` / `consulted` / `informed`). Only personas with authored RACI rows have a non-empty list; the rest are `[]`. This is the inverse of `personas[]` in `processes.json`.
 
 ### Shape — `processes.json`
 
@@ -123,5 +123,5 @@ By default the emitter forces a cache refresh on every run (it IS the regenerate
 }
 ```
 
-- Only processes USED somewhere, sorted by `key`. "Used" = referenced by any of four edges: `data_object_lifecycle_states.process_id` (gate), `process_raci.process_id` (raci), `handoff_processes.process_id` (handoff), `process_tools.process_id` (tool). The `usage` object flags which edges reference each process. The full `processes` table (~2k APQC PCF rows) is deliberately NOT emitted, only the in-use subset (~400).
+- Only processes USED somewhere, sorted by `key`. "Used" = referenced by any of four relationships: `data_object_lifecycle_states.process_id` (gate), `process_raci.process_id` (raci), `handoff_processes.process_id` (handoff), `process_tools.process_id` (tool). The `usage` object flags which relationships reference each process. The full `processes` table (~2k APQC PCF rows) is deliberately NOT emitted, only the in-use subset (~400).
 - `personas[]` is the RACI actors on this process from `process_raci` (`process_id` = this process, persona actors only, skill actors excluded), sorted by `code`. `raci` is the full enum word (`responsible` / `accountable` / `consulted` / `informed`). This is the inverse of `processes[]` in `personas.json`; only the ~39 gated processes carry personas today.

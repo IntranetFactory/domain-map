@@ -73,7 +73,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage re-confirmed 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Build is gated on B2-MOD-SHAPE (module count) and B2-AUDIT-VS-GRC (entity placement)."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Per the retired per-module-skill model (see header) author tools onto modules via domain_module_tools, NOT per-module skills."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Per the retired per-module-skill model (see header) author tools onto modules via domain_module_tools, NOT per-module skills."
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SHAPE}
 
@@ -92,7 +92,7 @@ b1b:
       - {type: user_decision, ref: B2-MOD-SHAPE}
 
   - id: B1B-A2
-    summary: "Zero capability_domains. Capabilities must link to realizing modules per M4."
+    summary: "Zero capability_domains. Capabilities must relate to realizing modules per M4."
     finding: |
       A2 fails. 0 capability_domains rows. Domain has 8 masters and a vendor-confirmed
       multi-pillar surface. Expected 5-8 capabilities.
@@ -100,7 +100,7 @@ b1b:
       AUDIT-EVIDENCE-MGMT, AUDIT-CONTROLS-TESTING, AUDIT-FINDINGS-MGMT,
       AUDIT-RECOMMENDATIONS-FOLLOWUP, AUDIT-REPORTING-COMMITTEE.
     blocked_by:
-      - {type: depends_on, ref: B1B-MOD1, reason: "M4 requires every capability to link to >=1 realizing module"}
+      - {type: depends_on, ref: B1B-MOD1, reason: "M4 requires every capability to relate to >=1 realizing module"}
 
   - id: B1B-B12
     summary: "Zero data_object_lifecycle_states across 8 masters. All 8 now classified operational_workflow."
@@ -126,7 +126,7 @@ b1b:
     summary: "9 outbound handoffs missing source_domain_module_id. Backfill after MOD1."
     finding: |
       9 outbound handoffs have NULL source_domain_module_id. Once AUDIT has modules,
-      derive each from the module that holds trigger_events.data_object_id with role=master.
+      derive each from the module that holds trigger_events.data_object_id with held_as=master.
       Handoff 257 has target_domain_module_id=38 (ITSM) already populated.
       Reference loader: scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts.
     blocked_by:

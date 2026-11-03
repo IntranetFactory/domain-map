@@ -43,24 +43,24 @@ b2:
   - id: B2-B6B-OWNERSIDE
     summary: ~13 one_to_many/composition relationship rows carry owner_side=target with a parent-first verb; soft B6b warning, needs per-row sign-off.
     question: |
-      Several SMP relationship rows set owner_side=target while the forward verb reads parent-to-child from the source (e.g. saas_applications integrates_with smp_app_integrations id 1475; smp_renewal_engagements negotiated_under smp_vendor_negotiations id 1487). Per B6b the fix is per-row, never a blanket flip: where the source is genuinely the parent, flip owner_side target->source; where the row is a child-first edge (owner_side=target already names the real parent) leave owner_side and instead swap relationship_verb<->inverse_verb so the forward verb reads parent-to-child. Each owner_side / verb change OVERWRITES an existing value (destructive), so each candidate row needs your sign-off.
+      Several SMP relationship rows set owner_side=target while the forward verb reads parent-to-child from the source (e.g. saas_applications integrates_with smp_app_integrations id 1475; smp_renewal_engagements negotiated_under smp_vendor_negotiations id 1487). Per B6b the fix is per-row, never a blanket flip: where the source is genuinely the parent, flip owner_side target->source; where the row is a child-first relationship (owner_side=target already names the real parent) leave owner_side and instead swap relationship_verb<->inverse_verb so the forward verb reads parent-to-child. Each owner_side / verb change OVERWRITES an existing value (destructive), so each candidate row needs your sign-off.
     options:
       - "(a) Run a B6b owner_side/verb-direction correction pass on the surfaced rows (each change is a destructive overwrite, listed per-row in the q-file)."
       - "(b) Leave as authored."
     candidate_rows:
-      - {id: 1475, edge: "saas_applications integrates_with smp_app_integrations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent that has many integrations)"}
-      - {id: 1480, edge: "saas_applications recommends_for_app smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, keep owner_side=target)"}
-      - {id: 1481, edge: "saas_subscriptions recommends_for_sub smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
-      - {id: 1483, edge: "saas_applications benchmarks_for smp_app_benchmarks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
-      - {id: 1484, edge: "saas_subscriptions tasks_for smp_renewal_tasks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
-      - {id: 1486, edge: "saas_subscriptions engagement_for smp_renewal_engagements", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
-      - {id: 1487, edge: "smp_renewal_engagements negotiated_under smp_vendor_negotiations", relationship_type: one_to_many, relationship_kind: composition, owner_side: target, proposed: "flip owner_side -> source (engagement is the composition parent of its negotiations)"}
-      - {id: 1488, edge: "saas_subscriptions allocates smp_spend_allocations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (subscription is the parent that allocates spend)"}
-      - {id: 1489, edge: "saas_applications assesses_app smp_vendor_risk_assessments", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent)"}
-      - {id: 1490, edge: "saas_applications automates_app smp_automation_workflows", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent the workflow automates)"}
-      - {id: 1492, edge: "smp_app_catalog_listings requests_listing smp_app_requests", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: listing is parent)"}
-      - {id: 1477, edge: "saas_applications raised_for smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, alert is child)"}
-      - {id: 1478, edge: "shadow_it_apps raised_for_shadow smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1475, relationship: "saas_applications integrates_with smp_app_integrations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent that has many integrations)"}
+      - {id: 1480, relationship: "saas_applications recommends_for_app smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, keep owner_side=target)"}
+      - {id: 1481, relationship: "saas_subscriptions recommends_for_sub smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1483, relationship: "saas_applications benchmarks_for smp_app_benchmarks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1484, relationship: "saas_subscriptions tasks_for smp_renewal_tasks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1486, relationship: "saas_subscriptions engagement_for smp_renewal_engagements", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1487, relationship: "smp_renewal_engagements negotiated_under smp_vendor_negotiations", relationship_type: one_to_many, relationship_kind: composition, owner_side: target, proposed: "flip owner_side -> source (engagement is the composition parent of its negotiations)"}
+      - {id: 1488, relationship: "saas_subscriptions allocates smp_spend_allocations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (subscription is the parent that allocates spend)"}
+      - {id: 1489, relationship: "saas_applications assesses_app smp_vendor_risk_assessments", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent)"}
+      - {id: 1490, relationship: "saas_applications automates_app smp_automation_workflows", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent the workflow automates)"}
+      - {id: 1492, relationship: "smp_app_catalog_listings requests_listing smp_app_requests", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: listing is parent)"}
+      - {id: 1477, relationship: "saas_applications raised_for smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, alert is child)"}
+      - {id: 1478, relationship: "shadow_it_apps raised_for_shadow smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
   - id: B2-B9D-MISTAG-44
     summary: "SMP mis-tagged handoff 44 (SMP->CLM, payload legal_contracts): APQC tag points at the wrong process; re-point or delete (destructive, SMP-authored)."
     question: |

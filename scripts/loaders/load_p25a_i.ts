@@ -201,7 +201,7 @@ const newQueryTools: ToolDraft[] = [
   { tool_name: "query_headcount_plans", operation_kind: "query", data_object_name: "headcount_plans", description: "Read headcount plans via Semantius CRUD." },
   { tool_name: "query_position_demand_forecasts", operation_kind: "query", data_object_name: "position_demand_forecasts", description: "Read position demand forecasts via Semantius CRUD." },
   { tool_name: "query_skills_gap_analyses", operation_kind: "query", data_object_name: "skills_gap_analyses", description: "Read skills-gap analyses via Semantius CRUD." },
-  { tool_name: "query_org_designs", operation_kind: "query", data_object_name: "org_designs", description: "Read SWP organisational designs via Semantius CRUD." },
+  { tool_name: "query_org_designs", operation_kind: "query", data_object_name: "org_designs", description: "Read SWP organizational designs via Semantius CRUD." },
   { tool_name: "query_workforce_cost_projections", operation_kind: "query", data_object_name: "workforce_cost_projections", description: "Read workforce cost projections via Semantius CRUD." },
   { tool_name: "query_labor_market_benchmarks", operation_kind: "query", data_object_name: "labor_market_benchmarks", description: "Read labor market benchmarks via Semantius CRUD." },
 ];
@@ -216,12 +216,12 @@ const newMutateTools: ToolDraft[] = [
   // SPM
   { tool_name: "create_strategic_initiative", operation_kind: "mutate", data_object_name: "strategic_initiatives", description: "Open a new strategic initiative." },
   { tool_name: "update_roadmap_item", operation_kind: "mutate", data_object_name: "roadmap_items", description: "Advance or update a roadmap item." },
-  { tool_name: "approve_demand_intake_request", operation_kind: "mutate", data_object_name: "demand_intake_requests", description: "Approve a demand intake request and authorise an initiative." },
+  { tool_name: "approve_demand_intake_request", operation_kind: "mutate", data_object_name: "demand_intake_requests", description: "Approve a demand intake request and authorize an initiative." },
   { tool_name: "create_okr_objective", operation_kind: "mutate", data_object_name: "okr_objectives", description: "Open a new OKR objective." },
   // GRC
   { tool_name: "create_issue", operation_kind: "mutate", data_object_name: "issues", description: "Open a new GRC issue." },
   { tool_name: "update_remediation_plan", operation_kind: "mutate", data_object_name: "remediation_plans", description: "Update a GRC remediation plan." },
-  { tool_name: "create_policy_attestation", operation_kind: "mutate", data_object_name: "policy_attestations", description: "Record a user policy acknowledgement." },
+  { tool_name: "create_policy_attestation", operation_kind: "mutate", data_object_name: "policy_attestations", description: "Record a user policy acknowledgment." },
   // AUDIT
   { tool_name: "create_audit_finding", operation_kind: "mutate", data_object_name: "audit_findings", description: "Open a new audit finding." },
   { tool_name: "create_audit_engagement", operation_kind: "mutate", data_object_name: "audit_engagements", description: "Open a new audit engagement." },
@@ -260,7 +260,7 @@ const allNewTools = [...newQueryTools, ...newMutateTools];
 // ============================================================================
 type SkillDraft = { skill_name: string; domain_code: string; description: string };
 const newSkills: SkillDraft[] = [
-  { skill_name: "apm-system", domain_code: "APM", description: "System skill for Application Portfolio Management — rationalises the enterprise application portfolio via TIME scoring, technology fit assessment, cost analytics, and capability-map alignment." },
+  { skill_name: "apm-system", domain_code: "APM", description: "System skill for Application Portfolio Management — rationalizes the enterprise application portfolio via TIME scoring, technology fit assessment, cost analytics, and capability-map alignment." },
   { skill_name: "cmdb-system", domain_code: "CMDB", description: "System skill for the Configuration Management Database — maintains the CI inventory, relationships, baselines, and service maps; detects drift and triggers incidents on unauthorized changes." },
   { skill_name: "epm-system", domain_code: "EPM", description: "System skill for Enterprise Performance Management — budgeting, rolling forecasts, variance analysis, scenario modeling." },
   { skill_name: "pa-system", domain_code: "PA", description: "System skill for People Analytics — workforce segmentation, attrition forecasting, engagement-survey distribution and analysis, predictive modeling on top of the HR stack." },
@@ -354,7 +354,7 @@ const skillToolsMatrix: Record<string, SkillToolTuple[]> = {
     ["create_okr_objective", "required"],
     ["query_work_items", "required", "Rolls up WORK-MGMT completion for portfolio KPIs"],
     ["query_financial_scenarios", "required", "Reads EPM scenarios for financial impact of portfolio decisions"],
-    ["query_workforce_scenarios", "required", "Reads SWP scenarios for resource-impact modelling"],
+    ["query_workforce_scenarios", "required", "Reads SWP scenarios for resource-impact modeling"],
   ],
   "swp-system": [
     ["query_workforce_plans", "required"],

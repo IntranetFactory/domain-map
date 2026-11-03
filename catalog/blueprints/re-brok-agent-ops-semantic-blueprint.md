@@ -74,7 +74,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `disclosure_documents` | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | - | - | optional | yes | operational_workflow | `:manage` | - |
 | 2 | `real_estate_listings` | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | - | - | required | yes | operational_workflow | `:manage` | - |
@@ -99,7 +99,7 @@ flowchart TD
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ flowchart TD
 | `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | cascade | parent | - |
 | `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -123,15 +123,15 @@ flowchart TD
 | `users` | owns | `crm_leads` | one_to_many | required | source | restrict | reference | - |
 | `users` | owns | `crm_contacts` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(none: no outbound cross-scope edges from this scope's masters or contributors)_
+_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -149,7 +149,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `disclosure_documents` | RE-BROK-BROKERAGE-OPS (Brokerage Oversight and Commission Management) - RE-BROKERAGE | embedded_master | required | - |
 | `disclosure_documents` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) - REAL-ESTATE-AGENT | embedded_master | required | - |
@@ -188,7 +188,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `commission_splits` | embedded_master | optional | RE-BROK-BROKERAGE-OPS (RE-BROKERAGE) | - |
 | `crm_contacts` | embedded_master | required | CRM-ACCT-MGT (CRM) | - |

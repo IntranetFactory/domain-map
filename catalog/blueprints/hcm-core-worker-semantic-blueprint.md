@@ -30,7 +30,7 @@ Core worker record: identity, employment lifecycle, contracts, and effective-dat
 | --- | --- | --- |
 | Emergency Contacts | `emergency_contacts` | People to contact in an emergency for a worker, with priority order and relationship. Holds personal data on third parties. |
 | Employee Dependents | `employee_dependents` | Spouses, children, and other dependents of a worker, used by benefits administration for eligibility and beneficiary designation. |
-| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit. |
+| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit. |
 | Employment Contracts | `employment_contracts` | Contractual terms of employment: contract type, start and end dates, jurisdiction, working hours, notice period, and references to the signed document. |
 | Employment Events | `employment_events` | Lifecycle events for an employee, such as hire, promotion, transfer, leave, comp change, and termination. The audit history of an employment. |
 | National IDs | `national_ids` | Government-issued identity numbers for a worker, such as social security or national insurance numbers, held with restricted access and validity dates. |
@@ -79,7 +79,7 @@ flowchart TD
   users -->|"publishes"| people_kpis
   employees -->|"signs"| employment_contracts
   employees -->|"generates"| employment_events
-  employees -->|"is_linked_to"| users
+  employees -->|"is_related_to"| users
   users -->|"approves"| employment_contracts
   users -->|"records"| employment_events
   users -->|"owns"| cost_centers
@@ -139,7 +139,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `emergency_contacts` | `emergency_contacts` | Emergency Contact | Emergency Contacts | master | - | - | optional | yes | operational_record | `:manage` | - |
 | 2 | `employee_dependents` | `employee_dependents` | Employee Dependent | Employee Dependents | master | - | - | optional | yes | operational_record | `:manage` | - |
@@ -167,7 +167,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -186,13 +186,13 @@ _(none: no industry-scoped aliases for this scope)_
 | `employees` | has | `worker_addresses` | one_to_many | composition | required | source | cascade | parent | - |
 | `employees` | has | `employee_dependents` | one_to_many | composition | required | source | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | receives pay slips | `pay_slips` | one_to_many | optional | source | clear | reference | - |
 | `users` | publishes | `people_kpis` | many_to_many | optional | target | clear | reference | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
 | `users` | approves | `employment_contracts` | one_to_many | optional | source | clear | reference | - |
 | `users` | records | `employment_events` | one_to_many | optional | source | clear | reference | - |
 | `users` | owns | `cost_centers` | one_to_many | optional | source | clear | reference | - |
@@ -205,7 +205,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | allocates | `project_resource_allocations` | one_to_many | required | target | restrict | reference | - |
 | `users` | verifies | `work_eligibility_documents` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -271,7 +271,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `frontline_recognitions` | recognizes | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
 | `advocate_profiles` | represents | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -305,7 +305,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `employees` | AGENCY-MGMT-JOB-TRAFFIC (Job and Traffic Management) - AGENCY-MGMT | consumer | required | - |
 | `employees` | BEN-ACA-COMPLIANCE (ACA Compliance Reporting) - BEN-ADMIN | consumer | required | - |
@@ -392,19 +392,19 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employment_event.recorded` | `recorded` _(signal)_ | `employment_events` | lifecycle_progression | low | Posted employment event (transfer, FTE change, leave, promotion) surfaces on employee and manager dashboards and feeds lifecycle approval routing. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employment_event.recorded` | `recorded` _(signal)_ | `employment_events` | event_stream | medium | Any employment-change event (transfer, FTE change, leave) needs PAYROLL processing for proration and effective dating. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-EARNINGS-DEDUCTIONS | `employment_contract.executed` | _(state_change)_ | `employment_contracts` | event_stream | medium | New contract terms (salary, allowances, currency, country) must be processed by PAYROLL with effective date alignment. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-EARNINGS-DEDUCTIONS | `employment_contract.expired` | _(state_change)_ | `employment_contracts` | event_stream | medium | Contract expiry stops compensation; final-pay processing similar to termination. |
 | HCM-CORE-WORKER | LMS | LMS-COURSE-DELIVERY | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion event triggers off-cycle compensation review (eligibility, band placement, increase recommendation) in COMP-MGMT. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employment_contract.executed` | _(state_change)_ | `employment_contracts` | event_stream | low | Executed contract carries comp basis; COMP-MGMT links compensation statement and ongoing-cycle eligibility. |
+| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employment_contract.executed` | _(state_change)_ | `employment_contracts` | event_stream | low | Executed contract carries comp basis; COMP-MGMT relates it to the compensation statement and ongoing-cycle eligibility. |
 | HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
 | HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination triggers benefits termination, COBRA / equivalent notices, and dependent coverage decisions. Late notifications cause coverage gaps. |
 | HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employment_event.recorded` | `recorded` _(signal)_ | `employment_events` | event_stream | medium | Status changes (FTE, leave) impact benefits eligibility. Carrier feeds may need refresh. |
@@ -428,16 +428,16 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | PA | PA-WORKFORCE-METRICS | `people_kpi.snapshot_published` | _(lifecycle)_ | `people_kpis` | batch_sync | low | Refreshed people-KPI snapshot lands; HCM dashboards and workforce scorecards re-render against the new period. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
 | HCM-CORE-WORKER | CWM | CWM-WORKER-SOURCING | `worker.tenure_threshold` | _(threshold)_ | `contingent_workers` | manual_handoff | high | Contingent worker crossing co-employment-risk tenure threshold (typically 18-24 months) must be reclassified, off-boarded, or converted. Cross-vendor stack with same logical entity: VMS and HCM rarely share identity; the watch-list is built by exception report and processed manually. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `project_assignment.confirmed` | _(state_change)_ | `project_assignments` | event_stream | medium | Confirmed assignments decrement available capacity in HCM and link the consultant's calendar to the engagement. Friction stems from PSA and HCM frequently being separate vendors with different resource models. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `project_assignment.confirmed` | _(state_change)_ | `project_assignments` | event_stream | medium | Confirmed assignments decrement available capacity in HCM and relate the consultant's calendar to the engagement. Friction stems from PSA and HCM frequently being separate vendors with different resource models. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `project_resource_allocation.committed` | _(state_change)_ | `project_resource_allocations` | event_stream | medium | Committed allocations book named hours in HCM's capacity view, locking the resource against other demand. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `resource_skill_inventory.updated` | _(state_change)_ | `resource_skill_inventories` | api_call | medium | Updated skill inventory enriches the HCM talent profile so non-billable internal moves and career planning use the same skill graph. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
 | HCM-CORE-WORKER | MDM | _(domain-level)_ | `source_record.merged_to_golden` | _(lifecycle)_ | `source_records` | event_stream | medium | Employee record merge updates HCM canonical employee identity used downstream by payroll and IGA. |
 | HCM-CORE-WORKER | ONBOARDING | ONB-DOCUMENT-INTAKE | `onboarding_document_collection.completed` | _(state_change)_ | `onboarding_document_collections` | event_stream | low | All new-hire docs collected; HCM finalizes the employee record. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `locations` | embedded_master | optional | IWMS-LOCATION-MASTER (IWMS) | - |
 | `cost_centers` | contributor | optional | FIN-GL-CLOSE (FIN) | - |
@@ -538,7 +538,7 @@ _This scope holds `project_resource_allocations` as **consumer**; the canonical 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `tentative` | ✓ | - | - | - | Forecast allocation drafted by resource manager; not yet committed. |
-| 2 | `committed` | - | - | ✓ | `psa-resource-mgmt:commit_project_resource_allocation` | Allocation firmed up: HCM treats the named hours as booked capacity; CLM links the allocation to the underlying engagement contract. |
+| 2 | `committed` | - | - | ✓ | `psa-resource-mgmt:commit_project_resource_allocation` | Allocation firmed up: HCM treats the named hours as booked capacity; CLM relates the allocation to the underlying engagement contract. |
 | 3 | `fulfilled` | - | ✓ | - | - | Allocation period elapsed and corresponding assignments closed. |
 | 4 | `canceled` | - | ✓ | ✓ | `psa-resource-mgmt:cancel_project_resource_allocation` | Allocation withdrawn before commitment (forecast change, project delayed or descoped). |
 

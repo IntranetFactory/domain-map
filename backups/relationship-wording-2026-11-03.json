@@ -1,0 +1,2527 @@
+{
+ "taken_at": "2026-11-03T14:33:24.059Z",
+ "cells": [
+  {
+   "table": "business_processes",
+   "id": 227,
+   "column": "description",
+   "old": "Establish organizational development needs for employees. Creating a link between employee and organizational development needs.",
+   "new": "Establish organizational development needs for employees. Creating a relationship between employee and organizational development needs."
+  },
+  {
+   "table": "business_processes",
+   "id": 410,
+   "column": "description",
+   "old": "Establishing, implementing, and managing business programs. Successfully handle related projects that together constitute a program. Establish the program structure and approach. Coordinate with stakeholders and partners. Execute the program. Assess and report the performance of the program. Coordinate and prioritize resources across projects. Manage links between the projects and the overall costs and risks of the program.",
+   "new": "Establishing, implementing, and managing business programs. Successfully handle related projects that together constitute a program. Establish the program structure and approach. Coordinate with stakeholders and partners. Execute the program. Assess and report the performance of the program. Coordinate and prioritize resources across projects. Manage relationships between the projects and the overall costs and risks of the program."
+  },
+  {
+   "table": "business_processes",
+   "id": 548,
+   "column": "description",
+   "old": "Controlling the details of materials' storage and utilization, supplier details linked to materials, in a defined sequential manner and ensuring regular updates with permissible accessibility.",
+   "new": "Controlling the details of materials' storage and utilization, supplier details related to materials, in a defined sequential manner and ensuring regular updates with permissible accessibility."
+  },
+  {
+   "table": "business_processes",
+   "id": 1718,
+   "column": "process_name",
+   "old": "Identify links to key initiatives",
+   "new": "Identify relationships to key initiatives"
+  },
+  {
+   "table": "business_processes",
+   "id": 1718,
+   "column": "description",
+   "old": "Identifying any links that exist between the strategy for knowledge management and any other functional areas. Determine any correlations that exist between the strategic road map for the knowledge management and any other functional areas. Study each function's/unit's attributes.",
+   "new": "Identifying any relationships that exist between the strategy for knowledge management and any other functional areas. Determine any correlations that exist between the strategic road map for the knowledge management and any other functional areas. Study each function's/unit's attributes."
+  },
+  {
+   "table": "business_processes",
+   "id": 1718,
+   "column": "process_key",
+   "old": "identify_links_key_initiatives",
+   "new": "identify_relationships_key_initiatives"
+  },
+  {
+   "table": "business_processes",
+   "id": 500,
+   "column": "description",
+   "old": "Fleshing out the connections and dependencies among the various units of the organization. Delineate the relationship among business units or process frameworks within the organization, in terms of activities, synergies, and shared resources and responsibilities. Formalize relationships among business units so that any mutual coherence is clearly understood and can be attended to.",
+   "new": "Fleshing out the relationships and dependencies among the various units of the organization. Delineate the relationship among business units or process frameworks within the organization, in terms of activities, synergies, and shared resources and responsibilities. Formalize relationships among business units so that any mutual coherence is clearly understood and can be attended to."
+  },
+  {
+   "table": "business_processes",
+   "id": 1698,
+   "column": "process_name",
+   "old": "Assess connection to other initiatives",
+   "new": "Assess relationship to other initiatives"
+  },
+  {
+   "table": "business_processes",
+   "id": 1698,
+   "column": "process_key",
+   "old": "assess_connection_other",
+   "new": "assess_relationship_other"
+  },
+  {
+   "table": "data_objects",
+   "id": 571,
+   "column": "notes",
+   "old": "Reference link to ECM-mastered content. No local workflow; the underlying document's lifecycle is owned by ECM.",
+   "new": "Reference to ECM-mastered content. No local workflow; the underlying document's lifecycle is owned by ECM."
+  },
+  {
+   "table": "data_objects",
+   "id": 1153,
+   "column": "description",
+   "old": "A single act of an employee resharing an advocacy content item to one of their linked personal social accounts, including the channel, timestamp, and any personalized copy.",
+   "new": "A single act of an employee resharing an advocacy content item to one of their connected personal social accounts, including the channel, timestamp, and any personalized copy."
+  },
+  {
+   "table": "data_objects",
+   "id": 1153,
+   "column": "catalog_description",
+   "old": "Individual acts of an employee resharing advocacy content to a linked personal social account, with channel, timestamp, and any personalized copy.",
+   "new": "Individual acts of an employee resharing advocacy content to a connected personal social account, with channel, timestamp, and any personalized copy."
+  },
+  {
+   "table": "data_objects",
+   "id": 1154,
+   "column": "description",
+   "old": "An employee enrolled as an advocate: their participation status, opted-in topics, gamification standing, and the personal social accounts they have linked for sharing.",
+   "new": "An employee enrolled as an advocate: their participation status, opted-in topics, gamification standing, and the personal social accounts they have connected for sharing."
+  },
+  {
+   "table": "data_objects",
+   "id": 1154,
+   "column": "catalog_description",
+   "old": "Employees enrolled as advocates, with participation status, opted-in topics, gamification standing, and linked social accounts.",
+   "new": "Employees enrolled as advocates, with participation status, opted-in topics, gamification standing, and connected social accounts."
+  },
+  {
+   "table": "data_objects",
+   "id": 1414,
+   "column": "description",
+   "old": "A carrier a shipper may tender to, with SCAC, modes, service area, and approval status. Kept separate from suppliers, with a link for payment, and scoped because benefit_carriers exists and other transport markets have equal interest in the bare word.",
+   "new": "A carrier a shipper may tender to, with SCAC, modes, service area, and approval status. Kept separate from suppliers, with a relationship to them for payment, and scoped because benefit_carriers exists and other transport markets have equal interest in the bare word."
+  },
+  {
+   "table": "domain_modules",
+   "id": 368,
+   "column": "description",
+   "old": "Curates brand content into shareable items, organizes it into topic streams and time-boxed campaigns, broadcasts it to enrolled advocates with personalizable share copy, and records every employee share to their linked social accounts. Masters the advocacy program, content, share, advocate profile, and campaign records; consumes HCM employees and SMM social content; sends each advocate a personalized internal newsletter.",
+   "new": "Curates brand content into shareable items, organizes it into topic streams and time-boxed campaigns, broadcasts it to enrolled advocates with personalizable share copy, and records every employee share to their connected social accounts. Masters the advocacy program, content, share, advocate profile, and campaign records; consumes HCM employees and SMM social content; sends each advocate a personalized internal newsletter."
+  },
+  {
+   "table": "domain_modules",
+   "id": 368,
+   "column": "catalog_description",
+   "old": "Build a steady pipeline of approved content, sort it into the topics your people care about, and run focused sharing campaigns around launches and events. Employees enroll, link their LinkedIn, X, and Facebook accounts, and reshare in one click using suggested copy they can personalize. A weekly newsletter lands in each person's inbox with exactly what is worth sharing, so participation does not depend on chasing anyone. Every share is captured automatically, ready to be scored and measured.",
+   "new": "Build a steady pipeline of approved content, sort it into the topics your people care about, and run focused sharing campaigns around launches and events. Employees enroll, connect their LinkedIn, X, and Facebook accounts, and reshare in one click using suggested copy they can personalize. A weekly newsletter lands in each person's inbox with exactly what is worth sharing, so participation does not depend on chasing anyone. Every share is captured automatically, ready to be scored and measured."
+  },
+  {
+   "table": "tools",
+   "id": 2008,
+   "column": "description",
+   "old": "Read advocate profiles, participation status, opted-in topics, and linked social accounts.",
+   "new": "Read advocate profiles, participation status, opted-in topics, and connected social accounts."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1722,
+   "column": "description",
+   "old": "An employee share is successfully posted to a linked personal social account. Drives share-metric collection, points award, and downstream reach and attribution.",
+   "new": "An employee share is successfully posted to a connected personal social account. Drives share-metric collection, points award, and downstream reach and attribution."
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 15,
+   "column": "relationship_verb",
+   "old": "is_linked_to",
+   "new": "is_related_to"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 745,
+   "column": "inverse_verb",
+   "old": "linked IT request from",
+   "new": "related IT request from"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1264,
+   "column": "relationship_verb",
+   "old": "linked_to_user",
+   "new": "related_to_user"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2303,
+   "column": "relationship_verb",
+   "old": "links",
+   "new": "relates"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2303,
+   "column": "inverse_verb",
+   "old": "linked_by",
+   "new": "related_by"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2538,
+   "column": "relationship_verb",
+   "old": "links",
+   "new": "connects"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2672,
+   "column": "relationship_verb",
+   "old": "is_linked_by",
+   "new": "is_related_by"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2672,
+   "column": "inverse_verb",
+   "old": "links",
+   "new": "relates"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2673,
+   "column": "inverse_verb",
+   "old": "links_to",
+   "new": "relates_to"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2281,
+   "column": "relationship_verb",
+   "old": "has lineage edge",
+   "new": "has lineage relationship"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2281,
+   "column": "inverse_verb",
+   "old": "connects data asset",
+   "new": "relates data asset"
+  },
+  {
+   "table": "capabilities",
+   "id": 87,
+   "column": "capability_name",
+   "old": "Product Strategy and OKR Linkage",
+   "new": "Product Strategy and Related OKRs"
+  },
+  {
+   "table": "capabilities",
+   "id": 321,
+   "column": "capability_name",
+   "old": "Linked Records and Junction Tables",
+   "new": "Related Records and Junction Tables"
+  },
+  {
+   "table": "capabilities",
+   "id": 321,
+   "column": "capability_code",
+   "old": "NCDB-LINKED-RECORDS",
+   "new": "NCDB-RELATED-RECORDS"
+  },
+  {
+   "table": "capabilities",
+   "id": 801,
+   "column": "capability_name",
+   "old": "Lean-Portfolio Funding-to-Delivery Linkage",
+   "new": "Lean-Portfolio Funding Related to Delivery"
+  },
+  {
+   "table": "data_object_aliases",
+   "id": 99,
+   "column": "alias_name",
+   "old": "CI link",
+   "new": "CI relationship"
+  },
+  {
+   "table": "data_object_aliases",
+   "id": 2073,
+   "column": "alias_name",
+   "old": "goal_link",
+   "new": "goal_relationship"
+  },
+  {
+   "table": "data_object_aliases",
+   "id": 2074,
+   "column": "alias_name",
+   "old": "contribution_link",
+   "new": "contribution_relationship"
+  },
+  {
+   "table": "data_object_aliases",
+   "id": 1740,
+   "column": "alias_name",
+   "old": "Lineage Edge",
+   "new": "Lineage Relationship"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 939,
+   "column": "state_name",
+   "old": "linked",
+   "new": "related"
+  },
+  {
+   "table": "data_objects",
+   "id": 1293,
+   "column": "data_object_name",
+   "old": "work_goal_links",
+   "new": "work_goal_relationships"
+  },
+  {
+   "table": "data_objects",
+   "id": 1293,
+   "column": "singular_label",
+   "old": "Work-to-Goal Link",
+   "new": "Work-to-Goal Relationship"
+  },
+  {
+   "table": "data_objects",
+   "id": 1293,
+   "column": "plural_label",
+   "old": "Work-to-Goal Links",
+   "new": "Work-to-Goal Relationships"
+  },
+  {
+   "table": "domain_modules",
+   "id": 282,
+   "column": "domain_module_name",
+   "old": "Visual Schema and Linked Records",
+   "new": "Visual Schema and Related Records"
+  },
+  {
+   "table": "trigger_events",
+   "id": 196,
+   "column": "event_name",
+   "old": "kg_entity.linked",
+   "new": "kg_entity.related"
+  },
+  {
+   "table": "trigger_events",
+   "id": 196,
+   "column": "to_state",
+   "old": "linked",
+   "new": "related"
+  },
+  {
+   "table": "trigger_events",
+   "id": 866,
+   "column": "event_name",
+   "old": "requirements_to_test_traceability.linked",
+   "new": "requirements_to_test_traceability.related"
+  },
+  {
+   "table": "trigger_events",
+   "id": 919,
+   "column": "event_name",
+   "old": "channel_file_share.linked",
+   "new": "channel_file_share.related"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1142,
+   "column": "event_name",
+   "old": "customer_feedback_item.linked_to_feature",
+   "new": "customer_feedback_item.related_to_feature"
+  },
+  {
+   "table": "data_objects",
+   "id": 6,
+   "column": "description",
+   "old": "Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus.",
+   "new": "Employee-submitted candidate suggestion related to a requisition. Tracks the referring employee, candidate, status, and any payable bonus."
+  },
+  {
+   "table": "data_objects",
+   "id": 6,
+   "column": "catalog_description",
+   "old": "Employee-submitted candidate suggestions linked to a requisition, tracking the referring employee, candidate, status, and any payable bonus.",
+   "new": "Employee-submitted candidate suggestions related to a requisition, tracking the referring employee, candidate, status, and any payable bonus."
+  },
+  {
+   "table": "data_objects",
+   "id": 31,
+   "column": "catalog_description",
+   "old": "Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit.",
+   "new": "Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit."
+  },
+  {
+   "table": "data_objects",
+   "id": 34,
+   "column": "catalog_description",
+   "old": "Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links.",
+   "new": "Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships."
+  },
+  {
+   "table": "data_objects",
+   "id": 40,
+   "column": "description",
+   "old": "What-if financial models layered on top of a base plan: revenue upside / downside cases, cost-cutting scenarios, M&A scenarios. Mirrors the structure of SWP's workforce_scenarios for the financial dimension; the two are usually linked via the cost projection.",
+   "new": "What-if financial models layered on top of a base plan: revenue upside / downside cases, cost-cutting scenarios, M&A scenarios. Mirrors the structure of SWP's workforce_scenarios for the financial dimension; the two are usually related via the cost projection."
+  },
+  {
+   "table": "data_objects",
+   "id": 49,
+   "column": "description",
+   "old": "Root-cause record for one or more incidents that recur or share a pattern. Carries known-error workaround, permanent fix candidate, and links to the change that will resolve it. Problem management is a discipline mature ITSM tools support but most orgs underuse.",
+   "new": "Root-cause record for one or more incidents that recur or share a pattern. Carries known-error workaround, permanent fix candidate, and a relationship to the change that will resolve it. Problem management is a discipline mature ITSM tools support but most orgs underuse."
+  },
+  {
+   "table": "data_objects",
+   "id": 49,
+   "column": "catalog_description",
+   "old": "Root-cause records for recurring or related incidents, with known-error workarounds and links to the fix that will resolve them.",
+   "new": "Root-cause records for recurring or related incidents, with known-error workarounds and relationships to the fix that will resolve them."
+  },
+  {
+   "table": "data_objects",
+   "id": 54,
+   "column": "description",
+   "old": "Lease, maintenance, support, or warranty contract governing an asset or pool of assets. Distinct from contract templates / signature artifacts (CLM-mastered): this is the ITAM-side index of contracts attached to physical or software assets. ITAM contributes the asset-pool linkage; CLM masters the contract document itself.",
+   "new": "Lease, maintenance, support, or warranty contract governing an asset or pool of assets. Distinct from contract templates / signature artifacts (CLM-mastered): this is the ITAM-side index of contracts attached to physical or software assets. ITAM contributes the asset-pool relationship; CLM masters the contract document itself."
+  },
+  {
+   "table": "data_objects",
+   "id": 61,
+   "column": "description",
+   "old": "Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and links to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity.",
+   "new": "Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and a relationship to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity."
+  },
+  {
+   "table": "data_objects",
+   "id": 62,
+   "column": "description",
+   "old": "The contractual instance for a SaaS app: plan / tier, seat count, MRR or ARR, billing cadence, renewal date, primary owner. One app may have multiple subscriptions (BU, region, M&A-inherited free tier). Linked to a contract (CLM) and a PO (S2P).",
+   "new": "The contractual instance for a SaaS app: plan / tier, seat count, MRR or ARR, billing cadence, renewal date, primary owner. One app may have multiple subscriptions (BU, region, M&A-inherited free tier). Related to a contract (CLM) and a PO (S2P)."
+  },
+  {
+   "table": "data_objects",
+   "id": 79,
+   "column": "catalog_description",
+   "old": "Mappings of named business services to the configuration items that underlie them, linking technical topology to business impact.",
+   "new": "Mappings of named business services to the configuration items that underlie them, relating technical topology to business impact."
+  },
+  {
+   "table": "data_objects",
+   "id": 95,
+   "column": "description",
+   "old": "RCA record \u2014 ML-suggested or human-confirmed. Links candidate root-cause CIs to the correlated event cluster and the resulting incident. Seeds ITSM problem records via the root_cause.identified handoff.",
+   "new": "RCA record, ML-suggested or human-confirmed. Relates candidate root-cause CIs to the correlated event cluster and the resulting incident. Seeds ITSM problem records via the root_cause.identified handoff."
+  },
+  {
+   "table": "data_objects",
+   "id": 95,
+   "column": "catalog_description",
+   "old": "Root cause analysis records, suggested or human-confirmed, linking candidate causes to the correlated event cluster and resulting incident.",
+   "new": "Root cause analysis records, suggested or human-confirmed, relating candidate causes to the correlated event cluster and resulting incident."
+  },
+  {
+   "table": "data_objects",
+   "id": 103,
+   "column": "description",
+   "old": "Customer-facing support ticket \u2014 the flagship CSM entity. Distinct from ITSM `incidents` (internal IT) and `service_requests` (catalog-driven internal requests). Carries severity, channel, queue, SLA clock, customer + contact references, CSAT linkage. SUB-MGMT-driven dunning failures and CSM-detected churn risk both surface as cases.",
+   "new": "Customer-facing support ticket, the flagship CSM entity. Distinct from ITSM `incidents` (internal IT) and `service_requests` (catalog-driven internal requests). Carries severity, channel, queue, SLA clock, customer + contact references, CSAT relationship. SUB-MGMT-driven dunning failures and CSM-detected churn risk both surface as cases."
+  },
+  {
+   "table": "data_objects",
+   "id": 112,
+   "column": "catalog_description",
+   "old": "Identity-resolution edges linking email, device, cookie, login, and phone, turning anonymous interactions into resolved customers.",
+   "new": "Identity-resolution relationships among email, device, cookie, login, and phone, turning anonymous interactions into resolved customers."
+  },
+  {
+   "table": "data_objects",
+   "id": 204,
+   "column": "catalog_description",
+   "old": "Three-way-match outcomes linking invoice, purchase order, and goods receipt, with line-level match status that drives posting or exception handling.",
+   "new": "Three-way-match outcomes relating invoice, purchase order, and goods receipt, with line-level match status that drives posting or exception handling."
+  },
+  {
+   "table": "data_objects",
+   "id": 240,
+   "column": "description",
+   "old": "Pre-spend approval request raised by an employee before a purchase, for a virtual card, raised card limit, vendor bill, or reimbursement budget. Modern spend-management platforms anchor on this proactive request workflow as the entry point before any transaction occurs. Lifecycle: draft -> submitted -> approved/declined -> spent (linked to one or more card_transactions / payment_runs).",
+   "new": "Pre-spend approval request raised by an employee before a purchase, for a virtual card, raised card limit, vendor bill, or reimbursement budget. Modern spend-management platforms anchor on this proactive request workflow as the entry point before any transaction occurs. Lifecycle: draft -> submitted -> approved/declined -> spent (related to one or more card_transactions / payment_runs)."
+  },
+  {
+   "table": "data_objects",
+   "id": 242,
+   "column": "description",
+   "old": "User-defined schema inside a no-code base \u2014 tables, fields with types, linked-record relationships, formulas, and views. The 'meta' the platform actually masters; the records themselves are user-owned data the platform stores without owning their semantics.",
+   "new": "User-defined schema inside a no-code base: tables, fields with types, record relationships, formulas, and views. The 'meta' the platform actually masters; the records themselves are user-owned data the platform stores without owning their semantics."
+  },
+  {
+   "table": "data_objects",
+   "id": 242,
+   "column": "catalog_description",
+   "old": "User-defined schema inside a no-code base: tables, fields with types, linked-record relationships, formulas, and views.",
+   "new": "User-defined schema inside a no-code base: tables, fields with types, record relationships, formulas, and views."
+  },
+  {
+   "table": "data_objects",
+   "id": 245,
+   "column": "description",
+   "old": "Hierarchical objective with measurable key results, weighted progress rollup from child objectives or linked work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes \u2014 canonical Signal-1 multi-master.",
+   "new": "Hierarchical objective with measurable key results, weighted progress rollup from child objectives or related work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes: canonical Signal-1 multi-master."
+  },
+  {
+   "table": "data_objects",
+   "id": 248,
+   "column": "description",
+   "old": "Hierarchical map of an organization's business capabilities (typically L1/L2/L3), with maturity/investment/strategic-fit heatmaps and linkage to applications, processes, value streams, and owners.",
+   "new": "Hierarchical map of an organization's business capabilities (typically L1/L2/L3), with maturity/investment/strategic-fit heatmaps and relationships to applications, processes, value streams, and owners."
+  },
+  {
+   "table": "data_objects",
+   "id": 248,
+   "column": "catalog_description",
+   "old": "Hierarchical maps of an organization's business capabilities, with maturity and investment ratings and links to applications, processes, and owners.",
+   "new": "Hierarchical maps of an organization's business capabilities, with maturity and investment ratings and relationships to applications, processes, and owners."
+  },
+  {
+   "table": "data_objects",
+   "id": 282,
+   "column": "description",
+   "old": "Identified threat to organizational objectives; likelihood, impact, inherent / residual severity, owner. Links to controls and risk factors.",
+   "new": "Identified threat to organizational objectives; likelihood, impact, inherent / residual severity, owner. Relates to controls and risk factors."
+  },
+  {
+   "table": "data_objects",
+   "id": 301,
+   "column": "catalog_description",
+   "old": "Flow edges linking a source data asset to a target, with column-level mapping, transformation logic, frequency, and SLA.",
+   "new": "Flow relationships from a source data asset to a target, with column-level mapping, transformation logic, frequency, and SLA."
+  },
+  {
+   "table": "data_objects",
+   "id": 310,
+   "column": "description",
+   "old": "Work item raised when a profiling or monitoring rule breaches: root-cause detail, remediation status, linked data assets, SLA.",
+   "new": "Work item raised when a profiling or monitoring rule breaches: root-cause detail, remediation status, related data assets, SLA."
+  },
+  {
+   "table": "data_objects",
+   "id": 310,
+   "column": "catalog_description",
+   "old": "Work items raised when a data quality rule is breached, with root-cause detail, remediation status, linked data assets, and SLA.",
+   "new": "Work items raised when a data quality rule is breached, with root-cause detail, remediation status, related data assets, and SLA."
+  },
+  {
+   "table": "data_objects",
+   "id": 478,
+   "column": "description",
+   "old": "Central engagement record for an agency client, the unit of billable work. Carries client, brief, deliverables, traffic state, retainer link (if any), assigned team, and rolled-up financials. Distinct from PSA `projects` by retainer linkage, creative-brief origination, and media-plan attachment.",
+   "new": "Central engagement record for an agency client, the unit of billable work. Carries client, brief, deliverables, traffic state, retainer relationship (if any), assigned team, and rolled-up financials. Distinct from PSA `projects` by retainer relationship, creative-brief origination, and media-plan attachment."
+  },
+  {
+   "table": "data_objects",
+   "id": 494,
+   "column": "description",
+   "old": "Lot / batch identifier per FSMA-204 Traceability Lot Code (TLC); links upstream sources to downstream consignees.",
+   "new": "Lot / batch identifier per FSMA-204 Traceability Lot Code (TLC); relates upstream sources to downstream consignees."
+  },
+  {
+   "table": "data_objects",
+   "id": 494,
+   "column": "catalog_description",
+   "old": "Lot and batch identifiers under food traceability rules, linking upstream sources to downstream consignees.",
+   "new": "Lot and batch identifiers under food traceability rules, relating upstream sources to downstream consignees."
+  },
+  {
+   "table": "data_objects",
+   "id": 568,
+   "column": "description",
+   "old": "Membership relationship linking a user/external guest to a channel: join_date, role (owner / moderator / member), notification settings, access_level.",
+   "new": "Membership relationship between a user/external guest and a channel: join_date, role (owner / moderator / member), notification settings, access_level."
+  },
+  {
+   "table": "data_objects",
+   "id": 568,
+   "column": "catalog_description",
+   "old": "Membership records linking a user or external guest to a channel, with join date, role, notification settings, and access level.",
+   "new": "Membership records relating a user or external guest to a channel, with join date, role, notification settings, and access level."
+  },
+  {
+   "table": "data_objects",
+   "id": 578,
+   "column": "description",
+   "old": "M:N links between product requirements (sourced from PROD-MGMT or internal specs) and test_cases that verify them. Supports coverage metrics and impact analysis.",
+   "new": "M:N relationships between product requirements (sourced from PROD-MGMT or internal specs) and test_cases that verify them. Supports coverage metrics and impact analysis."
+  },
+  {
+   "table": "data_objects",
+   "id": 578,
+   "column": "catalog_description",
+   "old": "Many-to-many links between product requirements and the test cases that verify them, supporting coverage metrics and impact analysis.",
+   "new": "Many-to-many relationships between product requirements and the test cases that verify them, supporting coverage metrics and impact analysis."
+  },
+  {
+   "table": "data_objects",
+   "id": 603,
+   "column": "description",
+   "old": "Retail/commercial customer request to open a deposit or payment account: account type (checking, savings, money market, business), initial funding, linked services (card, online banking, mobile), identity-verification flag. Distinct from ATS recruiting applications.",
+   "new": "Retail/commercial customer request to open a deposit or payment account: account type (checking, savings, money market, business), initial funding, related services (card, online banking, mobile), identity-verification flag. Distinct from ATS recruiting applications."
+  },
+  {
+   "table": "data_objects",
+   "id": 603,
+   "column": "catalog_description",
+   "old": "Customer requests to open a deposit or payment account, covering account type, initial funding, linked services, and identity verification.",
+   "new": "Customer requests to open a deposit or payment account, covering account type, initial funding, related services, and identity verification."
+  },
+  {
+   "table": "data_objects",
+   "id": 613,
+   "column": "description",
+   "old": "Request from clinical staff for device repair, configuration, training, or incident investigation; routed via clinical-engineering team. Links to device_maintenance_logs and device_incident_reports for closed-loop traceability.",
+   "new": "Request from clinical staff for device repair, configuration, training, or incident investigation; routed via clinical-engineering team. Relates to device_maintenance_logs and device_incident_reports for closed-loop traceability."
+  },
+  {
+   "table": "data_objects",
+   "id": 615,
+   "column": "description",
+   "old": "FDA MDR-style adverse-event report (patient injury, near-miss, unexpected behavior): root cause (user error vs device defect); links to device_recalls when patterns emerge.",
+   "new": "FDA MDR-style adverse-event report (patient injury, near-miss, unexpected behavior): root cause (user error vs device defect); relates to device_recalls when patterns emerge."
+  },
+  {
+   "table": "data_objects",
+   "id": 615,
+   "column": "catalog_description",
+   "old": "Adverse-event reports for medical devices, such as patient injury or unexpected behavior, with root cause and links to recalls when patterns emerge.",
+   "new": "Adverse-event reports for medical devices, such as patient injury or unexpected behavior, with root cause and relationships to recalls when patterns emerge."
+  },
+  {
+   "table": "data_objects",
+   "id": 710,
+   "column": "description",
+   "old": "Executed-query audit trail linking metric reads back to source tables, transformations and requestor identity.",
+   "new": "Executed-query audit trail relating metric reads back to source tables, transformations and requestor identity."
+  },
+  {
+   "table": "data_objects",
+   "id": 710,
+   "column": "catalog_description",
+   "old": "Audit trail of executed queries, linking metric reads back to source tables, transformations, and the requesting identity.",
+   "new": "Audit trail of executed queries, relating metric reads back to source tables, transformations, and the requesting identity."
+  },
+  {
+   "table": "data_objects",
+   "id": 717,
+   "column": "description",
+   "old": "Reward catalog entry \u2014 point values, redemption eligibility rules, partner-offer linkage.",
+   "new": "Reward catalog entry: point values, redemption eligibility rules, partner-offer relationship."
+  },
+  {
+   "table": "data_objects",
+   "id": 717,
+   "column": "catalog_description",
+   "old": "Catalog entries for loyalty rewards, with point values, redemption eligibility rules, and partner-offer linkage.",
+   "new": "Catalog entries for loyalty rewards, with point values, redemption eligibility rules, and partner-offer relationship."
+  },
+  {
+   "table": "data_objects",
+   "id": 752,
+   "column": "description",
+   "old": "Graph edges between people, organizations, and the firm: founder ↔ partner introductions, co-investor relationships, board observer assignments, advisor links.",
+   "new": "Graph relationships between people, organizations, and the firm: founder ↔ partner introductions, co-investor relationships, board observer assignments, advisor relationships."
+  },
+  {
+   "table": "data_objects",
+   "id": 752,
+   "column": "catalog_description",
+   "old": "Graph edges capturing relationships between people, organizations, and the firm, such as introductions, co-investor ties, and advisor links.",
+   "new": "Graph records capturing relationships between people, organizations, and the firm, such as introductions, co-investor ties, and advisor relationships."
+  },
+  {
+   "table": "data_objects",
+   "id": 799,
+   "column": "catalog_description",
+   "old": "Parent-child line items in an engineering bill of materials, each linking one child part under a parent assembly with quantity and effectivity.",
+   "new": "Parent-child line items in an engineering bill of materials, each relating one child part to a parent assembly with quantity and effectivity."
+  },
+  {
+   "table": "data_objects",
+   "id": 807,
+   "column": "description",
+   "old": "System, software, and hardware requirements with parent-child decomposition (system → subsystem → component requirements). Carries verification method (test / inspection / analysis / demonstration), allocated subsystem, and traceability links to test cases (via the existing requirements_to_test_traceability junction).",
+   "new": "System, software, and hardware requirements with parent-child decomposition (system → subsystem → component requirements). Carries verification method (test / inspection / analysis / demonstration), allocated subsystem, and traceability relationships to test cases (via the existing requirements_to_test_traceability junction)."
+  },
+  {
+   "table": "data_objects",
+   "id": 807,
+   "column": "catalog_description",
+   "old": "System, software, and hardware requirements with parent-child decomposition, verification method, allocated subsystem, and links to test cases.",
+   "new": "System, software, and hardware requirements with parent-child decomposition, verification method, allocated subsystem, and relationships to test cases."
+  },
+  {
+   "table": "data_objects",
+   "id": 808,
+   "column": "description",
+   "old": "Balanced-scorecard and strategy-house visualizations linking strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning perspectives. Configured once per planning horizon; rarely changes structure.",
+   "new": "Balanced-scorecard and strategy-house visualizations relating strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning perspectives. Configured once per planning horizon; rarely changes structure."
+  },
+  {
+   "table": "data_objects",
+   "id": 808,
+   "column": "catalog_description",
+   "old": "Strategy-map visualizations linking strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning views.",
+   "new": "Strategy-map visualizations relating strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning views."
+  },
+  {
+   "table": "data_objects",
+   "id": 831,
+   "column": "description",
+   "old": "Registered library member with borrowing privileges, contact information, patron category, and account history. Distinct from platform users; a patron may or may not have a linked user account for self-service.",
+   "new": "Registered library member with borrowing privileges, contact information, patron category, and account history. Distinct from platform users; a patron may or may not have a related user account for self-service."
+  },
+  {
+   "table": "data_objects",
+   "id": 868,
+   "column": "catalog_description",
+   "old": "Links between candidates and recruiting events, recording registration, check-in, attendance, and conversion outcome.",
+   "new": "Relationships between candidates and recruiting events, recording registration, check-in, attendance, and conversion outcome."
+  },
+  {
+   "table": "data_objects",
+   "id": 871,
+   "column": "catalog_description",
+   "old": "Links between candidates and talent pools, carrying added date, source, status in the pool, match score, and last engagement.",
+   "new": "Relationships between candidates and talent pools, carrying added date, source, status in the pool, match score, and last engagement."
+  },
+  {
+   "table": "data_objects",
+   "id": 897,
+   "column": "catalog_description",
+   "old": "Generated PDF letters of the offer terms, versioned alongside the structured offer and linked to the e-signature envelope.",
+   "new": "Generated PDF letters of the offer terms, versioned alongside the structured offer and related to the e-signature envelope."
+  },
+  {
+   "table": "data_objects",
+   "id": 968,
+   "column": "catalog_description",
+   "old": "Typed dependencies between two work items, linking predecessor and successor with finish-to-start, start-to-start, finish-to-finish, or start-to-finish type.",
+   "new": "Typed dependencies between two work items, relating predecessor and successor with finish-to-start, start-to-start, finish-to-finish, or start-to-finish type."
+  },
+  {
+   "table": "data_objects",
+   "id": 979,
+   "column": "catalog_description",
+   "old": "Assignments linking work items to tags, where existence asserts the tag is applied.",
+   "new": "Assignments relating work items to tags, where existence asserts the tag is applied."
+  },
+  {
+   "table": "data_objects",
+   "id": 984,
+   "column": "catalog_description",
+   "old": "Typed owner assignments linking a user to a SaaS app as its business, IT, finance, or security owner.",
+   "new": "Typed owner assignments relating a user to a SaaS app as its business, IT, finance, or security owner."
+  },
+  {
+   "table": "data_objects",
+   "id": 990,
+   "column": "description",
+   "old": "Executed reclamation against an smp_license_seat_assignment (revoke, downgrade, reassign) with savings_realized linkage. Tracks the operational payoff of the optimization workflow. BetterCloud License Recovery + Torii Reclaim workflows are the flagship.",
+   "new": "Executed reclamation against an smp_license_seat_assignment (revoke, downgrade, reassign) with a savings_realized relationship. Tracks the operational payoff of the optimization workflow. BetterCloud License Recovery + Torii Reclaim workflows are the flagship."
+  },
+  {
+   "table": "data_objects",
+   "id": 1003,
+   "column": "catalog_description",
+   "old": "Links between candidates and tags, recording who assigned each tag and when, with optional context.",
+   "new": "Relationships between candidates and tags, recording who assigned each tag and when, with optional context."
+  },
+  {
+   "table": "data_objects",
+   "id": 1028,
+   "column": "description",
+   "old": "A specific weakness detected on a specific asset, deduplicated across scans and tracked through its own lifecycle from open to closed. The headline noun of the domain: a vulnerability links an asset (mastered in ITAM/CMDB) to a vulnerability definition and carries severity, computed risk, ownership, and current state.",
+   "new": "A specific weakness detected on a specific asset, deduplicated across scans and tracked through its own lifecycle from open to closed. The headline noun of the domain: a vulnerability relates an asset (mastered in ITAM/CMDB) to a vulnerability definition and carries severity, computed risk, ownership, and current state."
+  },
+  {
+   "table": "data_objects",
+   "id": 1079,
+   "column": "description",
+   "old": "An industrial-hygiene sampling or exposure-monitoring result for a chemical, noise, or other agent, measured against occupational exposure limits and linked to the exposed workers and tasks.",
+   "new": "An industrial-hygiene sampling or exposure-monitoring result for a chemical, noise, or other agent, measured against occupational exposure limits and related to the exposed workers and tasks."
+  },
+  {
+   "table": "data_objects",
+   "id": 1081,
+   "column": "description",
+   "old": "A hazardous substance in the chemical inventory, with quantity, location, and links to its safety data sheet and exposure limits.",
+   "new": "A hazardous substance in the chemical inventory, with quantity, location, and relationships to its safety data sheet and exposure limits."
+  },
+  {
+   "table": "data_objects",
+   "id": 1081,
+   "column": "catalog_description",
+   "old": "Hazardous substances on hand, with quantity, location, and links to their safety data sheet and exposure limits.",
+   "new": "Hazardous substances on hand, with quantity, location, and relationships to their safety data sheet and exposure limits."
+  },
+  {
+   "table": "data_objects",
+   "id": 1127,
+   "column": "description",
+   "old": "An investigation case opened on a suspected insider threat. Carries the full lifecycle from triage through investigation to disposition, the activity timeline, linked evidence, and the HR/Legal handoff.",
+   "new": "An investigation case opened on a suspected insider threat. Carries the full lifecycle from triage through investigation to disposition, the activity timeline, related evidence, and the HR/Legal handoff."
+  },
+  {
+   "table": "data_objects",
+   "id": 1163,
+   "column": "description",
+   "old": "A record linking advocacy-share-driven traffic to a lead, opportunity, or pipeline value for social-selling attribution and program ROI.",
+   "new": "A record relating advocacy-share-driven traffic to a lead, opportunity, or pipeline value for social-selling attribution and program ROI."
+  },
+  {
+   "table": "data_objects",
+   "id": 1163,
+   "column": "catalog_description",
+   "old": "Records linking advocacy-share-driven traffic to a lead, opportunity, or pipeline value for social-selling attribution and program ROI.",
+   "new": "Records relating advocacy-share-driven traffic to a lead, opportunity, or pipeline value for social-selling attribution and program ROI."
+  },
+  {
+   "table": "data_objects",
+   "id": 1181,
+   "column": "description",
+   "old": "The placement of a specific vessel in a specific slip, mooring, or rack for a period, linking inventory to a reservation or contract.",
+   "new": "The placement of a specific vessel in a specific slip, mooring, or rack for a period, relating inventory to a reservation or contract."
+  },
+  {
+   "table": "data_objects",
+   "id": 1181,
+   "column": "catalog_description",
+   "old": "Placements of a specific vessel in a specific slip, mooring, or rack for a period, linking inventory to a reservation or contract.",
+   "new": "Placements of a specific vessel in a specific slip, mooring, or rack for a period, relating inventory to a reservation or contract."
+  },
+  {
+   "table": "data_objects",
+   "id": 1293,
+   "column": "description",
+   "old": "Contribution link between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it.",
+   "new": "Contribution relationship between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it."
+  },
+  {
+   "table": "data_objects",
+   "id": 1293,
+   "column": "catalog_description",
+   "old": "Contribution links between a work item or project and an objective, so goal progress can roll up from the work that drives it.",
+   "new": "Contribution relationships between a work item or project and an objective, so goal progress can roll up from the work that drives it."
+  },
+  {
+   "table": "data_objects",
+   "id": 1327,
+   "column": "description",
+   "old": "Per-question answers a third party returns on an assessment, with the supporting evidence attached, linking each response to the questionnaire version used.",
+   "new": "Per-question answers a third party returns on an assessment, with the supporting evidence attached, relating each response to the questionnaire version used."
+  },
+  {
+   "table": "data_objects",
+   "id": 1337,
+   "column": "description",
+   "old": "Breach, sanctions, and financial-distress events surfaced against a third party for triage, each linking the signal to the third party it concerns. Optional where a program does not ingest external signals.",
+   "new": "Breach, sanctions, and financial-distress events surfaced against a third party for triage, each relating the signal to the third party it concerns. Optional where a program does not ingest external signals."
+  },
+  {
+   "table": "data_objects",
+   "id": 1341,
+   "column": "description",
+   "old": "Subcontractor and nth-party edges linking a third party to the providers it in turn depends on, building the supply-chain graph behind a direct relationship. Not universal.",
+   "new": "Subcontractor and nth-party relationships from a third party to the providers it in turn depends on, building the supply-chain graph behind a direct relationship. Not universal."
+  },
+  {
+   "table": "data_objects",
+   "id": 1358,
+   "column": "description",
+   "old": "Parent/child and affiliate hierarchy links between supplier records, with relationship type.",
+   "new": "Parent/child and affiliate hierarchy relationships between supplier records, with relationship type."
+  },
+  {
+   "table": "data_objects",
+   "id": 1358,
+   "column": "catalog_description",
+   "old": "Hierarchy and affiliate links between supplier records, such as parent, child, and affiliate relationships.",
+   "new": "Hierarchy and affiliate relationships between supplier records, such as parent, child, and affiliate."
+  },
+  {
+   "table": "data_objects",
+   "id": 1377,
+   "column": "description",
+   "old": "An individual guest on a booking, carrying name, contact, rate type, any per-person requirements (weight, experience level, dietary), and the link to that guest's signed waiver.",
+   "new": "An individual guest on a booking, carrying name, contact, rate type, any per-person requirements (weight, experience level, dietary), and the relationship to that guest's signed waiver."
+  },
+  {
+   "table": "data_objects",
+   "id": 1377,
+   "column": "catalog_description",
+   "old": "Individual guests on a booking, with rate type, per-person requirements, and a link to each guest's waiver.",
+   "new": "Individual guests on a booking, with rate type, per-person requirements, and a relationship to each guest's waiver."
+  },
+  {
+   "table": "domain_modules",
+   "id": 6,
+   "column": "catalog_description",
+   "old": "Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay linked to the offer record, so what was approved is exactly what was sent.",
+   "new": "Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay related to the offer record, so what was approved is exactly what was sent."
+  },
+  {
+   "table": "domain_modules",
+   "id": 45,
+   "column": "catalog_description",
+   "old": "SLA and Chargeback Management defines the response and resolution commitments your service desk operates to, then measures every ticket against them so breaches are caught before they become escalations. Targets are explicit and performance is visible.\n\nLinking service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around.",
+   "new": "SLA and Chargeback Management defines the response and resolution commitments your service desk operates to, then measures every ticket against them so breaches are caught before they become escalations. Targets are explicit and performance is visible.\n\nRelating service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around."
+  },
+  {
+   "table": "domain_modules",
+   "id": 65,
+   "column": "description",
+   "old": "Survey-result-driven action plans owned by managers or HRBPs. Tracks driver-to-action linkage, completion, and downstream WORK-MGMT task spawn. Closes the listen-act loop for engagement programs.",
+   "new": "Survey-result-driven action plans owned by managers or HRBPs. Tracks driver-to-action relationships, completion, and downstream WORK-MGMT task spawn. Closes the listen-act loop for engagement programs."
+  },
+  {
+   "table": "domain_modules",
+   "id": 70,
+   "column": "catalog_description",
+   "old": "Capture and decompose product requirements, link them to the parts and changes that satisfy them, and build a traceability matrix that shows what is covered, reviewed, approved, and verified. Catch unmet or orphaned requirements before release so the product you ship is the product that was actually specified.",
+   "new": "Capture and decompose product requirements, relate them to the parts and changes that satisfy them, and build a traceability matrix that shows what is covered, reviewed, approved, and verified. Catch unmet or orphaned requirements before release so the product you ship is the product that was actually specified."
+  },
+  {
+   "table": "domain_modules",
+   "id": 72,
+   "column": "description",
+   "old": "The employee-facing workflow surface: elections, dependents, life-event handling, and decision-support tooling. Masters benefit_enrollments, benefit_dependents, life_events; embeds employees for the benefit-eligibility slice (coverage tier, dependent linkage, beneficiary designation).",
+   "new": "The employee-facing workflow surface: elections, dependents, life-event handling, and decision-support tooling. Masters benefit_enrollments, benefit_dependents, life_events; embeds employees for the benefit-eligibility slice (coverage tier, dependent relationship, beneficiary designation)."
+  },
+  {
+   "table": "domain_modules",
+   "id": 103,
+   "column": "catalog_description",
+   "old": "Capture every application, the interfaces that connect it, and the technology platforms it runs on, then link each one to the business capabilities it supports. Record owners, lifecycle stage, and technical detail so anyone can answer what you run and why.\n\nDrive each application and platform through a clear lifecycle, from planned and emerging to operating, sunsetting, and retired, with the right approvals at each gate. The result is a single source of truth your teams can plan, govern, and report against.",
+   "new": "Capture every application, the interfaces that connect it, and the technology platforms it runs on, then relate each one to the business capabilities it supports. Record owners, lifecycle stage, and technical detail so anyone can answer what you run and why.\n\nDrive each application and platform through a clear lifecycle, from planned and emerging to operating, sunsetting, and retired, with the right approvals at each gate. The result is a single source of truth your teams can plan, govern, and report against."
+  },
+  {
+   "table": "domain_modules",
+   "id": 108,
+   "column": "catalog_description",
+   "old": "Register, classify, and govern every configuration item in one place, from servers and databases to applications and the dependencies that link them. Bring in records from across the environment, organize them under a class model you control, and move each item through its lifecycle from first sighting to retirement.\n\nWith ownership and access controls on the records that matter, the inventory stays trustworthy: people see what depends on what, changes are reasoned about against real relationships, and the rest of your IT operation works from a single source of truth.",
+   "new": "Register, classify, and govern every configuration item in one place, from servers and databases to applications and the dependencies between them. Bring in records from across the environment, organize them under a class model you control, and move each item through its lifecycle from first sighting to retirement.\n\nWith ownership and access controls on the records that matter, the inventory stays trustworthy: people see what depends on what, changes are reasoned about against real relationships, and the rest of your IT operation works from a single source of truth."
+  },
+  {
+   "table": "domain_modules",
+   "id": 130,
+   "column": "catalog_description",
+   "old": "Bring every customer signal into one place, from raw feedback to explicit feature requests. Classify and link incoming input, weigh demand against effort, and triage requests through to an accept-or-reject decision. Accepted work flows straight into roadmap planning, so nothing gets lost between listening and building.",
+   "new": "Bring every customer signal into one place, from raw feedback to explicit feature requests. Classify and relate incoming input, weigh demand against effort, and triage requests through to an accept-or-reject decision. Accepted work flows straight into roadmap planning, so nothing gets lost between listening and building."
+  },
+  {
+   "table": "domain_modules",
+   "id": 142,
+   "column": "description",
+   "old": "Image, video, 3D model, and document assets tied to products: ingestion, rights metadata, renditions, CDN distribution, and asset-to-product linking. Lives inside PIM in v1; can be split into its own DAM domain when warranted.",
+   "new": "Image, video, 3D model, and document assets tied to products: ingestion, rights metadata, renditions, CDN distribution, and asset-to-product relationships. Lives inside PIM in v1; can be split into its own DAM domain when warranted."
+  },
+  {
+   "table": "domain_modules",
+   "id": 150,
+   "column": "description",
+   "old": "Team-execution OKR tracking surface: objectives with key results that link to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR linking.",
+   "new": "Team-execution OKR tracking surface: objectives with key results that relate to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR relationships."
+  },
+  {
+   "table": "domain_modules",
+   "id": 150,
+   "column": "catalog_description",
+   "old": "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Link objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand.\n\nCommit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked.",
+   "new": "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Relate objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand.\n\nCommit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked."
+  },
+  {
+   "table": "domain_modules",
+   "id": 154,
+   "column": "specification_requirements",
+   "old": "Hiring manager access to candidates. A `candidates` row has no link leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `hiring-starter:view_all_candidates`.",
+   "new": "Hiring manager access to candidates. A `candidates` row has no relationship leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `hiring-starter:view_all_candidates`."
+  },
+  {
+   "table": "domain_modules",
+   "id": 272,
+   "column": "description",
+   "old": "Member enrollment, profile, and program/tier design. Configures points-earn rules, tier thresholds, qualification windows, and retention logic, and links each member identity to the canonical customer record.",
+   "new": "Member enrollment, profile, and program/tier design. Configures points-earn rules, tier thresholds, qualification windows, and retention logic, and relates each member identity to the canonical customer record."
+  },
+  {
+   "table": "domain_modules",
+   "id": 276,
+   "column": "description",
+   "old": "The execution tier that resolves the semantic model against physical sources and accelerates reads. Plans federated joins and pushes computation down to each backend across warehouses, relational databases, object storage, and APIs, then serves cached and pre-aggregated rollups from columnar storage with query rewriting and automatic invalidation. Captures an executed-query audit trail linking every metric read back to source tables, transformations, and the requesting identity.",
+   "new": "The execution tier that resolves the semantic model against physical sources and accelerates reads. Plans federated joins and pushes computation down to each backend across warehouses, relational databases, object storage, and APIs, then serves cached and pre-aggregated rollups from columnar storage with query rewriting and automatic invalidation. Captures an executed-query audit trail relating every metric read back to source tables, transformations, and the requesting identity."
+  },
+  {
+   "table": "domain_modules",
+   "id": 282,
+   "column": "description",
+   "old": "The core data-modeling surface: a self-contained namespace holding user-defined tables, rich field types, linked-record relationships across tables, formula and rollup columns, and the runtime schema that downstream views, forms, and automations bind to. The reason the platform is bought: model structured data without a developer.",
+   "new": "The core data-modeling surface: a self-contained namespace holding user-defined tables, rich field types, record relationships across tables, formula and rollup columns, and the runtime schema that downstream views, forms, and automations bind to. The reason the platform is bought: model structured data without a developer."
+  },
+  {
+   "table": "domain_modules",
+   "id": 282,
+   "column": "catalog_tagline",
+   "old": "Model your data without code: design tables, pick the right field types, and link records across them.",
+   "new": "Model your data without code: design tables, pick the right field types, and relate records across them."
+  },
+  {
+   "table": "domain_modules",
+   "id": 294,
+   "column": "description",
+   "old": "Establish and operate attended and unattended remote-control sessions over workstations and servers: code or agent based connection, NAT-traversal relay, in-session file transfer and clipboard sharing, and just-in-time privilege elevation. Owns the remote session as the unit of work and reads the operational agent liveness view plus the linked service incident.",
+   "new": "Establish and operate attended and unattended remote-control sessions over workstations and servers: code or agent based connection, NAT-traversal relay, in-session file transfer and clipboard sharing, and just-in-time privilege elevation. Owns the remote session as the unit of work and reads the operational agent liveness view plus the related service incident."
+  },
+  {
+   "table": "domain_modules",
+   "id": 294,
+   "column": "catalog_description",
+   "old": "Establish a remote-control session to a workstation or server, whether a technician is invited in by the end user or you reach an unattended device on your own schedule. Work across firewalls and NAT without opening inbound ports, move files in both directions, share the clipboard, and step up to administrator rights only for the task at hand.\n\nSee live device health while you work, link the session to the open service ticket, and close it cleanly so downstream teams pick up exactly where you left off.",
+   "new": "Establish a remote-control session to a workstation or server, whether a technician is invited in by the end user or you reach an unattended device on your own schedule. Work across firewalls and NAT without opening inbound ports, move files in both directions, share the clipboard, and step up to administrator rights only for the task at hand.\n\nSee live device health while you work, relate the session to the open service ticket, and close it cleanly so downstream teams pick up exactly where you left off."
+  },
+  {
+   "table": "domain_modules",
+   "id": 339,
+   "column": "description",
+   "old": "The shared business-language layer: authors, reviews, publishes, and deprecates glossary terms and links them to physical assets. Masters glossary_terms; embeds ontologies as an optional formal-model shell. Runs a draft-review-publish-deprecate workflow.",
+   "new": "The shared business-language layer: authors, reviews, publishes, and deprecates glossary terms and relates them to physical assets. Masters glossary_terms; embeds ontologies as an optional formal-model shell. Runs a draft-review-publish-deprecate workflow."
+  },
+  {
+   "table": "domain_modules",
+   "id": 339,
+   "column": "catalog_description",
+   "old": "Build a shared vocabulary so Revenue, Active Customer, and Churn mean the same thing everywhere. Propose terms, route them through steward review, publish the approved definition, and link each term to the real data assets behind it. Optional ontology authoring adds formal relationships between concepts. A governed glossary is what lets self-service data consumers trust what they find.",
+   "new": "Build a shared vocabulary so Revenue, Active Customer, and Churn mean the same thing everywhere. Propose terms, route them through steward review, publish the approved definition, and relate each term to the real data assets behind it. Optional ontology authoring adds formal relationships between concepts. A governed glossary is what lets self-service data consumers trust what they find."
+  },
+  {
+   "table": "domain_modules",
+   "id": 350,
+   "column": "catalog_description",
+   "old": "Author the annual and quarterly marketing plan as a hierarchy of plan lines, each with an owner, objective, and time window, and see the entire program on a shared campaign and content calendar. Link plan lines to the campaigns your execution tools run and the tasks your teams own, so the plan stays connected to the work without duplicating it.",
+   "new": "Author the annual and quarterly marketing plan as a hierarchy of plan lines, each with an owner, objective, and time window, and see the entire program on a shared campaign and content calendar. Relate plan lines to the campaigns your execution tools run and the tasks your teams own, so the plan stays related to the work without duplicating it."
+  },
+  {
+   "table": "domain_modules",
+   "id": 353,
+   "column": "catalog_description",
+   "old": "Plan and record industrial-hygiene sampling against occupational exposure limits for chemical, noise, and other agents, and link results back to the workers and tasks exposed. Maintain medical surveillance and exposure records, respirator fit tests, and audiometric results with the retention rules occupational health demands. Keep a current chemical inventory and safety data sheet library so hazard communication and exposure assessment stay accurate.",
+   "new": "Plan and record industrial-hygiene sampling against occupational exposure limits for chemical, noise, and other agents, and relate results back to the workers and tasks exposed. Maintain medical surveillance and exposure records, respirator fit tests, and audiometric results with the retention rules occupational health demands. Keep a current chemical inventory and safety data sheet library so hazard communication and exposure assessment stay accurate."
+  },
+  {
+   "table": "domain_modules",
+   "id": 400,
+   "column": "description",
+   "old": "Manages the portfolio-to-delivery backlog hierarchy (epics to features), agile roadmaps and release plans, lean-portfolio funding linkage, and OKR-to-delivery alignment.",
+   "new": "Manages the portfolio-to-delivery backlog hierarchy (epics to features), agile roadmaps and release plans, lean-portfolio funding relationships, and OKR-to-delivery alignment."
+  },
+  {
+   "table": "domain_modules",
+   "id": 400,
+   "column": "catalog_description",
+   "old": "Keep strategy and delivery in sync. Manage the backlog hierarchy from portfolio epics down to features, plan agile roadmaps and releases, link lean-portfolio funding to the work it pays for, and align OKRs to the delivery that achieves them. Gives delivery leaders a current, honest picture of what is planned and how it ladders up to portfolio outcomes.",
+   "new": "Keep strategy and delivery in sync. Manage the backlog hierarchy from portfolio epics down to features, plan agile roadmaps and releases, relate lean-portfolio funding to the work it pays for, and align OKRs to the delivery that achieves them. Gives delivery leaders a current, honest picture of what is planned and how it ladders up to portfolio outcomes."
+  },
+  {
+   "table": "handoffs",
+   "id": 58,
+   "column": "description",
+   "old": "Confirmed RCA seeds an ITSM problem record (the long-lived root-cause artifact) and links it to the incident(s) that triggered it. Friction sits in the human-in-the-loop confirmation step \u2014 most AIOps RCAs need analyst sign-off before they reach problem-management.",
+   "new": "Confirmed RCA seeds an ITSM problem record (the long-lived root-cause artifact) and relates it to the incident(s) that triggered it. Friction sits in the human-in-the-loop confirmation step: most AIOps RCAs need analyst sign-off before they reach problem-management."
+  },
+  {
+   "table": "handoffs",
+   "id": 94,
+   "column": "description",
+   "old": "Marketing-Automation campaigns reference content snippets, hero copy, and CTAs that live in the CMS, but the link between a CMS entry and a campaign template is rarely event-driven. Marketers manually copy CMS content into the MA email/SMS template; CMS-side changes after the campaign is built don't propagate. Shadow-data pattern: the campaign's content of record diverges silently from the CMS source.",
+   "new": "Marketing-Automation campaigns reference content snippets, hero copy, and CTAs that live in the CMS, but the relationship between a CMS entry and a campaign template is rarely event-driven. Marketers manually copy CMS content into the MA email/SMS template; CMS-side changes after the campaign is built don't propagate. Shadow-data pattern: the campaign's content of record diverges silently from the CMS source."
+  },
+  {
+   "table": "handoffs",
+   "id": 160,
+   "column": "description",
+   "old": "Tier-1 ticket escalates to a remote-session need; technician launches the remote-control tool against the affected endpoint. Failure modes: ticket-to-endpoint mapping is hostname-based and breaks for shifting laptop names; session recording rarely auto-links back to the ticket.",
+   "new": "Tier-1 ticket escalates to a remote-session need; technician launches the remote-control tool against the affected endpoint. Failure modes: ticket-to-endpoint mapping is hostname-based and breaks for shifting laptop names; session recording is rarely related back to the ticket automatically."
+  },
+  {
+   "table": "handoffs",
+   "id": 176,
+   "column": "description",
+   "old": "Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific.",
+   "new": "Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results relating down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific."
+  },
+  {
+   "table": "handoffs",
+   "id": 177,
+   "column": "description",
+   "old": "Cross-functional WORK-MGMT items intersect with IT support requests: a marketing project task ('IT-provision new SaaS') needs to be linked to an ITSM request, with status mirrored both ways. Bidirectional sync is bespoke; off-the-shelf WORK-MGMT-to-ITSM connectors exist but require careful per-team configuration.",
+   "new": "Cross-functional WORK-MGMT items intersect with IT support requests: a marketing project task ('IT-provision new SaaS') needs to be related to an ITSM request, with status mirrored both ways. Bidirectional sync is bespoke; off-the-shelf WORK-MGMT-to-ITSM connectors exist but require careful per-team configuration."
+  },
+  {
+   "table": "handoffs",
+   "id": 182,
+   "column": "description",
+   "old": "BPA tool publishes a process; EA tool maps applications that support it for TIME scoring. Payload: process metadata + linked capabilities. Failure modes: process owner mapping lags, capability bindings drift.",
+   "new": "BPA tool publishes a process; EA tool maps applications that support it for TIME scoring. Payload: process metadata + related capabilities. Failure modes: process owner mapping lags, capability bindings drift."
+  },
+  {
+   "table": "handoffs",
+   "id": 222,
+   "column": "description",
+   "old": "MDM golden records are the authoritative source for master entities (Customer, Product, Supplier). KGP ingests them and links to ontology classes, but the data models differ: MDM is record-centric and survivorship-driven, KGP is relationship-centric and reasoning-driven. Bidirectional sync is bespoke.",
+   "new": "MDM golden records are the authoritative source for master entities (Customer, Product, Supplier). KGP ingests them and relates them to ontology classes, but the data models differ: MDM is record-centric and survivorship-driven, KGP is relationship-centric and reasoning-driven. Bidirectional sync is bespoke."
+  },
+  {
+   "table": "handoffs",
+   "id": 255,
+   "column": "description",
+   "old": "AUDIT remediation closure → GRC issue closure (1:1 linkage established at finding time).",
+   "new": "AUDIT remediation closure → GRC issue closure (1:1 relationship established at finding time)."
+  },
+  {
+   "table": "handoffs",
+   "id": 265,
+   "column": "description",
+   "old": "New glossary term published → KGP (Knowledge Graph Platform) populates concept hierarchy and links related entities.",
+   "new": "New glossary term published → KGP (Knowledge Graph Platform) populates concept hierarchy and relates entities."
+  },
+  {
+   "table": "handoffs",
+   "id": 269,
+   "column": "description",
+   "old": "Resolved golden ID + merged attributes; CRM links operational record.",
+   "new": "Resolved golden ID + merged attributes; CRM relates the operational record to the golden ID."
+  },
+  {
+   "table": "handoffs",
+   "id": 274,
+   "column": "description",
+   "old": "Resolved identity → HCM links operational HR record.",
+   "new": "Resolved identity → HCM relates the operational HR record to the identity."
+  },
+  {
+   "table": "handoffs",
+   "id": 341,
+   "column": "notes",
+   "old": "Friction shape: scope translation \u2014 sales-stage scope rarely matches the level of detail an agency_job needs (deliverable list, rate card, retainer linkage). Often requires a kick-off meeting to finalize.",
+   "new": "Friction shape: scope translation. Sales-stage scope rarely matches the level of detail an agency_job needs (deliverable list, rate card, retainer relationship). Often requires a kick-off meeting to finalize."
+  },
+  {
+   "table": "handoffs",
+   "id": 381,
+   "column": "description",
+   "old": "Executed contract carries comp basis; COMP-MGMT links compensation statement and ongoing-cycle eligibility.",
+   "new": "Executed contract carries comp basis; COMP-MGMT relates it to the compensation statement and ongoing-cycle eligibility."
+  },
+  {
+   "table": "handoffs",
+   "id": 387,
+   "column": "description",
+   "old": "Job profile links to salary bands; COMP-MGMT mapping authoritative.",
+   "new": "Job profile relates to salary bands; COMP-MGMT mapping authoritative."
+  },
+  {
+   "table": "handoffs",
+   "id": 421,
+   "column": "description",
+   "old": "Merit-cycle close finalizes pay-for-performance linkage; TALENT-MGMT updates 9-box and dev-plans.",
+   "new": "Merit-cycle close finalizes the pay-for-performance relationship; TALENT-MGMT updates 9-box and dev-plans."
+  },
+  {
+   "table": "handoffs",
+   "id": 483,
+   "column": "description",
+   "old": "Quote acceptance advances the linked opportunity to closed-won pending signature.",
+   "new": "Quote acceptance advances the related opportunity to closed-won pending signature."
+  },
+  {
+   "table": "handoffs",
+   "id": 603,
+   "column": "description",
+   "old": "AIOPS RCA conclusion lands on the linked ITSM incident/problem as resolution context.",
+   "new": "AIOPS RCA conclusion lands on the related ITSM incident/problem as resolution context."
+  },
+  {
+   "table": "handoffs",
+   "id": 616,
+   "column": "description",
+   "old": "New OBS error signatures auto-create VSDP defect tickets linked to recent deployments.",
+   "new": "New OBS error signatures auto-create VSDP defect tickets related to recent deployments."
+  },
+  {
+   "table": "handoffs",
+   "id": 646,
+   "column": "description",
+   "old": "Completed remote sessions append worklog and timer to the linked ITSM ticket.",
+   "new": "Completed remote sessions append worklog and timer to the related ITSM ticket."
+  },
+  {
+   "table": "handoffs",
+   "id": 655,
+   "column": "description",
+   "old": "Newly enrolled UEM devices auto-link to onboarding ITSM tickets.",
+   "new": "Newly enrolled UEM devices are automatically related to onboarding ITSM tickets."
+  },
+  {
+   "table": "handoffs",
+   "id": 754,
+   "column": "description",
+   "old": "PaaS deployment events cross-link to VSDP deployment records for unified delivery visibility.",
+   "new": "PaaS deployment events relate to VSDP deployment records for unified delivery visibility."
+  },
+  {
+   "table": "handoffs",
+   "id": 758,
+   "column": "description",
+   "old": "Build failures cross-link back to the originating VSDP commit for developer visibility.",
+   "new": "Build failures relate back to the originating VSDP commit for developer visibility."
+  },
+  {
+   "table": "handoffs",
+   "id": 762,
+   "column": "description",
+   "old": "Helm releases cross-link to VSDP deployment records for unified release tracking.",
+   "new": "Helm releases relate to VSDP deployment records for unified release tracking."
+  },
+  {
+   "table": "handoffs",
+   "id": 776,
+   "column": "description",
+   "old": "PR merges transition the linked work item to a completed state in the team's WORK-MGMT board.",
+   "new": "PR merges transition the related work item to a completed state in the team's WORK-MGMT board."
+  },
+  {
+   "table": "handoffs",
+   "id": 781,
+   "column": "description",
+   "old": "Requirement-to-test linkage updates feed product traceability and coverage reports.",
+   "new": "Requirement-to-test relationship updates feed product traceability and coverage reports."
+  },
+  {
+   "table": "handoffs",
+   "id": 788,
+   "column": "description",
+   "old": "Work-item automations linked to IT tickets propagate status changes to ITSM.",
+   "new": "Work-item automations related to IT tickets propagate status changes to ITSM."
+  },
+  {
+   "table": "handoffs",
+   "id": 801,
+   "column": "description",
+   "old": "Published recipes link to the originating VSDP commit/release for traceability.",
+   "new": "Published recipes relate to the originating VSDP commit/release for traceability."
+  },
+  {
+   "table": "handoffs",
+   "id": 827,
+   "column": "description",
+   "old": "Classified documents that match controlled categories (SOX, PCI, PHI) are linked as evidence to GRC controls.",
+   "new": "Classified documents that match controlled categories (SOX, PCI, PHI) are related as evidence to GRC controls."
+  },
+  {
+   "table": "handoffs",
+   "id": 959,
+   "column": "description",
+   "old": "Feed-ration change links ingredient lots to milk lots for downstream traceability.",
+   "new": "Feed-ration change relates ingredient lots to milk lots for downstream traceability."
+  },
+  {
+   "table": "handoffs",
+   "id": 963,
+   "column": "description",
+   "old": "Ready butcher order finalizes lot/cut linkage in FOOD-TRACE for source-animal traceability.",
+   "new": "Ready butcher order finalizes the lot/cut relationship in FOOD-TRACE for source-animal traceability."
+  },
+  {
+   "table": "handoffs",
+   "id": 987,
+   "column": "description",
+   "old": "Returns drive support case volume; CSM links the RMA to the customer record to track resolution.",
+   "new": "Returns drive support case volume; CSM relates the RMA to the customer record to track resolution."
+  },
+  {
+   "table": "handoffs",
+   "id": 1016,
+   "column": "description",
+   "old": "Confirmed assignments decrement available capacity in HCM and link the consultant's calendar to the engagement. Friction stems from PSA and HCM frequently being separate vendors with different resource models.",
+   "new": "Confirmed assignments decrement available capacity in HCM and relate the consultant's calendar to the engagement. Friction stems from PSA and HCM frequently being separate vendors with different resource models."
+  },
+  {
+   "table": "handoffs",
+   "id": 1200,
+   "column": "notes",
+   "old": "Pre-change CI baseline captured; ITSM-CHANGE-MGMT holds the snapshot as the comparison reference for the linked change_request.",
+   "new": "Pre-change CI baseline captured; ITSM-CHANGE-MGMT holds the snapshot as the comparison reference for the related change_request."
+  },
+  {
+   "table": "handoffs",
+   "id": 1209,
+   "column": "description",
+   "old": "Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the linked legal_contract transitions out_for_signature -> signed.",
+   "new": "Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the related legal_contract transitions out_for_signature -> signed."
+  },
+  {
+   "table": "handoffs",
+   "id": 1248,
+   "column": "description",
+   "old": "An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the linked work_items being closed in WORK-MGMT, leaving stale tasks.",
+   "new": "An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the related work_items being closed in WORK-MGMT, leaving stale tasks."
+  },
+  {
+   "table": "handoffs",
+   "id": 1253,
+   "column": "description",
+   "old": "A WORK-MGMT automation rule has been disabled. PROD-MGMT subscribers stop reacting to its downstream effects (e.g. auto-creation of feature_request linkages from incoming work_items).",
+   "new": "A WORK-MGMT automation rule has been disabled. PROD-MGMT subscribers stop reacting to its downstream effects (e.g. auto-creation of feature_request relationships from incoming work_items)."
+  },
+  {
+   "table": "handoffs",
+   "id": 1316,
+   "column": "description",
+   "old": "Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves.",
+   "new": "Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has related the item to a key result. In-process FK + state read; no message moves."
+  },
+  {
+   "table": "handoffs",
+   "id": 1317,
+   "column": "description",
+   "old": "Terminal completion of a work item is the strongest progress signal \u2014 drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives.",
+   "new": "Terminal completion of a work item is the strongest progress signal: it drives KR closure recalculation and triggers KR-fully-met evaluations on related objectives."
+  },
+  {
+   "table": "handoffs",
+   "id": 1318,
+   "column": "description",
+   "old": "Committing an OKR unlocks KR-to-work_item linking and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow.",
+   "new": "Committing an OKR unlocks KR-to-work_item relationships and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow."
+  },
+  {
+   "table": "handoffs",
+   "id": 1322,
+   "column": "description",
+   "old": "WM work_item completion updates PROD-MGMT roadmap progress when items are linked to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke \u2014 friction is the mapping between work_item id and roadmap_item id.",
+   "new": "WM work_item completion updates PROD-MGMT roadmap progress when items are related to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke: friction is the mapping between work_item id and roadmap_item id."
+  },
+  {
+   "table": "handoffs",
+   "id": 1390,
+   "column": "description",
+   "old": "When a customer_feedback_item is linked to a feature in PM-DISCOVERY, PM-ROADMAP-DELIVERY enriches the linked product_feature with the supporting demand signal.",
+   "new": "When a customer_feedback_item is related to a feature in PM-DISCOVERY, PM-ROADMAP-DELIVERY enriches the related product_feature with the supporting demand signal."
+  },
+  {
+   "table": "trigger_events",
+   "id": 148,
+   "column": "description",
+   "old": "A work_item transitions to done/complete state in a WORK-MGMT platform. Used by SPM for portfolio rollup, by PSA for billable hours close-out, and by ITSM when the work_item was linked to an IT ticket.",
+   "new": "A work_item transitions to done/complete state in a WORK-MGMT platform. Used by SPM for portfolio rollup, by PSA for billable hours close-out, and by ITSM when the work_item was related to an IT ticket."
+  },
+  {
+   "table": "trigger_events",
+   "id": 196,
+   "column": "description",
+   "old": "A KG entity gains a new relationship link (sameAs, partOf, derived from an inference run, or manually asserted). Triggers downstream re-reasoning, embedding-recomputation for similarity search, and notification of AI agents that hold the entity in context.",
+   "new": "A KG entity gains a new relationship (sameAs, partOf, derived from an inference run, or manually asserted). Triggers downstream re-reasoning, embedding-recomputation for similarity search, and notification of AI agents that hold the entity in context."
+  },
+  {
+   "table": "trigger_events",
+   "id": 238,
+   "column": "description",
+   "old": "Business term published; semantically links to assets and ontologies.",
+   "new": "Business term published; semantically relates to assets and ontologies."
+  },
+  {
+   "table": "trigger_events",
+   "id": 274,
+   "column": "description",
+   "old": "New lease signed; properties + cost center linked.",
+   "new": "New lease signed; properties + cost center related."
+  },
+  {
+   "table": "trigger_events",
+   "id": 362,
+   "column": "description",
+   "old": "Candidate submits an application against a posting. Triggers screening, source attribution, and (for internal candidates) HCM career-aspiration linkage.",
+   "new": "Candidate submits an application against a posting. Triggers screening, source attribution, and (for internal candidates) HCM career-aspiration relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 366,
+   "column": "description",
+   "old": "Employee submits a referral. Engagement and rewards-eligibility tracking kick off; ATS creates linked application.",
+   "new": "Employee submits a referral. Engagement and rewards-eligibility tracking kick off; ATS creates related application."
+  },
+  {
+   "table": "trigger_events",
+   "id": 435,
+   "column": "description",
+   "old": "New course made available in LMS catalog. TALENT-MGMT and HRSD curricula linkages update; required-training assignment rules apply.",
+   "new": "New course made available in LMS catalog. TALENT-MGMT and HRSD curricula relationships update; required-training assignment rules apply."
+  },
+  {
+   "table": "trigger_events",
+   "id": 443,
+   "column": "description",
+   "old": "Performance goal set for an employee/team (annual, quarterly). HCM, TALENT-MGMT, and COMP-MGMT pay-for-performance link to outcomes.",
+   "new": "Performance goal set for an employee/team (annual, quarterly). HCM, TALENT-MGMT, and COMP-MGMT relate pay-for-performance to outcomes."
+  },
+  {
+   "table": "trigger_events",
+   "id": 474,
+   "column": "description",
+   "old": "A new quote has been created in CPQ against an opportunity. CRM links the quote to the opportunity; CLM may stand by for downstream contract draft.",
+   "new": "A new quote has been created in CPQ against an opportunity. CRM relates the quote to the opportunity; CLM may stand by for downstream contract draft."
+  },
+  {
+   "table": "trigger_events",
+   "id": 500,
+   "column": "description",
+   "old": "A CCaaS contact (call, chat, email, social) has been recorded. CSM links to the customer case; WFM uses for agent occupancy.",
+   "new": "A CCaaS contact (call, chat, email, social) has been recorded. CSM relates it to the customer case; WFM uses for agent occupancy."
+  },
+  {
+   "table": "trigger_events",
+   "id": 554,
+   "column": "description",
+   "old": "A fixed asset has been capitalized in the books. Triggers depreciation schedule creation, ITAM/HAM asset record linkage, and AUDIT logging.",
+   "new": "A fixed asset has been capitalized in the books. Triggers depreciation schedule creation, ITAM/HAM asset record relationship, and AUDIT logging."
+  },
+  {
+   "table": "trigger_events",
+   "id": 575,
+   "column": "description",
+   "old": "A corporate card has been issued to an employee. SPEND-MGMT activates; EXPENSE links for auto-feed; AUDIT records.",
+   "new": "A corporate card has been issued to an employee. SPEND-MGMT activates; EXPENSE connects the card for auto-feed; AUDIT records."
+  },
+  {
+   "table": "trigger_events",
+   "id": 617,
+   "column": "description",
+   "old": "A software title has been added to the SAM catalog. SMP may cross-link discovered SaaS apps; SAM begins license tracking.",
+   "new": "A software title has been added to the SAM catalog. SMP may relate discovered SaaS apps to it; SAM begins license tracking."
+  },
+  {
+   "table": "trigger_events",
+   "id": 643,
+   "column": "description",
+   "old": "OBS error tracking detected a new error signature (not seen before). ITSM/VSDP creates investigation ticket linked to recent release.",
+   "new": "OBS error tracking detected a new error signature (not seen before). ITSM/VSDP creates investigation ticket related to recent release."
+  },
+  {
+   "table": "trigger_events",
+   "id": 651,
+   "column": "description",
+   "old": "An RMM automation script ran on one or more endpoints. ITSM updates linked tickets; logs ingested by OBS.",
+   "new": "An RMM automation script ran on one or more endpoints. ITSM updates related tickets; logs ingested by OBS."
+  },
+  {
+   "table": "trigger_events",
+   "id": 653,
+   "column": "description",
+   "old": "A REMOTE-ACCESS session has begun between a technician and an endpoint. ITSM ticket links; GRC records access.",
+   "new": "A REMOTE-ACCESS session has begun between a technician and an endpoint. ITSM relates it to the ticket; GRC records access."
+  },
+  {
+   "table": "trigger_events",
+   "id": 665,
+   "column": "description",
+   "old": "A UEM-managed device completed enrollment. ITSM links to user; IGA establishes device-identity binding; ITAM/HAM record asset.",
+   "new": "A UEM-managed device completed enrollment. ITSM relates it to the user; IGA establishes device-identity binding; ITAM/HAM record asset."
+  },
+  {
+   "table": "trigger_events",
+   "id": 675,
+   "column": "description",
+   "old": "A UEM enrollment token was issued to a user for self-service device enrollment. ITSM ticket links the request.",
+   "new": "A UEM enrollment token was issued to a user for self-service device enrollment. ITSM ticket relates to the request."
+  },
+  {
+   "table": "trigger_events",
+   "id": 808,
+   "column": "description",
+   "old": "A new API version has been published and is available for consumer subscription. Downstream: developer-portal catalog refresh, IPAAS connector regeneration, VSDP release-note linkage.",
+   "new": "A new API version has been published and is available for consumer subscription. Downstream: developer-portal catalog refresh, IPAAS connector regeneration, VSDP release-note relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 819,
+   "column": "description",
+   "old": "A PaaS deployment completed successfully. Triggers OBS baseline refresh, KUBE-PLAT workload reconciliation, VSDP deployment-record cross-link.",
+   "new": "A PaaS deployment completed successfully. Triggers OBS baseline refresh, KUBE-PLAT workload reconciliation, VSDP deployment-record relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 829,
+   "column": "description",
+   "old": "A Helm release has been installed or upgraded successfully on a cluster. VSDP cross-links the release; OBS rebaselines.",
+   "new": "A Helm release has been installed or upgraded successfully on a cluster. VSDP relates the release to its deployment record; OBS rebaselines."
+  },
+  {
+   "table": "trigger_events",
+   "id": 834,
+   "column": "description",
+   "old": "A new container image has been pushed to the registry. VULN-MGMT scans for vulnerabilities; VSDP cross-links to the build.",
+   "new": "A new container image has been pushed to the registry. VULN-MGMT scans for vulnerabilities; VSDP relates it to the build."
+  },
+  {
+   "table": "trigger_events",
+   "id": 848,
+   "column": "description",
+   "old": "A pull request has been merged to a tracked branch. Triggers CD pipeline kickoff, release-note generation, and traceability linkage.",
+   "new": "A pull request has been merged to a tracked branch. Triggers CD pipeline kickoff, release-note generation, and traceability relationships."
+  },
+  {
+   "table": "trigger_events",
+   "id": 857,
+   "column": "description",
+   "old": "A new test case has been authored. Traceability linkage to requirements is captured.",
+   "new": "A new test case has been authored. Traceability relationship to requirements is captured."
+  },
+  {
+   "table": "trigger_events",
+   "id": 866,
+   "column": "description",
+   "old": "A requirement has been linked to a test case (or unlinked). Triggers traceability-matrix refresh and coverage-gap analysis.",
+   "new": "A requirement has been related to a test case (or the relationship removed). Triggers traceability-matrix refresh and coverage-gap analysis."
+  },
+  {
+   "table": "trigger_events",
+   "id": 877,
+   "column": "description",
+   "old": "A web page is taken offline (sunset, expired, withdrawn). WEB-CONTOPS marks lifecycle plan complete and KMS removes any linked references.",
+   "new": "A web page is taken offline (sunset, expired, withdrawn). WEB-CONTOPS marks lifecycle plan complete and KMS removes any related references."
+  },
+  {
+   "table": "trigger_events",
+   "id": 919,
+   "column": "description",
+   "old": "An ECM or file-share document is linked into a channel for collaboration. IGA reconciles share scope; DLP applies external-share policy when applicable.",
+   "new": "An ECM or file-share document is related to a channel for collaboration. IGA reconciles share scope; DLP applies external-share policy when applicable."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1020,
+   "column": "description",
+   "old": "A clinical engineering work order has been opened for a medical device. Triggers technician dispatch and ITSM linkage.",
+   "new": "A clinical engineering work order has been opened for a medical device. Triggers technician dispatch and the ITSM relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1103,
+   "column": "description",
+   "old": "A feed ration formulation has been changed for a group; downstream ERP-FIN updates feed-cost-per-liter and FOOD-TRACE links ingredient lots for traceability.",
+   "new": "A feed ration formulation has been changed for a group; downstream ERP-FIN updates feed-cost-per-liter and FOOD-TRACE relates ingredient lots for traceability."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1111,
+   "column": "description",
+   "old": "A field boundary/geometry has been updated; downstream FOOD-TRACE updates lot-to-field linkage, TELEMATICS recomputes geofences, and ERP-FIN updates land-cost allocation.",
+   "new": "A field boundary/geometry has been updated; downstream FOOD-TRACE updates lot-to-field relationships, TELEMATICS recomputes geofences, and ERP-FIN updates land-cost allocation."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1115,
+   "column": "description",
+   "old": "A variable-rate prescription map has been published for application; downstream TELEMATICS pushes the map to machinery and FOOD-TRACE links it to the resulting application KDE.",
+   "new": "A variable-rate prescription map has been published for application; downstream TELEMATICS pushes the map to machinery and FOOD-TRACE relates it to the resulting application KDE."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1116,
+   "column": "description",
+   "old": "A machinery telemetry record (GPS/coverage/yield/engine-hours) has been captured; downstream TELEMATICS aggregates utilization, ERP-FIN allocates machine-cost, FOOD-TRACE links to operation KDE.",
+   "new": "A machinery telemetry record (GPS/coverage/yield/engine-hours) has been captured; downstream TELEMATICS aggregates utilization, ERP-FIN allocates machine-cost, FOOD-TRACE relates it to operation KDE."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1135,
+   "column": "description",
+   "old": "A buy-online-pickup-in-store (BOPIS) order has been created. The destination store is notified for staging; B2C-COMM shows pickup instructions; CRM links the visit to the customer record.",
+   "new": "A buy-online-pickup-in-store (BOPIS) order has been created. The destination store is notified for staging; B2C-COMM shows pickup instructions; CRM relates the visit to the customer record."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1142,
+   "column": "description",
+   "old": "A feedback item has been linked to a feature_request or product_feature, closing the listening loop. CSM/CRM should surface this on the customer record for renewal and expansion conversations.",
+   "new": "A feedback item has been related to a feature_request or product_feature, closing the listening loop. CSM/CRM should surface this on the customer record for renewal and expansion conversations."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1167,
+   "column": "description",
+   "old": "A tentative resource-allocation plan transitions to committed status. HCM treats the named hours as booked capacity; CLM links the allocation to the underlying engagement contract.",
+   "new": "A tentative resource-allocation plan transitions to committed status. HCM treats the named hours as booked capacity; CLM relates the allocation to the underlying engagement contract."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1175,
+   "column": "description",
+   "old": "A new in-house legal matter has been opened (litigation hold, regulatory enquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk linkage.",
+   "new": "A new in-house legal matter has been opened (litigation hold, regulatory enquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1374,
+   "column": "description",
+   "old": "A team-execution OKR is committed: KRs are finalized, owners set, and downstream task-creation / KR-to-task linking may now happen. Subscribers in TASK-EXEC create placeholder work_items or link existing ones to the freshly-committed KRs.",
+   "new": "A team-execution OKR is committed: KRs are finalized, owners set, and downstream task-creation / KR-to-task relationships may now follow. Subscribers in TASK-EXEC create placeholder work_items or relate existing ones to the freshly-committed KRs."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1395,
+   "column": "description",
+   "old": "A key_result is committed: target value, owner, and measurement cadence are finalized. Downstream KR-to-task linking can now happen.",
+   "new": "A key_result is committed: target value, owner, and measurement cadence are finalized. Downstream KR-to-task relationships can now be created."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1511,
+   "column": "description",
+   "old": "A traceability lot has been split into child lots; genealogy edges link each child back to the parent lot.",
+   "new": "A traceability lot has been split into child lots; genealogy records relate each child back to the parent lot."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1513,
+   "column": "description",
+   "old": "A traceability lot has been transformed into a new product lot; genealogy links the output lot to its input lots.",
+   "new": "A traceability lot has been transformed into a new product lot; genealogy relates the output lot to its input lots."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1527,
+   "column": "description",
+   "old": "Fired when a purchase order is created from an approved requisition. Publisher domain owns the state transition; subscribers may react by linking the order.",
+   "new": "Fired when a purchase order is created from an approved requisition. Publisher domain owns the state transition; subscribers may react by relating the order."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1661,
+   "column": "description",
+   "old": "A published business glossary term is retired; term-to-asset links and ontology mappings should be re-pointed to the replacement term.",
+   "new": "A published business glossary term is retired; term-to-asset relationships and ontology mappings should be re-pointed to the replacement term."
+  },
+  {
+   "table": "capabilities",
+   "id": 85,
+   "column": "description",
+   "old": "Capture of customer feedback from support tickets, sales calls, surveys, in-app prompts, and reviews; deduplication, tagging, linking to features and personas, and quantification of demand per opportunity.",
+   "new": "Capture of customer feedback from support tickets, sales calls, surveys, in-app prompts, and reviews; deduplication, tagging, relating to features and personas, and quantification of demand per opportunity."
+  },
+  {
+   "table": "capabilities",
+   "id": 176,
+   "column": "description",
+   "old": "Capture, triage, prioritize, route, resolve, and close unplanned service disruptions. Includes MTTR clocks, escalation rules, incident-on-incident linking, and resolution-code taxonomy.",
+   "new": "Capture, triage, prioritize, route, resolve, and close unplanned service disruptions. Includes MTTR clocks, escalation rules, incident-on-incident relationships, and resolution-code taxonomy."
+  },
+  {
+   "table": "capabilities",
+   "id": 177,
+   "column": "description",
+   "old": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artefact, lessons-learned linking. Distinct discipline from standard incident handling.",
+   "new": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artefact, lessons-learned relationships. Distinct discipline from standard incident handling."
+  },
+  {
+   "table": "capabilities",
+   "id": 178,
+   "column": "description",
+   "old": "Root-cause investigation for recurring or pattern-matched incidents. Carries known-error records, workaround library, permanent-fix change linking, and proactive-problem trend analysis.",
+   "new": "Root-cause investigation for recurring or pattern-matched incidents. Carries known-error records, workaround library, permanent-fix change relationships, and proactive-problem trend analysis."
+  },
+  {
+   "table": "capabilities",
+   "id": 287,
+   "column": "description",
+   "old": "Member onboarding, profile, identity linkage to customer record, account hub.",
+   "new": "Member onboarding, profile, identity relationship to customer record, account hub."
+  },
+  {
+   "table": "capabilities",
+   "id": 321,
+   "column": "description",
+   "old": "First-class relationships between tables (one-to-many, many-to-many, self-referential), with linked-record fields that surface related records inline, two-way navigation, and junction-table modeling for many-to-many without manual SQL.",
+   "new": "First-class relationships between tables (one-to-many, many-to-many, self-referential), with relationship fields that surface related records inline, two-way navigation, and junction-table modeling for many-to-many without manual SQL."
+  },
+  {
+   "table": "capabilities",
+   "id": 323,
+   "column": "description",
+   "old": "Spreadsheet-style derived columns with arithmetic, string, date, and conditional functions; cross-table rollups that aggregate child records; lookup fields that surface fields from linked records. The expressiveness gap with full code is where vendors differentiate.",
+   "new": "Spreadsheet-style derived columns with arithmetic, string, date, and conditional functions; cross-table rollups that aggregate child records; lookup fields that surface fields from related records. The expressiveness gap with full code is where vendors differentiate."
+  },
+  {
+   "table": "capabilities",
+   "id": 327,
+   "column": "description",
+   "old": "Linked predecessor/successor relationships between tasks (finish-to-start, start-to-start, etc.) with automatic schedule recalculation, critical-path highlighting, and Gantt/timeline visualization. Distinguishes serious project execution from to-do-list tools.",
+   "new": "Predecessor/successor relationships between tasks (finish-to-start, start-to-start, etc.) with automatic schedule recalculation, critical-path highlighting, and Gantt/timeline visualization. Distinguishes serious project execution from to-do-list tools."
+  },
+  {
+   "table": "capabilities",
+   "id": 329,
+   "column": "description",
+   "old": "Hierarchical goals/OKRs with measurable key results, weighted progress rollup from child tasks/projects, owner accountability views, and quarterly cadence reporting. The strategy-to-execution link that pushes WORK-MGMT into VP/exec rooms.",
+   "new": "Hierarchical goals/OKRs with measurable key results, weighted progress rollup from child tasks/projects, owner accountability views, and quarterly cadence reporting. The strategy-to-execution relationship that pushes WORK-MGMT into VP/exec rooms."
+  },
+  {
+   "table": "capabilities",
+   "id": 343,
+   "column": "description",
+   "old": "Hierarchical capability maps with heatmaps for maturity, investment, strategic-fit, and ownership; explicit linkage to applications, processes, and value streams. Cross-cutting across both APM and BPA tooling.",
+   "new": "Hierarchical capability maps with heatmaps for maturity, investment, strategic-fit, and ownership; explicit relationships to applications, processes, and value streams. Cross-cutting across both APM and BPA tooling."
+  },
+  {
+   "table": "capabilities",
+   "id": 440,
+   "column": "description",
+   "old": "Central agency job (engagement) record with traffic state, brief linkage, deliverable rollup, assigned teams, deadlines, and status routing. The system-of-record for the agency's active book of business \u2014 distinct from PSA's project record by retainer linkage, creative-brief origination, and media-plan attachment.",
+   "new": "Central agency job (engagement) record with traffic state, brief relationship, deliverable rollup, assigned teams, deadlines, and status routing. The system-of-record for the agency's active book of business, distinct from PSA's project record by retainer relationship, creative-brief origination, and media-plan attachment."
+  },
+  {
+   "table": "capabilities",
+   "id": 519,
+   "column": "description",
+   "old": "Pre-employment background, identity, and reference checks: criminal history, employment verification, education verification, drug screening, credit checks where lawful. FCRA / EU GDPR adverse-action workflows. Today linked to ATS only; cross-cutting candidate (also relevant in FSM contractor onboarding, PRM/TPRM partner screening) once those domains run Phase B.",
+   "new": "Pre-employment background, identity, and reference checks: criminal history, employment verification, education verification, drug screening, credit checks where lawful. FCRA / EU GDPR adverse-action workflows. Today related to ATS only; cross-cutting candidate (also relevant in FSM contractor onboarding, PRM/TPRM partner screening) once those domains run Phase B."
+  },
+  {
+   "table": "capabilities",
+   "id": 568,
+   "column": "description",
+   "old": "Balanced-scorecard and strategy-house visualization linking strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning perspectives.",
+   "new": "Balanced-scorecard and strategy-house visualization relating strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning perspectives."
+  },
+  {
+   "table": "capabilities",
+   "id": 596,
+   "column": "description",
+   "old": "Image, video, 3D model, and document asset linking to products with rights metadata, renditions, and CDN distribution. The DAM slice that lives inside PIM in v1; can be promoted to its own domain later.",
+   "new": "Image, video, 3D model, and document assets related to products with rights metadata, renditions, and CDN distribution. The DAM slice that lives inside PIM in v1; can be promoted to its own domain later."
+  },
+  {
+   "table": "capabilities",
+   "id": 679,
+   "column": "description",
+   "old": "Author, review, publish, and steward business-language definitions of concepts, linking terms to physical data assets.",
+   "new": "Author, review, publish, and steward business-language definitions of concepts, relating terms to physical data assets."
+  },
+  {
+   "table": "capabilities",
+   "id": 708,
+   "column": "description",
+   "old": "Plan-level performance and marketing-ROI measurement, linking results and pipeline contribution back to the plans and budgets that funded them.",
+   "new": "Plan-level performance and marketing-ROI measurement, relating results and pipeline contribution back to the plans and budgets that funded them."
+  },
+  {
+   "table": "capabilities",
+   "id": 848,
+   "column": "description",
+   "old": "Keeping the shipper's list of approved carriers, their relationships, equipment, and service levels, linked to the supplier record used for payment.",
+   "new": "Keeping the shipper's list of approved carriers, their relationships, equipment, and service levels, related to the supplier record used for payment."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 961,
+   "column": "notes",
+   "old": "Read inbound customer feedback for clustering and feature linkage.",
+   "new": "Read inbound customer feedback for clustering and feature relationships."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 963,
+   "column": "notes",
+   "old": "Move feature_requests through triage to prioritized, accepted, rejected, archived; link to product_features on acceptance.",
+   "new": "Move feature_requests through triage to prioritized, accepted, rejected, archived; relate to product_features on acceptance."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 964,
+   "column": "notes",
+   "old": "Classify, link to feature_requests or product_features, set status.",
+   "new": "Classify, relate to feature_requests or product_features, set status."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 971,
+   "column": "notes",
+   "old": "Read product metrics for strategy/OKR linkage and outcome reporting.",
+   "new": "Read product metrics for strategy/OKR relationships and outcome reporting."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 977,
+   "column": "notes",
+   "old": "Set product_feature state to released or deprecated; link to release rows.",
+   "new": "Set product_feature state to released or deprecated; relate to release rows."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 980,
+   "column": "notes",
+   "old": "Record adoption, usage, quality metrics linked to features and releases.",
+   "new": "Record adoption, usage, quality metrics related to features and releases."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 1035,
+   "column": "notes",
+   "old": "Patch asset metadata and product linkages.",
+   "new": "Patch asset metadata and product relationships."
+  },
+  {
+   "table": "tools",
+   "id": 857,
+   "column": "description",
+   "old": "Create a new employee-referral record linking a referring employee to a referred candidate.",
+   "new": "Create a new employee-referral record relating a referring employee to a referred candidate."
+  },
+  {
+   "table": "tools",
+   "id": 913,
+   "column": "description",
+   "old": "Single-recipient outbound message; channel is routed by recipient profile or deployment config. Backed by `send_email`, `send_sms`, `make_phone_call`, and future per-channel primitives. Default link for skills that need to notify a specific person and don't require a specific channel. Becomes `platform` only when Semantius ships an outbound dispatcher (recipient lookup + channel routing) on BOTH the `crud` MCP server AND the `semantius` CLI.",
+   "new": "Single-recipient outbound message; channel is routed by recipient profile or deployment config. Backed by `send_email`, `send_sms`, `make_phone_call`, and future per-channel primitives. Default tool for skills that need to notify a specific person and don't require a specific channel. Becomes `platform` only when Semantius ships an outbound dispatcher (recipient lookup + channel routing) on BOTH the `crud` MCP server AND the `semantius` CLI."
+  },
+  {
+   "table": "tools",
+   "id": 914,
+   "column": "description",
+   "old": "Broadcast to a team or shared inbox; typical real-world pattern is chat-channel-alert plus email-audit-trail on the same event. Backed by `post_chat_message`, `send_email`, `post_social_message`. Default link for skills that need to alert a team (incident broadcast, deploy notification, escalation). Becomes `platform` under the same MCP + CLI criterion as `notify_person`.",
+   "new": "Broadcast to a team or shared inbox; typical real-world pattern is chat-channel-alert plus email-audit-trail on the same event. Backed by `post_chat_message`, `send_email`, `post_social_message`. Default tool for skills that need to alert a team (incident broadcast, deploy notification, escalation). Becomes `platform` under the same MCP + CLI criterion as `notify_person`."
+  },
+  {
+   "table": "tools",
+   "id": 1071,
+   "column": "description",
+   "old": "Create a signature envelope record linked to a legal_contract.",
+   "new": "Create a signature envelope record related to a legal_contract."
+  },
+  {
+   "table": "tools",
+   "id": 1077,
+   "column": "description",
+   "old": "Move feature requests through triage, prioritized, accepted, rejected, archived states and link to product_features on acceptance.",
+   "new": "Move feature requests through triage, prioritized, accepted, rejected, archived states and relate to product_features on acceptance."
+  },
+  {
+   "table": "tools",
+   "id": 1078,
+   "column": "description",
+   "old": "Classify inbound feedback, link to feature_requests or product_features, set status.",
+   "new": "Classify inbound feedback, relate to feature_requests or product_features, set status."
+  },
+  {
+   "table": "tools",
+   "id": 1082,
+   "column": "description",
+   "old": "Set product_feature state (in_discovery, in_delivery, released, deprecated) and link to releases and roadmap items.",
+   "new": "Set product_feature state (in_discovery, in_delivery, released, deprecated) and relate to releases and roadmap items."
+  },
+  {
+   "table": "tools",
+   "id": 1085,
+   "column": "description",
+   "old": "Record adoption, usage, quality, or business metrics linked to features, releases, or product_lines.",
+   "new": "Record adoption, usage, quality, or business metrics related to features, releases, or product_lines."
+  },
+  {
+   "table": "tools",
+   "id": 1111,
+   "column": "description",
+   "old": "Patch asset metadata, link to additional products, update rights / renditions.",
+   "new": "Patch asset metadata, relate to additional products, update rights / renditions."
+  },
+  {
+   "table": "tools",
+   "id": 1188,
+   "column": "description",
+   "old": "Create a job application linking a candidate to a posting at an initial stage.",
+   "new": "Create a job application relating a candidate to a posting at an initial stage."
+  },
+  {
+   "table": "tools",
+   "id": 1237,
+   "column": "description",
+   "old": "Create a new copy of a library item linked to a bibliographic record.",
+   "new": "Create a new copy of a library item related to a bibliographic record."
+  },
+  {
+   "table": "tools",
+   "id": 1735,
+   "column": "description",
+   "old": "Update a record definition's fields, types, or linked-record relationships.",
+   "new": "Update a record definition's fields, types, or record relationships."
+  },
+  {
+   "table": "tools",
+   "id": 1860,
+   "column": "description",
+   "old": "Publish an approved glossary term, making its term-to-asset linkage live.",
+   "new": "Publish an approved glossary term, making its term-to-asset relationship live."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 30,
+   "column": "description",
+   "old": "Operational unit; carries headcount, cost-center linkage, and reporting lines.",
+   "new": "Operational unit; carries headcount, cost-center relationship, and reporting lines."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 277,
+   "column": "description",
+   "old": "Contract is in force and covering the linked assets.",
+   "new": "Contract is in force and covering the related assets."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 786,
+   "column": "description",
+   "old": "Allocation firmed up: HCM treats the named hours as booked capacity; CLM links the allocation to the underlying engagement contract.",
+   "new": "Allocation firmed up: HCM treats the named hours as booked capacity; CLM relates the allocation to the underlying engagement contract."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 840,
+   "column": "description",
+   "old": "Asset uploaded; metadata pending. Not yet linked to any product feed.",
+   "new": "Asset uploaded; metadata pending. Not yet related to any product feed."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 939,
+   "column": "description",
+   "old": "Feedback has been linked to a feature_request or product_feature.",
+   "new": "Feedback has been related to a feature_request or product_feature."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1057,
+   "column": "description",
+   "old": "Cataloger is enriching the record (subject headings, classification, links).",
+   "new": "Cataloger is enriching the record (subject headings, classification, relationships)."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1508,
+   "column": "description",
+   "old": "Applicant has advanced past initial screening and is in active consideration. Auto-progressed when the linked application advances stages.",
+   "new": "Applicant has advanced past initial screening and is in active consideration. Auto-progressed when the related application advances stages."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1750,
+   "column": "description",
+   "old": "Lot split into child lots; genealogy edges link children to this parent.",
+   "new": "Lot split into child lots; genealogy records relate children to this parent."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1752,
+   "column": "description",
+   "old": "Lot transformed into a new product lot; genealogy links output to inputs.",
+   "new": "Lot transformed into a new product lot; genealogy relates output to inputs."
+  },
+  {
+   "table": "capability_domains",
+   "id": 637,
+   "column": "notes",
+   "old": "Product-team OKR linkage to roadmap and features.",
+   "new": "Product-team OKR relationship to roadmap and features."
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1120,
+   "column": "notes",
+   "old": "An asset can be linked to many products (campaign hero shot) and a product can have many assets (image gallery).",
+   "new": "An asset can be related to many products (campaign hero shot) and a product can have many assets (image gallery)."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 114,
+   "column": "notes",
+   "old": "PO line items link to acquired hardware/software assets in ITAM/HAM/SAM via the asset.acquired lifecycle event.",
+   "new": "PO line items relate to acquired hardware/software assets in ITAM/HAM/SAM via the asset.acquired lifecycle event."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 140,
+   "column": "notes",
+   "old": "Software-installation side feeds CIs that represent installed applications, with version and licence linkage.",
+   "new": "Software-installation side feeds CIs that represent installed applications, with version and license relationship."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 233,
+   "column": "notes",
+   "old": "HCMS owns structured content entries served to channels. DXP suites with bundled CMSs co-master from their side (to be linked when DXP data_objects load).",
+   "new": "HCMS owns structured content entries served to channels. DXP suites with bundled CMSs co-master from their side (to be related when DXP data_objects load)."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 259,
+   "column": "notes",
+   "old": "BEN-ADMIN writes the benefit-eligibility slice (coverage tier, dependent linkage, beneficiary designation) on the worker record.",
+   "new": "BEN-ADMIN writes the benefit-eligibility slice (coverage tier, dependent relationship, beneficiary designation) on the worker record."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 423,
+   "column": "notes",
+   "old": "The user-authored schema (tables, fields, types, linked records, formulas) is the platform's primary intellectual artifact, defining what migrates when moving between flexible-database platforms.",
+   "new": "The user-authored schema (tables, fields, types, related records, formulas) is the platform's primary intellectual artifact, defining what migrates when moving between flexible-database platforms."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 427,
+   "column": "notes",
+   "old": "Team-level execution OKRs: weekly check-ins, child key-results that link to work_items for automatic progress rollup.",
+   "new": "Team-level execution OKRs: weekly check-ins, child key-results that relate to work_items for automatic progress rollup."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 526,
+   "column": "notes",
+   "old": "Co-master with AIOPS. DQ slice = anomalies linked to quality_rule_id; AIOPS slice = monitored_system_id",
+   "new": "Co-master with AIOPS. DQ slice = anomalies related to quality_rule_id; AIOPS slice = monitored_system_id"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 547,
+   "column": "notes",
+   "old": "Reads supplier master to link supplier_esg_assessments",
+   "new": "Reads supplier master to relate supplier_esg_assessments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1161,
+   "column": "notes",
+   "old": "Investment-alignment views require cost-center linkage; many SEM deployments skip this.",
+   "new": "Investment-alignment views require cost-center relationships; many SEM deployments skip this."
+  },
+  {
+   "table": "personas",
+   "id": 15,
+   "column": "description",
+   "old": "Cross-functional objective owner who commits and scores OKRs and links key results to executing work items.",
+   "new": "Cross-functional objective owner who commits and scores OKRs and relates key results to executing work items."
+  },
+  {
+   "table": "domains",
+   "id": 18,
+   "column": "catalog_description",
+   "old": "Run your business through the lens of the services that matter most to customers and to the market, not the systems that happen to support them. Identify your important business services, then map each one down to the people, processes, applications, data, and third parties it relies on, so you can see exactly what a single failure would take out and where the hidden single points of failure are.\n\nFor every important service, set an impact tolerance: the maximum disruption you are willing to accept before customers or the wider market are harmed. Test those limits against severe but plausible scenarios, from a key supplier going dark to a cyber outage or a data-center loss, and record whether each service stayed inside tolerance or breached it. Turn every breach and near miss into tracked remediation with owners and due dates, so the gaps close instead of resurfacing in the next test.\n\nGive boards and regulators a clear, evidenced view of how resilient the organization really is. Maintain the self-assessment and reporting that rules such as DORA and NIS2 expect, link operational-resilience incidents back to the services and tolerances they threatened, and keep the dependency map current as the business changes, so resilience is a living posture you can defend rather than a document that ages on a shelf.",
+   "new": "Run your business through the lens of the services that matter most to customers and to the market, not the systems that happen to support them. Identify your important business services, then map each one down to the people, processes, applications, data, and third parties it relies on, so you can see exactly what a single failure would take out and where the hidden single points of failure are.\n\nFor every important service, set an impact tolerance: the maximum disruption you are willing to accept before customers or the wider market are harmed. Test those limits against severe but plausible scenarios, from a key supplier going dark to a cyber outage or a data-center loss, and record whether each service stayed inside tolerance or breached it. Turn every breach and near miss into tracked remediation with owners and due dates, so the gaps close instead of resurfacing in the next test.\n\nGive boards and regulators a clear, evidenced view of how resilient the organization really is. Maintain the self-assessment and reporting that rules such as DORA and NIS2 expect, relate operational-resilience incidents back to the services and tolerances they threatened, and keep the dependency map current as the business changes, so resilience is a living posture you can defend rather than a document that ages on a shelf."
+  },
+  {
+   "table": "domains",
+   "id": 134,
+   "column": "description",
+   "old": "Spreadsheet-database hybrids letting non-developers model structured data, link records across tables, build forms/views/dashboards, and automate without code. Bought self-serve by citizen developers in marketing, ops, HR, and PMO; expands to enterprise via Business/Enterprise tiers. Distinct from LCAP (no managed app runtime, no environments/version pipeline, no compiled UI), from BI (no warehouse, no analytical semantic layer), and from work management (the data model is the buy reason, not the project view).",
+   "new": "Spreadsheet-database hybrids letting non-developers model structured data, relate records across tables, build forms/views/dashboards, and automate without code. Bought self-serve by citizen developers in marketing, ops, HR, and PMO; expands to enterprise via Business/Enterprise tiers. Distinct from LCAP (no managed app runtime, no environments/version pipeline, no compiled UI), from BI (no warehouse, no analytical semantic layer), and from work management (the data model is the buy reason, not the project view)."
+  },
+  {
+   "table": "domains",
+   "id": 134,
+   "column": "catalog_description",
+   "old": "Stand up a working database in an afternoon, no developer required. Design your own tables, add the field types your work actually needs, and link records across tables so related information stays connected. Your data structure is the product: shape it to match how your team works instead of bending your work to fit a rigid tool.\n\nGive everyone a way to read and contribute. Switch the same data between grid, gallery, kanban, calendar, and timeline views, each filtered and sorted to the question at hand, and share any view with the people who need it. Collect new information through forms that write straight into your tables, so submissions land clean and ready to use.\n\nPut the busywork on autopilot. Trigger actions when records change or on a schedule, send notifications to the right people, and keep your tables in sync with the other systems you rely on. The result is a single place where your team models, captures, works, and automates its operational data.",
+   "new": "Stand up a working database in an afternoon, no developer required. Design your own tables, add the field types your work actually needs, and relate records across tables so information stays related. Your data structure is the product: shape it to match how your team works instead of bending your work to fit a rigid tool.\n\nGive everyone a way to read and contribute. Switch the same data between grid, gallery, kanban, calendar, and timeline views, each filtered and sorted to the question at hand, and share any view with the people who need it. Collect new information through forms that write straight into your tables, so submissions land clean and ready to use.\n\nPut the busywork on autopilot. Trigger actions when records change or on a schedule, send notifications to the right people, and keep your tables in sync with the other systems you rely on. The result is a single place where your team models, captures, works, and automates its operational data."
+  },
+  {
+   "table": "domains",
+   "id": 135,
+   "column": "business_logic",
+   "old": "Cross-project resource leveling and capacity calculations; critical-path and dependency scheduling on linked tasks; OKR-to-task progress rollup with weighted contribution; recurring-task generation rules; AI-assisted task summarization, status drafting, and risk flagging.",
+   "new": "Cross-project resource leveling and capacity calculations; critical-path and dependency scheduling on related tasks; OKR-to-task progress rollup with weighted contribution; recurring-task generation rules; AI-assisted task summarization, status drafting, and risk flagging."
+  },
+  {
+   "table": "skills",
+   "id": 432,
+   "column": "description",
+   "old": "Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, link them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards.",
+   "new": "Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, relate them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards."
+  },
+  {
+   "table": "solutions",
+   "id": 406,
+   "column": "description",
+   "old": "Outcome-driven product portfolio and capacity-planning platform: links objectives to initiatives, features, and capacity; built for product-operations leaders.",
+   "new": "Outcome-driven product portfolio and capacity-planning platform: relates objectives to initiatives, features, and capacity; built for product-operations leaders."
+  },
+  {
+   "table": "solutions",
+   "id": 590,
+   "column": "description",
+   "old": "No-code database platform: linked tables, views (grid/gallery/kanban/calendar/timeline), forms, automations, and Interface Designer apps with write-back.",
+   "new": "No-code database platform: related tables, views (grid/gallery/kanban/calendar/timeline), forms, automations, and Interface Designer apps with write-back."
+  },
+  {
+   "table": "solutions",
+   "id": 593,
+   "column": "description",
+   "old": "Open-source Airtable alternative with self-hostable database, linked records, formulas, and a plugin ecosystem.",
+   "new": "Open-source Airtable alternative with self-hostable database, related records, formulas, and a plugin ecosystem."
+  },
+  {
+   "table": "solutions",
+   "id": 1006,
+   "column": "description",
+   "old": "Work management platform built on a no-code relational database. Teams model structured records across linked apps and view them as grids, kanban boards, calendars, timelines, and dashboards, with built-in automations, forms, and reporting. Sold to PMOs, operations, marketing, and HR teams running structured cross-functional work.",
+   "new": "Work management platform built on a no-code relational database. Teams model structured records across related apps and view them as grids, kanban boards, calendars, timelines, and dashboards, with built-in automations, forms, and reporting. Sold to PMOs, operations, marketing, and HR teams running structured cross-functional work."
+  },
+  {
+   "table": "tools",
+   "id": 101,
+   "column": "description",
+   "old": "Read data-lineage edges via Semantius CRUD.",
+   "new": "Read data-lineage relationships via Semantius CRUD."
+  },
+  {
+   "table": "tools",
+   "id": 1855,
+   "column": "description",
+   "old": "Retire a data asset from active catalog use, flagging downstream consumers and lineage edges.",
+   "new": "Retire a data asset from active catalog use, flagging downstream consumers and lineage relationships."
+  },
+  {
+   "table": "tools",
+   "id": 1857,
+   "column": "description",
+   "old": "Record a lineage edge from a source data asset to a target data asset with column-level mapping.",
+   "new": "Record a lineage relationship from a source data asset to a target data asset with column-level mapping."
+  },
+  {
+   "table": "tools",
+   "id": 2190,
+   "column": "description",
+   "old": "Query the subcontractor and fourth-party edges behind a third party.",
+   "new": "Query the subcontractor and fourth-party relationships behind a third party."
+  },
+  {
+   "table": "tools",
+   "id": 2191,
+   "column": "description",
+   "old": "Record a subcontractor or fourth-party dependency edge for a third party.",
+   "new": "Record a subcontractor or fourth-party dependency relationship for a third party."
+  },
+  {
+   "table": "capabilities",
+   "id": 834,
+   "column": "description",
+   "old": "Map subcontractor and fourth-party edges and surface concentration risk across shared providers.",
+   "new": "Map subcontractor and fourth-party relationships and surface concentration risk across shared providers."
+  },
+  {
+   "table": "data_objects",
+   "id": 77,
+   "column": "description",
+   "old": "Edges in the CI graph: depends-on, runs-on, contains, member-of, hosted-by, communicates-with. The topology that makes service mapping, impact analysis, and event correlation possible.",
+   "new": "Relationships in the CI graph: depends-on, runs-on, contains, member-of, hosted-by, communicates-with. The topology that makes service mapping, impact analysis, and event correlation possible."
+  },
+  {
+   "table": "data_objects",
+   "id": 77,
+   "column": "catalog_description",
+   "old": "Edges in the configuration-item graph such as depends-on, runs-on, and hosted-by, the topology behind service mapping and impact analysis.",
+   "new": "Relationships in the configuration-item graph such as depends-on, runs-on, and hosted-by, the topology behind service mapping and impact analysis."
+  },
+  {
+   "table": "data_objects",
+   "id": 77,
+   "column": "notes",
+   "old": "Config-shaped graph edges (CI dependencies). Discovered or hand-curated, then maintained inline. No workflow gates. No per-state permissions needed (Rule #12 config-shape exemption).",
+   "new": "Config-shaped graph relationships (CI dependencies). Discovered or hand-curated, then maintained inline. No workflow gates. No per-state permissions needed (Rule #12 config-shape exemption)."
+  },
+  {
+   "table": "data_objects",
+   "id": 112,
+   "column": "description",
+   "old": "Identity-resolution edges: email ↔ device ↔ cookie ↔ login ↔ phone. The graph that turns anonymous interactions into resolved customers. Built up over time from event signals; quality drives every downstream activation. IGA contributes employee-as-customer overlap for B2C-employer scenarios.",
+   "new": "Identity-resolution relationships: email ↔ device ↔ cookie ↔ login ↔ phone. The graph that turns anonymous interactions into resolved customers. Built up over time from event signals; quality drives every downstream activation. IGA contributes employee-as-customer overlap for B2C-employer scenarios."
+  },
+  {
+   "table": "data_objects",
+   "id": 227,
+   "column": "description",
+   "old": "Pipeline definition and its run history: ELT/ETL jobs, streaming pipelines, dbt-style transformation models, and managed ingestion connectors. Includes scheduling, dependency graph, lineage edges to source and target tables, and run-level observability (status, duration, rows processed).",
+   "new": "Pipeline definition and its run history: ELT/ETL jobs, streaming pipelines, dbt-style transformation models, and managed ingestion connectors. Includes scheduling, dependency graph, lineage relationships to source and target tables, and run-level observability (status, duration, rows processed)."
+  },
+  {
+   "table": "data_objects",
+   "id": 301,
+   "column": "description",
+   "old": "Flow edge from source data_asset to target data_asset with column-level mapping, transformation logic, frequency, SLA. Represents ETL/dbt graphs.",
+   "new": "Flow relationship from source data_asset to target data_asset with column-level mapping, transformation logic, frequency, SLA. Represents ETL/dbt graphs."
+  },
+  {
+   "table": "data_objects",
+   "id": 748,
+   "column": "description",
+   "old": "Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`).",
+   "new": "Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator relationships. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`)."
+  },
+  {
+   "table": "domain_modules",
+   "id": 338,
+   "column": "description",
+   "old": "Captures and presents flow edges between data assets with column-level mapping and transformation logic, and runs impact analysis when a source changes. Masters data_lineage_relationships; carries an embedded shell of data_assets so it deploys standalone.",
+   "new": "Captures and presents flow relationships between data assets with column-level mapping and transformation logic, and runs impact analysis when a source changes. Masters data_lineage_relationships; carries an embedded shell of data_assets so it deploys standalone."
+  },
+  {
+   "table": "domain_modules",
+   "id": 415,
+   "column": "description",
+   "old": "Visibility beyond the direct third party: subcontractor and fourth-party edges, concentration risk across shared providers, and the regulatory registers and subcontracting-chain disclosures that resilience frameworks require.",
+   "new": "Visibility beyond the direct third party: subcontractor and fourth-party relationships, concentration risk across shared providers, and the regulatory registers and subcontracting-chain disclosures that resilience frameworks require."
+  },
+  {
+   "table": "trigger_events",
+   "id": 470,
+   "column": "description",
+   "old": "CDP identity graph has resolved new edges (cookie merge, device match, email-to-known-customer). MA and LOYALTY refresh audience membership; CSM updates contact lookup.",
+   "new": "CDP identity graph has resolved new relationships (cookie merge, device match, email-to-known-customer). MA and LOYALTY refresh audience membership; CSM updates contact lookup."
+  },
+  {
+   "table": "trigger_events",
+   "id": 740,
+   "column": "description",
+   "old": "New lineage edge captured (upstream/downstream/derived); impact-analysis graph updates.",
+   "new": "New lineage relationship captured (upstream/downstream/derived); impact-analysis graph updates."
+  },
+  {
+   "table": "trigger_events",
+   "id": 741,
+   "column": "description",
+   "old": "Previously-observed lineage edge no longer present; may indicate pipeline change or deletion.",
+   "new": "Previously-observed lineage relationship no longer present; may indicate pipeline change or deletion."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1512,
+   "column": "description",
+   "old": "Two or more traceability lots have been merged into one lot; genealogy edges preserve every source lot.",
+   "new": "Two or more traceability lots have been merged into one lot; genealogy relationships preserve every source lot."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1660,
+   "column": "description",
+   "old": "A data asset is retired from active use in the catalog; downstream consumers and lineage edges should be flagged for migration or removal.",
+   "new": "A data asset is retired from active use in the catalog; downstream consumers and lineage relationships should be flagged for migration or removal."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 212,
+   "column": "notes",
+   "old": "Employee identities that also exist as customer identities (B2C-employer overlap, self-service employee perk programs) contribute resolution edges. Edge case but real.",
+   "new": "Employee identities that also exist as customer identities (B2C-employer overlap, self-service employee perk programs) contribute resolution relationships. Edge case but real."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 509,
+   "column": "notes",
+   "old": "Flow-edge graph between data_assets",
+   "new": "Flow-relationship graph between data_assets"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1062,
+   "column": "notes",
+   "old": "Auto-inferred graph edges between firm and external people / orgs.",
+   "new": "Auto-inferred graph relationships between firm and external people / orgs."
+  },
+  {
+   "table": "handoffs",
+   "id": 49,
+   "column": "description",
+   "old": "Discovered relationships (network flows, dependencies, k8s service-mesh edges) feed the CI relationship graph. Friction is medium \u2014 relationship discovery is noisier than device discovery, and pruning false-positive edges requires class-aware rules.",
+   "new": "Discovered relationships (network flows, dependencies, k8s service-mesh relationships) feed the CI relationship graph. Friction is medium: relationship discovery is noisier than device discovery, and pruning false-positive relationships requires class-aware rules."
+  },
+  {
+   "table": "handoffs",
+   "id": 710,
+   "column": "description",
+   "old": "Broken lineage edge may indicate uncontrolled pipeline change; audit captures the event.",
+   "new": "Broken lineage relationship may indicate uncontrolled pipeline change; audit captures the event."
+  },
+  {
+   "table": "domains",
+   "id": 4,
+   "column": "catalog_tagline",
+   "old": "Keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+   "new": "Keep one trusted record of every server, application, database, and the relationships between them, so changes and incidents can be reasoned about in minutes."
+  },
+  {
+   "table": "domains",
+   "id": 4,
+   "column": "catalog_prompt",
+   "old": "I need a system to keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+   "new": "I need a system to keep one trusted record of every server, application, database, and the relationships between them, so changes and incidents can be reasoned about in minutes."
+  },
+  {
+   "table": "domains",
+   "id": 5,
+   "column": "catalog_description",
+   "old": "Discovery scans your networks, cloud accounts, and directories to find the IT you actually run, then fingerprints each asset and maps how components connect into the business services they support. It turns blind spots into a normalized, reconciled inventory that feeds your CMDB, asset management, and operations tools, so teams stop guessing what exists and start acting on a trusted source of truth.",
+   "new": "Discovery scans your networks, cloud accounts, and directories to find the IT you actually run, then fingerprints each asset and maps how components relate to the business services they support. It turns blind spots into a normalized, reconciled inventory that feeds your CMDB, asset management, and operations tools, so teams stop guessing what exists and start acting on a trusted source of truth."
+  },
+  {
+   "table": "domains",
+   "id": 14,
+   "column": "catalog_description",
+   "old": "Bring every threat indicator your team relies on into one curated catalog. Pull hashes, IP addresses, domains, URLs, and exploited CVEs from open feeds, commercial intelligence providers, and information-sharing communities, then normalize them across STIX, TAXII, and the formats each source uses, deduplicate the overlap, and score what is left by confidence and by how relevant it is to your environment. Track the actors, campaigns, and malware families behind the indicators, map the techniques they use to the MITRE ATT&CK framework, and write finished-intelligence reports your analysts, responders, and leadership can act on.\n\nTurn that catalog into protection. Push high-confidence indicators directly into your SIEM, endpoint tooling, firewalls, and DNS controls for blocking and detection, and record a sighting every time your own telemetry matches a known indicator so you see who is being targeted and where. Manage priority intelligence requirements so collection stays focused on what leadership actually cares about, retract false positives quickly, and share back to the community in formats that respect Traffic Light Protocol handling.\n\nKeep the program defensible. Show coverage against the requirements you set, evidence how indicators flowed from feed to block, and connect threat intelligence to the incidents, vulnerabilities, and risks it informs across the rest of your security operations.",
+   "new": "Bring every threat indicator your team relies on into one curated catalog. Pull hashes, IP addresses, domains, URLs, and exploited CVEs from open feeds, commercial intelligence providers, and information-sharing communities, then normalize them across STIX, TAXII, and the formats each source uses, deduplicate the overlap, and score what is left by confidence and by how relevant it is to your environment. Track the actors, campaigns, and malware families behind the indicators, map the techniques they use to the MITRE ATT&CK framework, and write finished-intelligence reports your analysts, responders, and leadership can act on.\n\nTurn that catalog into protection. Push high-confidence indicators directly into your SIEM, endpoint tooling, firewalls, and DNS controls for blocking and detection, and record a sighting every time your own telemetry matches a known indicator so you see who is being targeted and where. Manage priority intelligence requirements so collection stays focused on what leadership actually cares about, retract false positives quickly, and share back to the community in formats that respect Traffic Light Protocol handling.\n\nKeep the program defensible. Show coverage against the requirements you set, evidence how indicators flowed from feed to block, and relate threat intelligence to the incidents, vulnerabilities, and risks it informs across the rest of your security operations."
+  },
+  {
+   "table": "domains",
+   "id": 17,
+   "column": "catalog_description",
+   "old": "Build an organization that keeps running when something goes wrong. Start with a business impact analysis that maps each critical service to the processes, applications, people, and suppliers it depends on, then set the recovery time and recovery point targets that say how fast each one has to come back and how much data you can afford to lose. Turn those targets into continuity and disaster recovery plans with named owners, recovery strategies, and step-by-step runbooks, so the response is written down and approved instead of improvised under pressure.\n\nKeep the plans honest. Schedule tabletop, walkthrough, and full-interruption exercises, capture the gaps and action items each one surfaces, and feed the findings back into the plans so they get stronger with every test. When a real disruption hits, activate the right plan, stand up the response team, work the call tree and mass-notification roster, log every decision and outbound message, and stand down cleanly with an after-action record that improves the next response.\n\nGive leadership and auditors a defensible answer on resilience. Track plan currency and exercise coverage, evidence the controls that frameworks such as ISO 22301, DORA, and NIS2 expect, and connect continuity to the risks and compliance findings raised elsewhere so a critical risk automatically refreshes the continuity exposure it threatens.",
+   "new": "Build an organization that keeps running when something goes wrong. Start with a business impact analysis that maps each critical service to the processes, applications, people, and suppliers it depends on, then set the recovery time and recovery point targets that say how fast each one has to come back and how much data you can afford to lose. Turn those targets into continuity and disaster recovery plans with named owners, recovery strategies, and step-by-step runbooks, so the response is written down and approved instead of improvised under pressure.\n\nKeep the plans honest. Schedule tabletop, walkthrough, and full-interruption exercises, capture the gaps and action items each one surfaces, and feed the findings back into the plans so they get stronger with every test. When a real disruption hits, activate the right plan, stand up the response team, work the call tree and mass-notification roster, log every decision and outbound message, and stand down cleanly with an after-action record that improves the next response.\n\nGive leadership and auditors a defensible answer on resilience. Track plan currency and exercise coverage, evidence the controls that frameworks such as ISO 22301, DORA, and NIS2 expect, and relate continuity to the risks and compliance findings raised elsewhere so a critical risk automatically refreshes the continuity exposure it threatens."
+  },
+  {
+   "table": "domains",
+   "id": 100,
+   "column": "catalog_description",
+   "old": "Strategic Workforce Planning connects your business plan to the people who will deliver it. Build a multi-year picture of the workforce you need by role, skill, location, and level, then compare it to the workforce you have and see the gap before it becomes a crisis.\n\nModel growth, reduction, restructure, geography shift, skill pivot, and cost-optimization scenarios side by side, overlay live labor-market data, and turn the chosen plan into approved headcount that flows straight into hiring. Project the fully loaded cost of every plan so finance can fold it into the budget, and reconcile plan against actuals as the year unfolds.\n\nStart with demand and supply modeling, then layer in scenario planning, org design, and workforce costing as planning matures from a once-a-year spreadsheet into a continuous discipline.",
+   "new": "Strategic Workforce Planning relates your business plan to the people who will deliver it. Build a multi-year picture of the workforce you need by role, skill, location, and level, then compare it to the workforce you have and see the gap before it becomes a crisis.\n\nModel growth, reduction, restructure, geography shift, skill pivot, and cost-optimization scenarios side by side, overlay live labor-market data, and turn the chosen plan into approved headcount that flows straight into hiring. Project the fully loaded cost of every plan so finance can fold it into the budget, and reconcile plan against actuals as the year unfolds.\n\nStart with demand and supply modeling, then layer in scenario planning, org design, and workforce costing as planning matures from a once-a-year spreadsheet into a continuous discipline."
+  },
+  {
+   "table": "domains",
+   "id": 135,
+   "column": "catalog_description",
+   "old": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then connect them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when.",
+   "new": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then relate them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when."
+  },
+  {
+   "table": "domains",
+   "id": 181,
+   "column": "catalog_description",
+   "old": "Give your team a steady stream of approved, on-brand content and let them share it to their own LinkedIn, X, and Facebook networks in a single click, with ready-to-post copy they can personalize. Reward participation with points, badges, and leaderboards, surface your top advocates, and send each person a tailored newsletter of what is worth sharing this week. See exactly what every share earned in clicks, reach, and earned media value, and connect that activity to the pipeline and revenue it influenced. Built for marketing and communications teams who want authentic employee reach without chasing people for screenshots.",
+   "new": "Give your team a steady stream of approved, on-brand content and let them share it to their own LinkedIn, X, and Facebook networks in a single click, with ready-to-post copy they can personalize. Reward participation with points, badges, and leaderboards, surface your top advocates, and send each person a tailored newsletter of what is worth sharing this week. See exactly what every share earned in clicks, reach, and earned media value, and relate that activity to the pipeline and revenue it influenced. Built for marketing and communications teams who want authentic employee reach without chasing people for screenshots."
+  },
+  {
+   "table": "domains",
+   "id": 186,
+   "column": "catalog_description",
+   "old": "Bring scaled-agile delivery under one roof. Model the full delivery hierarchy from portfolio epics down to features, stories, sprints, and release trains, and plan each program increment with your teams. Map and resolve cross-team dependencies before they block delivery, keep agile roadmaps and release plans current, and connect OKRs to the work that achieves them. Live flow and velocity analytics show where delivery is on track and where it is stuck, so release-train engineers and delivery leaders can steer in real time. Built for organizations running multiple teams or trains that need coordinated, framework-aware planning rather than a generic task board.",
+   "new": "Bring scaled-agile delivery under one roof. Model the full delivery hierarchy from portfolio epics down to features, stories, sprints, and release trains, and plan each program increment with your teams. Map and resolve cross-team dependencies before they block delivery, keep agile roadmaps and release plans current, and relate OKRs to the work that achieves them. Live flow and velocity analytics show where delivery is on track and where it is stuck, so release-train engineers and delivery leaders can steer in real time. Built for organizations running multiple teams or trains that need coordinated, framework-aware planning rather than a generic task board."
+  },
+  {
+   "table": "domain_modules",
+   "id": 53,
+   "column": "catalog_description",
+   "old": "Make recognition and coaching part of everyday work. Capture kudos, one-on-one notes, peer comments, and requested feedback as they happen, independent of the formal review calendar.\n\nShare feedback with the right timing and the right people. Move each record from draft to shared to acknowledged so feedback lands clearly and is confirmed by the recipient.\n\nConnect continuous feedback to formal performance. Aggregate the year's feedback into review summaries so managers walk into every review with the full picture.",
+   "new": "Make recognition and coaching part of everyday work. Capture kudos, one-on-one notes, peer comments, and requested feedback as they happen, independent of the formal review calendar.\n\nShare feedback with the right timing and the right people. Move each record from draft to shared to acknowledged so feedback lands clearly and is confirmed by the recipient.\n\nRelate continuous feedback to formal performance. Aggregate the year's feedback into review summaries so managers walk into every review with the full picture."
+  },
+  {
+   "table": "domain_modules",
+   "id": 97,
+   "column": "catalog_description",
+   "old": "Cost Projections puts a number on the plan. Project the fully loaded compensation expense of any workforce plan or scenario by period, org, geography, and level, so the cost of growth, reduction, or restructure is clear before the decision is made.\n\nApproved cost projections roll straight into enterprise budgeting, keeping the people-cost line connected to the workforce plan instead of drifting in a separate spreadsheet. This is the module that lets finance and workforce planning speak the same language.",
+   "new": "Cost Projections puts a number on the plan. Project the fully loaded compensation expense of any workforce plan or scenario by period, org, geography, and level, so the cost of growth, reduction, or restructure is clear before the decision is made.\n\nApproved cost projections roll straight into enterprise budgeting, keeping the people-cost line related to the workforce plan instead of drifting in a separate spreadsheet. This is the module that lets finance and workforce planning speak the same language."
+  },
+  {
+   "table": "domain_modules",
+   "id": 108,
+   "column": "catalog_tagline",
+   "old": "Maintain the authoritative inventory of every configuration item and the relationships that connect them.",
+   "new": "Maintain the authoritative inventory of every configuration item and the relationships between them."
+  },
+  {
+   "table": "domain_modules",
+   "id": 193,
+   "column": "catalog_description",
+   "old": "Plan, reserve, and track business trips alongside the expenses they generate. Move bookings from request to confirmed and completed, apply per diem and travel rules as you go, and keep travelers and approvers informed at each step. Connect trip details to the expenses they produce so travel spend stays visible, in policy, and ready to report.",
+   "new": "Plan, reserve, and track business trips alongside the expenses they generate. Move bookings from request to confirmed and completed, apply per diem and travel rules as you go, and keep travelers and approvers informed at each step. Relate trip details to the expenses they produce so travel spend stays visible, in policy, and ready to report."
+  },
+  {
+   "table": "domain_modules",
+   "id": 282,
+   "column": "catalog_description",
+   "old": "Create the data model behind your tools without writing a line of code. Add your own tables, choose from rich field types for text, numbers, dates, attachments, single and multi-select, and more, and connect related records across tables so a customer, a project, or an order pulls in everything tied to it.\n\nGo beyond plain storage with formula and rollup columns that calculate and summarize automatically as records change. The schema you build here becomes the foundation the rest of your workspace reads from, so the views, forms, and automations your team uses all stay in step with one source of truth.",
+   "new": "Create the data model behind your tools without writing a line of code. Add your own tables, choose from rich field types for text, numbers, dates, attachments, single and multi-select, and more, and relate records across tables so a customer, a project, or an order pulls in everything tied to it.\n\nGo beyond plain storage with formula and rollup columns that calculate and summarize automatically as records change. The schema you build here becomes the foundation the rest of your workspace reads from, so the views, forms, and automations your team uses all stay in step with one source of truth."
+  },
+  {
+   "table": "domain_modules",
+   "id": 400,
+   "column": "catalog_tagline",
+   "old": "Connect portfolio strategy to the agile backlog teams actually deliver.",
+   "new": "Relate portfolio strategy to the agile backlog teams actually deliver."
+  },
+  {
+   "table": "domains",
+   "id": 27,
+   "column": "catalog_description",
+   "old": "Source-to-Pay is the operational backbone of corporate buying. It tracks the requisition, the purchase order, the goods receipt, and the supplier invoice as one connected chain of records, with approvals, three-way matching, and savings tracking layered on top. Buyers raise requisitions and route them through approval, sourcing managers run RFx events and award contracts, receivers post goods receipts against open orders, and accounts-payable specialists match invoices to orders and receipts before payment is released.\n\nThe value is control and speed across the whole buying motion: every dollar of spend is requested, approved, and reconciled against a negotiated price, exceptions are routed instead of stalling the line, and spend categories drive the routing so direct, indirect, services, and tail spend each follow the right path. Teams get a single audit trail from first sourcing event to final payment, fewer maverick purchases, and measurable savings captured at line-item granularity.",
+   "new": "Source-to-Pay is the operational backbone of corporate buying. It tracks the requisition, the purchase order, the goods receipt, and the supplier invoice as one chain of related records, with approvals, three-way matching, and savings tracking layered on top. Buyers raise requisitions and route them through approval, sourcing managers run RFx events and award contracts, receivers post goods receipts against open orders, and accounts-payable specialists match invoices to orders and receipts before payment is released.\n\nThe value is control and speed across the whole buying motion: every dollar of spend is requested, approved, and reconciled against a negotiated price, exceptions are routed instead of stalling the line, and spend categories drive the routing so direct, indirect, services, and tail spend each follow the right path. Teams get a single audit trail from first sourcing event to final payment, fewer maverick purchases, and measurable savings captured at line-item granularity."
+  },
+  {
+   "table": "domains",
+   "id": 70,
+   "column": "catalog_description",
+   "old": "Run your marketing across every channel from one place. Author and send email campaigns, build multi-step nurture journeys that reach people on email, SMS, push, and in-app, and capture new leads through hosted landing pages and forms. Score and prioritize those leads automatically so the best ones reach sales at the right moment. Connect what each contact does back into the next message they receive, so every touch builds on the last and your whole funnel keeps moving without manual handoffs.",
+   "new": "Run your marketing across every channel from one place. Author and send email campaigns, build multi-step nurture journeys that reach people on email, SMS, push, and in-app, and capture new leads through hosted landing pages and forms. Score and prioritize those leads automatically so the best ones reach sales at the right moment. Relate what each contact does back to the next message they receive, so every touch builds on the last and your whole funnel keeps moving without manual handoffs."
+  },
+  {
+   "table": "domain_modules",
+   "id": 10,
+   "column": "catalog_description",
+   "old": "Build a relationship graph from the signals your team already produces. The system reads email and calendar metadata to infer who is connected to whom and how strong each tie is, then keeps that map current as relationships grow or go quiet. Founders, executives, co-investors, board members, and advisors all sit in one network directory.\n\nUse the graph to open doors. When you want to reach a person or an organization, see the shortest warm path in and ask the colleague who actually holds that relationship to make the introduction. Track the request through to a yes or a no so nothing stalls in someone's inbox.\n\nThe payoff is more introductions that land, less guessing about who can reach a target, and a network that becomes a shared firm asset instead of a set of private address books.",
+   "new": "Build a relationship graph from the signals your team already produces. The system reads email and calendar metadata to infer who has a relationship with whom and how strong each tie is, then keeps that map current as relationships grow or go quiet. Founders, executives, co-investors, board members, and advisors all sit in one network directory.\n\nUse the graph to open doors. When you want to reach a person or an organization, see the shortest warm path in and ask the colleague who actually holds that relationship to make the introduction. Track the request through to a yes or a no so nothing stalls in someone's inbox.\n\nThe payoff is more introductions that land, less guessing about who can reach a target, and a network that becomes a shared firm asset instead of a set of private address books."
+  },
+  {
+   "table": "domain_modules",
+   "id": 109,
+   "column": "catalog_description",
+   "old": "Turn a flat list of components into a living map of the services your business actually runs on. Connect applications, hosts, and dependencies into service views, publish them for the teams that rely on them, and keep them current as the underlying estate shifts.\n\nWhen an incident hits or a change is planned, you can see the affected service end to end and who it touches, so impact is understood before work begins instead of discovered afterward.",
+   "new": "Turn a flat list of components into a living map of the services your business actually runs on. Relate applications, hosts, and dependencies in service views, publish them for the teams that rely on them, and keep them current as the underlying estate shifts.\n\nWhen an incident hits or a change is planned, you can see the affected service end to end and who it touches, so impact is understood before work begins instead of discovered afterward."
+  },
+  {
+   "table": "domain_modules",
+   "id": 248,
+   "column": "catalog_description",
+   "old": "Turn billing and delivery events into correctly recognized revenue. Track recognition records from pending through recognized and reversed, apply the right timing and schedules, and keep revenue aligned with the goods and services actually delivered.\n\nConnect project and subscription activity to the ledger so recognized revenue posts cleanly into the close. When something changes, reverse and re-recognize with a clear trail, and give finance numbers that hold up under review.",
+   "new": "Turn billing and delivery events into correctly recognized revenue. Track recognition records from pending through recognized and reversed, apply the right timing and schedules, and keep revenue aligned with the goods and services actually delivered.\n\nRelate project and subscription activity to the ledger so recognized revenue posts cleanly into the close. When something changes, reverse and re-recognize with a clear trail, and give finance numbers that hold up under review."
+  }
+ ],
+ "labels": [
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 939,
+   "column": "data_object_lifecycle_state_label",
+   "old": "customer_feedback_items.linked",
+   "new": "customer_feedback_items.related"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 15,
+   "column": "data_object_relationship_label",
+   "old": "employees is_linked_to users",
+   "new": "employees is_related_to users"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1264,
+   "column": "data_object_relationship_label",
+   "old": "library_patrons linked_to_user users",
+   "new": "library_patrons related_to_user users"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2281,
+   "column": "data_object_relationship_label",
+   "old": "data_assets has lineage edge data_lineage_relationships",
+   "new": "data_assets has lineage relationship data_lineage_relationships"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2303,
+   "column": "data_object_relationship_label",
+   "old": "dependency_chains links strategic_initiatives",
+   "new": "dependency_chains relates strategic_initiatives"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2538,
+   "column": "data_object_relationship_label",
+   "old": "advocate_profiles links advocacy_social_accounts",
+   "new": "advocate_profiles connects advocacy_social_accounts"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2672,
+   "column": "data_object_relationship_label",
+   "old": "work_items is_linked_by work_goal_links",
+   "new": "work_items is_related_by work_goal_relationships"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2673,
+   "column": "data_object_relationship_label",
+   "old": "okr_objectives is_advanced_by work_goal_links",
+   "new": "okr_objectives is_advanced_by work_goal_relationships"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 2059,
+   "column": "domain_module_data_object_label",
+   "old": "WORK-MGMT-GOALS-OKR / work_goal_links",
+   "new": "WORK-MGMT-GOALS-OKR / work_goal_relationships"
+  },
+  {
+   "table": "capability_domains",
+   "id": 88,
+   "column": "capability_domain_label",
+   "old": "Product Strategy and OKR Linkage / Product Management",
+   "new": "Product Strategy and Related OKRs / Product Management"
+  },
+  {
+   "table": "capability_domains",
+   "id": 354,
+   "column": "capability_domain_label",
+   "old": "Linked Records and Junction Tables / No-Code Database",
+   "new": "Related Records and Junction Tables / No-Code Database"
+  },
+  {
+   "table": "capability_domains",
+   "id": 870,
+   "column": "capability_domain_label",
+   "old": "Lean-Portfolio Funding-to-Delivery Linkage / Enterprise Agile Planning",
+   "new": "Lean-Portfolio Funding Related to Delivery / Enterprise Agile Planning"
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 596,
+   "column": "domain_module_capability_label",
+   "old": "NCDB-SCHEMA-BUILDER / NCDB-LINKED-RECORDS",
+   "new": "NCDB-SCHEMA-BUILDER / NCDB-RELATED-RECORDS"
+  },
+  {
+   "table": "handoffs",
+   "id": 222,
+   "column": "handoff_label",
+   "old": "Master Data Management → Knowledge Graph Platform : kg_entity.linked",
+   "new": "Master Data Management → Knowledge Graph Platform : kg_entity.related"
+  },
+  {
+   "table": "handoffs",
+   "id": 781,
+   "column": "handoff_label",
+   "old": "Test Management → Product Management : requirements_to_test_traceability.linked",
+   "new": "Test Management → Product Management : requirements_to_test_traceability.related"
+  },
+  {
+   "table": "handoffs",
+   "id": 998,
+   "column": "handoff_label",
+   "old": "Product Management → Customer Service Management : customer_feedback_item.linked_to_feature",
+   "new": "Product Management → Customer Service Management : customer_feedback_item.related_to_feature"
+  },
+  {
+   "table": "handoffs",
+   "id": 1390,
+   "column": "handoff_label",
+   "old": "Product Management → Product Management : customer_feedback_item.linked_to_feature",
+   "new": "Product Management → Product Management : customer_feedback_item.related_to_feature"
+  }
+ ]
+}

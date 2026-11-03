@@ -76,7 +76,7 @@ a7:
 
 ---
 
-q8: The US statutory anchors (the federal ESIGN Act and UETA) are not yet in the catalog as regulation rows. Should I research and add them alongside the eIDAS and FDA 21 CFR Part 11 frameworks already linked? (yes/no)
+q8: The US statutory anchors (the federal ESIGN Act and UETA) are not yet in the catalog as regulation rows. Should I research and add them alongside the eIDAS and FDA 21 CFR Part 11 frameworks already related? (yes/no)
 
 Recommended: yes. They are the US legal basis for binding e-signature outside the EU. Additive and non-blocking.
 
@@ -86,7 +86,7 @@ a8:
 
 q9: Flagship usage implies inbound triggers from other domains (a closed-won opportunity, an extended job offer, a drafted engagement letter, an issued purchase order, onboarding paperwork, a drafted lease, a drafted subscription contract) that create envelopes here. Should I schedule those source domains to wire their outbound side to this domain? (yes/no)
 
-Recommended: yes in principle, but each edge is the source domain's work to author, not this domain's load. Additive and non-blocking.
+Recommended: yes in principle, but each relationship is the source domain's work to author, not this domain's load. Additive and non-blocking.
 
 a9:
 

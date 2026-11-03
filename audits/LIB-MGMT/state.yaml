@@ -7,8 +7,8 @@ last_audit: "2026-06-13"
 b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (6 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 6 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per audit policy: personas/RACI are not authored unattended (B1A-PHASE-P)."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 6 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per audit policy: personas/RACI are not authored unattended (B1A-PHASE-P)."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     deferred: persona_layer
     candidate_personas: [cataloger, circulation_clerk, acquisitions_librarian, reference_librarian, library_director]
     extra_phase_p_triage: "2026-06-02"
@@ -29,7 +29,7 @@ b1b:
     summary: Author 6 outbound cross-domain data_object_relationships from LIB-MGMT masters
     finding: |
       B8 fail. Catalog records 22 intra-domain master-to-master relationships + 8 users
-      user-edges per Rule #10 + 1 reverse library_patrons linked_to_user users, total 31.
+      relationships to users per Rule #10 + 1 reverse library_patrons related_to_user users, total 31.
       Zero outbound cross-domain. 2026-06-07 counterparty re-check: the canonical counterparty
       ids assumed by the prior snapshot are STALE / wrong. There is no single ap_invoices,
       no iam_users, no bare contracts, and HCM employees is id 31 (NOT 54; id 54 is
@@ -37,9 +37,9 @@ b1b:
       service_contracts 741, msp_contracts 234, employment_contracts 35). AP invoice surface is
       split (supplier_invoices 75, customer_invoices 107, msp_invoices 236, client_invoices 739).
       Identity surface is identity_graphs 112 / employee_golden_records 317, not iam_users.
-      Selecting the right canonical counterparty per edge is cross-domain judgment, not a
+      Selecting the right canonical counterparty per relationship is cross-domain judgment, not a
       deterministic THIS-domain backfill, so this stays user/neighbor-gated.
-      Edges still wanted (verb/inverse/type/kind/is_required/owner_side each):
+      Relationships still wanted (verb/inverse/type/kind/is_required/owner_side each):
       (1) library_acquisition_orders (833) -> AP invoice master on invoiced;
       (2) library_acquisition_orders (833) -> FIN encumbrance master on ordered/received (no encumbrance master exists in catalog today);
       (3) library_serial_subscriptions (835) -> AP invoice master on renewal;
@@ -47,7 +47,7 @@ b1b:
       (5) library_patrons (831) -> IGA identity master for SSO-backed registration;
       (6) library_patrons (831) -> HCM employees (31) when staff are also patrons.
     blocked_by:
-      - {type: user_decision, reason: "select the canonical AP-invoice / ERP-encumbrance / CLM-contract / IGA-identity counterparty master per edge; prior snapshot ids were wrong"}
+      - {type: user_decision, reason: "select the canonical AP-invoice / ERP-encumbrance / CLM-contract / IGA-identity counterparty master per relationship; prior snapshot ids were wrong"}
       - {type: depends_on, ref: B1A-S3, reason: "RESOLVED 2026-06-07 - the source trigger_events (.submitted .invoiced .activated .renewed .terminated etc.) now exist"}
     affected_entities: [data_object_relationships]
   - id: B1B-S5
@@ -63,7 +63,7 @@ b1b:
       (c) library_serial_subscription.renewed LIB-ACQUISITIONS -> AP-AUTO;
       (d) library_eresource_license.activated / .renewed / .terminated LIB-ACQUISITIONS -> CLM (3 handoffs);
       (e) library_patron.activated LIB-PATRON -> IGA.
-      The HCM staff-as-patron edge is REPORT-ONLY (HCM owes hcm employee.hired outbound).
+      The HCM staff-as-patron relationship is REPORT-ONLY (HCM owes hcm employee.hired outbound).
     blocked_by:
       - {type: depends_on, ref: B1B-S4, reason: "corresponding cross-domain data_object_relationships should land first, and the counterparty target_domain selection is the same gated decision"}
     affected_modules: [157, 158]
@@ -71,7 +71,7 @@ b1b:
     summary: Author library_holdings 3-state lifecycle on data_object 826
     finding: |
       B12 partial-fail. data_object 826 (library_holdings) carries zero data_object_lifecycle_states.
-      Audit proposes: new (state_order 10, is_initial=true) -> linked (state_order 20,
+      Audit proposes: new (state_order 10, is_initial=true) -> related (state_order 20,
       requires_permission=true, permission_verb_override='link_library_holdings',
       domain_module_id=155) -> withdrawn (state_order 30, is_terminal=true,
       requires_permission=true, permission_verb_override='withdraw_library_holdings',
@@ -149,7 +149,7 @@ b2:
     question: |
       Keep LIB-DISCOVERY as a thin OPAC module (local catalog search only), or split into
       LIB-OPAC + LIB-DISCOVERY (the latter covering EBSCO Discovery Service, Primo VE,
-      Summon-shaped federated indexes, link resolver, relevance)?
+      Summon-shaped federated indexes, relationship resolver, relevance)?
     options:
       - keep_one_module_document_scope_tightly
       - split_into_lib_opac_plus_lib_discovery

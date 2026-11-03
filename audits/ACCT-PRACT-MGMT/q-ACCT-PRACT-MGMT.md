@@ -79,7 +79,7 @@ q7: What is the intended scope of the supplier-invoice contributor role on this 
 - b) Client-side supplier invoices the firm processes as a bookkeeper; move it to a future bookkeeping-services module.
 - c) Erroneous; delete the contributor row.
 
-Recommended: a. The firm's own accounts payable is the most natural reading of the contributor link, and it keeps the inbound dependency intact rather than removing data.
+Recommended: a. The firm's own accounts payable is the most natural reading of the contributor relationship, and it keeps the inbound dependency intact rather than removing data.
 
 a7:
 

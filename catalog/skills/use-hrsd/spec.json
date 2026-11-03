@@ -439,7 +439,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "HRSD-CASE-AGENT",
       "business_function": "HR Service Delivery",
@@ -511,7 +511,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

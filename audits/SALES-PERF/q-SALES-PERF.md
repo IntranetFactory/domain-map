@@ -31,7 +31,7 @@ a2:
 
 ---
 
-q3: Which regulations should Sales Performance Management link to?
+q3: Which regulations should Sales Performance Management relate to?
 
 - a) ASC 606-21 only.
 - b) ASC 606-21 plus SOX.
@@ -60,7 +60,7 @@ a4:
 q5: When the build lands, which pairwise cross-domain reconciliation passes do you want scheduled?
 
 - a) Schedule both the CRM and REV-INTEL passes immediately after the build lands.
-- b) Defer until the edge weight independently crosses the deep-dive threshold.
+- b) Defer until the relationship weight independently crosses the deep-dive threshold.
 - c) Run only the CRM pass for now (REV-INTEL has modularized, but the SALES-PERF side must build first).
 
 Recommended: a. Reconciliation is read-only, so running both once modules exist is cheap and catches boundary drift early. Timing is your call, not a structural blocker.

@@ -14,7 +14,7 @@ q1: (answer this first) How should remote sessions be shaped: one master record 
 - b) Split into two masters: rename the current one to attended_sessions and add unattended_sessions (the BeyondTrust pattern), re-shaping the modules and possibly adding a third.
 - c) Defer: keep the shipped single-master shape for now and revisit once you have real deployments to learn from.
 
-Recommended: a. TeamViewer and AnyDesk both treat attended and unattended access as one session entity with a mode field, which is the single-master shape; only BeyondTrust splits them into separate attended and unattended surfaces with distinct access-policy and consent flows. The single-master pattern matches the build that already shipped and stays inside the current 2-master ceiling. This choice drives the lifecycle states, the cross-domain links, and any future re-modularization, so it unlocks the rest of the build.
+Recommended: a. TeamViewer and AnyDesk both treat attended and unattended access as one session entity with a mode field, which is the single-master shape; only BeyondTrust splits them into separate attended and unattended surfaces with distinct access-policy and consent flows. The single-master pattern matches the build that already shipped and stays inside the current 2-master ceiling. This choice drives the lifecycle states, the cross-domain relationships, and any future re-modularization, so it unlocks the rest of the build.
 
 a1:
 
@@ -53,7 +53,7 @@ a4:
 
 ---
 
-q5: Should the 7 cross-domain handoff records already drafted (the links into ITSM, MSP-PSA, and GRC) be approved, moving the catalog-quality headline from 0 approved to 7 approved? (yes/no)
+q5: Should the 7 cross-domain handoff records already drafted (the relationships into ITSM, MSP-PSA, and GRC) be approved, moving the catalog-quality headline from 0 approved to 7 approved? (yes/no)
 
 Recommended: yes. All 7 are agent-curated "implements" rows ready for sign-off; approving them is the only thing standing between the headline and zero. Approval flips records to approved, which is a sign-off step that is never applied automatically.
 
@@ -66,7 +66,7 @@ q6: When a remote session produces a recording, is it always one recording per s
 - a) One recording per session (one-to-one).
 - b) Several recording segments per session (one-to-many).
 
-Recommended: b. Session recordings are commonly segmented (pause and resume, multi-monitor, or per-leg captures), so one-to-many is the safer shape; pick (a) only if your recordings are always a single unbroken file per session. This is a genuine modeling choice, so I am holding the link write until you decide.
+Recommended: b. Session recordings are commonly segmented (pause and resume, multi-monitor, or per-leg captures), so one-to-many is the safer shape; pick (a) only if your recordings are always a single unbroken file per session. This is a genuine modeling choice, so I am holding the relationship write until you decide.
 
 a6:
 

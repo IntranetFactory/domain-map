@@ -67,7 +67,7 @@ Fill in the last column: `ok`, or the tier you want.
 | 61 | create_disclosure_document | semantius_crud | **agent_native** | medium | The description is "generate from a state-specific template"; generation is the work | |
 | 62 | validate_scorm_package | semantius_crud | **agent_native** | medium | Unzipping and checking `imsmanifest.xml` is a code-sandbox job; storing the result is trivial | |
 | 63 | ingest_external_completion | semantius_crud | **semantius_platform** | medium | Receiver lands it; the stated two-table landing (assignments + evidence) needs a business_logic follow-up | |
-| 64 | receive_cdp_segment_update | semantius_crud | **semantius_platform** | medium | Landing is a receiver; re-evaluating journeys afterwards is separate logic | |
+| 64 | receive_cdp_segment_update | semantius_crud | **semantius_platform** | medium | Landing is a receiver; re-evaluating journeys afterward is separate logic | |
 | 65 | receive_crawler_completion | semantius_crud | **semantius_platform** | high | Same as above | |
 | 66 | receive_scanner_callback | semantius_crud | **semantius_platform** | high | Single-table landing via a receiver (JSONata reshapes the scanner payload) | |
 | 67 | receive_webhook | semantius_crud | **semantius_platform** | high | `webhook_receivers` built-in with auth and JSONata transform, one target table | |

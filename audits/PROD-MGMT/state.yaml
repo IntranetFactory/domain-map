@@ -6,7 +6,7 @@ last_audit: "2026-06-15"
 
 # NOTE 2026-06-15 (a-file processed): resolved + dropped B2-31-1 (PMM promoted - 6 caps relocated to
 #   new domain 184), B2-31-2, B2-31-3 (3 flags), B2-31-4 (routed to SPM), B2-31-5 (leave), B2-31-6
-#   (8 users edges), B2-31-7 (notes cleared), B2-B9D-OWN-956 (RACI authored), B2-B9D-MISTAG-REPOINT
+#   (8 relationships to users), B2-31-7 (notes cleared), B2-B9D-OWN-956 (RACI authored), B2-B9D-MISTAG-REPOINT
 #   (7 re-points). See history.md 2026-06-15. a11 record_status approval NOT executed (out-of-band).
 
 b1a:

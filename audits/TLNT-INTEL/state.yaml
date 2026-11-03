@@ -7,13 +7,13 @@ last_audit: "2026-06-13"
 b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "DEFERRED (personas/RACI, B1A-PHASE-P): not auto-authored. Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Talent Manager, Hiring Manager (cross-functional, missing today), Marketplace Ops (see B2-T2), HR Business Partner consumer."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "DEFERRED (personas/RACI, B1A-PHASE-P): not auto-authored. Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Talent Manager, Hiring Manager (cross-functional, missing today), Marketplace Ops (see B2-T2), HR Business Partner consumer."
     extra_phase_p_triage: "2026-06-02"
 
   - id: B1A-SELF-CONTAIN
     summary: "11 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 11 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    finding: "Live triage 2026-06-02: 11 domain_module_data_objects rows on this domain's modules are held_as=contributor or held_as=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
     action: "DESTRUCTIVE (rewrites role/necessity on existing DMDO rows): surfaced, not applied. Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
     extra_m9_shapes:
       - {entity: career_aspirations, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: TALENT-MGMT}
@@ -45,18 +45,18 @@ b1b:
       - {direction: outbound, source_domain: TLNT-INTEL, target_domain: SWP, trigger_event: workforce_skills_heatmap.recalculated, payload: pending_b3_skill_inferences_or_aggregate, null_field: row_does_not_exist}
 
   - id: B1B-S4
-    summary: B7 partial fail, master 865 match_inference_runs has zero users edges; default recommendation is leave-as-is pending user confirmation.
+    summary: B7 partial fail, master 865 match_inference_runs has zero relationships to users; default recommendation is leave-as-is pending user confirmation.
     finding: |
-      data_object_relationships from users (id 748) cover 6 of 7 TLNT-INTEL masters: users posts internal_opportunities (859), submits opportunity_applications (860), targeted by mobility_recommendations (861), scored as fit_scores (862), follows career_path_suggestions (863), participates in mentorship_engagements (864). Zero edges to/from match_inference_runs (865). Match runs are typically model-derived without a human actor. (865 is now classified entity_type='operational_record', consistent with a system-initiated append-only audit run with no human actor.)
+      data_object_relationships from users (id 748) cover 6 of 7 TLNT-INTEL masters: users posts internal_opportunities (859), submits opportunity_applications (860), targeted by mobility_recommendations (861), scored as fit_scores (862), follows career_path_suggestions (863), participates in mentorship_engagements (864). Zero relationships to/from match_inference_runs (865). Match runs are typically model-derived without a human actor. (865 is now classified entity_type='operational_record', consistent with a system-initiated append-only audit run with no human actor.)
     blocked_by:
-      - {type: user_decision, ref: B2-default-no-confirmation, reason: audit_explicitly_recommends_leave_as_is_not_a_pre_specified_rule_10_edge}
+      - {type: user_decision, ref: B2-default-no-confirmation, reason: audit_explicitly_recommends_leave_as_is_not_a_pre_specified_rule_10_relationship}
     affected_masters:
-      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: user_actor_edge_decision}
+      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: user_actor_relationship_decision}
 
   - id: B1B-S5
     summary: B8 partial fail (outbound), zero outbound cross-domain data_object_relationships from TLNT-INTEL masters.
     finding: |
-      Zero outbound cross-domain relationships from TLNT-INTEL masters. Current cross-domain edges are inbound only: skill_profiles (172) feeds mobility_recommendations (861) and compared via fit_scores (862); career_aspirations (179) informs career_path_suggestions (863). For every outbound handoff in S2 with a clean payload, a matching relationship row should exist: (a) opportunity_applications becomes job_applications (ATS master, verify id); (b) opportunity_applications spawns hcm_worker_assignments (HCM master, verify); (c) mobility_recommendations seeds job_requisitions (ATS master id 1).
+      Zero outbound cross-domain relationships from TLNT-INTEL masters. Current cross-domain relationships are inbound only: skill_profiles (172) feeds mobility_recommendations (861) and compared via fit_scores (862); career_aspirations (179) informs career_path_suggestions (863). For every outbound handoff in S2 with a clean payload, a matching relationship row should exist: (a) opportunity_applications becomes job_applications (ATS master, verify id); (b) opportunity_applications spawns hcm_worker_assignments (HCM master, verify); (c) mobility_recommendations seeds job_requisitions (ATS master id 1).
     blocked_by:
       - {type: depends_on, ref: B1B-S2, reason: cross_domain_relationships_mirror_outbound_handoffs}
       - {type: prerequisite_entity, ref: ATS-job_applications-verification, reason: ats_master_ids_need_verification_at_fix_time}
@@ -85,7 +85,7 @@ b1b:
   - id: B1B-S9
     summary: E1-E5 hard fail, zero catalog roles touch any TLNT-INTEL module; only built-in Administrator role_id=2 holds the 16 permissions.
     finding: |
-      role_modules query for domain_module_id in (175, 176, 177) returns 0 rows. role_permissions for the 16 TLNT-INTEL permissions (10632 through 10647, 9 baseline + 7 workflow-gate) shows only role_id=2 (Semantius built-in Administrator). Existing function-scoped roles that should plausibly touch TLNT-INTEL: TALENT-DEVELOPMENT-TALENT-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, RECRUITING-RECRUITER, RECRUITING-MANAGER, plus a missing cross-functional HIRING-MANAGER. (Overlaps with B1A-PHASE-P persona authoring.)
+      persona_modules query for domain_module_id in (175, 176, 177) returns 0 rows. role_permissions for the 16 TLNT-INTEL permissions (10632 through 10647, 9 baseline + 7 workflow-gate) shows only role_id=2 (Semantius built-in Administrator). Existing function-scoped roles that should plausibly touch TLNT-INTEL: TALENT-DEVELOPMENT-TALENT-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, RECRUITING-RECRUITER, RECRUITING-MANAGER, plus a missing cross-functional HIRING-MANAGER. (Overlaps with B1A-PHASE-P persona authoring.)
     blocked_by:
       - {type: user_decision, ref: B2-T2, reason: marketplace_ops_role_add_or_absorb_shapes_row_count}
     affected_modules: [175, 176, 177]

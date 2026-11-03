@@ -22,9 +22,9 @@ a1:
 
 ---
 
-q2: Should this domain additionally record a consumer link onto the Real Estate and Commercial Real Estate lease records, to make the lessee-versus-occupancy data overlap explicit? (yes/no)
+q2: Should this domain additionally record a consumer relationship onto the Real Estate and Commercial Real Estate lease records, to make the lessee-versus-occupancy data overlap explicit? (yes/no)
 
-Recommended: no. Real Estate masters property leases as a workplace-occupancy record and Commercial Real Estate masters commercial leases as a landlord-side record, while this domain models lease agreements as the lessee accounting-subledger view: three legitimately different masters of the same real-world lease. The three pure-plays (FinQuery, Trullion, Occupier) do not consume an external real-estate record at all, they master the lease themselves, so the build records only cross-domain reference edges (lease agreements account for the commercial/property lease; lease journal entries post to the general ledger). Add the explicit consumer links (answer yes) only if you run a CoStar or Nakisa-style deployment where the RE platform already masters the lease and this domain reads it; in that case the consumer rows make the silo visible. For the pure-play shape, the reference edges already in place are sufficient.
+Recommended: no. Real Estate masters property leases as a workplace-occupancy record and Commercial Real Estate masters commercial leases as a landlord-side record, while this domain models lease agreements as the lessee accounting-subledger view: three legitimately different masters of the same real-world lease. The three pure-plays (FinQuery, Trullion, Occupier) do not consume an external real-estate record at all, they master the lease themselves, so the build records only cross-domain reference relationships (lease agreements account for the commercial/property lease; lease journal entries post to the general ledger). Add the explicit consumer relationships (answer yes) only if you run a CoStar or Nakisa-style deployment where the RE platform already masters the lease and this domain reads it; in that case the consumer rows make the silo visible. For the pure-play shape, the reference relationships already in place are sufficient.
 
 a2:
 

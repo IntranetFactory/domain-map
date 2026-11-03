@@ -32,16 +32,16 @@ async function sem(req: any): Promise<any> {
 // 1. unclassified data_objects that are a master in >=1 module (B13's <masters> = module junction)
 const objs: any[] = await sem({
   method: "GET",
-  path: "/data_objects?entity_type=eq.unclassified&select=id,data_object_name,description,domain_module_data_objects(role,domain_modules(domain_module_code,domain_id))",
+  path: "/data_objects?entity_type=eq.unclassified&select=id,data_object_name,description,domain_module_data_objects(held_as,domain_modules(domain_module_code,domain_id))",
 });
-let masters = objs.filter((o) => (o.domain_module_data_objects || []).some((r: any) => r.role === "master"));
+let masters = objs.filter((o) => (o.domain_module_data_objects || []).some((r: any) => r.held_as === "master"));
 
 if (DOM) {
   const dRows = await sem({ method: "GET", path: `/domains?domain_code=eq.${DOM}&select=id` });
   const did = dRows?.[0]?.id;
   if (!did) throw new Error(`domain ${DOM} not found`);
   masters = masters.filter((o) =>
-    (o.domain_module_data_objects || []).some((r: any) => r.role === "master" && r.domain_modules?.domain_id === did));
+    (o.domain_module_data_objects || []).some((r: any) => r.held_as === "master" && r.domain_modules?.domain_id === did));
 }
 
 if (masters.length === 0) { console.log(`No unclassified masters${DOM ? ` in ${DOM}` : ""}. Nothing to do.`); process.exit(0); }
@@ -58,8 +58,8 @@ function classify(o: any): { et: string; why: string; conf: "high" | "med" | "lo
   const d = ((o.description as string) || "").toLowerCase();
   const states = lc.get(o.id) || 0;
   if (states > 0) return { et: "operational_workflow", why: `${states} lifecycle states`, conf: "high" };
-  if (/_(assignments|memberships|links|mappings|associations|attendances|enrollments|participations?|allocations)$/.test(n))
-    return { et: "junction", why: "N:M link name, no lifecycle", conf: "med" };
+  if (/_(assignments|memberships|mappings|associations|attendances|enrollments|participations?|allocations)$/.test(n))
+    return { et: "junction", why: "N:M junction name, no lifecycle", conf: "med" };
   if (/(score|scorecard|rating|rollup|aggregate|metric|workload|projection|snapshot|index|ranking|forecast_result)/.test(n)
     || /\b(derived|computed|calculated|aggregat|rolled[- ]up|read-only projection)\b/.test(d))
     return { et: "computed", why: "computed/derived signal", conf: "med" };
@@ -73,7 +73,7 @@ function classify(o: any): { et: string; why: string; conf: "high" | "med" | "lo
 }
 
 const rows = masters.map((o) => {
-  const dom = (o.domain_module_data_objects || []).find((r: any) => r.role === "master")?.domain_modules?.domain_module_code || "?";
+  const dom = (o.domain_module_data_objects || []).find((r: any) => r.held_as === "master")?.domain_modules?.domain_module_code || "?";
   return { id: o.id, name: o.data_object_name, dom, ...classify(o) };
 }).sort((a, b) => (a.conf === b.conf ? a.name.localeCompare(b.name) : ({ low: 0, med: 1, high: 2 } as any)[a.conf] - ({ low: 0, med: 1, high: 2 } as any)[b.conf]));
 

@@ -96,7 +96,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Service Request",
     plural_label: "Service Requests",
     display_label: "Service Request",
-    description: "Planned, catalog-driven request: access, hardware, software, information. Distinct from incidents — incidents are reactive, service requests are proactive. The fulfilment for many requests crosses domains (provisioning ↔ IGA, asset assignment ↔ ITAM, HR exception ↔ HRSD).",
+    description: "Planned, catalog-driven request: access, hardware, software, information. Distinct from incidents — incidents are reactive, service requests are proactive. The fulfillment for many requests crosses domains (provisioning ↔ IGA, asset assignment ↔ ITAM, HR exception ↔ HRSD).",
     master_domain: "ITSM",
   },
   {
@@ -128,7 +128,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Service Catalog Item",
     plural_label: "Service Catalog Items",
     display_label: "Service Catalog Item",
-    description: "Definition of what can be requested: the form schema, fulfilment workflow, approval routing, SLA, and the price/charge-back rules. Each service request instance references a catalog item.",
+    description: "Definition of what can be requested: the form schema, fulfillment workflow, approval routing, SLA, and the price/charge-back rules. Each service request instance references a catalog item.",
     master_domain: "ITSM",
   },
   {
@@ -195,7 +195,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "License Audit",
     plural_label: "License Audits",
     display_label: "License Audit",
-    description: "Audit / true-up record: entitled count, installed count, the resulting gap, true-up cost, and audit-defence evidence. Triggered by vendor audit or proactive internal review. The artifact that justifies a SAM tool's ROI.",
+    description: "Audit / true-up record: entitled count, installed count, the resulting gap, true-up cost, and audit-defense evidence. Triggered by vendor audit or proactive internal review. The artifact that justifies a SAM tool's ROI.",
     master_domain: "SAM",
   },
   // ----- SMP -----
@@ -302,7 +302,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Purchase Order",
     plural_label: "Purchase Orders",
     display_label: "Purchase Order",
-    description: "Issued PO to a supplier: line items, agreed prices, delivery terms, payment terms, ship-to / bill-to. Authorises the supplier to deliver. PO creation is a primary trigger for downstream system updates — ITAM gets the asset reference, SMP gets the SaaS subscription anchor.",
+    description: "Issued PO to a supplier: line items, agreed prices, delivery terms, payment terms, ship-to / bill-to. Authorizes the supplier to deliver. PO creation is a primary trigger for downstream system updates — ITAM gets the asset reference, SMP gets the SaaS subscription anchor.",
     master_domain: "S2P",
   },
   {
@@ -328,9 +328,9 @@ const insertableObjects = allObjects.map(({ master_domain, ...rest }) => rest);
 const dataObjMap = await syncByKey("/data_objects", insertableObjects, "data_object_name");
 
 // =============================================================================
-// PHASE 2 — master links
+// PHASE 2 — master relationships
 // =============================================================================
-console.log("\n=== Phase 2: master links ===");
+console.log("\n=== Phase 2: master relationships ===");
 
 const allDDO = await get("/domain_data_objects?select=domain_id,data_object_id&limit=20000");
 const existingDDOKey = new Set(allDDO.map(r => `${r.domain_id}|${r.data_object_id}`));
@@ -339,16 +339,16 @@ const masterRows = allObjects
   .map(o => ({
     domain_id: did(o.master_domain),
     data_object_id: dataObjMap.get(o.data_object_name)!,
-    role: "master",
+    held_as: "master",
     notes: "",
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
 
 if (masterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${masterRows.length} master links`);
+  console.log(`  /domain_data_objects: inserting ${masterRows.length} master relationships`);
   await insertChunked("/domain_data_objects", masterRows);
 } else {
-  console.log(`  /domain_data_objects: all master links already present`);
+  console.log(`  /domain_data_objects: all master relationships already present`);
 }
 
 // =============================================================================
@@ -356,66 +356,66 @@ if (masterRows.length > 0) {
 // =============================================================================
 console.log("\n=== Phase 3: multi-master / contributor / consumer rows ===");
 
-type SignalRow = { data_object: string; domain: string; role: "master" | "contributor" | "consumer" | "derived"; notes: string };
+type SignalRow = { data_object: string; domain: string; held_as: "master" | "contributor" | "consumer" | "derived"; notes: string };
 
 const signals: SignalRow[] = [
   // ITSM — incidents: cross-feed from ITOM and SECOPS
-  { data_object: "incidents", domain: "ITOM", role: "contributor", notes: "Alerts and events from ITOM auto-create incidents in ITSM via the event.alert_triggered handoff." },
-  { data_object: "incidents", domain: "SECOPS", role: "contributor", notes: "Security incidents that require operational coordination land as ITSM incidents (or are mirrored)." },
+  { data_object: "incidents", domain: "ITOM", held_as: "contributor", notes: "Alerts and events from ITOM auto-create incidents in ITSM via the event.alert_triggered handoff." },
+  { data_object: "incidents", domain: "SECOPS", held_as: "contributor", notes: "Security incidents that require operational coordination land as ITSM incidents (or are mirrored)." },
   // ITSM — service_requests: HRSD consumes, Onboarding contributes
-  { data_object: "service_requests", domain: "HRSD", role: "consumer", notes: "When an HR case requires IT assistance (access, hardware, app), it routes a service request into ITSM and consumes status updates back." },
-  { data_object: "service_requests", domain: "ONBOARDING", role: "contributor", notes: "Onboarding provisioning tasks open ITSM service requests for IT fulfilment (laptop, accounts, access)." },
+  { data_object: "service_requests", domain: "HRSD", held_as: "consumer", notes: "When an HR case requires IT assistance (access, hardware, app), it routes a service request into ITSM and consumes status updates back." },
+  { data_object: "service_requests", domain: "ONBOARDING", held_as: "contributor", notes: "Onboarding provisioning tasks open ITSM service requests for IT fulfillment (laptop, accounts, access)." },
   // ITSM — changes: CMDB contributor
-  { data_object: "changes", domain: "CMDB", role: "contributor", notes: "Configuration drift detected against the CMDB triggers change records; approved changes write back to the CMDB on completion." },
+  { data_object: "changes", domain: "CMDB", held_as: "contributor", notes: "Configuration drift detected against the CMDB triggers change records; approved changes write back to the CMDB on completion." },
 
   // HAM — hardware_assets: CMDB and DISCOVERY contributors
-  { data_object: "hardware_assets", domain: "CMDB", role: "contributor", notes: "The same physical thing is a CI in CMDB (operational/topology view) and a hardware asset in HAM (financial/lifecycle view). Separate masters, separate data objects, intentional cross-reference." },
-  { data_object: "hardware_assets", domain: "DISCOVERY", role: "contributor", notes: "Auto-discovered devices feed the HAM catalog via the device.discovered handoff." },
+  { data_object: "hardware_assets", domain: "CMDB", held_as: "contributor", notes: "The same physical thing is a CI in CMDB (operational/topology view) and a hardware asset in HAM (financial/lifecycle view). Separate masters, separate data objects, intentional cross-reference." },
+  { data_object: "hardware_assets", domain: "DISCOVERY", held_as: "contributor", notes: "Auto-discovered devices feed the HAM catalog via the device.discovered handoff." },
 
   // ITAM umbrella — asset_lifecycle_events: ITSM, HCM, Onboarding contributors
-  { data_object: "asset_lifecycle_events", domain: "ITSM", role: "contributor", notes: "Incident.asset_failure events generate lifecycle entries (replacement, retirement, RMA)." },
-  { data_object: "asset_lifecycle_events", domain: "HCM", role: "contributor", notes: "employee.terminated triggers asset-recall lifecycle events — the canonical leaver pain." },
-  { data_object: "asset_lifecycle_events", domain: "ONBOARDING", role: "contributor", notes: "Onboarding provisioning tasks generate asset-assignment lifecycle events." },
+  { data_object: "asset_lifecycle_events", domain: "ITSM", held_as: "contributor", notes: "Incident.asset_failure events generate lifecycle entries (replacement, retirement, RMA)." },
+  { data_object: "asset_lifecycle_events", domain: "HCM", held_as: "contributor", notes: "employee.terminated triggers asset-recall lifecycle events — the canonical leaver pain." },
+  { data_object: "asset_lifecycle_events", domain: "ONBOARDING", held_as: "contributor", notes: "Onboarding provisioning tasks generate asset-assignment lifecycle events." },
 
   // SAM — software_installations: DISCOVERY, VULN-MGMT
-  { data_object: "software_installations", domain: "DISCOVERY", role: "contributor", notes: "Auto-discovered installs from scanning feed SAM via the software.discovered handoff." },
-  { data_object: "software_installations", domain: "VULN-MGMT", role: "consumer", notes: "The install footprint defines the vulnerability scan scope — VULN-MGMT reads SAM's installations to know what to assess." },
+  { data_object: "software_installations", domain: "DISCOVERY", held_as: "contributor", notes: "Auto-discovered installs from scanning feed SAM via the software.discovered handoff." },
+  { data_object: "software_installations", domain: "VULN-MGMT", held_as: "consumer", notes: "The install footprint defines the vulnerability scan scope — VULN-MGMT reads SAM's installations to know what to assess." },
   // SAM — software_licenses: CLM contributor (the license contract terms)
-  { data_object: "software_licenses", domain: "CLM", role: "contributor", notes: "The licence terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view." },
+  { data_object: "software_licenses", domain: "CLM", held_as: "contributor", notes: "The license terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view." },
 
   // SMP — saas_applications: ITAM consumer
-  { data_object: "saas_applications", domain: "ITAM", role: "consumer", notes: "ITAM umbrella surfaces SaaS apps alongside hardware and installed-software assets for unified asset reporting." },
+  { data_object: "saas_applications", domain: "ITAM", held_as: "consumer", notes: "ITAM umbrella surfaces SaaS apps alongside hardware and installed-software assets for unified asset reporting." },
   // SMP — saas_subscriptions: CLM and S2P contributors, EXPENSE consumer
-  { data_object: "saas_subscriptions", domain: "CLM", role: "contributor", notes: "The underlying subscription contract lives in CLM; SMP indexes the active subscription against portfolio decisions." },
-  { data_object: "saas_subscriptions", domain: "S2P", role: "contributor", notes: "The PO that originally purchased the subscription lives in S2P; SMP holds the operational subscription state." },
-  { data_object: "saas_subscriptions", domain: "EXPENSE", role: "consumer", notes: "Corporate-card SaaS charges are matched against subscriptions to reconcile expensed-vs-procured SaaS." },
+  { data_object: "saas_subscriptions", domain: "CLM", held_as: "contributor", notes: "The underlying subscription contract lives in CLM; SMP indexes the active subscription against portfolio decisions." },
+  { data_object: "saas_subscriptions", domain: "S2P", held_as: "contributor", notes: "The PO that originally purchased the subscription lives in S2P; SMP holds the operational subscription state." },
+  { data_object: "saas_subscriptions", domain: "EXPENSE", held_as: "consumer", notes: "Corporate-card SaaS charges are matched against subscriptions to reconcile expensed-vs-procured SaaS." },
   // SMP — saas_app_assignments: IGA master (multi-master with SMP)
-  { data_object: "saas_app_assignments", domain: "IGA", role: "master", notes: "IGA masters the identity-access slice (account, group membership, role assignment, entitlement); SMP masters the cost/seat slice (which plan, which seat, last used). Two true masters on the same row — the SaaS-era equivalent of the employees multi-master." },
+  { data_object: "saas_app_assignments", domain: "IGA", held_as: "master", notes: "IGA masters the identity-access slice (account, group membership, role assignment, entitlement); SMP masters the cost/seat slice (which plan, which seat, last used). Two true masters on the same row — the SaaS-era equivalent of the employees multi-master." },
   // SMP — saas_usage_metrics: PA consumer
-  { data_object: "saas_usage_metrics", domain: "PA", role: "consumer", notes: "Tool-adoption metrics roll into people analytics for productivity and engagement dashboards." },
+  { data_object: "saas_usage_metrics", domain: "PA", held_as: "consumer", notes: "Tool-adoption metrics roll into people analytics for productivity and engagement dashboards." },
 
   // CLM — contracts: S2P and SMP contributors, LSD consumer
-  { data_object: "contracts", domain: "S2P", role: "contributor", notes: "Procurement context (PO ref, sourcing event, supplier) is captured during contracting; S2P contributes that context, CLM masters the document." },
-  { data_object: "contracts", domain: "SMP", role: "contributor", notes: "For SaaS contracts, SMP contributes portfolio context — current usage, recommended seat count, renewal recommendation — that informs negotiation and approval." },
-  { data_object: "contracts", domain: "LSD", role: "consumer", notes: "Legal Service Delivery reviews and advises on contracts; surfaces review state and risk classification back." },
+  { data_object: "contracts", domain: "S2P", held_as: "contributor", notes: "Procurement context (PO ref, sourcing event, supplier) is captured during contracting; S2P contributes that context, CLM masters the document." },
+  { data_object: "contracts", domain: "SMP", held_as: "contributor", notes: "For SaaS contracts, SMP contributes portfolio context — current usage, recommended seat count, renewal recommendation — that informs negotiation and approval." },
+  { data_object: "contracts", domain: "LSD", held_as: "consumer", notes: "Legal Service Delivery reviews and advises on contracts; surfaces review state and risk classification back." },
   // CLM — contract_obligations: GRC consumer
-  { data_object: "contract_obligations", domain: "GRC", role: "consumer", notes: "Regulatory and audit-trackable obligations feed GRC for compliance evidence." },
+  { data_object: "contract_obligations", domain: "GRC", held_as: "consumer", notes: "Regulatory and audit-trackable obligations feed GRC for compliance evidence." },
 
   // S2P — invoices: EXPENSE and FINOPS consumers
-  { data_object: "invoices", domain: "EXPENSE", role: "consumer", notes: "When the procurement path overlaps with corporate-card spend, EXPENSE reconciles the duplicate paths." },
-  { data_object: "invoices", domain: "FINOPS", role: "consumer", notes: "Cloud-provider invoices feed FINOPS for cost allocation across business units and projects." },
+  { data_object: "invoices", domain: "EXPENSE", held_as: "consumer", notes: "When the procurement path overlaps with corporate-card spend, EXPENSE reconciles the duplicate paths." },
+  { data_object: "invoices", domain: "FINOPS", held_as: "consumer", notes: "Cloud-provider invoices feed FINOPS for cost allocation across business units and projects." },
   // S2P — purchase_orders: ITAM consumer (acquired assets), SMP consumer (SaaS subscriptions)
-  { data_object: "purchase_orders", domain: "ITAM", role: "consumer", notes: "PO line items link to acquired hardware/software assets in ITAM/HAM/SAM via the asset.acquired lifecycle event." },
-  { data_object: "purchase_orders", domain: "SMP", role: "consumer", notes: "A PO for a SaaS subscription creates the corresponding saas_subscription record in SMP via the po.saas_subscription_created handoff." },
+  { data_object: "purchase_orders", domain: "ITAM", held_as: "consumer", notes: "PO line items link to acquired hardware/software assets in ITAM/HAM/SAM via the asset.acquired lifecycle event." },
+  { data_object: "purchase_orders", domain: "SMP", held_as: "consumer", notes: "A PO for a SaaS subscription creates the corresponding saas_subscription record in SMP via the po.saas_subscription_created handoff." },
   // S2P — sourcing_events: CLM consumer (resulting contract)
-  { data_object: "sourcing_events", domain: "CLM", role: "consumer", notes: "Awarded sourcing events flow into CLM as draft contracts." },
+  { data_object: "sourcing_events", domain: "CLM", held_as: "consumer", notes: "Awarded sourcing events flow into CLM as draft contracts." },
 ];
 
 const signalRows = signals
   .map(s => ({
     domain_id: did(s.domain),
     data_object_id: dataObjMap.get(s.data_object)!,
-    role: s.role,
+    held_as: s.held_as,
     notes: s.notes,
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
@@ -457,7 +457,7 @@ const handoffs = [
     trigger_event: "case.it_assistance_required",
     integration_pattern: "api_call",
     friction_level: "medium",
-    description: "HR case that needs IT action (lost laptop replacement, app access for a new role, account lockout) routes a service request into ITSM. Friction sits in the case-to-SR field mapping and status synchronisation back to HRSD.",
+    description: "HR case that needs IT action (lost laptop replacement, app access for a new role, account lockout) routes a service request into ITSM. Friction sits in the case-to-SR field mapping and status synchronization back to HRSD.",
     notes: "",
   },
   {
@@ -509,7 +509,7 @@ const handoffs = [
     trigger_event: "employee.terminated",
     integration_pattern: "api_call",
     friction_level: "high",
-    description: "Employee termination triggers asset-recall events: assigned laptops, mobile devices, badges, software licences must be reclaimed. High friction — recall rates rarely hit 100%, and the cost of unrecovered SaaS seats / laptops shows up in financial leakage reports.",
+    description: "Employee termination triggers asset-recall events: assigned laptops, mobile devices, badges, software licenses must be reclaimed. High friction — recall rates rarely hit 100%, and the cost of unrecovered SaaS seats / laptops shows up in financial leakage reports.",
     notes: "",
   },
   // --- SAM ↔ ITSM ---
@@ -562,7 +562,7 @@ const handoffs = [
     trigger_event: "shadow_app.requires_sanctioning",
     integration_pattern: "api_call",
     friction_level: "medium",
-    description: "Shadow-IT app that passes the threshold for sanctioning (recurring use, multiple users, business-critical) triggers a procurement requisition in S2P to formalise the relationship.",
+    description: "Shadow-IT app that passes the threshold for sanctioning (recurring use, multiple users, business-critical) triggers a procurement requisition in S2P to formalize the relationship.",
     notes: "",
   },
   {
@@ -673,8 +673,8 @@ console.log(`  total data_objects:           ${totalDO}`);
 console.log(`  total domain_data_objects:    ${totalDDO}`);
 console.log(`  total cross_domain_handoffs:  ${totalHO}`);
 
-console.log("\nMulti-master leaderboard (data_objects with role=master count > 1):");
-const allMasterRows = await get("/domain_data_objects?role=eq.master&select=data_object_id&limit=20000");
+console.log("\nMulti-master leaderboard (data_objects with held_as=master count > 1):");
+const allMasterRows = await get("/domain_data_objects?held_as=eq.master&select=data_object_id&limit=20000");
 const masterCount = new Map<number, number>();
 for (const r of allMasterRows) {
   const id = Number(r.data_object_id);

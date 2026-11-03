@@ -47,8 +47,8 @@ last_audit: "2026-06-10"
 b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "DEFERRED per parent-task Rule (personas/RACI are not auto-authored). Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor, and (pending B2-S4) Org Design Practitioner."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "DEFERRED per parent-task Rule (personas/RACI are not auto-authored). Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor, and (pending B2-S4) Org Design Practitioner."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
     extra_b9d_owned_processes: |
@@ -65,8 +65,8 @@ b1a:
   - id: B1A-SELF-CONTAIN
     summary: "12 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) -> needs approval."
     finding: |
-      Live triage 2026-06-02: 12 domain_module_data_objects rows on this domain's modules are role=contributor
-      or role=consumer with necessity=required, pointing at an entity mastered by another domain and not
+      Live triage 2026-06-02: 12 domain_module_data_objects rows on this domain's modules are held_as=contributor
+      or held_as=consumer with necessity=required, pointing at an entity mastered by another domain and not
       embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.
     action: |
       SURFACED (not executed): each row needs either convert-to-embedded_master (carry a local shell) or
@@ -204,7 +204,7 @@ b2:
       or did it never deploy? (Personas overall are deferred under B1A-PHASE-P, but this drift question is the editorial input.)
     options:
       - confirm 4-role posture is intentional (close drift)
-      - re-author ORG-DESIGN-PRACTITIONER per prior design (with role_modules on 95 + 96 primary, 97 secondary)
+      - re-author ORG-DESIGN-PRACTITIONER per prior design (with persona_modules on 95 + 96 primary, 97 secondary)
     why: |
       Editorial scope question on role coverage; org-design-specific permissions on SWP-SCENARIO-MODELING (10227 approve_org_design,
       10228 publish_org_design) plausibly want a dedicated role.
@@ -225,7 +225,7 @@ b2:
   - id: B2-S6
     summary: REPLACE-CORRECT / DELETE 3 mis-tagged discovery_substring handoff_processes rows (DESTRUCTIVE). Targets refined by B9d 2026-06-10.
     question: |
-      Three SWP-boundary handoff_processes rows are still proposal_source='discovery_substring' with wrong-context PCF links.
+      Three SWP-boundary handoff_processes rows are still proposal_source='discovery_substring' with wrong-context PCF relationships.
       B9d (2026-06-10) refined the exact fix per row. Each overwrites/deletes an existing non-empty row (destructive), gated on approval:
         - row 101 (handoff 13, PA->SWP attrition.forecast_updated): currently process_id=671 "Analyze customer attrition and
           retention rates". REPLACE-CORRECT to process_id=980 "Perform strategic workforce planning" (payload is workforce
@@ -293,7 +293,7 @@ b3:
     candidate: succession_plans
     rationale: |
       Workday Talent and SAP SuccessFactors Succession & Development hold succession plans. SWP-SUPPLY-PLANNING reads
-      B-grade headcount + ready-now successor counts as supply-side talent-pipeline signals. No SWP-side edge to
+      B-grade headcount + ready-now successor counts as supply-side talent-pipeline signals. No SWP-side relationship to
       TALENT-MGMT exists today.
     vendor_evidence:
       - Workday Talent Management
@@ -311,9 +311,9 @@ b3:
     proposed_module: SWP-SUPPLY-PLANNING
 
   - id: B3-S4
-    candidate: domain_regulations linkages
+    candidate: domain_regulations relationships
     rationale: |
-      SWP has 0 regulations linked. Candidates: EU Pay Transparency Directive (ties to SWP-COST-PROJECTIONS via pay-equity
+      SWP has 0 regulations related. Candidates: EU Pay Transparency Directive (ties to SWP-COST-PROJECTIONS via pay-equity
       analyses), WARN Act (mass-layoff scenarios in workforce_scenarios trigger notification obligations at 100+ headcount
       cuts), CA SB 1162 + NYC AI bias audits (skills-gap and cost-projection AI-decision surface).
     vendor_evidence:

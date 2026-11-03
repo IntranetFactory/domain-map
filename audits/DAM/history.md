@@ -4,14 +4,14 @@
 
 ### Summary
 
-- Current footprint: 1 master data_object (`digital_assets`, id 137), 0 `domain_modules`, 1 capability (`CREATIVE-REVIEW`), 1 solution link (Adobe Experience Manager, secondary), 0 regulations, 1 trigger_event, 1 outbound + 2 inbound cross-domain handoffs, 0 intra-domain handoffs, 0 lifecycle states, 3 aliases, 1 legacy domain-level system skill (`dam-system`, id 44) with 1 platform tool (`query_digital_assets`).
+- Current footprint: 1 master data_object (`digital_assets`, id 137), 0 `domain_modules`, 1 capability (`CREATIVE-REVIEW`), 1 solution relationship (Adobe Experience Manager, secondary), 0 regulations, 1 trigger_event, 1 outbound + 2 inbound cross-domain handoffs, 0 intra-domain handoffs, 0 lifecycle states, 3 aliases, 1 legacy domain-level system skill (`dam-system`, id 44) with 1 platform tool (`query_digital_assets`).
 - Vendor-surface basis (flagship vendors enumerated): Bynder, Brandfolder (Smartsheet), Frontify, Adobe Experience Manager Assets, Cloudinary, Widen Collective (Acquia), MediaValet. Adobe AEM Assets is the catalog incumbent. Bynder, Brandfolder, Frontify are the brand-led pure-plays. Cloudinary anchors the dynamic-delivery / transformation specialist leg. Widen and MediaValet cover the mid-market.
 - **Bucket 1 (in-scope, agent fixable):** 12 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 7 items.
 - Candidates queued to `audits/_missing-domains.md`: 3 (CREATIVE-PROOFING bumped, MRM bumped, BRAND-PORTAL new).
 
-Structural posture: M-band fails outright (zero `domain_modules`), which gates B / E / F. Phase A is shallow (1 capability, 1 solution, 0 regulations). Phase B has the headline master and aliases but no lifecycle states, no DMDOs, and the `users` edges run one-way. F-band fails on Rule #17 (system skill is domain-anchored, not module-anchored; one tool only).
+Structural posture: M-band fails outright (zero `domain_modules`), which gates B / E / F. Phase A is shallow (1 capability, 1 solution, 0 regulations). Phase B has the headline master and aliases but no lifecycle states, no DMDOs, and the relationships to `users` run one-way. F-band fails on Rule #17 (system skill is domain-anchored, not module-anchored; one tool only).
 
 ### Vendor surface basis
 
@@ -19,9 +19,9 @@ Adobe Experience Manager Assets is the enterprise incumbent and the only catalog
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges auto-discovered from `handoffs` (source or target = DAM, id 92):
+Cross-domain relationships auto-discovered from `handoffs` (source or target = DAM, id 92):
 
-| Neighbor | Outbound from DAM | Inbound to DAM | Edge weight | Deep dive? |
+| Neighbor | Outbound from DAM | Inbound to DAM | Relationship weight | Deep dive? |
 |---|---|---|---|---|
 | HCMS (id 93) | 1 (`digital_asset.published`) | 1 (`content_entry.created`) | 2 | one-line summary |
 | AGENCY-MGMT (id 153) | 0 | 1 (`deliverable.approved`) | 1 | one-line summary |
@@ -49,14 +49,14 @@ No neighbor exceeds weight 3, so no full 5-section pairwise diff is run; both ar
 |---|---|---|---|
 | B1-S1 | M1 | DAM has zero `domain_modules` rows. Per Rule #14, every domain needs at least one full module. The legacy `domain_data_objects` master row on `digital_assets` (id 137) exists but no `domain_module_data_objects` row anywhere in DAM. The DAM domain is undeployable. | Phase M load: author at least 2 full modules (DAM-ASSET-LIB and DAM-DISTRIBUTION are the minimum split; a 3-module shape adds DAM-RIGHTS-MGMT or DAM-CREATIVE-REVIEW). Load `domain_modules` + `domain_module_capabilities` + `domain_module_data_objects` (master row on digital_assets, plus the embedded_master / consumer rows for `users`, `content_entries`, `creative_deliverables`). |
 | B1-S2 | M2 | DAM has 1 capability today and gates M2 vacuously. After fixing A2 (add 4-6 capabilities), M2 binds and requires at least 2 full modules. | Solved by B1-S1 when M2 binds. |
-| B1-S3 | M4 | The single capability `CREATIVE-REVIEW` (id 446) has no realizing module (no `domain_module_capabilities` row exists for any DAM module, because no modules exist). | Solved by B1-S1 (link CREATIVE-REVIEW to whichever module hosts review workflow, likely the DAM-DISTRIBUTION or a new DAM-CREATIVE-REVIEW module). |
+| B1-S3 | M4 | The single capability `CREATIVE-REVIEW` (id 446) has no realizing module (no `domain_module_capabilities` row exists for any DAM module, because no modules exist). | Solved by B1-S1 (relationship CREATIVE-REVIEW to whichever module hosts review workflow, likely the DAM-DISTRIBUTION or a new DAM-CREATIVE-REVIEW module). |
 | B1-S4 | A1 / Rule #20 | `catalog_tagline` and `catalog_description` are both empty strings. | Draft per Rule #20 buyer voice, surface to user for review BEFORE writing. |
-| B1-S5 | A2 | Only 1 capability (`CREATIVE-REVIEW`) is linked. The pass threshold is at least 3 (typical 5-8). | Phase A capability load: author asset-library, asset-taxonomy, rights-mgmt, brand-portal, asset-distribution, dynamic-delivery-transformation (5-6 candidate capabilities). |
-| B1-S6 | A3 | Only 1 solution (Adobe Experience Manager, secondary) is linked. Pass threshold is at least 3 solutions, with at least 1 `primary`. | Phase A solution load: add Bynder (primary), Brandfolder (primary), Frontify (primary or secondary), Cloudinary (secondary, transformation-specialist), Widen Collective (secondary). |
-| B1-S7 | B7 | `digital_assets` (master) has zero outbound edges to `users` in `data_object_relationships`. Three inbound rows exist (`users uploaded digital_assets`, `users owns digital_assets`, `users approves digital_assets`) but no symmetric `digital_assets ... users` row, despite the master clearly having user-typed actors (uploader, owner, approver). Per Rule #10, edges should exist in both directions on `data_object_relationships`. | Author 3 outbound `digital_assets ... users` rows symmetric to the existing inbound rows. |
+| B1-S5 | A2 | Only 1 capability (`CREATIVE-REVIEW`) is related. The pass threshold is at least 3 (typical 5-8). | Phase A capability load: author asset-library, asset-taxonomy, rights-mgmt, brand-portal, asset-distribution, dynamic-delivery-transformation (5-6 candidate capabilities). |
+| B1-S6 | A3 | Only 1 solution (Adobe Experience Manager, secondary) is related. Pass threshold is at least 3 solutions, with at least 1 `primary`. | Phase A solution load: add Bynder (primary), Brandfolder (primary), Frontify (primary or secondary), Cloudinary (secondary, transformation-specialist), Widen Collective (secondary). |
+| B1-S7 | B7 | `digital_assets` (master) has zero outbound relationships to `users` in `data_object_relationships`. Three inbound rows exist (`users uploaded digital_assets`, `users owns digital_assets`, `users approves digital_assets`) but no symmetric `digital_assets ... users` row, despite the master clearly having user-typed actors (uploader, owner, approver). Per Rule #10, relationships should exist in both directions on `data_object_relationships`. | Author 3 outbound `digital_assets ... users` rows symmetric to the existing inbound rows. |
 | B1-S8 | B12 | `digital_assets` has zero `data_object_lifecycle_states` rows despite being a workflow-bearing master (`digital_asset.published` trigger event exists, implying at least `draft / review / approved / published / archived` states). | Phase B load: author lifecycle states (initial: `uploaded` or `draft`; gated transitions: `submitted_for_review`, `approved`, `published`, `archived`; with `requires_permission=true` and `domain_module_id` set per M5). |
 | B1-S9 | B4 | `digital_assets` pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) all default to false. The audit must positively re-evaluate. `has_personal_content=true` is plausible (assets often contain personal images and require GDPR / model-release handling). `has_submit_lock=true` plausible on the approved->published transition. `has_single_approver` plausible on certain workflows. | Surface for explicit consideration; PATCH where the pattern matches. |
-| B1-S10 | F1 / F2 | `dam-system` (skill id 44) is the legacy domain-level system skill (`domain_id=92`, `domain_module_id=null`). Per Rule #17 + F2, every `domain_modules` row needs a module-anchored system skill named `<module_code_lower>_agent`. The legacy row blocks F1 once modules exist. | Phase S load (sequenced after B1-S1): author one `system` skill per DAM module (e.g. `dam_asset_lib_agent`, `dam_distribution_agent`), populate skill_tools, then retire the legacy `dam-system` row (or migrate its single tool link). |
+| B1-S10 | F1 / F2 | `dam-system` (skill id 44) is the legacy domain-level system skill (`domain_id=92`, `domain_module_id=null`). Per Rule #17 + F2, every `domain_modules` row needs a module-anchored system skill named `<module_code_lower>_agent`. The legacy row blocks F1 once modules exist. | Phase S load (sequenced after B1-S1): author one `system` skill per DAM module (e.g. `dam_asset_lib_agent`, `dam_distribution_agent`), populate skill_tools, then retire the legacy `dam-system` row (or migrate its single tool relationship). |
 | B1-S11 | F3 | The legacy `dam-system` skill has only 1 `skill_tools` row (`query_digital_assets`, platform). The Phase-S floor is 3+ required tools and 5-20 total. | Solved by B1-S10's Phase S authoring against the new modules. |
 
 #### APQC TAGGING
@@ -85,7 +85,7 @@ No deferred-to-Discover items: every DAM cross-domain handoff has a clean PCF L3
 
 1. **Modularization choice (the load-bearing question).** The DAM market admits several module splits. Options:
    - **2-module split:** DAM-ASSET-LIB (masters `digital_assets`, `asset_renditions`, `asset_versions`, `asset_collections`, `asset_categories`, `asset_rights`, `model_releases`) + DAM-DISTRIBUTION (masters `share_links`, `asset_publications`). Clean, minimal, satisfies the M2 floor if A2 (B1-S5) ends up at 3+ capabilities.
-   - **3-module split:** add DAM-CREATIVE-REVIEW (masters review-thread / approval-round entities; absorbs `creative_briefs` and `creative_deliverables` consumer links). Useful if Bucket 3 review-workflow entities (B3-1 below) are confirmed.
+   - **3-module split:** add DAM-CREATIVE-REVIEW (masters review-thread / approval-round entities; absorbs `creative_briefs` and `creative_deliverables` consumer relationships). Useful if Bucket 3 review-workflow entities (B3-1 below) are confirmed.
    - **4-module split:** add DAM-RIGHTS-MGMT as a standalone module (masters `asset_rights`, `model_releases`, `license_agreements`). Justified only if rights/licensing is the buyer-visible primary workflow (Bynder-like enterprise tier), not the storage layer.
    Decision unblocks B1-S1, B1-S3, B1-B1/B2/B3 patches and the B3 candidate routing.
 
@@ -127,7 +127,7 @@ No deferred-to-Discover items: every DAM cross-domain handoff has a clean PCF L3
 ### Cross-bucket dependencies
 
 - **Bucket 2 item 1 (modularization choice) gates Bucket 1 items B1-S1 / B1-S3 / B1-B1 / B1-B2 / B1-B3 / B1-S10.** The module set must be chosen first; the structural fixes then materialize against the chosen split.
-- **Bucket 2 item 3 (`creative_briefs` and `creative_deliverables` placement) depends on Bucket 2 item 1** (the chosen modularization decides which DAM module gets the consumer / embedded_master link).
+- **Bucket 2 item 3 (`creative_briefs` and `creative_deliverables` placement) depends on Bucket 2 item 1** (the chosen modularization decides which DAM module gets the consumer / embedded_master relationship).
 - **Bucket 3 item B3-2 informs Bucket 2 item 5 (cross-cutting capability decisions)** (`brand_guidelines` is the BRAND-PORTAL anchor; if eyeball-confirmed, the cross-cutting BRAND-MGMT capability is more justified).
 - **Bucket 3 items B3-1 and B3-6 inform Bucket 2 item 1** (a 3- or 4-module split is easier to justify if B3-1 review entities and B3-6 workspaces are vendor-confirmed).
 - **Bucket 1 APQC tagging (B1-H1 / B1-H2 / B1-H3) is independent** of all Bucket 2 / Bucket 3 items, can be loaded immediately on user approval.
@@ -149,8 +149,8 @@ No deferred-to-Discover items: every DAM cross-domain handoff has a clean PCF L3
 
 #### Per-neighbor one-line summaries
 
-- **HCMS (weight 2).** Bidirectional edge: DAM publishes `digital_asset.published` to HCMS (handoff 98), HCMS publishes `content_entry.created` to DAM (handoff 806). Both directions carry NULL module FKs on both sides because DAM has no modules; B10b will resolve on each side after Phase M lands on both domains.
-- **AGENCY-MGMT (weight 1).** Single inbound edge: `deliverable.approved` (handoff 344). Target-side NULL is DAM's responsibility once Phase M lands; source-side NULL is AGENCY-MGMT's.
+- **HCMS (weight 2).** Bidirectional relationship: DAM publishes `digital_asset.published` to HCMS (handoff 98), HCMS publishes `content_entry.created` to DAM (handoff 806). Both directions carry NULL module FKs on both sides because DAM has no modules; B10b will resolve on each side after Phase M lands on both domains.
+- **AGENCY-MGMT (weight 1).** Single inbound relationship: `deliverable.approved` (handoff 344). Target-side NULL is DAM's responsibility once Phase M lands; source-side NULL is AGENCY-MGMT's.
 
 ### Candidates queued to `audits/_missing-domains.md`
 
@@ -184,7 +184,7 @@ Pre-flight confirmed all three pairs were absent before insert (the `key` unique
 | B1-S4 | `catalog_tagline` / `catalog_description` | Per brief: Rule #20 buyer-voice copy is deferred (surface to user before writing). |
 | B1-S5 | New `capabilities` + `capability_domains` | New entities; also implicates cross-cutting decisions in Bucket 2 item 5. |
 | B1-S6 | New `solutions` + `solution_domains` | New entities; vendor surface needs user pick on `primary`/`secondary` split. |
-| B1-S7 | Outbound `digital_assets ... users` edges | Audit asks for 3 rows "symmetric to the existing inbound" but does not pre-specify exact `relationship_verb` / `data_object_relationship_label` / `inverse_verb` / cardinality / `owner_side` tuples. Per brief, Rule #10 user-edges only applied when the audit pre-specifies the exact tuple. |
+| B1-S7 | Outbound `digital_assets ... relationships to `users` | Audit asks for 3 rows "symmetric to the existing inbound" but does not pre-specify exact `relationship_verb` / `data_object_relationship_label` / `inverse_verb` / cardinality / `owner_side` tuples. Per brief, Rule #10 relationships to `users` only applied when the audit pre-specifies the exact tuple. |
 | B1-S8 | `data_object_lifecycle_states` for `digital_assets` | Lifecycle states need `domain_module_id` (M5), which depends on B1-S1 modules existing. |
 | B1-S9 | Pattern flags on `digital_assets` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) | Audit text: "surface for explicit consideration; PATCH where the pattern matches." Per brief: pattern flag flips are deferred (judgment). |
 | B1-S10, B1-S11 | Retire legacy `dam-system` skill / author module-anchored system skills + `skill_tools` | New `skills` + `skill_tools` rows; gated on Bucket 2 item 1 modules. |
@@ -202,7 +202,7 @@ https://tests.semantius.app/domain_map/handoff_processes
 
 ### Summary
 
-- Current footprint (live re-pull): 1 master data_object (`digital_assets`, id 137, `kind=domain_owned`), 0 `domain_modules`, 0 cross-cutting host junctions, 1 capability (`CREATIVE-REVIEW` id 446), 1 solution link (Adobe Experience Manager id 375, `secondary`), 0 regulations, 1 trigger_event (`digital_asset.published` id 46, `lifecycle`), 1 outbound + 2 inbound cross-domain handoffs (ids 98, 344, 806), 0 intra-domain handoffs, 0 lifecycle states, 3 aliases (`asset`, `creative asset`, `brand asset`), 7 `data_object_relationships` (3 user-edges inbound, 1 outbound to content_entries, 1 inbound from creative_deliverables, 2 inbound from content_entries), 1 legacy domain-level system skill (`dam-system` id 44, `domain_module_id=null`) with 1 `skill_tools` row (`query_digital_assets` id 380, kind `query`), 0 `domain_module_data_objects` rows for `digital_assets`, 4 `handoff_processes` rows (709/710/711 from prior continuation + pre-existing 344/141).
+- Current footprint (live re-pull): 1 master data_object (`digital_assets`, id 137, `kind=domain_owned`), 0 `domain_modules`, 0 cross-cutting host junctions, 1 capability (`CREATIVE-REVIEW` id 446), 1 solution relationship (Adobe Experience Manager id 375, `secondary`), 0 regulations, 1 trigger_event (`digital_asset.published` id 46, `lifecycle`), 1 outbound + 2 inbound cross-domain handoffs (ids 98, 344, 806), 0 intra-domain handoffs, 0 lifecycle states, 3 aliases (`asset`, `creative asset`, `brand asset`), 7 `data_object_relationships` (3 relationships to `users` inbound, 1 outbound to content_entries, 1 inbound from creative_deliverables, 2 inbound from content_entries), 1 legacy domain-level system skill (`dam-system` id 44, `domain_module_id=null`) with 1 `skill_tools` row (`query_digital_assets` id 380, kind `query`), 0 `domain_module_data_objects` rows for `digital_assets`, 4 `handoff_processes` rows (709/710/711 from prior continuation + pre-existing 344/141).
 - Pattern flags on `digital_assets` (137): all three `false` (`has_personal_content`, `has_submit_lock`, `has_single_approver`).
 - `domains.business_logic` on row 92 contains a U+2014 em-dash (between "watermark)" and "irreducible"); flagged for sanitization. `description` is clean.
 - `catalog_tagline` and `catalog_description` both empty.
@@ -216,7 +216,7 @@ The 2026-05-30 audit's classification holds with no measurable progress on the s
 
 - **M-band** still fails outright (M1: zero `domain_modules`). M2/M4 vacuously pass on 1 capability but bind to a real failure once A2 is fixed. The whole B/C/E/F stack is gated on M.
 - **A-band**: A1 (Rule #20 copy) empty; A2 capability count at 1 (floor 3); A3 solutions at 1 (floor 3, no `primary`).
-- **B-band**: B5 master shape OK; B7 user-edges asymmetric (3 inbound, 0 outbound); B9 events present (1, `lifecycle`); B9b NULL module FKs on both sides of all 3 cross-domain handoffs; B10b consequently fails; B11 aliases present (3); B12 lifecycle states absent on a workflow-bearing master.
+- **B-band**: B5 master shape OK; B7 relationships to `users` asymmetric (3 inbound, 0 outbound); B9 events present (1, `lifecycle`); B9b NULL module FKs on both sides of all 3 cross-domain handoffs; B10b consequently fails; B11 aliases present (3); B12 lifecycle states absent on a workflow-bearing master.
 - **C-band**: C1 (intra-domain handoffs) zero, acceptable for single-master domain; C2 cross-domain handoffs present but all carry NULL module FKs (B9b shadow).
 - **D-band**: D1 trigger events tied to master OK; D2 NULL module FKs.
 - **E-band**: E1 modules absent → E2/E3/E4/E5 all gated.
@@ -250,7 +250,7 @@ Carrying forward from 2026-05-30 (all items still pending, classified to b1a vs 
 | B1-S4 | A1 / Rule #20 | `catalog_tagline` and `catalog_description` empty. | b2 (Rule #20 wording requires user approval) |
 | B1-S5 | A2 | 1 capability; floor 3 (typical 5-8). | b2/b1b: capability list requires user pick; some intersect B2-5 cross-cutting decisions |
 | B1-S6 | A3 | 1 solution (secondary); floor 3 with at least 1 `primary`. | b2/b1b: vendor primary/secondary split requires user pick |
-| B1-S7 | B7 | 3 inbound user-edges, 0 outbound. Rule #10 symmetric edges. | b1b: audit does not pre-specify exact verb / inverse / owner_side tuples |
+| B1-S7 | B7 | 3 inbound relationships to `users`, 0 outbound. Rule #10 symmetric relationships. | b1b: audit does not pre-specify exact verb / inverse / owner_side tuples |
 | B1-S8 | B12 | 0 lifecycle states on `digital_assets`; trigger event `digital_asset.published` exists. | b1b, gated on B1-S1 (M5 needs `domain_module_id`) |
 | B1-S9 | B4 | Pattern flags all `false`; positive re-evaluation owed. | b2 (judgment per audit) |
 | B1-S10 | F1 / F2 | Legacy `dam-system` skill is domain-level; needs module-anchored per Rule #17. | b1b, gated on B1-S1 |
@@ -347,7 +347,7 @@ Loader: `c:/dev/domain-map/.tmp_deploy/dam_state_execute_2026_06_07.ts` (idempot
 
 - B2-1 (LOAD-BEARING): the DAM module split (2 / 3 / 4 modules). Gates the entire b1b build cascade (B1B-S1 modules, B1B-S3 capability bind, B1B-S8 lifecycle states, B1B-B1/B2/B3 handoff FKs, B1B-M1..M8 routing). DAM stays unbuilt until decided.
 - B2-2 (DAM/PIM master-ownership overlap): `pim_digital_assets` (816, PIM module 142) vs `digital_assets` (137) seam. Surfaced, not resolved, per the digital-asset-mastery overlap rule.
-- B2-3 / B2-4 / B2-5 / B2-7: creative_briefs/deliverables placement; regulations to attach; capability cross-cutting scope (also clears A2); exact tuples for the 3 outbound `digital_assets -> users` edges (gates B1B-S7).
+- B2-3 / B2-4 / B2-5 / B2-7: creative_briefs/deliverables placement; regulations to attach; capability cross-cutting scope (also clears A2); exact tuples for the 3 outbound `digital_assets -> relationships to `users` (gates B1B-S7).
 - B2-S9 (DESTRUCTIVE): flip pattern flags on `digital_assets` (has_personal_content / has_submit_lock / has_single_approver). Agent will not flip without approval.
 - B2-H1 (DESTRUCTIVE / Rule #1): promote 4 existing `handoff_processes` rows (709, 255, 710, 711, all record_status=new, agent_curated) to approved. Tag rows already exist; only the approval flip is owed.
 - B2-6 / Phase P personas: DEFERRED (Brand and Creative function 55 roles). Owner + contributor `business_function_domains` rows already exist (function 55 owner id 147, function 25 contributor id 148), so C1 is satisfied; roles/personas await modules.

@@ -7,14 +7,14 @@ last_audit: "2026-06-14"
 # 2026-06-14 BUILD. New domain built from Phase 0 (audits/MRM/MRM-phase0-2026-06-14.md),
 # scoped TIGHTLY to the marketing planning + budget kernel that no existing domain owns.
 # Loaded live at record_status='new': domain 173 (+ 7 metadata fields + catalog UX), 5
-# capabilities, 2 full modules (MRM-PLANNING 350, MRM-BUDGET 351), 5 solutions linked
+# capabilities, 2 full modules (MRM-PLANNING 350, MRM-BUDGET 351), 5 solutions related
 # (Uptempo + Planful for Marketing + Sitecore Content Hub new; Aprimo + Adobe Workfront reused),
 # 7 masters, 3 cross-domain consumers (marketing_campaigns/MA, work_items + work_projects/WORK-MGMT),
-# 18 data_object_relationships (intra + 5 users edges + 4 cross-domain incl. a DAM digital_assets
+# 18 data_object_relationships (intra + 5 relationships to users + 4 cross-domain incl. a DAM digital_assets
 # reference), 14 aliases, 17 lifecycle states (4 workflow masters), 6 trigger_events, 4 handoffs
 # (2 cross-domain to MA + WORK-MGMT, 2 intra-domain), 2 handoff_processes (PCF 3.3, 3.4.2.10),
 # 1 domain-grain system skill (mrm-system 460), 14 tools (12 new + notify_person/team reused),
-# 16 domain_module_tools, 3 personas, 6 role_modules, 9 process_raci (PCF 3.3 / 3.3.2 / 3.3.2.3,
+# 16 domain_module_tools, 3 personas, 6 persona_modules, 9 process_raci (PCF 3.3 / 3.3.2 / 3.3.2.3,
 # each R+A), 4 gated lifecycle states wired to PCF process_id. Strict Semantius score 13/14 (~0.93),
 # the lone non-platform tool is notify_team.
 # DELIBERATELY NOT MASTERED (kernel scoping): brand/creative assets (DAM digital_assets, referenced

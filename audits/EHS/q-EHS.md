@@ -35,10 +35,10 @@ a2:
 q3: Should EHS publish its incident and emissions data upstream to corporate sustainability disclosure (ESG) as built?
 
 - a) Keep both EHS to ESG handoffs: a logged safety incident feeds health-and-safety disclosure metrics, and a recorded emission feeds environmental disclosure.
-- b) Keep only the safety-incident to ESG edge; route emissions through Real Estate and Workplace Management instead.
+- b) Keep only the safety-incident to ESG relationship; route emissions through Real Estate and Workplace Management instead.
 - c) Drop both; ESG sources this data directly from establishments.
 
-Recommended: a. Sphera and Enablon sell both EHS and ESG and explicitly feed operational EHS incident and environmental data into corporate sustainability disclosure, so the upstream edge is real. The nuance is emissions: Real Estate and Workplace Management already owns utility and Scope 1+2 emission source data in this catalog (the emissions records object is ESG-owned), so the emissions edge could be argued to belong to Real Estate rather than EHS, which is option (b). EHS was built as a consumer of the shared emissions records and publishes the establishment-level recorded event upstream, which keeps the operational capture in EHS and the disclosure aggregation in ESG. The safety-incident feed is unambiguous; the only genuine fork is the emissions boundary.
+Recommended: a. Sphera and Enablon sell both EHS and ESG and explicitly feed operational EHS incident and environmental data into corporate sustainability disclosure, so the upstream relationship is real. The nuance is emissions: Real Estate and Workplace Management already owns utility and Scope 1+2 emission source data in this catalog (the emissions records object is ESG-owned), so the emissions relationship could be argued to belong to Real Estate rather than EHS, which is option (b). EHS was built as a consumer of the shared emissions records and publishes the establishment-level recorded event upstream, which keeps the operational capture in EHS and the disclosure aggregation in ESG. The safety-incident feed is unambiguous; the only genuine fork is the emissions boundary.
 
 a3:
 

@@ -522,7 +522,7 @@
       "name": "service_problems",
       "singular_label": "Problem",
       "plural_label": "Problems",
-      "description": "Root-cause record for one or more incidents that recur or share a pattern. Carries known-error workaround, permanent fix candidate, and links to the change that will resolve it. Problem management is a discipline mature ITSM tools support but most orgs underuse.",
+      "description": "Root-cause record for one or more incidents that recur or share a pattern. Carries known-error workaround, permanent fix candidate, and a relationship to the change that will resolve it. Problem management is a discipline mature ITSM tools support but most orgs underuse.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -1079,7 +1079,7 @@
       ]
     }
   ],
-  "roles": [],
+  "personas": [],
   "enums": {
     "trigger_event_category": [
       "lifecycle",
@@ -1100,7 +1100,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

@@ -4,7 +4,7 @@
 
 ### Summary
 
-- **Current footprint:** 8 full modules; 7 masters (`service_incidents`, `service_requests`, `service_problems`, `service_changes`, `knowledge_articles`, `service_catalog_items`, `service_slas`); 20 capabilities (incl. 5 cross-cutting: SLA-MGMT, KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL, AI-TRIAGE-CLASSIFICATION, APPROVAL-WORKFLOW); 23 solutions (5 primary, 9 secondary, 9 partial); 14 trigger_events on ITSM masters; 6 outbound + ~70 inbound cross-domain handoffs; 10 aliases; 32 lifecycle states across 6 masters; 8 system skills + 57 skill_tools rows; **0 roles, 0 role_modules**.
+- **Current footprint:** 8 full modules; 7 masters (`service_incidents`, `service_requests`, `service_problems`, `service_changes`, `knowledge_articles`, `service_catalog_items`, `service_slas`); 20 capabilities (incl. 5 cross-cutting: SLA-MGMT, KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL, AI-TRIAGE-CLASSIFICATION, APPROVAL-WORKFLOW); 23 solutions (5 primary, 9 secondary, 9 partial); 14 trigger_events on ITSM masters; 6 outbound + ~70 inbound cross-domain handoffs; 10 aliases; 32 lifecycle states across 6 masters; 8 system skills + 57 skill_tools rows; **0 roles, 0 persona_modules**.
 - **Bucket 1 (in-scope, agent fixable):** 7 items.
 - **Bucket 2 (surface-for-user, judgment):** 4 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 1 prompt (run Phase 0 before drafting more), with 7 candidates the audit suspects from vendor knowledge.
@@ -19,7 +19,7 @@ Domain Semantius score (strict) across 8 system skills: ~83% (47 platform / 57 t
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S1 | **E1 (hard fail)** | **Zero `roles` touch any ITSM module.** ITSM has 8 modules and 20 capabilities → E1 threshold is ≥3 roles (typical 5-7). The deployer cannot provision users without role definitions. Expected personas, by SKILL convention: `IT-SERVICE-DESK-AGENT` (Service Desk function — primary on incident-mgmt, service-request, agent-workspace; secondary on knowledge), `IT-SERVICE-DESK-MANAGER` (admin tier, all 8 modules), `IT-CHANGE-MANAGER` (primary on change-mgmt; secondary on incident-mgmt, sla-mgmt), `IT-PROBLEM-MANAGER` (primary on problem-mgmt; secondary on incident-mgmt, knowledge), `KNOWLEDGE-AUTHOR` (primary on knowledge; secondary on incident-mgmt, service-request), `END-USER-REQUESTER` (cross-functional; primary on service-request, knowledge `:read`). Each carries `role_modules` (≥2 each) + `role_permissions` bundle (tier-level grants preferred). | Author 5-6 roles in a focused loader with `role_modules` + `role_permissions`. |
+| B1-S1 | **E1 (hard fail)** | **Zero `roles` touch any ITSM module.** ITSM has 8 modules and 20 capabilities → E1 threshold is ≥3 roles (typical 5-7). The deployer cannot provision users without role definitions. Expected personas, by SKILL convention: `IT-SERVICE-DESK-AGENT` (Service Desk function — primary on incident-mgmt, service-request, agent-workspace; secondary on knowledge), `IT-SERVICE-DESK-MANAGER` (admin tier, all 8 modules), `IT-CHANGE-MANAGER` (primary on change-mgmt; secondary on incident-mgmt, sla-mgmt), `IT-PROBLEM-MANAGER` (primary on problem-mgmt; secondary on incident-mgmt, knowledge), `KNOWLEDGE-AUTHOR` (primary on knowledge; secondary on incident-mgmt, service-request), `END-USER-REQUESTER` (cross-functional; primary on service-request, knowledge `:read`). Each carries `persona_modules` (≥2 each) + `role_permissions` bundle (tier-level grants preferred). | Author 5-6 roles in a focused loader with `persona_modules` + `role_permissions`. |
 | B1-S2 | **B10b (hard fail)** | **~52 inbound handoffs to ITSM (target_domain_id=1) lack `target_domain_module_id`.** Examples: handoffs 248, 257, 266, 267, 461, 463, 466, 603, 604, 611, 624, 626, 642, 644, 646, 650, 652, 655, 660, 663, 664, 674-678, 682, 686, 689, 703, 706, 714, 727, 736, 739, 757, 763, 765, 774, 779, 788, 834, 841, 843, 866, 878, 893, 898, 901, 927, 928, 932, 943, 952. Most resolve deterministically to ITSM-INCIDENT-MGMT (38) or ITSM-CHANGE-MGMT (41) based on the payload data_object_id and DMDO role-strength rule. | Run a backfill loader following [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts) shape. For each, resolve target_module = the ITSM module holding the payload `data_object_id` at strongest role (master > embedded_master > contributor > consumer); ties left NULL with explicit surface. |
 | B1-S3 | **B10b outbound** | Handoffs 148, 149 (outbound to FSM domain 130 via RMM payload `rmm_tickets` id 223) have NULL on BOTH `source_domain_module_id` AND `target_domain_module_id`. ITSM does not master `rmm_tickets` (data_object 223 belongs to RMM domain 130, but here ITSM is publishing it). This is likely scope creep — the publisher should be RMM not ITSM. | Surface to user; either DELETE these two handoffs (scope creep — RMM should publish them) or re-attribute source_domain → RMM. |
 | B1-S4 | **B10b outbound** | Handoff 630 (`knowledge_article.published` → KMS domain 33, payload 51) has NULL `target_domain_module_id`. KMS may not be modularized yet. | If KMS has modules, derive target_module deterministically; otherwise leave NULL with a follow-up flag for KMS audit. |
@@ -123,13 +123,13 @@ User reply: **fix bucket 1 (all)**. Per-item resolution within Bucket 1:
 | S6 | Direct CLI: `PATCH /trigger_events?id=eq.39 {data_object_id: 93}` | 1 row | trigger_event 39 now publishes on AIOPS `event_correlations` |
 | S3 | Direct CLI: `DELETE /handoffs?id=in.(148,149)` | 2 rows | RMM scope creep removed |
 | P (permissions) | [.tmp_deploy/fix_itsm_audit_2026_05_29.ts](../.tmp_deploy/fix_itsm_audit_2026_05_29.ts) Phase P | 32 rows: 24 baseline + 8 workflow-gate | E-band prerequisite; permissions for all 8 ITSM modules. Workflow gates: `:resolve_incident`, `:close_incident`, `:approve_service_request`, `:publish_catalog_item`, `:retire_catalog_item`, `:resolve_problem`, `:approve_change`, `:publish_article`. |
-| S1 (E1 roles) | Same loader Phase R | 4 roles + 19 role_modules + 23 role_permissions | `IT-SERVICE-DESK-AGENT`, `IT-SERVICE-DESK-MANAGER`, `IT-CHANGE-MANAGER`, `IT-KNOWLEDGE-AUTHOR`. Function-scoped per SKILL convention; bundles prefer tier-level grants + specific gates. |
+| S1 (E1 roles) | Same loader Phase R | 4 roles + 19 persona_modules + 23 role_permissions | `IT-SERVICE-DESK-AGENT`, `IT-SERVICE-DESK-MANAGER`, `IT-CHANGE-MANAGER`, `IT-KNOWLEDGE-AUTHOR`. Function-scoped per SKILL convention; bundles prefer tier-level grants + specific gates. |
 | S2 (B10b) | Same loader Phase B10b | 55 rows | Bulk re-payload to `data_object_id=47` + `target_domain_module_id=38`. All inbound NULL-target rows resolved to ITSM-INCIDENT-MGMT since the semantic payload is the new incident, not the source-side entity. |
 | H1 (top batch) | Same loader Phase H | 9 new (1 dedup-skipped) | `human_curated` tags on outbound 30 / 630 / 631 + inbound 28 / 55 / 57 / 142 / 143 / 162. Handoff 186 already had a discovery-override tag pointing at the same PCF; loader skipped to avoid duplicate. |
 
 Re-verification queries:
 
-- **E1**: `/role_modules?domain_module_id=in.(38..45)` returns 19 rows across the 4 roles. PASS.
+- **E1**: `/persona_modules?domain_module_id=in.(38..45)` returns 19 rows across the 4 roles. PASS.
 - **B10b**: `/handoffs?target_domain_id=eq.1&target_domain_module_id=is.null` returns `[]`. PASS.
 - **H1**: 10 `human_curated` rows on ITSM-touching handoffs; ~45 remaining cross-domain handoffs deferred to follow-up.
 
@@ -156,7 +156,7 @@ Reviewed the original Bucket 1 against the prior Fixes-applied table. Identified
 
 | Original ID | Status after 2026-05-29 | Classification | Reason |
 |---|---|---|---|
-| B1-S1 (E1 roles) | Applied (4 roles, 19 role_modules, 23 role_permissions) | n/a | closed |
+| B1-S1 (E1 roles) | Applied (4 roles, 19 persona_modules, 23 role_permissions) | n/a | closed |
 | B1-S2 (B10b inbound NULL target) | Applied (55 rows retargeted to module 38) | n/a | closed |
 | B1-S3 (handoffs 148, 149 scope creep) | Applied (DELETED) | n/a | closed |
 | B1-S4 (handoff 630 NULL target) | Self-resolved (KMS unmodularized) | n/a | closed |
@@ -176,7 +176,7 @@ Reviewed the original Bucket 1 against the prior Fixes-applied table. Identified
 
 | ID | Reason for deferral |
 |---|---|
-| B1-S5 | Needs new `trigger_events` per intra-domain edge (incident→problem, problem→change, change→CI, request→incident, sla→incident, sla→request, incident→knowledge, problem→knowledge). event_name, event_category, payload data_object_id, and condition each require editorial choice. Surface to user for a focused creative pass. |
+| B1-S5 | Needs new `trigger_events` per intra-domain relationship (incident→problem, problem→change, change→CI, request→incident, sla→incident, sla→request, incident→knowledge, problem→knowledge). event_name, event_category, payload data_object_id, and condition each require editorial choice. Surface to user for a focused creative pass. |
 | B1-S7 | Cross-domain attribution call; belongs to ITAM audit. |
 | H1 queue | ~45 inbound handoffs (target_module 38 after S2 backfill) lack per-handoff PCF pre-specification. Bulk-assigning PCF 20903 would mass-pollute the catalog; a per-handoff trigger_event review is required to separate the "Triage IT service delivery incidents" bulk from the Pass-3 misfits. Surface as a follow-up tagging pass. |
 
@@ -198,7 +198,7 @@ Reviewed the original Bucket 1 against the prior Fixes-applied table. Identified
 
 ### Summary
 
-Structural Validate b1 pass against the live catalog. Footprint: domain id 1, 8 full modules, 7 masters (`service_incidents`, `service_requests`, `service_problems`, `service_changes`, `knowledge_articles`, `service_catalog_items`, `service_slas`), 4 roles (`IT-SERVICE-DESK-AGENT`, `IT-SERVICE-DESK-MANAGER`, `IT-CHANGE-MANAGER`, `IT-KNOWLEDGE-AUTHOR`) with 19 `role_modules` and 23 `role_permissions` rows, 8 system skills (one per module), 57 `skill_tools` rows, 80 cross-domain handoffs, 65 `handoff_processes` rows (55 agent_curated, 6 discovery_substring, 4 discovery_override, 0 approved).
+Structural Validate b1 pass against the live catalog. Footprint: domain id 1, 8 full modules, 7 masters (`service_incidents`, `service_requests`, `service_problems`, `service_changes`, `knowledge_articles`, `service_catalog_items`, `service_slas`), 4 roles (`IT-SERVICE-DESK-AGENT`, `IT-SERVICE-DESK-MANAGER`, `IT-CHANGE-MANAGER`, `IT-KNOWLEDGE-AUTHOR`) with 19 `persona_modules` and 23 `role_permissions` rows, 8 system skills (one per module), 57 `skill_tools` rows, 80 cross-domain handoffs, 65 `handoff_processes` rows (55 agent_curated, 6 discovery_substring, 4 discovery_override, 0 approved).
 
 Bands run: S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H.
 
@@ -214,8 +214,8 @@ Bands run: S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H
 | B1 | PASS | 7 master rows |
 | B4 pattern flags | OPEN | prior B2-S2 (incident.has_personal_content, knowledge.has_personal_content, change.has_submit_lock re-eval) unresolved |
 | B5 embedded_master integrity | PASS | no orphan embedded_master rows in this domain |
-| B6 intra-domain relationships | PASS | 9 edges across the 7 masters |
-| B7 `users` edges | PASS | covered by prior audit's E-band load |
+| B6 intra-domain relationships | PASS | 9 relationships across the 7 masters |
+| B7 relationships to `users` | PASS | covered by prior audit's E-band load |
 | B9 outbound events + handoffs | PASS | every master with a state machine has trigger events; outbound coverage present |
 | B9b intra-domain cross-module handoffs | FAIL | zero rows with `source_domain_id=target_domain_id=1`; carries forward residual B1-S5 from 2026-05-29 |
 | B10b per-module attribution | PASS | inbound `target_domain_module_id=is.null` returns `[]`; outbound `source_domain_module_id=is.null` returns `[]` |
@@ -224,8 +224,8 @@ Bands run: S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H
 | C1 business function ownership | PASS | IT Service Desk owner; Security contributor; HR + Finance consumers |
 | D1 UI spot-check | PASS | URLs renderable; deferred to user post-fix |
 | E1 role coverage | PASS | 4 roles; multi-module domain threshold (>=3) met |
-| E2 2-module floor per role | PASS | every role >=2 `role_modules` |
-| E3 interaction_level set | PASS | every `role_modules` row primary or secondary |
+| E2 2-module floor per role | PASS | every role >=2 `persona_modules` |
+| E3 interaction_level set | PASS | every `persona_modules` row primary or secondary |
 | E4 role_permissions non-empty | PASS | bundles 5-7 rows per role |
 | E5 Path A/Path B agreement | PASS | implied by E2 + E4 success on single-domain role set |
 | F1 legacy domain-level skills retired | PASS | no `domain_id=eq.1` system skill with `domain_module_id=is.null` |
@@ -253,7 +253,7 @@ Bands run: S, A, M, B (B5/B7/B9/B9b/B10b/B11/B12), C, D, E (E1-E5), F (F1-F5), H
 
 | ID | Reason |
 |---|---|
-| B1B-B9b | New `trigger_events` authoring per intra-domain edge (incident -> problem, problem -> change, change -> CI, request -> incident, sla -> incident, sla -> request, incident -> knowledge, problem -> knowledge). Each needs event_name + payload + category editorial choice. Carries from 2026-05-29 B1-S5. |
+| B1B-B9b | New `trigger_events` authoring per intra-domain relationship (incident -> problem, problem -> change, change -> CI, request -> incident, sla -> incident, sla -> request, incident -> knowledge, problem -> knowledge). Each needs event_name + payload + category editorial choice. Carries from 2026-05-29 B1-S5. |
 | B1B-M7-MONITORING-ALERTS | Cross-domain canonical-owner question (ITOM vs RMM); resolved by ITOM + RMM b1 audits. |
 | B1B-ASSET-FAILURE | Cross-domain attribution call on event 65 `service_incident.asset_failure`; resolved in ITAM audit. |
 
@@ -296,7 +296,7 @@ re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-
 
 ### Summary
 
-State-driven Validate pass against `audits/ITSM/state.yaml`. Resolved domain id 1, 8 full modules (38-45), 7 masters (47-53). Worked only the open state items, classifying each EXECUTE / SURFACE / LEAVE. Loader: `.tmp_deploy/fix_itsm_audit_2026_06_07.ts` (idempotent, read-live-then-write, all new rows `record_status='new'`). Snapshot was partly stale: the recorded 16-id H1 set had collapsed to 11 genuinely-untagged handoffs (handoff 9 is a non-ITSM Onboarding->HRSD edge already tagged; 140/177/642/644 already tagged; new handoff 1200 already tagged).
+State-driven Validate pass against `audits/ITSM/state.yaml`. Resolved domain id 1, 8 full modules (38-45), 7 masters (47-53). Worked only the open state items, classifying each EXECUTE / SURFACE / LEAVE. Loader: `.tmp_deploy/fix_itsm_audit_2026_06_07.ts` (idempotent, read-live-then-write, all new rows `record_status='new'`). Snapshot was partly stale: the recorded 16-id H1 set had collapsed to 11 genuinely-untagged handoffs (handoff 9 is a non-ITSM Onboarding->HRSD relationship already tagged; 140/177/642/644 already tagged; new handoff 1200 already tagged).
 
 ### Executed (additive/corrective, all `record_status='new'`)
 
@@ -345,7 +345,7 @@ ServiceNow ITSM (suite leader; CSDM 5), Atlassian Jira Service Management + Stat
 ### Diff vs live footprint
 
 - **SCOPE-CREEP: 0.** All 7 current masters (service_incidents, service_requests, service_catalog_items, service_problems, service_changes, knowledge_articles, service_slas) are validated as ITSM-owned by all five vendors. No current master is owned elsewhere.
-- **WRONG-OWNERSHIP: 2.** (a) chargeback/cost-charge records belong to IT Financial Management / SPM (ServiceNow ships it as Financial Charging in ITFM, billing a business service, not the ITSM ticket); ITSM-CHARGEBACK should stay a cross-domain capability link, not get an ITSM master. (b) Raw alert/monitoring stream leans ITOM, not ITSM (the event-to-incident bridge is ITSM; the alert master is the ITSM/ITOM seam).
+- **WRONG-OWNERSHIP: 2.** (a) chargeback/cost-charge records belong to IT Financial Management / SPM (ServiceNow ships it as Financial Charging in ITFM, billing a business service, not the ITSM ticket); ITSM-CHARGEBACK should stay a cross-domain capability relationship, not get an ITSM master. (b) Raw alert/monitoring stream leans ITOM, not ITSM (the event-to-incident bridge is ITSM; the alert master is the ITSM/ITOM seam).
 - **MISSING: 6 in-domain master candidates + 1 newly surfaced** (all CONFIRMED additive masters into existing modules - no module restructure, so they stay `b3`, not `b2`): service_outages, change_collisions, cab_meetings, service_offerings, virtual_agent_conversations, walkup_visits (RESHAPE: single master, no walkup_kiosks), plus newly-surfaced service_releases. Out-of-domain MISSING (NOT ITSM gaps): configuration_items (CMDB), service_assets / service_contracts / purchase_orders (ITAM/procurement), chargeback_records (ITFM/SPM).
 - **MODULARIZATION: 4 findings, no new module needed.** RELEASE folds into ITSM-CHANGE-MGMT (which also absorbs cab_meetings + change_collisions); MAJOR-INCIDENT stays a flag/parent on service_incidents, not a separate master; ITSM-AGENT-WORKSPACE (no master today) gains walkup_visits + virtual_agent_conversations, retiring 2 of 3 capability-orphans; ITSM-EVENT-MGMT is the weakest fit - keep it (it has a master, Rule #14) but narrow to the event-to-incident bridge and treat raw alert streams as an ITOM/OBS inbound handoff.
 
@@ -380,7 +380,7 @@ Processed `a-ITSM.md` per Rule #22. Resolved domain id 1. All catalog writes are
 - **q4 / B2-PATTERN-FLAGS.changelock (a4 empty -> Recommended yes):** PATCH `data_objects` id 50 service_changes.has_submit_lock -> true (record_status stays new).
 - **q5 / B2-SLA-LIFECYCLE (a5=a):** accept config-shape (catalog) for service_slas; no state machine authored, no write needed (B12 already passes on the catalog classification). Item removed from state.yaml.
 - **q6 / B3 backlog (a6 empty -> Recommended yes, add all seven):** INSERT 7 new `data_objects` + 7 master `domain_module_data_objects` rows, all at record_status=new. service_outages (id 1261, operational_workflow) master on ITSM-INCIDENT-MGMT; service_releases (1262, operational_workflow), cab_meetings (1263, operational_record), change_collisions (1264, operational_record) masters on ITSM-CHANGE-MGMT; service_offerings (1265, catalog) master on ITSM-SERVICE-REQUEST; virtual_agent_conversations (1266, operational_record) and walkup_visits (1267, operational_workflow) masters on ITSM-AGENT-WORKSPACE (its first own masters). All seven B3 items removed from state.yaml.
-- **q7-q20 / 14 x B2-B9D-OWN-* (a7..a20 empty -> Recommended a, "ITSM owns it"):** the user accepted ITSM ownership of each forwarded step. ITSM currently has zero personas reaching its modules (role_modules on 38-45 returns [], confirming B1A-PHASE-P), so the R/A `process_raci` realization cannot be authored now: it is deferred to the persona-authoring pass. The 14 b2 ownership FORKS are decided and removed; the realization obligation is folded into a single B1B item blocked on B1A-PHASE-P. Three of the fourteen (B2-B9D-OWN-272 "Develop and execute IT resilience and continuity operations", -370 "Create remediation plans", -285 "Manage change deployment control") have been RECLASSIFIED by the committed b9d_resolver (2026-06-16 run) from ITSM ORPHAN to RE-TAG: the coarse tags on handoffs 682/686 (DATA-AI-PLAT), 841 (GRC), 703/706 (NCDB/LCAP) should re-point to 8.7.5.9 "Triage IT service delivery incidents" (already ITSM-owned). The ownership answer is honored (ITSM owns the triage work they fold into); the row-level re-point is a DESTRUCTIVE source-side edit recorded against the source domains' audits (DATA-AI-PLAT, GRC, NCDB, LCAP), not ITSM, so it is routed there and left for their sign-off, not executed here.
+- **q7-q20 / 14 x B2-B9D-OWN-* (a7..a20 empty -> Recommended a, "ITSM owns it"):** the user accepted ITSM ownership of each forwarded step. ITSM currently has zero personas reaching its modules (persona_modules on 38-45 returns [], confirming B1A-PHASE-P), so the R/A `process_raci` realization cannot be authored now: it is deferred to the persona-authoring pass. The 14 b2 ownership FORKS are decided and removed; the realization obligation is folded into a single B1B item blocked on B1A-PHASE-P. Three of the fourteen (B2-B9D-OWN-272 "Develop and execute IT resilience and continuity operations", -370 "Create remediation plans", -285 "Manage change deployment control") have been RECLASSIFIED by the committed b9d_resolver (2026-06-16 run) from ITSM ORPHAN to RE-TAG: the coarse tags on handoffs 682/686 (DATA-AI-PLAT), 841 (GRC), 703/706 (NCDB/LCAP) should re-point to 8.7.5.9 "Triage IT service delivery incidents" (already ITSM-owned). The ownership answer is honored (ITSM owns the triage work they fold into); the row-level re-point is a DESTRUCTIVE source-side edit recorded against the source domains' audits (DATA-AI-PLAT, GRC, NCDB, LCAP), not ITSM, so it is routed there and left for their sign-off, not executed here.
 - **B1A-B9D-VERIFY:** B9d was run this pass via `bun run scripts/analytics/b9d_resolver.ts ITSM --dry-run` (78 boundary tags; 33 (process,owner) findings: 21 ORPHAN, 8 RE-TAG, 1 UNOWNED, 3 RESOLVED). Both directions classified. The 14 ITSM-owned ORPHANs are the q7-q20 set (now answered). Remaining cross-domain findings are owned by neighbors (CMDB, ONBOARDING, ITAM) and routed to their files / left for their audits. Item removed.
 - **B2-SKILL-NAMING:** SUPERSEDED 2026-06-06 (per-domain-skill restoration); the tombstone note removed from state.yaml per Rule #22 hygiene (no disposition tombstones).
 

@@ -59,10 +59,10 @@ Zero lifecycle states across every master routes to B12. Trigger event `legal_ho
 | ID | Band | Finding | Fix |
 | --- | --- | --- | --- |
 | B1-S1 | M1 | ECM has 0 `domain_modules` rows. Per Rule #14 every domain must have >=1 module; per Rule #14 a 7-capability domain must have >=2 full modules. The 5 masters sit at the legacy `domain_data_objects` layer only. | Author a 4-module split: `ECM-REPO` (masters `content_documents`, `document_versions`, `document_folders`), `ECM-RECORDS` (masters `records_retention_policies`), `ECM-CLASSIFY` (masters `document_classifications`), `ECM-WORKFLOW` (no master; consumes masters from `ECM-REPO`, hosts workflow + approval-chain entities once Bucket 3 lands). Realize the 7 capabilities across them. Module codes are proposals (see Bucket 2 #2 for alternate splits). |
-| B1-S2 | M4 | Every capability is realized in zero modules (because zero modules exist). Once the split lands, link `ECM-REPO` to `ECM-REPO` capability + `ECM-CAPTURE`; `ECM-RECORDS` to `ECM-RECORDS` + `ECM-INFOGOV`; `ECM-CLASSIFY` to `ECM-CLASSIFY`; `ECM-WORKFLOW` to `ECM-WORKFLOW`; `ECM-AUDIT` to whichever module hosts the audit-trail entity (likely `ECM-RECORDS`, see Bucket 3). | Load `domain_module_capabilities` rows after B1-S1 lands. |
+| B1-S2 | M4 | Every capability is realized in zero modules (because zero modules exist). Once the split lands, relate `ECM-REPO` to `ECM-REPO` capability + `ECM-CAPTURE`; `ECM-RECORDS` to `ECM-RECORDS` + `ECM-INFOGOV`; `ECM-CLASSIFY` to `ECM-CLASSIFY`; `ECM-WORKFLOW` to `ECM-WORKFLOW`; `ECM-AUDIT` to whichever module hosts the audit-trail entity (likely `ECM-RECORDS`, see Bucket 3). | Load `domain_module_capabilities` rows after B1-S1 lands. |
 | B1-S3 | M6 | Every module realizes zero capabilities (trivial consequence of M1). | Resolves automatically when B1-S2 fix lands. |
-| B1-S4 | A3 / solution_domains | Only 2 solutions linked, both Microsoft, both `coverage_level=secondary`. Per A3 the minimum is >=3 solutions and >=1 `primary`. Flagship ECM vendors (OpenText Documentum, Hyland OnBase, M-Files, Box, Laserfiche, IBM FileNet, Microsoft SharePoint) are not modeled as `solutions` rows or not linked to ECM. | Add `solutions` rows + `solution_domains` links: OpenText Documentum (`primary`), Hyland OnBase (`primary`), M-Files (`primary`), Box Content Cloud (`primary`), Laserfiche (`secondary`), IBM FileNet (`secondary`), Microsoft SharePoint Online (`primary` — separate from Syntex). Add Microsoft SharePoint Online as `primary` (Syntex stays `secondary` since it is the AI add-on). Apply Rule #18 in solution descriptions. |
-| B1-S5 | A2 / domain_regulations | 0 `domain_regulations` rows. ECM is the regulated-records substrate for SOX, GDPR, HIPAA, GLBA, FDA 21 CFR Part 11, eIDAS. None are linked. | Insert `domain_regulations` rows: SOX (`mandatory`, US-listed financial-controls retention), GDPR (`mandatory`, EU personal-data retention + erasure), HIPAA (`industry`, US healthcare), GLBA (`industry`, US financial), FDA 21 CFR Part 11 (`industry`, FDA-regulated life sciences), eIDAS (`industry`, EU electronic-signature interop). 6 rows. |
+| B1-S4 | A3 / solution_domains | Only 2 solutions related, both Microsoft, both `coverage_level=secondary`. Per A3 the minimum is >=3 solutions and >=1 `primary`. Flagship ECM vendors (OpenText Documentum, Hyland OnBase, M-Files, Box, Laserfiche, IBM FileNet, Microsoft SharePoint) are not modeled as `solutions` rows or not related to ECM. | Add `solutions` rows + `solution_domains` relationships: OpenText Documentum (`primary`), Hyland OnBase (`primary`), M-Files (`primary`), Box Content Cloud (`primary`), Laserfiche (`secondary`), IBM FileNet (`secondary`), Microsoft SharePoint Online (`primary` — separate from Syntex). Add Microsoft SharePoint Online as `primary` (Syntex stays `secondary` since it is the AI add-on). Apply Rule #18 in solution descriptions. |
+| B1-S5 | A2 / domain_regulations | 0 `domain_regulations` rows. ECM is the regulated-records substrate for SOX, GDPR, HIPAA, GLBA, FDA 21 CFR Part 11, eIDAS. None are related. | Insert `domain_regulations` rows: SOX (`mandatory`, US-listed financial-controls retention), GDPR (`mandatory`, EU personal-data retention + erasure), HIPAA (`industry`, US healthcare), GLBA (`industry`, US financial), FDA 21 CFR Part 11 (`industry`, FDA-regulated life sciences), eIDAS (`industry`, EU electronic-signature interop). 6 rows. |
 | B1-S6 | A1 / catalog UX | `catalog_tagline` and `catalog_description` are empty per Rule #20's A4. | Draft per Rule #20 voice rule (buyer voice: workflow + value, not analyst voice); surface to user BEFORE write. Sample tagline draft: "Store, classify, and retain every document with built-in workflow and compliance audit trails." Sample description: 2-3 paragraphs covering capture, repository + versioning, classification + retention policy, workflow + approvals, eDiscovery + legal-hold posture. User approves wording before any write. |
 | B1-S7 | B1 / data_objects naming | `content_documents` (id 429) is the only non-bare master in the set; the four other masters (`document_versions`, `document_folders`, `document_classifications`, `records_retention_policies`) follow the prefixed pattern (`document_*`, `records_*`). `content_documents` mixes two prefixes. Consistency option: rename to `ecm_documents` to share the `ecm_*` prefix once that becomes the canonical authority claim, OR claim canonical bare-word for `documents` if ECM owns the catalog-wide noun. | Decision belongs in Bucket 2 (rename has cross-domain blast radius: 27 `data_object_relationships` rows + 5 handoffs reference id 429). Surface, do not patch. (Moves to Bucket 2 #3.) |
 | B1-S8 | trigger_events attribution | Trigger event `legal_hold.placed` (id 900) has `data_object_id=429` (`content_documents`) but the event clearly belongs to LSD-mastered `legal_holds` (id 635). This is a duplicate of LSD's `legal_hold.issued` (id 1042) seen from ECM's side. Mis-attribution at source per B10b's "trigger-event data quality" diagnostic. | Decide: either DELETE event 900 + retarget handoff 824 to use LSD's event 1042, OR rename event 900 to `content_document.legal_hold_applied` to keep ECM ownership of the state transition on `content_documents`. Recommend the rename (ECM's `content_documents` does transition into a legal-hold state). Surface as a single PATCH. |
@@ -76,7 +76,7 @@ Zero lifecycle states across every master routes to B12. Trigger event `legal_ho
 | B1-B3 | B10b: 10/10 inbound handoffs have `target_domain_module_id=NULL`. Resolves once B1-S1 lands and the target module is the one that holds the payload data_object. | After module split: PATCH the 10 inbound rows. |
 | B1-B4 | B10b: 8/10 inbound handoffs have `source_domain_module_id=NULL`. Two are populated (919 -> LEGAL-PRACT-MGMT module 136; 828/829 -> WSC module 115). The 8 NULLs are owed by the source domain's B10b (IDP x2, LSD x6). | REPORT-ONLY: route to each source domain's audit. |
 | B1-B5 | B9b: ECM currently has 0 intra-domain handoffs. After the 4-module split lands, the intra-domain handoff candidates derive from cross-module `data_object_relationships`: `document_classifications classifies content_documents` (CLASSIFY -> REPO), `records_retention_policies retains content_documents` (RECORDS -> REPO), `records_retention_policies retains document_folders` (RECORDS -> REPO), `records_retention_policies applies_to_classification document_classifications` (RECORDS -> CLASSIFY), `document_folders contains content_documents` (intra-REPO, skip). Plus the WORKFLOW module's consumer access to all three masters once it lands. | After B1-S1 lands: draft 4 intra-domain handoff rows with `integration_pattern=lifecycle_progression`, `friction_level=low`. |
-| B1-B6 | Stale-or-misclassified `data_object_relationships`: row 300 (`chat_message_attachments captured_in content_documents`, owner_side=target) and row 301 (`chat_channels archives_to content_documents`, owner_side=target) appear to reverse the natural direction (a chat attachment is not "captured in" a document; an attachment IS a document or becomes one). Rows 587 (`content_documents captures chat_message_attachments`, owner_side=target) and 588 (`document_folders archives chat_channels`, owner_side=target) duplicate the same edges with the verbs flipped. | Surface: are 300/301 and 587/588 four separate edges or are 587/588 the corrected mirror that should replace 300/301? Likely the cluster-drafts era authored 300/301 first then re-authored from ECM's side with 587/588. Recommend DELETE 300/301 (keep ECM's source-side rows 587/588). Bucket 2 #4 (calls for owner review). |
+| B1-B6 | Stale-or-misclassified `data_object_relationships`: row 300 (`chat_message_attachments captured_in content_documents`, owner_side=target) and row 301 (`chat_channels archives_to content_documents`, owner_side=target) appear to reverse the natural direction (a chat attachment is not "captured in" a document; an attachment IS a document or becomes one). Rows 587 (`content_documents captures chat_message_attachments`, owner_side=target) and 588 (`document_folders archives chat_channels`, owner_side=target) duplicate the same relationships with the verbs flipped. | Surface: are 300/301 and 587/588 four separate relationships or are 587/588 the corrected mirror that should replace 300/301? Likely the cluster-drafts era authored 300/301 first then re-authored from ECM's side with 587/588. Recommend DELETE 300/301 (keep ECM's source-side rows 587/588). Bucket 2 #4 (calls for owner review). |
 
 #### B12 lifecycle states (zero loaded across all 5 masters)
 
@@ -135,7 +135,7 @@ H-band measures:
 
 3. **`content_documents` rename.** B1-S7. Bare canonical `documents` is owned by no other domain (no naming collision found). Options: (a) keep `content_documents` as-is, (b) rename to `documents` and claim `is_canonical_bare_word=true` with rationale ("ECM is the canonical owner of internal-document mastery; other domains [DXP, KMS, LSD] consume documents from ECM"), (c) rename to `ecm_documents` for prefix consistency. Cross-domain blast radius: 27 `data_object_relationships` + 5 handoffs reference id 429, all surgically PATCHable (FK is id, not name). Independent of Bucket 3.
 
-4. **Duplicate WSC `data_object_relationships`.** B1-B6. Rows 300/301 (`chat_message_attachments captured_in content_documents` + `chat_channels archives_to content_documents`) and rows 587/588 (`content_documents captures chat_message_attachments` + `document_folders archives chat_channels`) describe the same two edges. Recommend DELETE 300/301 (keep ECM's source-side authoring 587/588 — the source side carries the canonical verb per the B6/B8 ownership rule).
+4. **Duplicate WSC `data_object_relationships`.** B1-B6. Rows 300/301 (`chat_message_attachments captured_in content_documents` + `chat_channels archives_to content_documents`) and rows 587/588 (`content_documents captures chat_message_attachments` + `document_folders archives chat_channels`) describe the same two relationships. Recommend DELETE 300/301 (keep ECM's source-side authoring 587/588 — the source side carries the canonical verb per the B6/B8 ownership rule).
 
 5. **Pairwise reconciliation scope.** Only one neighbor is weight >=3: LSD (5 inbound + 1 outbound = 6 total). Run inline below as Pass 4 (deep dive). Lighter neighbors get one-line summaries. Decide whether to also kick off pairwise on DLP (2 outbound) and IGA (2 outbound) since both have NULL `source_domain_module_id` on every row owed to ECM.
 
@@ -166,9 +166,9 @@ Universal-or-near-universal vendor entities surfaced by the market enumeration b
 
 ### Pass 3 — Neighbor discovery
 
-Cross-domain edges discovered from `handoffs` (source = ECM or target = ECM):
+Cross-domain relationships discovered from `handoffs` (source = ECM or target = ECM):
 
-| Neighbor | Outbound rows | Inbound rows | DMDO cross-refs | Edge weight | Tier |
+| Neighbor | Outbound rows | Inbound rows | DMDO cross-refs | Relationship weight | Tier |
 | --- | --- | --- | --- | --- | --- |
 | LSD | 1 (id 824) | 5 (ids 911, 912, 915, 1028, 1031) | implicit via 4 LSD-mastered `data_object_relationships` rows | 6 | heavy (deep dive) |
 | IGA | 2 (ids 823, 839) | 0 | 2 IGA modules consume ECM's `document_folders` (id 431) + `content_documents` (id 429) — note IGA already has populated `target_domain_module_id` on the 2 outbound rows | 4 | medium |
@@ -180,11 +180,11 @@ Cross-domain edges discovered from `handoffs` (source = ECM or target = ECM):
 | GRC | 1 (id 827) | 0 | 1 relationship row | 1 | light |
 | LEGAL-PRACT-MGMT | 0 | 1 (id 919) | 1 relationship row | 1 | light |
 
-Only LSD crosses the edge-weight 3 threshold for the deep-dive pass. IGA is borderline at weight 4 but its 2 outbound rows already have populated target module FKs (the only ECM-related neighbor in that shape), so the diff section would mostly be empty. Surface the heavy LSD diff inline; lighter neighbors get one-line summaries.
+Only LSD crosses the relationship-weight 3 threshold for the deep-dive pass. IGA is borderline at weight 4 but its 2 outbound rows already have populated target module FKs (the only ECM-related neighbor in that shape), so the diff section would mostly be empty. Surface the heavy LSD diff inline; lighter neighbors get one-line summaries.
 
 ### Pass 4 — Pairwise reconciliation per neighbor
 
-#### ECM <-> LSD (edge weight 6)
+#### ECM <-> LSD (relationship weight 6)
 
 **Direction 1: ECM -> LSD (1 row).**
 
@@ -239,7 +239,7 @@ Per Rule #11: these route to other domains' audits. ECM does not author fixes fo
 - **IDP B10b** owes `source_domain_module_id` on handoffs 732, 735 (IDP -> ECM).
 - **LEGAL-PRACT-MGMT B10b** owes `target_domain_module_id` on handoff 919 (already populated source side from LSD module 136 reference is via LEGAL-PRACT-MGMT module 136; verify the target NULL is owed by ECM or by LEGAL-PRACT-MGMT's outbound-target convention).
 - **LSD B9 candidate:** consider adding outbound handoff `legal_matter.opened -> ECM` to formalize the matter-to-folder provisioning leg (currently handoff 915 attributes the event differently from its trigger_event.data_object_id; LSD's audit could either fix event 324's attribution or split the event into matter-specific variants).
-- **WSC B10b** owes the duplicate-edge cleanup (rows 300, 301) on its side, although the actual DELETE belongs in whichever side authored the row first; that history is not visible here.
+- **WSC B10b** owes the duplicate-relationship cleanup (rows 300, 301) on its side, although the actual DELETE belongs in whichever side authored the row first; that history is not visible here.
 
 ### Decisions
 
@@ -259,7 +259,7 @@ Applied only the technical, no-judgment subset of Bucket 1 (audit's "Fixes appli
 
 | Item | Type | Outcome |
 | --- | --- | --- |
-| B1-S5 | INSERT 6 `domain_regulations` | linked ECM (91) to SOX (mandatory), GDPR (mandatory), HIPAA (conditional), GLBA (conditional), FDA 21 CFR Part 11 (id 22, conditional), eIDAS (id 34, conditional). Mapped audit's "industry" applicability to enum `conditional` per Rule #13 (`industry` is not a valid value; the description on `conditional` ("applies under specific circumstances") matches the audit's intent). |
+| B1-S5 | INSERT 6 `domain_regulations` | related ECM (91) to SOX (mandatory), GDPR (mandatory), HIPAA (conditional), GLBA (conditional), FDA 21 CFR Part 11 (id 22, conditional), eIDAS (id 34, conditional). Mapped audit's "industry" applicability to enum `conditional` per Rule #13 (`industry` is not a valid value; the description on `conditional` ("applies under specific circumstances") matches the audit's intent). |
 | B1-S8a | PATCH enum backfill | `trigger_events.event_category` on event 900 set from `''` to `state_change`. |
 | B1-S8b | PATCH naming rename | `trigger_events.event_name` on event 900 renamed `legal_hold.placed` -> `content_document.legal_hold_applied`. `data_object_id` stays 429 (`content_documents`); handoff 824 keeps its trigger_event_id FK. Disambiguates from LSD-published `legal_hold.issued` (event 1042). |
 | B1-APQC DELETE | DELETE 5 stale rows | `handoff_processes` ids 161, 162, 163, 164, 165 deleted (all `discovery_substring` -> PCF 339 `Document trade`, which the audit identified as wrong attributions to international-trade documents rather than ECM content). |
@@ -274,7 +274,7 @@ Applied only the technical, no-judgment subset of Bucket 1 (audit's "Fixes appli
 Each entry is gated on user judgment, a separate audit pass, or rules excluded by the residual-fix scope:
 
 1. **B1-S1** module split (4 candidate ECM modules) — gated on Bucket 2 #2 "user picks shape" (new entities, new modules).
-2. **B1-S2** `domain_module_capabilities` links — gated on B1-S1.
+2. **B1-S2** `domain_module_capabilities` relationships — gated on B1-S1.
 3. **B1-S3** trivial consequence of M1 — gated on B1-S1.
 4. **B1-S4** add 5+ solutions (OpenText, Hyland, M-Files, Box, Laserfiche, FileNet, SharePoint Online) — new entities, deferred.
 5. **B1-S6** `catalog_tagline` + `catalog_description` — Rule #20 forbids without per-row user approval of exact wording.
@@ -364,18 +364,18 @@ All five masters at zero lifecycle states routes to B12 (carried forward as B1-L
 | A5 | skip | Opt-in only. |
 | M1 | FAIL | 0 `domain_modules`. Headline blocker, gates M2 / M4 / M5 / M6 / M7 / M8 / B9b / B10b / E1-E5 / F2-F5. |
 | M2 | FAIL (consequential) | 7 capabilities require >=2 full modules. |
-| M4 | FAIL (consequential) | Every capability realised in zero modules. |
+| M4 | FAIL (consequential) | Every capability realized in zero modules. |
 | M5 | n/a | No lifecycle states exist. |
-| M6 | FAIL (consequential) | No modules realise any capability. |
-| M7 | n/a | No `domain_module_data_objects` rows to evaluate single-master integrity. Domain-level `domain_data_objects` shows each of the 5 masters present exactly once with `role='master'`. |
+| M6 | FAIL (consequential) | No modules realize any capability. |
+| M7 | n/a | No `domain_module_data_objects` rows to evaluate single-master integrity. Domain-level `domain_data_objects` shows each of the 5 masters present exactly once with `held_as='master'`. |
 | M8 | n/a | No modules. |
 | B1 | pass | 5 master rows. |
 | B2 | pass | All 5 masters carry `singular_label` and `plural_label`. |
 | B3 | pass | All 5 masters are prefixed names. Naming arbitration not required. |
 | B4 | needs positive re-evaluation | All three pattern flags default `false` on every master. Per Rule #12 + B4 review, surface to user whether any are true (e.g. `content_documents.has_personal_content` likely true for HR-stored content). New Bucket 2 candidate: see #6. |
 | B5 | pass | Zero `embedded_master` rows. |
-| B6 | pass with carry-forward | Intra-domain edges 572-577 cover folder/version/classification/retention relationships. Duplicate rows 300/301 vs 587/588 still pending DELETE owner review (Bucket 2 #4). |
-| B7 | pass | Users edges loaded: rows 578-583 (`users authored content_documents`, `owns`, `revised`, `stewards`, `maintains`). |
+| B6 | pass with carry-forward | Intra-domain relationships 572-577 cover folder/version/classification/retention relationships. Duplicate rows 300/301 vs 587/588 still pending DELETE owner review (Bucket 2 #4). |
+| B7 | pass | Relationships to `users` loaded: rows 578-583 (`users authored content_documents`, `owns`, `revised`, `stewards`, `maintains`). |
 | B8 | pass | Outbound cross-domain relationships cover DLP, IGA, AUDIT, KMS, GRC, LSD, LEGAL-PRACT-MGMT, IDP, WSC payloads on this side. |
 | B9 | pass | 7 events cover the master state-transitions ECM publishes; each event has >=1 handoff. |
 | B9b | n/a | Skipped: <2 modules. Re-evaluate after M1 fix. |
@@ -388,7 +388,7 @@ All five masters at zero lifecycle states routes to B12 (carried forward as B1-L
 | E1-E5 | vacuous | Pre-module domain; role authoring blocked behind the 2-module floor. Resolves after M1. |
 | F1 | FAIL (transitional) | Legacy domain-level `ecm-system` skill (id 54, `domain_module_id=null`) remains. Acceptable transitional state until module-level skills exist; converts after M1. |
 | F2-F5 | n/a | No `domain_modules` rows; module-level system skills not yet authorable. |
-| F7 | n/a | No skill_tools link channel primitives. |
+| F7 | n/a | No skill_tools relationship channel primitives. |
 | H1 | partial | Coverage: 18/18 cross-domain handoffs carry an `agent_curated` row (full coverage achieved by 2026-05-31 continuation). Quality headline: 0/18 `record_status='approved'`. Reclassification finding (new this audit): handoffs 911, 912, 915, 1028, 1031 (LSD -> ECM) carry PCF ids 373, 396, 373, 373, 397 (legal-investigation cluster) which describe LSD-side activity, not ECM's receive-side content control. The proper PCF for receive-side content workflows is in 8.4 (`Control delivered content` 430, `Develop and manage content` 428, `Retain records` 1440). Bucket 2 #5. |
 
 #### New B-band data quality finding
@@ -412,12 +412,12 @@ All five masters at zero lifecycle states routes to B12 (carried forward as B1-L
 | ID | Band | Blocked until | Notes |
 | --- | --- | --- | --- |
 | B1-S1 | M1 / M2 / M4 / M6 / M7 / M8 | Bucket 2 #2 (module split shape) | Author 3 / 4 / 5 modules per user's pick. |
-| B1-S2 | M4 | B1-S1 | Link 7 capabilities to module(s). |
+| B1-S2 | M4 | B1-S1 | Relationship 7 capabilities to module(s). |
 | B1-S3 | M6 | B1-S1 | Reverse-orphan cure. |
 | B1-B1 | B10b outbound source | B1-S1 | PATCH 8 outbound `source_domain_module_id` to the master-resolution result. |
 | B1-B3 | B10b inbound target | B1-S1 | PATCH 10 inbound `target_domain_module_id` to the consumer-DMDO result. |
 | B1-B5 | B9b intra-domain | B1-S1 | Draft 4 intra-domain handoffs (`document_classifications classifies content_documents`, `records_retention_policies retains content_documents`, `records_retention_policies retains document_folders`, `records_retention_policies applies_to_classification document_classifications`). |
-| B1-L1..L5 | B12 + M5 | B1-S1 | 5 lifecycle state machines with `requires_permission` plus `domain_module_id` per realising module. |
+| B1-L1..L5 | B12 + M5 | B1-S1 | 5 lifecycle state machines with `requires_permission` plus `domain_module_id` per realizing module. |
 
 #### APQC TAGGING delta
 
@@ -438,7 +438,7 @@ The H-band's coverage measure is at 18/18 after the 2026-05-31 continuation. The
 | --- | --- | --- |
 | `document_workflow_definitions` + `document_workflow_instances` | ECM-WORKFLOW | Universal (OpenText, Hyland, M-Files, Laserfiche, Box, FileNet). Anchors ECM-WORKFLOW as a real master-holding module. |
 | `document_approvals` | ECM-WORKFLOW | Universal; 5 of 7 vendors model approvals as a distinct entity. |
-| `document_audit_trail_entries` | ECM-RECORDS or ECM-AUDIT | Universal compliance entity; supports the regulatory load already linked. |
+| `document_audit_trail_entries` | ECM-RECORDS or ECM-AUDIT | Universal compliance entity; supports the regulatory load already related. |
 | `metadata_property_definitions` | ECM-REPO or ECM-CLASSIFY | M-Files-anchored, universal at OpenText / Hyland / SharePoint. |
 | `document_renditions` | ECM-REPO | Universal (PDF / preview / thumbnail). |
 
@@ -507,7 +507,7 @@ CLASSIFY into the repository module and AUDIT into the records/governance module
 ### Catalog-wide master pre-check
 
 Ran the mandatory pre-check on all five intended masters (429, 430, 431, 432, 433) BEFORE writing
-any `role='master'` row: `/domain_module_data_objects?data_object_id=in.(...)&role=eq.master`
+any `held_as='master'` row: `/domain_module_data_objects?data_object_id=in.(...)&held_as=eq.master`
 returned zero rows. No foreign module masters any of the five, so every ECM master could be authored
 as a true `master` (none demoted to `embedded_master`). The loader also re-runs this guard on every
 invocation and aborts if a foreign master ever appears.
@@ -613,9 +613,9 @@ existing `notify_person` abstraction tool 913 rather than minting duplicates):
 - ecm_workflow_agent (391): query_documents (req), query_document_versions (opt),
   route_content_document (req), approve_content_document (req), notify_person (req). [5 tools]
 
-Channel-vs-capability: ECM-WORKFLOW links the `notify_person` abstraction (channel rule default),
+Channel-vs-capability: ECM-WORKFLOW relationships the `notify_person` abstraction (channel rule default),
 not a channel primitive. F4 invariant (operation_kind <-> data_object_id) verified clean across all
-16 linked tools (0 violations). Each module skill clears the F3 >=3-required floor with >=1 query
+16 related tools (0 violations). Each module skill clears the F3 >=3-required floor with >=1 query
 and >=1 mutate.
 
 Legacy skill `ecm-system` (id 54) was left in place (its retirement is B1B-F1, blocked behind this

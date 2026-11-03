@@ -141,7 +141,7 @@ b1b:
   - id: B1B-T8
     summary: Author 9-12 intra-domain data_object_relationships once T6 lands (B6).
     finding: |
-      Zero data_object_relationships. Once T6 lands, expected edges: threat_indicators
+      Zero data_object_relationships. Once T6 lands, expected relationships: threat_indicators
       attributed_to threat_actors; threat_indicators part_of threat_campaigns; threat_actors uses
       attack_techniques; threat_actors uses malware_families; threat_campaigns staged_by
       threat_actors; malware_families implements attack_techniques; intelligence_reports analyzes
@@ -151,9 +151,9 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-T6}
 
   - id: B1B-T9
-    summary: Author 4-5 users-edge data_object_relationships once T6 lands (B7, Rule #10).
+    summary: Author 4-5 relationship to users data_object_relationships once T6 lands (B7, Rule #10).
     finding: |
-      Zero users-edge rows. Once T6 lands, expected: users authors intelligence_reports; users
+      Zero users relationship rows. Once T6 lands, expected: users authors intelligence_reports; users
       reviews intelligence_reports; users approves intel_requirements; users curates
       threat_indicators; users attributes threat_actors. Per Rule #10 the users row is
       kind='platform_builtin'.
@@ -173,7 +173,7 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-T6}
 
   - id: B1B-T12
-    summary: Author 3-4 roles + role_modules + role_permissions once modules land (E1/E2/E3/E4).
+    summary: Author 3-4 roles + persona_modules + role_permissions once modules land (E1/E2/E3/E4).
     finding: |
       Zero roles. Once 2 modules exist E1 mandates >=3 distinct roles. Expected:
       INFORMATION-SECURITY-THREAT-INTEL-ANALYST (primary CURATION, secondary OPERATIONALIZATION);
@@ -245,7 +245,7 @@ b2:
     question: Promote TI-ENRICHMENT and / or TI-COLLABORATION-SHARING to domain-neutral capabilities?
     options:
       - "(a) Author both as domain-prefixed (lowest authoring cost)"
-      - "(b) Promote TI-ENRICHMENT to domain-neutral THREAT-ENRICHMENT linking THREAT-INTEL + SOAR + DLP + VULN-MGMT; keep TI-COLLABORATION-SHARING domain-prefixed"
+      - "(b) Promote TI-ENRICHMENT to domain-neutral THREAT-ENRICHMENT relating THREAT-INTEL + SOAR + DLP + VULN-MGMT; keep TI-COLLABORATION-SHARING domain-prefixed"
       - "(c) Promote both"
     why: |
       Recorded Future, VirusTotal Premium, Anomali Lens, Mandiant Advantage all sell enrichment
@@ -371,6 +371,6 @@ b3:
       Cybersecurity Information Sharing Act (2015) and CISA Automated Indicator Sharing program
       govern US public / private CTI sharing. TI programs at US critical-infra orgs operate under
       these rules; sector ISACs (FS-ISAC, H-ISAC, E-ISAC) implement at sector level. CISA-AIS
-      likely needs a new regulations row before linking.
+      likely needs a new regulations row before relating.
     vendor_evidence: [CISA]
     proposed_module: null

@@ -31,14 +31,14 @@ Executed the outstanding agent-doable work; left only user decisions and one des
 
 ### Summary
 
-- **Current footprint:** **0 modules** (no `domain_modules` row, no `domain_module_host_domains` row). 7 capabilities (`DSPM-DATA-DISCOVERY`, `DSPM-CLASSIFICATION`, `DSPM-ACCESS-AUDIT`, `DSPM-LINEAGE`, `DSPM-RISK-SCORING`, `DSPM-REMEDIATION`, `DSPM-SHADOW-DATA`). 8 masters declared at the `domain_data_objects` rollup layer (`cloud_storage_buckets`, `cloud_databases`, `data_warehouses`, `saas_app_instances`, `iam_access_policies`, `sensitive_data_incidents`, `data_risk_scores`, `shadow_data_findings`), 2 contributor rows (`data_assets` mastered by DCG, `data_classifications` mastered by DCG), 1 consumer row (`data_lineage_relationships` mastered by DCG). 12 solutions (4 primary, 8 secondary). 0 regulations linked. 9 trigger_events (3 with empty `event_category`). 10 outbound + 3 inbound cross-domain handoffs (13 total). 0 intra-domain handoffs (no modules to host any). 0 `data_object_aliases`. 1 `data_object_relationships` row touches DSPM masters (an inbound `reviews` edge from `data_assets` 294 onto `cloud_databases` 337). 0 `data_object_lifecycle_states` across all 8 masters. 0 `business_function_domains`. 0 system skills, 0 `skill_tools`, 0 `role_modules`. Semantius score: **uncomputable** (no skills, no modules).
+- **Current footprint:** **0 modules** (no `domain_modules` row, no `domain_module_host_domains` row). 7 capabilities (`DSPM-DATA-DISCOVERY`, `DSPM-CLASSIFICATION`, `DSPM-ACCESS-AUDIT`, `DSPM-LINEAGE`, `DSPM-RISK-SCORING`, `DSPM-REMEDIATION`, `DSPM-SHADOW-DATA`). 8 masters declared at the `domain_data_objects` rollup layer (`cloud_storage_buckets`, `cloud_databases`, `data_warehouses`, `saas_app_instances`, `iam_access_policies`, `sensitive_data_incidents`, `data_risk_scores`, `shadow_data_findings`), 2 contributor rows (`data_assets` mastered by DCG, `data_classifications` mastered by DCG), 1 consumer row (`data_lineage_relationships` mastered by DCG). 12 solutions (4 primary, 8 secondary). 0 regulations related. 9 trigger_events (3 with empty `event_category`). 10 outbound + 3 inbound cross-domain handoffs (13 total). 0 intra-domain handoffs (no modules to host any). 0 `data_object_aliases`. 1 `data_object_relationships` row touches DSPM masters (an inbound `reviews` relationship from `data_assets` 294 onto `cloud_databases` 337). 0 `data_object_lifecycle_states` across all 8 masters. 0 `business_function_domains`. 0 system skills, 0 `skill_tools`, 0 `persona_modules`. Semantius score: **uncomputable** (no skills, no modules).
 - **Vendor-surface basis (Pass 2 flagship enumeration):** Cyera Platform, Wiz DSPM, Dig Security (Palo Alto Prisma Cloud Data Security), Sentra DSPM, Securiti Platform, Normalyze, Symmetry Systems DataGuard, Concentric AI Toucan, BigID, OneTrust Data Discovery, Varonis Data Security Platform, IBM Guardium Insights, Polar Security (acquired by IBM), Eureka Security, Theom, Laminar (acquired by Rubrik), Mineral. Compliance-specialist coverage anchored on GDPR (Articles 30, 32, 35), CCPA / CPRA (consumer data inventories), HIPAA (PHI discovery), PCI-DSS 4.0 (cardholder-data scope reduction), and US state breach-notification laws (incident reporting on sensitive-data exposure).
 - **Bucket 1 (in-scope, agent fixable):** 8 items.
 - **Bucket 2 (surface-for-user, judgment):** 8 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 11 items.
 - **Candidate-domain queue:** 4 new candidates appended to `audits/_missing-domains.md` (CSPM, CIEM, DDR, AI-SPM).
 
-**Neighbor discovery (auto-derived from handoffs + cross-domain DDO ownership, ranked by edge weight):**
+**Neighbor discovery (auto-derived from handoffs + cross-domain DDO ownership, ranked by relationship weight):**
 
 | Neighbor | Out | In | Cross-rels | DDO overlap | Weight | Pass shape |
 |---|---|---|---|---|---|---|
@@ -202,7 +202,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 
 | Owing domain | Owed work |
 |---|---|
-| DCG | B10b: populate `target_domain_module_id` on outbound 285 (also DELETE candidate per B1-S5) and 846 (`cloud_database.discovered`). Populate `source_domain_module_id` on inbound 261 and 712. PATCH event 744 `data_usage_metric.spike_detected` `event_category` (Rule #13). Consider whether DSPM-emitted contributions to `data_assets` and `data_classifications` warrant a DCG-side acknowledgement (handoff 285 review per B1-S5). |
+| DCG | B10b: populate `target_domain_module_id` on outbound 285 (also DELETE candidate per B1-S5) and 846 (`cloud_database.discovered`). Populate `source_domain_module_id` on inbound 261 and 712. PATCH event 744 `data_usage_metric.spike_detected` `event_category` (Rule #13). Consider whether DSPM-emitted contributions to `data_assets` and `data_classifications` warrant a DCG-side acknowledgment (handoff 285 review per B1-S5). |
 | SECOPS | B10b: populate `target_domain_module_id` on 287 and 290 (`sensitive_data_incident.detected` / `.resolved`). Add `consumer + required` DMDO on `sensitive_data_incidents` (341) in whichever SECOPS module subscribes to the DSPM incident feed. |
 | IGA | B10b: 286 and 289 already pointed at IGA module 146 on the target side. Verify 146 is the right module; if so, also add a `consumer + required` DMDO on `iam_access_policies` (340) and / or `sensitive_data_incidents` (341) in IGA module 146 to mirror the inbound expectation. |
 | PRIV-MGMT | B10b: populate `target_domain_module_id` on 288 (also direction-contested per B1-S6). Add `consumer` DMDO if the payload settles. |
@@ -281,7 +281,7 @@ The 2026-05-30 pass left **all 8 Bucket 1 items** unfixed (the prior Fixes-appli
 - **A1-A3 pass.** `domains.id=140` has all 7 required fields populated.
 - **M1 hard-fail (Rule #14).** Still 0 `domain_modules` rows of any `module_kind` and 0 `domain_module_host_domains`. Gates every downstream module-keyed band. With 7 capabilities the floor is >=2 `module_kind='full'`. Carried from 2026-05-30.
 - **B5 (`data_object_aliases`).** 0 aliases on 8 masters. Not a hard-fail since aliases are vendor-synonym layer; flagged for B3 follow-up if user wants vendor-terminology surface.
-- **B7 (`data_object_relationships`).** Single inbound `reviews` edge from `data_assets` 300 onto `cloud_databases` 337 carried from prior. No new intra-domain edges since 0 modules.
+- **B7 (`data_object_relationships`).** Single inbound `reviews` relationship from `data_assets` 300 onto `cloud_databases` 337 carried from prior. No new intra-domain relationships since 0 modules.
 - **B9 pass.** All 9 `trigger_events` now carry `event_category` (per 2026-05-31 Continuation fix). Previously partial-fail.
 - **B9b (event-payload coherence).** Handoffs 285 (DSPM->DCG, event 236, payload `data_assets`) and 288 (DSPM->PRIV-MGMT, event 273 owned by `data_classifications` 303, payload `data_assets` 300) carry over the direction/payload mismatches flagged on 2026-05-30. Editorial; routed to B2.
 - **B10b (handoff module FKs).** All 13 handoffs still have NULL `source_domain_module_id` (gated on M1). 11 of 13 have NULL `target_domain_module_id`; only 286 and 289 carry `target_domain_module_id=146` (IGA). DSPM-owed source FK PATCH on 10 outbounds (285, 286, 287, 288, 289, 290, 846, 847, 848, 849) is gated on M1.
@@ -289,7 +289,7 @@ The 2026-05-30 pass left **all 8 Bucket 1 items** unfixed (the prior Fixes-appli
 - **B12 (pattern flags).** All 8 masters default-false on `has_personal_content`, `has_submit_lock`, `has_single_approver`. Implausible for `sensitive_data_incidents`, `iam_access_policies`, `shadow_data_findings`. Surface-for-user (B2-S5 carried).
 - **C1 (`business_function_domains`).** 0 rows. Carried from 2026-05-30. B2-S6 picks the owner.
 - **D bands (`domain_regulations`).** 0 rows. Carried as B2-S7 (5 candidate regulations).
-- **E1-E5 (roles / `role_modules`).** All E-band checks uncomputable: zero modules means zero role_module rows possible. Gated on M1.
+- **E1-E5 (roles / `persona_modules`).** All E-band checks uncomputable: zero modules means zero role_module rows possible. Gated on M1.
 - **F1-F5 (skills / tools / Semantius score).** F1: 1 orphan `dspm-system` skill exists with `domain_module_id=NULL`. F2: 0 of 0 modules carry a `system` skill (vacuous); the orphan skill cannot satisfy F2 without a module to bind to. F3-F4: 0 `skill_tools` rows. F5: Semantius score uncomputable. All gated on M1. The orphan skill is a new finding requiring user decision (delete vs reuse during M1 fix).
 - **H1 partial-fail.** 7 of 13 cross-domain handoffs tagged via `handoff_processes` (54%). Volume target is 0.5N to 0.8N (6.5 to 10.4 rows), so the current 7 sits at the bottom of the target band. 6 handoffs untagged (286, 288, 289, 847, 848, 849). Tagging on 285 should be reconsidered if B2-S3 leads to DELETE.
 - **Rule #15 notes check.** `domain_data_objects.notes` on DSPM has 6 populated rows ("Security-posture lens (distinct from CMDB CI topology lens)", "Infrastructure IAM artifact (distinct from DCG data_access_policies)", "DSPM remediation trigger", "Shadow-data discovery output", "DCG-mastered; DSPM enriches with security-posture context", "Applies classifications via at-rest scans (DCG masters)", "DCG-mastered; DSPM consumes for risk-context enrichment"). These appear to predate Rule #15. Surface as B2 carry (not auto-revert).
@@ -342,7 +342,7 @@ _(empty; this is a read-only audit pass; no writes were made to the catalog)_
 
 ### Summary
 
-DSPM was modularized from 0 modules to 3 `full` modules, resolving the long-standing M1 hard-fail (Rule #14) that gated every downstream module-keyed band. Scope was modules + entity assignment ONLY: existing capabilities were linked, existing data_objects were assigned at their existing role and necessity, and no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created.
+DSPM was modularized from 0 modules to 3 `full` modules, resolving the long-standing M1 hard-fail (Rule #14) that gated every downstream module-keyed band. Scope was modules + entity assignment ONLY: existing capabilities were related, existing data_objects were assigned at their existing role and necessity, and no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created.
 
 The prior audit (2026-05-30 / 2026-05-31) drafted a 4-module split pending B2-S1. This pass executed the 3-module variant (the audit own alt-c: collapse classification-lineage into discovery-inventory), which is the coherent 3-module shape: one discovery-and-classification surface, one access-and-risk engine, one incident-and-remediation workflow. All 7 capabilities and all 11 domain_data_objects were placed; no module is empty.
 
@@ -358,7 +358,7 @@ The prior audit (2026-05-30 / 2026-05-31) drafted a 4-module split pending B2-S1
 
 ### Master assignment (catalog-wide pre-check)
 
-The mandatory catalog-wide master pre-check ran before any `role='master'` write: `GET /domain_module_data_objects?data_object_id=in.(336,337,338,339,340,341,342,343,300,303,301)&role=eq.master`. It returned ZERO rows, so none of the candidates were mastered by any module catalog-wide. All 8 native masters (336-343) were therefore assigned `master` in DSPM without conflict. No demotions to `embedded_master` were required this pass.
+The mandatory catalog-wide master pre-check ran before any `held_as='master'` write: `GET /domain_module_data_objects?data_object_id=in.(336,337,338,339,340,341,342,343,300,303,301)&held_as=eq.master`. It returned ZERO rows, so none of the candidates were mastered by any module catalog-wide. All 8 native masters (336-343) were therefore assigned `master` in DSPM without conflict. No demotions to `embedded_master` were required this pass.
 
 The 3 borrowed entities kept their existing legacy roles (DCG masters all three): 300 data_assets (contributor / required), 303 data_classifications (contributor / required), 301 data_lineage_relationships (consumer / required). None was promoted.
 
@@ -400,7 +400,7 @@ Loader: `.tmp_deploy/fix_dspm_skills.ts` (idempotent; dedup by natural key). Not
 
 **INSERT `skills` (3 system skills, `skill_type=system`, `domain_id=140`, `record_status=new`):** id 285 dspm_discovery_classification_agent -> module 233; id 286 dspm_access_risk_agent -> module 234; id 287 dspm_incident_remediation_agent -> module 235.
 
-**INSERT `skill_tools` (34 rows, `record_status=new`, `notes=""`):** skill 285 = 17 rows (10 required, 7 optional); skill 286 = 9 rows (5 required, 4 optional); skill 287 = 8 rows (6 required, 2 optional). Each skill carries at least one query, one mutate, and one workflow gate of its module's own masters; optional rows cover cross-module reads. Only the `notify_person` abstraction is linked (no channel primitives), so F7 needs no channel-justification notes.
+**INSERT `skill_tools` (34 rows, `record_status=new`, `notes=""`):** skill 285 = 17 rows (10 required, 7 optional); skill 286 = 9 rows (5 required, 4 optional); skill 287 = 8 rows (6 required, 2 optional). Each skill carries at least one query, one mutate, and one workflow gate of its module's own masters; optional rows cover cross-module reads. Only the `notify_person` abstraction is related (no channel primitives), so F7 needs no channel-justification notes.
 
 **Verification:** F2 every module 233/234/235 has exactly one system skill; F3 every skill >=1 skill_tools; F4 invariant holds (all query/mutate tools have data_object_id set, notify_person side_effect has data_object_id null); F1 orphan check `/skills?domain_id=eq.140&skill_type=eq.system&domain_module_id=is.null` returns 0.
 

@@ -22,13 +22,13 @@ last_audit: "2026-06-14"
 #     7 new solutions + reused Sociabble, 8 solution_domains.
 #   Phase B: 14 data_objects (all entity_type-classified), 20 DMDO, 9 aliases, 28 lifecycle
 #     states (5 operational_workflow masters + leaderboards + rewards), 4 trigger_events,
-#     22 data_object_relationships (intra + 4 users edges + 2 cross-domain outbound), 4 handoffs.
+#     22 data_object_relationships (intra + 4 relationships to users + 2 cross-domain outbound), 4 handoffs.
 #   Phase C: 3 business_function_domains (Marketing owner; Marketing Communications + HR contributors).
 #   Phase S: 1 domain system skill (emp-advocacy-system 468) + 14 new tools (5 query, 5 mutate,
 #     2 compute, 1 side_effect post_to_social_network, 1 fetch fetch_social_share_engagement)
 #     + reused notify_person/notify_team, 16 domain_module_tools.
-#   Phase E: 3 domain_roles (Advocacy Program Manager, Advocacy Content Curator, Employee Advocate),
-#     6 role_modules, 3 PCF-wired gates (665 Execute promotional activities x2, 666 Evaluate
+#   Phase E: 3 personas (Advocacy Program Manager, Advocacy Content Curator, Employee Advocate),
+#     6 persona_modules, 3 PCF-wired gates (665 Execute promotional activities x2, 666 Evaluate
 #     promotional performance metrics), 4 process_raci.
 #
 # Verified: A1 metadata complete; every record_status=new; zero notes on every touched table;
@@ -73,7 +73,7 @@ b2:
     evidence: >-
       Advocacy platforms freeze published content so a share pins to an approved revision and
       route content through one approver (EveryoneSocial, DSMN8, GaggleAMP content approval flows).
-      Advocate identity and the linked LinkedIn/X/Facebook account tokens are personal data subject
+      Advocate identity and the related LinkedIn/X/Facebook account tokens are personal data subject
       to GDPR across every flagship.
   - id: B2-REGULATIONS
     summary: "Pick the regulation set for EMP-ADVOCACY (currently none attached)."
@@ -82,7 +82,7 @@ b2:
       - "(a) GDPR only (recommended)"
       - "(b) GDPR + FINRA (conditional, financial services)"
       - "(c) leave empty"
-    why: "domain_regulations is empty. Advocacy is not a regulation-mandated market, but advocate PII + linked social accounts make GDPR load-bearing; FINRA/social-supervision applies only to regulated financial-services advocacy estates."
+    why: "domain_regulations is empty. Advocacy is not a regulation-mandated market, but advocate PII + related social accounts make GDPR load-bearing; FINRA/social-supervision applies only to regulated financial-services advocacy estates."
     evidence: >-
       Every flagship developer/advocate record stores personal contact and social-account data
       (GDPR retention/erasure). The advocacy_content_approvals/brand-review surface is the

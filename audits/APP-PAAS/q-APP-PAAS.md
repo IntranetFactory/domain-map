@@ -15,17 +15,17 @@ q1: (answer this first) How should Application Platform as a Service be split in
 - b) A single module covering everything.
 - c) An alternative split you specify.
 
-Recommended: a. AWS Elastic Beanstalk separates an application version (an S3-backed deployable) from the environment it deploys into, Google App Engine separates a version from its instances, Heroku separates the build-plus-release ledger from the dyno that runs it, and Fly.io separates `fly deploy` (which builds and deposits an image in the registry) from the Machine that runs, so the build-vs-runtime split is vendor-real across the incumbents (the phase-0 study confirmed it). The modern pure-plays (Render, Railway, Vercel, DigitalOcean) market it more collapsed but still expose deployments and build logs as distinct records, so the split holds across the set, and it drives every module, capability, lifecycle owner, and per-module link below it.
+Recommended: a. AWS Elastic Beanstalk separates an application version (an S3-backed deployable) from the environment it deploys into, Google App Engine separates a version from its instances, Heroku separates the build-plus-release ledger from the dyno that runs it, and Fly.io separates `fly deploy` (which builds and deposits an image in the registry) from the Machine that runs, so the build-vs-runtime split is vendor-real across the incumbents (the phase-0 study confirmed it). The modern pure-plays (Render, Railway, Vercel, DigitalOcean) market it more collapsed but still expose deployments and build logs as distinct records, so the split holds across the set, and it drives every module, capability, lifecycle owner, and per-module relationship below it.
 
 a1:
 
 ---
 
-q2: For the managed-runtime capability, how should it be named and linked?
+q2: For the managed-runtime capability, how should it be named and related?
 
-- a) Link Application Platform as a Service to the existing shared capability LCAP-MANAGED-RUNTIME (id 333).
+- a) Relationship Application Platform as a Service to the existing shared capability LCAP-MANAGED-RUNTIME (id 333).
 - b) Author a parallel capability named just for this domain (APP-PAAS-MANAGED-RUNTIME).
-- c) Rename the existing capability to MANAGED-RUNTIME (drop the LCAP prefix) and link both domains to it.
+- c) Rename the existing capability to MANAGED-RUNTIME (drop the LCAP prefix) and relate both domains to it.
 
 Recommended: a. The managed-runtime abstraction (the platform runs your app, autoscales it, and manages instances with no server management) is identical in shape between code-first PaaS and low-code (LCAP); only the artifact differs (code vs a visual app). Across the PaaS vendors this is exactly what App Engine ("your application can be running on one or many instances"), Heroku (dynos), Azure App Service (plan-level scale-out), and Fly.io (Machines) all sell, and it is the same runtime LCAP platforms wrap around a no-code builder. Reusing LCAP-MANAGED-RUNTIME avoids a duplicate. Renaming to a neutral MANAGED-RUNTIME only earns its keep once a third domain shares it; the natural third candidate, KUBE-PLAT, markets a cluster/workload runtime (container orchestration), a different buyer abstraction, so the shared count is firmly 2 today, below the >=3-domain threshold for the neutral name. Hold the rename for now.
 
@@ -86,7 +86,7 @@ q8: Three entities arrive from neighbor domains (published apps from low-code, c
 - b) Declare only a subset (you name which).
 - c) Leave all three as domain-level only (no per-module dependency row).
 
-Recommended: a. None of these three is mastered by a PaaS vendor; they originate upstream and a PaaS consumes them (a low-code app gets deployed to a runtime, a container workload is what runs, a software-deployment record tracks a release elsewhere). That is precisely why declaring them consumer plus optional is the accurate model: the PaaS reads them, it does not own them. Doing so captures the cross-domain links in the catalog rather than leaving them implicit. The receiving module follows from the q1 split (Runtime receives published apps and container workloads; Delivery receives software deployments).
+Recommended: a. None of these three is mastered by a PaaS vendor; they originate upstream and a PaaS consumes them (a low-code app gets deployed to a runtime, a container workload is what runs, a software-deployment record tracks a release elsewhere). That is precisely why declaring them consumer plus optional is the accurate model: the PaaS reads them, it does not own them. Doing so captures the cross-domain relationships in the catalog rather than leaving them implicit. The receiving module follows from the q1 split (Runtime receives published apps and container workloads; Delivery receives software deployments).
 
 a8:
 

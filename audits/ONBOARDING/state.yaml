@@ -59,14 +59,14 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (Note: 5 legacy roles still attach via role_modules per the 2026-05-31 audit; the E1 fail is about the post-Plan-3 domain_roles persona layer.)"
-    action: "DEFERRED per Rule #21 (B1A-PHASE-P personas/RACI are not agent-authored). Candidate operational personas (function-anchored, Human Resources owner): Onboarding Coordinator, Onboarding HR Partner, Onboarding Program Manager, Hiring Manager. Author domain_roles, wire role_modules reach across the 3 modules, add process_raci rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (Note: 5 legacy roles still attach via persona_modules per the 2026-05-31 audit; the E1 fail is about the post-Plan-3 personas persona layer.)"
+    action: "DEFERRED per Rule #21 (B1A-PHASE-P personas/RACI are not agent-authored). Candidate operational personas (function-anchored, Human Resources owner): Onboarding Coordinator, Onboarding HR Partner, Onboarding Program Manager, Hiring Manager. Author personas, wire persona_modules reach across the 3 modules, add process_raci rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     deferred: true
     extra_phase_p_triage: "2026-06-02"
 
   - id: B1A-SELF-CONTAIN
     summary: "4 contributor/required-consumer rows break module self-containment (M9): destructive role/necessity rewrite (surface only)."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on ONB-JOURNEY-MGMT are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here. Each is an M9 self-containment violation."
+    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on ONB-JOURNEY-MGMT are held_as=contributor or held_as=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here. Each is an M9 self-containment violation."
     action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Rewriting role/necessity on an existing DMDO row is destructive (M9) per Rule #21; surfaced for user sign-off, not applied."
     destructive: true
     extra_m9_shapes:
@@ -87,14 +87,14 @@ b1b:
       requires_permission=true state warrants a <module_code>:<verb>_<entity>
       permission realized on the state's domain_module_id. State distribution:
       ONB-JOURNEY-MGMT (mod 35) realizes 12 states across onboarding_plans
-      (approved, active, retired), onboarding_journeys (completed, cancelled),
+      (approved, active, retired), onboarding_journeys (completed, canceled),
       onboarding_stages (completed, skipped), onboarding_tasks (completed,
-      skipped, cancelled), onboarding_cohorts (active, completed, cancelled);
+      skipped, canceled), onboarding_cohorts (active, completed, canceled);
       ONB-DOCUMENT-INTAKE (mod 36) realizes 4 states on
       onboarding_document_collections (submitted, approved, rejected, archived);
       ONB-WELCOME-EXPERIENCE (mod 37) realizes 7 states across buddy_assignments
-      (active, completed, cancelled) and welcome_communications (sent, delivered,
-      failed, cancelled). Plus role_permission mappings: Onboarding HR Partner
+      (active, completed, canceled) and welcome_communications (sent, delivered,
+      failed, canceled). Plus role_permission mappings: Onboarding HR Partner
       (10012) -> approve / reject document_collection, activate / retire plan,
       complete / cancel journey; Onboarding Coordinator (10011) -> complete stage,
       complete task; Onboarding Program Manager (10013) -> admin tier across all
@@ -109,12 +109,12 @@ b1b:
       lifecycle state before deriving the permission_name.
     affected_masters:
       - {data_object_id: 15, name: "onboarding_plans", target_module_id: 35, workflow: "draft -> approved -> active -> retired"}
-      - {data_object_id: 16, name: "onboarding_journeys", target_module_id: 35, workflow: "scheduled -> pre_boarding -> day_one -> in_progress -> completed | cancelled"}
+      - {data_object_id: 16, name: "onboarding_journeys", target_module_id: 35, workflow: "scheduled -> pre_boarding -> day_one -> in_progress -> completed | canceled"}
       - {data_object_id: 17, name: "onboarding_stages", target_module_id: 35, workflow: "pending -> active -> completed | skipped"}
-      - {data_object_id: 18, name: "onboarding_tasks", target_module_id: 35, workflow: "pending -> in_progress -> completed | skipped | cancelled"}
-      - {data_object_id: 19, name: "buddy_assignments", target_module_id: 37, workflow: "assigned -> active -> completed | cancelled"}
-      - {data_object_id: 20, name: "onboarding_cohorts", target_module_id: 35, workflow: "planned -> active -> completed | cancelled"}
-      - {data_object_id: 21, name: "welcome_communications", target_module_id: 37, workflow: "draft -> scheduled -> sent -> delivered | failed | cancelled"}
+      - {data_object_id: 18, name: "onboarding_tasks", target_module_id: 35, workflow: "pending -> in_progress -> completed | skipped | canceled"}
+      - {data_object_id: 19, name: "buddy_assignments", target_module_id: 37, workflow: "assigned -> active -> completed | canceled"}
+      - {data_object_id: 20, name: "onboarding_cohorts", target_module_id: 35, workflow: "planned -> active -> completed | canceled"}
+      - {data_object_id: 21, name: "welcome_communications", target_module_id: 37, workflow: "draft -> scheduled -> sent -> delivered | failed | canceled"}
       - {data_object_id: 22, name: "onboarding_document_collections", target_module_id: 36, workflow: "pending -> in_progress -> submitted -> approved | rejected -> archived"}
     affected_modules: [35, 36, 37]
     blocked_by:

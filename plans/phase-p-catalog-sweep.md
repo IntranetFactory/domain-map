@@ -8,10 +8,10 @@ large; this captures everything needed to run it cold).
 Plan 3 ([plan-3-personas-raci.md](plan-3-personas-raci.md), executed 2026-06-02) replaced the
 rotted `_core` RBAC with a catalog-owned persona/RACI layer:
 
-- New entities: `domain_roles` (operational personas), `process_raci` (RACI; polymorphic
+- New entities: `personas` (operational personas), `process_raci` (RACI; polymorphic
   persona-OR-skill actor, hard exactly-one-actor `validation_rules`); new column
-  `data_object_lifecycle_states.process_id` (the process-to-gate edge). `role_modules.role_id`
-  was re-pointed from `_core` `roles` to `domain_roles`.
+  `data_object_lifecycle_states.process_id` (the process-to-gate relationship). `persona_modules.persona_id`
+  was re-pointed from `_core` `roles` to `personas`.
 - The 102 old `_core` personas were DELETED. **Consequence: every domain now has ZERO personas
   except ATS** (the pilot, authored via `scripts/loaders/load_ats_personas_pilot.ts`).
 - The emitter (`scripts/generate_blueprints.ts`) now derives + emits §9 (baseline roles, permission
@@ -24,7 +24,7 @@ rotted `_core` RBAC with a catalog-owned persona/RACI layer:
 
 Authoritative reading before running: [SKILL.md](../.claude/skills/domain-map-analyst/SKILL.md)
 audit bands (S/A/M/B/C/E/F, esp. M1/M2/M9, E1-E6, A4/M8, B13);
-[references/roles.md](../.claude/skills/domain-map-analyst/references/roles.md) (persona model +
+[references/personas.md](../.claude/skills/domain-map-analyst/references/personas.md) (persona model +
 function-anchored discovery §7); [references/modules.md](../.claude/skills/domain-map-analyst/references/modules.md)
 §5 (self-containment); the audit-state format in [audits/README.md](../audits/README.md); the
 2026-06-02 entries in [references/skill-changelog.md](../.claude/skills/domain-map-analyst/references/skill-changelog.md).
@@ -70,7 +70,7 @@ do not assume prior figures.
 | 0 modules (M1 fail) | `agent` | `B1A-BUILD`: unbuilt; run Phase A->M->B->S, then Phase P if it ends multi-module |
 | 1 module AND capability_count >= 3 (M2 fail) | `agent` | `B1A-MODULARIZE`: >=3 capabilities on 1 module; split per Phase M, then Phase P |
 | 1 module AND capability_count < 3 | `agent` | `B1A-VERIFY-SCOPE`: confirm genuinely small (not under-researched in Phase A/B); if real, no personas needed and this clears |
-| >=2 modules AND 0 personas | `agent` | `B1A-PHASE-P`: multi-module with 0 personas post-Plan-3; author personas + `role_modules` reach + `process_raci` + wire `lifecycle.process_id`, function-anchored per roles.md section 7 |
+| >=2 modules AND 0 personas | `agent` | `B1A-PHASE-P`: multi-module with 0 personas post-Plan-3; author personas + `persona_modules` reach + `process_raci` + wire `lifecycle.process_id`, function-anchored per personas.md section 7 |
 | >=2 modules AND >=1 persona | (unchanged; likely ATS) | none for personas; still evaluate B13/M9 below |
 
 Append where present (any domain):
@@ -84,8 +84,8 @@ Append where present (any domain):
 1. **Triage script (read-only).** Write `scripts/analytics/phase_p_triage.ts` using `pg()` from
    `scripts/lib/catalog.ts`. Bulk-load (one query each, `limit` high): `domains`; `domain_modules`
    (count per `domain_id` + host_domains for cross-cutting); `capability_domains` (capability count
-   per domain); `domain_roles` + `role_modules` (persona count reaching each domain via
-   `role_modules.domain_module_id -> domain_modules.domain_id`); `domain_module_data_objects`
+   per domain); `personas` + `persona_modules` (persona count reaching each domain via
+   `persona_modules.domain_module_id -> domain_modules.domain_id`); `domain_module_data_objects`
    (roles + necessity, for M9 shapes) joined to `data_objects` (`entity_type`, `kind`). Compute the
    per-domain signals above. Emit a table + JSON: `{domain_code, module_count, capability_count,
    persona_count, unclassified_masters, m9_shapes, verdict, b1a_codes[]}`. This is the prioritized

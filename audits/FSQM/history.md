@@ -5,7 +5,7 @@
 ### Summary
 
 - **Domain id:** 157. **Owner business function:** Governance, Risk and Compliance (contributors: Business Operations, Procurement; consumer: Executive).
-- **Current footprint counts.** 7 master data_objects (`haccp_plans`, `critical_control_points`, `ccp_measurements`, `food_safety_incidents`, `allergen_programs`, `environmental_monitoring_samples`, `sanitation_records`), 4 contributor (`supplier_certifications`, `audit_findings`, `recall_events`, `compliance_obligations`), 1 consumer (`suppliers`). 6 capabilities. 8 solutions (6 primary, 2 secondary). **0 modules**, **0 lifecycle states**, **0 aliases**, **0 regulations**, **0 user-edges in `data_object_relationships`**, **0 intra-domain `data_object_relationships`**. 9 outbound + 5 inbound handoffs, all with NULL module FKs on both sides. 1 system skill at the legacy `domain_id`-only anchor; no module-anchored skill; 8 `skill_tools`.
+- **Current footprint counts.** 7 master data_objects (`haccp_plans`, `critical_control_points`, `ccp_measurements`, `food_safety_incidents`, `allergen_programs`, `environmental_monitoring_samples`, `sanitation_records`), 4 contributor (`supplier_certifications`, `audit_findings`, `recall_events`, `compliance_obligations`), 1 consumer (`suppliers`). 6 capabilities. 8 solutions (6 primary, 2 secondary). **0 modules**, **0 lifecycle states**, **0 aliases**, **0 regulations**, **0 relationships to `users` in `data_object_relationships`**, **0 intra-domain `data_object_relationships`**. 9 outbound + 5 inbound handoffs, all with NULL module FKs on both sides. 1 system skill at the legacy `domain_id`-only anchor; no module-anchored skill; 8 `skill_tools`.
 - **Vendor-surface basis.** Flagship vendors enumerated for the semantic pass: TraceGains, Safefood 360, SafetyChain, Icicle, Intelex Food Safety, FoodReady, Trustwell Connect (in catalog as solutions). Wider FSQM market shape cross-checked against MasterControl, ETQ Reliance, AssurX, Veeva QualityOne (positioned as EQMS-shaped general QMS rather than food-specific, surfaced as a separate candidate market) and Cority / Sphera / Enablon (positioned as EHS rather than food-specific). Statutory anchors: FSMA Preventive Controls Rule (21 CFR 117), FDA Food Traceability Rule (21 CFR 1 Subpart S), Codex Alimentarius HACCP, USDA FSIS HACCP, GFSI-recognized schemes (SQF, BRC GS, FSSC 22000, IFS Food).
 - **Bucket 1 (in-scope, agent fixable):** 12 items.
 - **Bucket 2 (surface-for-user, judgment):** 4 items.
@@ -65,7 +65,7 @@ Every master has events but zero lifecycle states (B12 fail) and zero aliases (B
 | B4 | FAIL: every master has all three pattern flags = false. Per Rule #12 a positive consideration is required; defaults are not the same as reviewed | Bucket 2 (per-flag review) |
 | B5 | pass (no `embedded_master` rows in this domain) | n/a |
 | B6 | FAIL: 0 intra-domain `data_object_relationships`; expected verbs include `haccp_plans → critical_control_points (defines)`, `critical_control_points → ccp_measurements (monitored_by)`, `food_safety_incidents → recall_events (escalates_to)`, `allergen_programs → environmental_monitoring_samples (verifies via)`, etc. | Bucket 1 STRUCTURAL |
-| B7 | FAIL: 0 `users` edges on any FSQM master, both directions. Quality manager (HACCP author), CCP monitor (measurement recorder), incident commander, allergen-program owner, EMP technician, sanitation lead are all user-typed roles per FSMA Preventive Controls (1 PCQI per facility, plus operator roles) | Bucket 1 STRUCTURAL |
+| B7 | FAIL: 0 relationships to `users` on any FSQM master, both directions. Quality manager (HACCP author), CCP monitor (measurement recorder), incident commander, allergen-program owner, EMP technician, sanitation lead are all user-typed roles per FSMA Preventive Controls (1 PCQI per facility, plus operator roles) | Bucket 1 STRUCTURAL |
 | B8 | FAIL (outbound): cross-domain relationship rows missing. Outbound handoff `food_safety_incident.escalated → FOOD-TRACE.recall_events` lacks the corresponding `data_object_relationships` (`food_safety_incidents spawns recall_events`). Same for the other 8 outbound handoffs once payload-target pairs are unambiguous | Bucket 1 STRUCTURAL |
 | B9 | partial: 7 published events for 7 masters; deviation-shape events present. Missing: `food_safety_incident.opened`, `food_safety_incident.closed`, `haccp_plan.due_for_review`, `ccp_measurement.recorded` (normal-path informational), `environmental_monitoring_sample.adverse_trend` | Bucket 1 STRUCTURAL |
 | B9b | n/a until M1 cured (single-module domain after split has cross-module candidates, but no modules to attribute) | cascade |
@@ -76,9 +76,9 @@ Every master has events but zero lifecycle states (B12 fail) and zero aliases (B
 | C1 | pass (1 owner + 2 contributors + 1 consumer) | n/a |
 | C2 | pass (no capability divergences observed; FSQM-AUDIT-PREP could plausibly be GRC-Audit-owned but that's a Bucket 2 review) | Bucket 2 (capability function-divergence review) |
 | D1 | UI spot-check deferred until after fix loads | n/a |
-| E1-E6 | E1 vacuously fails because M1 fails (no modules to anchor `role_modules` on); cascade | cascade from M1 |
+| E1-E6 | E1 vacuously fails because M1 fails (no modules to anchor `persona_modules` on); cascade | cascade from M1 |
 | F1 | FAIL: legacy `skills.id = 64` (`fsqm-system`) at `domain_id = 157`, `domain_module_id = null`. Per Rule #14 + F1, this becomes obsolete once module-level system skills are authored, but **must not be deleted before** the module set lands | Bucket 1 STRUCTURAL (sequenced after M1) |
-| F2 / F3 / F4 / F5 | cascade from M1 (no modules to anchor system skills on); F4 sub-finding: the legacy skill's 8 tools pass operation-kind invariants (`query_*` tools all have `data_object_id` set; `send_email` has NULL `data_object_id`); F7 sub-finding: the `send_email` link to the legacy skill is unjustified by the channel-vs-capability rule — most FSQM notification flows (incident escalation, deviation alert, sample-positive page-out) should use `notify_person` or `notify_team` unless the channel is contractually email-only | Bucket 1 STRUCTURAL (F7 specifically); rest cascade from M1 |
+| F2 / F3 / F4 / F5 | cascade from M1 (no modules to anchor system skills on); F4 sub-finding: the legacy skill's 8 tools pass operation-kind invariants (`query_*` tools all have `data_object_id` set; `send_email` has NULL `data_object_id`); F7 sub-finding: the `send_email` relationship to the legacy skill is unjustified by the channel-vs-capability rule — most FSQM notification flows (incident escalation, deviation alert, sample-positive page-out) should use `notify_person` or `notify_team` unless the channel is contractually email-only | Bucket 1 STRUCTURAL (F7 specifically); rest cascade from M1 |
 | H1 | FAIL: 14 cross-domain handoffs (9 outbound + 5 inbound); 1 `handoff_processes` row exists (id 357 → APQC 11043 "Report audit findings", `discovery_substring`, `new`). Per H1 volume expectation `0.5N to 0.8N` agent-curated tags = 7-11; this audit proposes APQC tags below | Bucket 1 APQC TAGGING |
 
 ### Pass 2 — Market audit (semantic) findings
@@ -126,11 +126,11 @@ FSQM has 6 capabilities and 0 modules. Per Rule #14 a domain with >=3 capabiliti
 
 A 6-module split is heavy for a $800M USA market; a 3-module starter (HACCP-MONITORING, INCIDENT-RECALL, AUDIT-PREP) plus a single `FSQM-CORE` covering allergen / EMP / sanitation could be the lighter alternative. Surface to user (Bucket 2).
 
-### Pass 3 — Neighbor discovery (cross-edges)
+### Pass 3 — Neighbor discovery (cross-domain relationships)
 
 Neighbor set derived from `handoffs` (outbound + inbound) and contributor / consumer DMDO cross-references.
 
-| Neighbor | Outbound handoffs (FSQM → neighbor) | Inbound handoffs (neighbor → FSQM) | DMDO edges | Edge weight | Pairwise depth |
+| Neighbor | Outbound handoffs (FSQM → neighbor) | Inbound handoffs (neighbor → FSQM) | DMDO relationships | Relationship weight | Pairwise depth |
 | --- | --- | --- | --- | --- | --- |
 | FOOD-TRACE (155) | 4 (incident.escalated, ccp.deviation, EMP.positive, allergen.violation) | 2 (traceability_lot.created, supplier_certification.expired) | FSQM consumer/contributor on `recall_events`, `supplier_certifications` (both FOOD-TRACE-mastered) | 8 | full 5-section |
 | MFG-OPS (47) | 2 (critical_control_point.deviation, sanitation_record.completed) | 0 | none observed | 2 | one-line |
@@ -140,11 +140,11 @@ Neighbor set derived from `handoffs` (outbound + inbound) and contributor / cons
 | FMIS (154) | 0 | 1 (field_application.recorded) | none observed | 1 | one-line |
 | SUP-LIFE (28) | 0 | 0 | FSQM consumer on `suppliers`, contributor on `supplier_certifications` (catalog-wide single-master fail observed: `supplier_certifications` is mastered in both SUP-LIFE and FOOD-TRACE, `suppliers` in both SUP-LIFE and MDM, but that is owed by SUP-LIFE / MDM / FOOD-TRACE, not FSQM) | 2 (DMDO only) | report-only |
 
-### Pass 4 — Pairwise reconciliation (edge weight >= 3)
+### Pass 4 — Pairwise reconciliation (relationship weight >= 3)
 
 #### Neighbor: FOOD-TRACE (weight 8)
 
-1. **Existing handoffs, fully wired** — 0. Every cross-edge with FOOD-TRACE has NULL module FKs on both sides (cascade of FSQM M1 fail AND FOOD-TRACE's own modularization state, which this audit does not assert about). Pass: nothing to confirm.
+1. **Existing handoffs, fully wired** — 0. Every cross-domain relationship with FOOD-TRACE has NULL module FKs on both sides (cascade of FSQM M1 fail AND FOOD-TRACE's own modularization state, which this audit does not assert about). Pass: nothing to confirm.
 2. **Existing handoffs with NULL module FK** — 4 outbound + 2 inbound, all NULL on both sides. Resolution blocked on M1 here. Once FSQM modules are loaded, `food_safety_incident.escalated → FOOD-TRACE.recall_events` should map source to `FSQM-INCIDENT-RECALL`; `critical_control_point.deviation → FOOD-TRACE` to `FSQM-CCP-MONITORING`; `allergen_program.violation_detected → FOOD-TRACE` to `FSQM-ALLERGEN-CONTROL`; `environmental_monitoring_sample.positive → FOOD-TRACE` to `FSQM-EMP`.
 3. **Missing handoffs catalog implies** — likely missing: `food_safety_plan.approved → FOOD-TRACE` (if `food_safety_plans` is added per Bucket 3), `corrective_action.closed → FOOD-TRACE` (for traceability evidence closure), `mock_recall.executed → FOOD-TRACE`. Bucket 1 if those entities land.
 4. **Boundary integrity gaps** — none for the FSQM side. FOOD-TRACE side carries a catalog-wide single-master conflict on `supplier_certifications` (also mastered by SUP-LIFE) and `suppliers` (also mastered by MDM); both are FOOD-TRACE / SUP-LIFE / MDM responsibilities, not FSQM's. Report-only follow-ups.
@@ -176,13 +176,13 @@ Neighbor set derived from `handoffs` (outbound + inbound) and contributor / cons
 | B1-S2 | M1 fail (GATING): 0 `domain_modules` rows for a 6-capability domain. Rule #14 requires >=2 `module_kind='full'` modules | Author the module set per Bucket 2 selected shape (3-module starter vs 6-module split). Default recommendation: 4 modules (`FSQM-HACCP`, `FSQM-CCP-MONITORING`, `FSQM-INCIDENT-RECALL`, `FSQM-CORE` covering allergen / EMP / sanitation / audit-prep). |
 | B1-S3 | B4 fail: pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) on every master are default false with no audit confirmation. Per Rule #12, positive consideration is required | Re-evaluate per master. Likely true cases: `haccp_plans.has_submit_lock = true` (lock on activation), `haccp_plans.has_single_approver = true` (PCQI signs), `food_safety_incidents.has_submit_lock = true` (incidents lock on close), `corrective_action_records.has_single_approver = true`. Apply via PATCH after user confirms per row (no notes annotation per Rule #15). |
 | B1-S4 | B6 fail: 0 intra-domain `data_object_relationships` | Load the cluster: `haccp_plans → critical_control_points (defines)`, `critical_control_points → ccp_measurements (monitored_by)`, `food_safety_incidents → recall_events (escalates_to)` (cross-domain), `allergen_programs → environmental_monitoring_samples (verified_by)`, `haccp_plans → food_safety_incidents (governs)`, `environmental_monitoring_samples → food_safety_incidents (triggers)` when EMP positive escalates. |
-| B1-S5 | B7 fail: 0 `users` edges on any FSQM master | Author Rule #10 edges: `users → haccp_plans (authored_by:pcqi, approved_by:plant_manager)`, `users → ccp_measurements (recorded_by:operator)`, `users → food_safety_incidents (reported_by:any, owned_by:qa_manager)`, `users → allergen_programs (owned_by:qa_manager)`, `users → environmental_monitoring_samples (collected_by:emp_tech)`, `users → sanitation_records (performed_by:sanitor, verified_by:supervisor)`, `users → critical_control_points (assigned_monitor)`. Per Rule #10, both directions where applicable. |
+| B1-S5 | B7 fail: 0 relationships to `users` on any FSQM master | Author Rule #10 relationships: `users → haccp_plans (authored_by:pcqi, approved_by:plant_manager)`, `users → ccp_measurements (recorded_by:operator)`, `users → food_safety_incidents (reported_by:any, owned_by:qa_manager)`, `users → allergen_programs (owned_by:qa_manager)`, `users → environmental_monitoring_samples (collected_by:emp_tech)`, `users → sanitation_records (performed_by:sanitor, verified_by:supervisor)`, `users → critical_control_points (assigned_monitor)`. Per Rule #10, both directions where applicable. |
 | B1-S6 | B8 fail (outbound only): 9 outbound `handoffs` rows but 0 corresponding cross-domain `data_object_relationships`. Per Rule §B8, FSQM owes the outbound mirror | Author `food_safety_incidents spawns recall_events` (target = FOOD-TRACE), `haccp_plans subject_to audit_findings` (target = AUDIT), `food_safety_incidents triggers compliance_obligations` (target = GRC), etc. One row per cleanly-mapped outbound handoff payload. |
 | B1-S7 | B9 partial: 7 events published, missing normal-lifecycle events. Specifically `haccp_plan.due_for_review` (annual review cycle is FSMA-mandated), `food_safety_incident.opened`, `food_safety_incident.closed`, `environmental_monitoring_sample.adverse_trend` (3 positives in 60 days at the same zone) | Author the missing events; pair each with at least one handoff per § B9 (intra-domain for due_for_review once modules land; cross-domain for incident.opened → GRC for early-warning, etc.). |
 | B1-S8 | B10b mis-attribution: `trigger_event 349` (`audit_finding.created`) publishes from FSQM but `audit_findings` is AUDIT-mastered. FSQM is mis-emitting | Two options: (a) DELETE trigger_event 349 from FSQM emission and load an equivalent on AUDIT's side (AUDIT B9 work); (b) re-attribute the event to a FSQM-mastered payload (e.g. retire 349, replace with `food_safety_incident.escalated_to_audit`). Recommended: (a), since AUDIT already owns the audit_findings lifecycle. |
 | B1-S9 | B11 fail: 0 aliases on any master. Vendor-specific synonyms: `ccp_measurements` ↔ "Check Records" (SafetyChain), "Monitoring Forms" (Safefood 360), "Quality Records" (TraceGains); `haccp_plans` ↔ "Food Safety Plan" (FSMA usage), "Quality Plan" (some QMS); `environmental_monitoring_samples` ↔ "EMP Swabs", "Pathogen Environmental Monitoring (PEM)" | Author cross-vendor and statutory alias rows; bundle into a cluster-drafts load. |
 | B1-S10 | B12 fail: 0 lifecycle states on any of the 7 masters. Per Rule #12 every `master + required` data_object needs states; only config-shaped exemption applies and none of these qualify | Author state machines: `haccp_plans` (draft → reviewed → approved → in_effect → superseded → archived); `food_safety_incidents` (opened → under_investigation → contained → corrected → closed; escalated branch to recall); `ccp_measurements` (recorded → reviewed → in_deviation → corrected); `allergen_programs` (draft → approved → active → suspended); `environmental_monitoring_samples` (collected → in_lab → result_received → adverse → re-sampled → closed); `sanitation_records` (scheduled → in_progress → completed → verified → failed); `critical_control_points` (defined → active → deactivated). Mark workflow-gate states `requires_permission=true` and set `domain_module_id` per realizing module once M1 cured. |
-| B1-S11 | F1 + F7 fail: legacy `skills.id=64` at `domain_id=157`, `domain_module_id=null`. Once module-level system skills are authored (per F2 after M1), this becomes obsolete. F7 sub-finding: the `send_email` linkage is unjustified channel-pinning for generic notification flows | Sequenced: (1) author module-level system skills, (2) link channel abstractions (`notify_person` / `notify_team`) on the per-module skills, (3) DELETE legacy skill 64. Do not delete legacy before per-module skills exist. |
+| B1-S11 | F1 + F7 fail: legacy `skills.id=64` at `domain_id=157`, `domain_module_id=null`. Once module-level system skills are authored (per F2 after M1), this becomes obsolete. F7 sub-finding: the `send_email` relationship is unjustified channel-pinning for generic notification flows | Sequenced: (1) author module-level system skills, (2) relationship channel abstractions (`notify_person` / `notify_team`) on the per-module skills, (3) DELETE legacy skill 64. Do not delete legacy before per-module skills exist. |
 | B1-S12 | C2 review: `FSQM-AUDIT-PREP` capability's responsibility may diverge from the domain's owning function (GRC). Audit prep is more a GRC-Audit than a GRC-Compliance function | Bucket 2 review (whether to add a `business_function_capabilities` override). |
 
 #### MISSING (data-object surface gaps)
@@ -252,7 +252,7 @@ Queued via `scripts/analytics/append_missing_domain.ts`:
 
 ### Per-bucket prompts
 
-- **Bucket 1 (12 STRUCTURAL + MISSING + APQC items).** *"Approve Bucket 1 items B1-S1..S12, B1-M1..M4, B1-H1 for fix loads? Recommended order: (1) author Bucket 2 #1 module split, (2) load modules + lifecycle states + pattern-flag review + intra-domain relationships + users edges, (3) re-attribute or DELETE trigger_event 349 per B1-S8, (4) load APQC tags (excluding handoff 357 until B1-S8 decided), (5) load missing masters M1..M4. Confirm per-item approve / decline."*
+- **Bucket 1 (12 STRUCTURAL + MISSING + APQC items).** *"Approve Bucket 1 items B1-S1..S12, B1-M1..M4, B1-H1 for fix loads? Recommended order: (1) author Bucket 2 #1 module split, (2) load modules + lifecycle states + pattern-flag review + intra-domain relationships + relationships to `users`, (3) re-attribute or DELETE trigger_event 349 per B1-S8, (4) load APQC tags (excluding handoff 357 until B1-S8 decided), (5) load missing masters M1..M4. Confirm per-item approve / decline."*
 - **Bucket 2 (4 judgment items).** *"Decisions needed: (1) module split shape (recommended: 4 modules HACCP / CCP-MONITORING / INCIDENT-RECALL / CORE; alternatives: 6-module or 3-module starter); (2) `gfsi_audits` mastership (FSQM vs AUDIT-with-FSQM-contributor); (3) VACCP/TACCP fold vs separate vs defer; (4) `FSQM-AUDIT-PREP` capability function-divergence override (yes/no). What's your call on each?"*
 - **Bucket 3 (3 Phase-0 candidates).** *"Vet via Phase 0 vendor research, or eyeball-mode? Candidates: `food_safety_plans` (FSMA superseder of `haccp_plans`), `coa_records` (per-shipment COAs), VACCP+TACCP assessment masters. Eyeball-mode recommendation: `food_safety_plans` rings true (FSMA naming shift is real); `coa_records` defer (may belong in FOOD-TRACE); VACCP/TACCP defer (enterprise food only, vendor support uneven)."*
 
@@ -278,7 +278,7 @@ Loader: [.tmp_deploy/fix_fsqm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fsq
 ### Applied
 
 - **B1-S8** DELETE stale `trigger_event` 349 (`audit_finding.created`) which mis-attributed an AUDIT-mastered payload to FSQM emission. Cascade order: `handoff_processes` id=143 -> `handoffs` id=357 -> `trigger_events` id=349.
-- **B1-S5** INSERT 10 `data_object_relationships` user-edges (Rule #10) covering PCQI authoring, plant manager approval, CCP monitoring, operator-recorded measurements, incident reporting + QA ownership, allergen program ownership, EMP sample collection, sanitor performance + supervisor verification. All `<master> -> users (748)`, `many_to_many`, `reference`, `owner_side=source`. New ids 1805..1814.
+- **B1-S5** INSERT 10 `data_object_relationships` relationships to `users` (Rule #10) covering PCQI authoring, plant manager approval, CCP monitoring, operator-recorded measurements, incident reporting + QA ownership, allergen program ownership, EMP sample collection, sanitor performance + supervisor verification. All `<master> -> users (748)`, `many_to_many`, `reference`, `owner_side=source`. New ids 1805..1814.
 - **B1-S4** INSERT 5 intra-domain `data_object_relationships` (verbs `defines`, `is monitored by`, `is verified by`, `governs`, `triggers`). New ids 1815..1819.
 - **B1-S6** INSERT 4 cross-domain `data_object_relationships` (`food_safety_incidents spawns recall_events` to FOOD-TRACE, `haccp_plans is subject to audit_findings` to AUDIT with `owner_side=target`, `food_safety_incidents triggers compliance_obligations` to GRC, `haccp_plans is subject to compliance_obligations` to GRC with `owner_side=target`). New ids 1820..1823.
 - **B1-H1** INSERT 10 `handoff_processes` rows (`agent_curated`) for handoffs 356, 358, 361, 971, 975, 976, 977, 978, 979, 980 against the audit's pre-specified PCF external_ids (20111, 10369, 10089, 20110, 11047, 20115, 19248, 10368, 10289, 10302). Pre-flight verified every (handoff_id, process_id) pair. New ids 606..615.
@@ -294,7 +294,7 @@ Loader: [.tmp_deploy/fix_fsqm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fsq
 - **B1-S11** F1/F7 legacy skill cleanup: sequenced after M1 (must not delete legacy skill 64 before module-level system skills exist).
 - **B1-S12** C2 capability function-divergence override for `FSQM-AUDIT-PREP`: judgment.
 - **B1-M1..M4** MISSING masters (`corrective_action_records`, `verification_records`, `mock_recalls`, `environmental_monitoring_programs`): new entities.
-- **Regulations gap (S1)**: 0 `domain_regulations` rows but the food-safety regulations themselves (FSMA Preventive Controls, FDA Food Traceability, Codex HACCP, USDA FSIS HACCP, SQF, BRC GS, FSSC 22000, IFS Food) are not yet in the `regulations` table; can only link existing rows, and new regulation inserts are out of scope.
+- **Regulations gap (S1)**: 0 `domain_regulations` rows but the food-safety regulations themselves (FSMA Preventive Controls, FDA Food Traceability, Codex HACCP, USDA FSIS HACCP, SQF, BRC GS, FSSC 22000, IFS Food) are not yet in the `regulations` table; can only relate existing rows, and new regulation inserts are out of scope.
 - **APQC tags for handoffs 352, 354, 355**: each already has an `agent_curated` `handoff_processes` row from a prior run with different `process_id` than this audit proposes (352 has 171 vs proposed 1570; 354 has 170 which matches proposed; 355 has 70 vs proposed 393). For 354 the proposed pair is identical to the existing row (skipped as already present); for 352 and 355 the divergent proposals would compete with the prior agent_curated rows and need user judgment.
 - **Bucket 2** (4 judgment items) and **Bucket 3** (3 Phase-0 candidates) untouched per scope.
 
@@ -308,7 +308,7 @@ None.
 
 - **Domain id 157.** A/M/B/C/D/E/F/H structural sweep, b1 mode (Validate). No subagent / market pass run in this audit.
 - **Current footprint (live).** 12 DMDO rows (7 master, 4 contributor, 1 consumer), 6 capabilities, 8 solutions (6 primary + 2 secondary), 4 business_function_domains rows (1 owner GRC + 2 contributors + 1 consumer). **0 domain_modules** (M1 still failing). 0 domain_regulations. 7 trigger_events (1 was deleted in the 2026-05-31 continuation: id 349 / handoff 357 / handoff_processes 143 cascade applied; verified absent on this audit). 13 cross-domain handoffs (8 outbound + 5 inbound), all with NULL `source_domain_module_id` AND `target_domain_module_id` (cascade of M1). 1 legacy `skills` row (id 64, `domain_id=157`, `domain_module_id=null`) with 8 `skill_tools` (7 query + 1 send_email). 15 `handoff_processes` rows covering all 13 cross-domain handoffs (handoffs 975 and 979 each have 2 tags; all `proposal_source='agent_curated'`, all `record_status='new'`).
-- **2026-05-31 continuation deltas verified.** B1-S8 trigger_event 349 + handoff 357 + handoff_processes 143 cascade-deleted. B1-S5 10 `data_object_relationships` user-edges (ids 1805-1814) present. B1-S4 5 intra-domain rels (1815-1819) present. B1-S6 4 cross-domain rels (1820-1823) present. B1-H1 10 new `handoff_processes` (606-615) present, plus 2 additional rows on 975 and 979 (683, 684) layering second APQC mappings (not from the audit's curated list but valid additional `agent_curated` tags).
+- **2026-05-31 continuation deltas verified.** B1-S8 trigger_event 349 + handoff 357 + handoff_processes 143 cascade-deleted. B1-S5 10 `data_object_relationships` relationships to `users` (ids 1805-1814) present. B1-S4 5 intra-domain rels (1815-1819) present. B1-S6 4 cross-domain rels (1820-1823) present. B1-H1 10 new `handoff_processes` (606-615) present, plus 2 additional rows on 975 and 979 (683, 684) layering second APQC mappings (not from the audit's curated list but valid additional `agent_curated` tags).
 - **Bucket 1 (in-scope, agent fixable):** 9 items still pending (down from 12; B1-S5 / B1-S4 / B1-S6 / B1-S8 / most of B1-H1 resolved by the continuation).
 - **Bucket 2 (surface-for-user, judgment):** 4 items unchanged.
 - **Bucket 3 (Phase 0 pending, speculative):** 3 items unchanged.
@@ -367,7 +367,7 @@ Every master has 0 lifecycle states (B12 fail) and 0 aliases (B11 fail for cross
 | B4 | FAIL: every master has all three pattern flags false; Rule #12 requires positive consideration | Bucket 1 STRUCTURAL (B1-S3, carried; per-flag review needed, Rule #15 forbids notes annotation) |
 | B5 | pass (no `embedded_master` rows in this domain) | n/a |
 | B6 | pass (5 intra-domain `data_object_relationships`: 1815-1819 cover `haccp_plans defines critical_control_points`, `critical_control_points is monitored by ccp_measurements`, `allergen_programs is verified by environmental_monitoring_samples`, `haccp_plans governs food_safety_incidents`, `environmental_monitoring_samples triggers food_safety_incidents`) | n/a |
-| B7 | pass (10 user-edges on masters: rows 1805-1814 to `users` id 748) | n/a |
+| B7 | pass (10 relationships to `users` on masters: rows 1805-1814 to `users` id 748) | n/a |
 | B8 | partial pass: 4 cross-domain outbound rels (1820 to FOOD-TRACE, 1821 + 1823 to AUDIT + GRC, 1822 to GRC). Remaining outbound handoffs (358, 975, 976, 977, 978, 979) have payload = source master, so no separate target master to mirror against; B8 acceptance criterion is satisfied per "clean payload->target mapping" caveat | n/a |
 | B9 | partial: 7 published events for 7 masters; missing normal-path events `haccp_plan.due_for_review`, `food_safety_incident.opened`, `food_safety_incident.closed`, `environmental_monitoring_sample.adverse_trend` | Bucket 1 STRUCTURAL (B1-S7, carried) |
 | B9b | n/a until M1 cured | cascade |
@@ -378,9 +378,9 @@ Every master has 0 lifecycle states (B12 fail) and 0 aliases (B11 fail for cross
 | C1 | pass (1 owner GRC + 2 contributors + 1 consumer) | n/a |
 | C2 | open: `FSQM-AUDIT-PREP` capability function-divergence review | Bucket 2 #4 (carried) |
 | D1 | UI spot-check deferred until after fix loads | n/a |
-| E1-E6 | E1 vacuously fails (no modules to anchor `role_modules` on; `business_function_id=eq.5` returns zero roles) | cascade from M1 |
+| E1-E6 | E1 vacuously fails (no modules to anchor `persona_modules` on; `business_function_id=eq.5` returns zero roles) | cascade from M1 |
 | F1 | FAIL: legacy `skills.id=64` at `domain_id=157`, `domain_module_id=null` still in place. Sequenced after M1 (must not delete legacy before module-level system skills exist) | Bucket 1 STRUCTURAL (B1-S11, carried; cascade) |
-| F2 / F3 / F4 / F5 | cascade from M1. F4 sub-finding: the 8 legacy skill_tools pass operation-kind invariants (7 `query_*` tools with `data_object_id` set; `send_email` with NULL `data_object_id`); F7 sub-finding: `send_email` link unjustified for generic notification flows, should use `notify_person` / `notify_team` | Bucket 1 STRUCTURAL (F7 specifically, carried; F2-F5 cascade) |
+| F2 / F3 / F4 / F5 | cascade from M1. F4 sub-finding: the 8 legacy skill_tools pass operation-kind invariants (7 `query_*` tools with `data_object_id` set; `send_email` with NULL `data_object_id`); F7 sub-finding: `send_email` relationship unjustified for generic notification flows, should use `notify_person` / `notify_team` | Bucket 1 STRUCTURAL (F7 specifically, carried; F2-F5 cascade) |
 | H1 | pass on coverage: 13/13 cross-domain handoffs have at least one `handoff_processes` row. All 15 tags `agent_curated`, all `record_status='new'`. Catalog quality (approved count) = 0; provenance (agent_curated count) = 15. Two extra tags (683 on 975, 684 on 979) layered after the curated audit list; both are valid `agent_curated` rows. No deferrals | pass on coverage; approval cycle remains user action |
 
 ### Bucket 1, In-scope confirmed gaps (carried + still pending)
@@ -393,7 +393,7 @@ Every master has 0 lifecycle states (B12 fail) and 0 aliases (B11 fail for cross
 | B1-S7 | B9 partial: 7 events published, missing normal-lifecycle events `haccp_plan.due_for_review`, `food_safety_incident.opened`, `food_safety_incident.closed`, `environmental_monitoring_sample.adverse_trend` | Author the missing events; pair each with at least one handoff per B9. |
 | B1-S9 | B11 fail: 0 aliases on any master | Cluster-drafts load with `alias_type` + `solution_id` resolution. Deferred per prior audit pending vendor-term arbitration. |
 | B1-S10 | B12 fail: 0 lifecycle states on any of the 7 masters | State machines: `haccp_plans`, `food_safety_incidents`, `ccp_measurements`, `allergen_programs`, `environmental_monitoring_samples`, `sanitation_records`, `critical_control_points`. Per-state `domain_module_id` blocked on M1. |
-| B1-S11 | F1 + F7 fail: legacy `skills.id=64` at `domain_id=157`, `domain_module_id=null`. F7 sub-finding: `send_email` linkage unjustified channel-pinning for generic notification flows | Sequenced: (1) author module-level system skills (cascade of M1), (2) link channel abstractions, (3) DELETE legacy skill 64. Blocked on M1. |
+| B1-S11 | F1 + F7 fail: legacy `skills.id=64` at `domain_id=157`, `domain_module_id=null`. F7 sub-finding: `send_email` relationship unjustified channel-pinning for generic notification flows | Sequenced: (1) author module-level system skills (cascade of M1), (2) relationship channel abstractions, (3) DELETE legacy skill 64. Blocked on M1. |
 | B1-M1..M4 | MISSING masters: `corrective_action_records`, `verification_records`, `mock_recalls`, `environmental_monitoring_programs` | Load each per module placement after M1 cured. |
 | B1-H1 | APQC tag review and approval: 13/13 handoffs covered (15 tags). All `record_status='new'`. Catalog quality headline = 0 approved. Requires reviewer pass to mark `approved` | User decision per Rule #1 (record_status confirmation). |
 
@@ -432,7 +432,7 @@ None.
 Cured the M1 gating fail. FSQM went from 0 to 3 `module_kind='full'` domain_modules, all
 `industry_id=24` (Food and Beverage Manufacturing, NAICS 311-312, the single clear food
 manufacturer row; FSQM buyer is the FSMA-subject food manufacturer). Scope was modules +
-entity assignment only: linked all 6 existing capabilities, assigned all 12 existing
+entity assignment only: related all 6 existing capabilities, assigned all 12 existing
 data_objects at their existing role + necessity. No new data_objects, capabilities, lifecycle
 states, skills, tools, handoffs, or relationships were created. Loader:
 [.tmp_deploy/modularize_fsqm_2026-06-02.ts](../../.tmp_deploy/modularize_fsqm_2026-06-02.ts),
@@ -445,7 +445,7 @@ Built a 3-module split (not the prior audit's 4-module HACCP / CCP-MONITORING / 
 each master in exactly one module without an empty "CORE" catch-all. The prior B2-MODULE-SHAPE
 options are superseded by the as-built shape below; the open question is closed.
 
-| Module code | id | Capabilities | Masters (role=master) | Borrowed (existing role preserved) |
+| Module code | id | Capabilities | Masters (held_as=master) | Borrowed (existing role preserved) |
 | --- | --- | --- | --- | --- |
 | FSQM-HACCP-CCP | 259 | 467 HACCP Plan Authoring, 468 CCP Monitoring and Deviation Management | haccp_plans (507), critical_control_points (508), ccp_measurements (509), food_safety_incidents (510) | audit_findings (294) contributor/required |
 | FSQM-HYGIENE-CONTROL | 263 | 470 Allergen Control, 471 Environmental Monitoring | allergen_programs (511), environmental_monitoring_samples (512), sanitation_records (513) | (none) |
@@ -466,7 +466,7 @@ capabilities), satisfying M6 and the no-empty-module rule.
 ### Verification
 
 - 3 full modules, all industry_id=24. M1 cured.
-- 6 capability links, every capability placed exactly once (M4).
+- 6 capability relationships, every capability placed exactly once (M4).
 - 12 DMDO rows, no empty module, all borrowed roles + necessity preserved.
 - Catalog-wide master re-check: each of the 7 masters mastered exactly once.
 
@@ -574,7 +574,7 @@ All 13 handoffs PATCHed. Prior value on each patched field was NULL.
 - Legacy skill cleanup (F1): DELETE `skill_tools` skill_id=64 (8 rows: ids 573-580, tools 492,
   493, 494, 495, 496, 497, 498, send_email 37) then DELETE `skills` id=64 (`fsqm-system`,
   domain_id=157, domain_module_id=null). Prior row snapshot: skill 64 was the only legacy
-  domain-level system skill; its send_email link (F7) is retired in favor of notify_person /
+  domain-level system skill; its send_email relationship (F7) is retired in favor of notify_person /
   notify_team on the per-module skills.
 
 ### Skipped
@@ -612,3 +612,7 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-11-03 - supplier_certifications master moved, owner-approved
+
+The master of `supplier_certifications` is now SRM-RISK-COMPLIANCE (see FOOD-TRACE history). No FSQM row changed. Check M9 now flags dmdo 1396, FSQM-AUDIT-SUPPLIER as contributor, which is q17.

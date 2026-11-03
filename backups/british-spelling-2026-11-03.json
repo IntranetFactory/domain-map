@@ -1,0 +1,1561 @@
+{
+ "taken_at": "2026-11-03T15:18:29.726Z",
+ "cells": [
+  {
+   "table": "business_function_domains",
+   "id": 316,
+   "column": "notes",
+   "old": "FP&A contributes valuation modelling and underwriting analysis.",
+   "new": "FP&A contributes valuation modeling and underwriting analysis."
+  },
+  {
+   "table": "business_function_domains",
+   "id": 347,
+   "column": "notes",
+   "old": "Ag-input procurement (seed / fertiliser / chemicals) feeds FMIS input-inventory and reconciles applications against purchases.",
+   "new": "Ag-input procurement (seed / fertilizer / chemicals) feeds FMIS input-inventory and reconciles applications against purchases."
+  },
+  {
+   "table": "business_function_domains",
+   "id": 357,
+   "column": "notes",
+   "old": "Production operations executes CCP monitoring, sanitation, and allergen-control programmes on the plant floor.",
+   "new": "Production operations executes CCP monitoring, sanitation, and allergen-control programs on the plant floor."
+  },
+  {
+   "table": "business_processes",
+   "id": 51,
+   "column": "description",
+   "old": "Designing and maintaining the IT services/solutions catalogue. Evaluate the performance of IT services/solutions. Communicate the results to the management.",
+   "new": "Designing and maintaining the IT services/solutions catalog. Evaluate the performance of IT services/solutions. Communicate the results to the management."
+  },
+  {
+   "table": "business_processes",
+   "id": 242,
+   "column": "description",
+   "old": "Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the enquiry has been made.",
+   "new": "Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the inquiry has been made."
+  },
+  {
+   "table": "business_processes",
+   "id": 256,
+   "column": "description",
+   "old": "Establishing and maintaining service levels for the provision of IT services and solutions. Design and maintain the IT services and solution catalogue, as well as service level agreements. Evaluate the performance of IT service level agreements. Communicate the results to the management.",
+   "new": "Establishing and maintaining service levels for the provision of IT services and solutions. Design and maintain the IT services and solution catalog, as well as service level agreements. Evaluate the performance of IT service level agreements. Communicate the results to the management."
+  },
+  {
+   "table": "business_processes",
+   "id": 740,
+   "column": "description",
+   "old": "Attending to any queries received from the customers, even after a sales order has been serviced. Deploy ad hoc personnel for managing these enquiries.",
+   "new": "Attending to any queries received from the customers, even after a sales order has been serviced. Deploy ad hoc personnel for managing these inquiries."
+  },
+  {
+   "table": "business_processes",
+   "id": 1029,
+   "column": "description",
+   "old": "Document the results of both formal reviews to include both positive and negative feedback and commentary. May include acknowledgement by involved parties.",
+   "new": "Document the results of both formal reviews to include both positive and negative feedback and commentary. May include acknowledgment by involved parties."
+  },
+  {
+   "table": "capabilities",
+   "id": 177,
+   "column": "description",
+   "old": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artefact, lessons-learned relationships. Distinct discipline from standard incident handling.",
+   "new": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artifact, lessons-learned relationships. Distinct discipline from standard incident handling."
+  },
+  {
+   "table": "capabilities",
+   "id": 264,
+   "column": "description",
+   "old": "Behavioral + demographic scoring with grading and nurture-stream triggers; B2B-flavoured.",
+   "new": "Behavioral + demographic scoring with grading and nurture-stream triggers; B2B-flavored."
+  },
+  {
+   "table": "capabilities",
+   "id": 279,
+   "column": "capability_name",
+   "old": "Auto-Dialler and Click-to-Call",
+   "new": "Auto-Dialer and Click-to-Call"
+  },
+  {
+   "table": "capabilities",
+   "id": 279,
+   "column": "description",
+   "old": "Power/parallel dialler with local-presence numbers and call disposition logging.",
+   "new": "Power/parallel dialer with local-presence numbers and call disposition logging."
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 738,
+   "column": "permission_verb_override",
+   "old": "fulfil_order",
+   "new": "fulfill_order"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2802,
+   "column": "state_name",
+   "old": "cancelled",
+   "new": "canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2806,
+   "column": "state_name",
+   "old": "cancelled",
+   "new": "canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2841,
+   "column": "state_name",
+   "old": "cancelled",
+   "new": "canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2845,
+   "column": "state_name",
+   "old": "cancelled",
+   "new": "canceled"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "relationship_verb",
+   "old": "dialled_call",
+   "new": "dialed_call"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "inverse_verb",
+   "old": "is_dialled_by",
+   "new": "is_dialed_by"
+  },
+  {
+   "table": "data_objects",
+   "id": 7,
+   "column": "description",
+   "old": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters).",
+   "new": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medalists, alumni, target-school grads, hard-to-fill skill clusters)."
+  },
+  {
+   "table": "data_objects",
+   "id": 341,
+   "column": "description",
+   "old": "Detected over-privilege, toxic combination (PII + public access), unauthorised access, shadow-data exposure. DSPM remediation trigger.",
+   "new": "Detected over-privilege, toxic combination (PII + public access), unauthorized access, shadow-data exposure. DSPM remediation trigger."
+  },
+  {
+   "table": "data_objects",
+   "id": 648,
+   "column": "data_object_name",
+   "old": "retail_labour_schedules",
+   "new": "retail_labor_schedules"
+  },
+  {
+   "table": "data_objects",
+   "id": 673,
+   "column": "data_object_name",
+   "old": "visitor_nda_acknowledgements",
+   "new": "visitor_nda_acknowledgments"
+  },
+  {
+   "table": "data_objects",
+   "id": 902,
+   "column": "data_object_name",
+   "old": "fcra_summary_of_rights_acknowledgements",
+   "new": "fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "data_objects",
+   "id": 941,
+   "column": "data_object_name",
+   "old": "harassment_training_acknowledgements",
+   "new": "harassment_training_acknowledgments"
+  },
+  {
+   "table": "data_objects",
+   "id": 952,
+   "column": "description",
+   "old": "GDPR Article 17 right-to-erasure request: scope, anonymisation policy, regulator deadline, fulfillment status.",
+   "new": "GDPR Article 17 right-to-erasure request: scope, anonymization policy, regulator deadline, fulfillment status."
+  },
+  {
+   "table": "data_objects",
+   "id": 1142,
+   "column": "data_object_name",
+   "old": "content_acknowledgements",
+   "new": "content_acknowledgments"
+  },
+  {
+   "table": "data_objects",
+   "id": 1284,
+   "column": "data_object_name",
+   "old": "dpo_training_acknowledgements",
+   "new": "dpo_training_acknowledgments"
+  },
+  {
+   "table": "data_objects",
+   "id": 1376,
+   "column": "description",
+   "old": "A reservation a customer makes against one or more departures, holding the booked rate options, participant count, total price, payment status, channel of origin, and the full lifecycle from pending through completed, cancelled, or no-show.",
+   "new": "A reservation a customer makes against one or more departures, holding the booked rate options, participant count, total price, payment status, channel of origin, and the full lifecycle from pending through completed, canceled, or no-show."
+  },
+  {
+   "table": "data_objects",
+   "id": 1392,
+   "column": "description",
+   "old": "A reusable waiver document definition with custom clauses, questions, and acknowledgements an operator requires for an activity, published for guests to sign.",
+   "new": "A reusable waiver document definition with custom clauses, questions, and acknowledgments an operator requires for an activity, published for guests to sign."
+  },
+  {
+   "table": "data_objects",
+   "id": 1392,
+   "column": "catalog_description",
+   "old": "Reusable waiver definitions with custom clauses, questions, and acknowledgements an operator requires for an activity.",
+   "new": "Reusable waiver definitions with custom clauses, questions, and acknowledgments an operator requires for an activity."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 92,
+   "column": "notes",
+   "old": "Onboarding provisioning tasks open ITSM service requests for IT fulfilment (laptop, accounts, access).",
+   "new": "Onboarding provisioning tasks open ITSM service requests for IT fulfillment (laptop, accounts, access)."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 101,
+   "column": "notes",
+   "old": "The licence terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view.",
+   "new": "The license terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 248,
+   "column": "notes",
+   "old": "BEN-ADMIN defines the benefit deduction codes that PAYROLL operationalises in gross-to-net calculation.",
+   "new": "BEN-ADMIN defines the benefit deduction codes that PAYROLL operationalizes in gross-to-net calculation."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 249,
+   "column": "notes",
+   "old": "COMP-MGMT defines compensation-driven earning codes (bonus, equity vest, allowance) that PAYROLL operationalises.",
+   "new": "COMP-MGMT defines compensation-driven earning codes (bonus, equity vest, allowance) that PAYROLL operationalizes."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 280,
+   "column": "notes",
+   "old": "PSA consumes project-tagged time_entries for billable-hours calculation and utilisation reporting.",
+   "new": "PSA consumes project-tagged time_entries for billable-hours calculation and utilization reporting."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 308,
+   "column": "notes",
+   "old": "PA consumes engagement_drivers at team/department grain for cross-cutting people-analytics dashboards and attrition modelling features.",
+   "new": "PA consumes engagement_drivers at team/department grain for cross-cutting people-analytics dashboards and attrition modeling features."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 321,
+   "column": "notes",
+   "old": "HRSD consumes the worker record as the principal authentication / authorisation context for case visibility and routing.",
+   "new": "HRSD consumes the worker record as the principal authentication / authorization context for case visibility and routing."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 363,
+   "column": "notes",
+   "old": "WFM consumes positions to enforce position-based scheduling rules: required skills, location, cost-centre, and FTE budget per position.",
+   "new": "WFM consumes positions to enforce position-based scheduling rules: required skills, location, cost-center, and FTE budget per position."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 364,
+   "column": "notes",
+   "old": "WFM consumes job_profiles for skill/qualification matching when filling open shifts and for labour-law rules tied to job class.",
+   "new": "WFM consumes job_profiles for skill/qualification matching when filling open shifts and for labor-law rules tied to job class."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 366,
+   "column": "notes",
+   "old": "PSA consumes employees as the consultant pool for resource staffing and utilisation tracking.",
+   "new": "PSA consumes employees as the consultant pool for resource staffing and utilization tracking."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 434,
+   "column": "notes",
+   "old": "Process-anchored capability decomposition: capabilities map onto modelled processes and value streams. Owned by the Process Office / Operational Excellence.",
+   "new": "Process-anchored capability decomposition: capabilities map onto modeled processes and value streams. Owned by the Process Office / Operational Excellence."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 435,
+   "column": "notes",
+   "old": "Application-anchored capability mapping: capabilities map onto applications for rationalisation and TIME scoring. Owned by Enterprise Architecture. Co-master with BPA: APM anchors capability on application portfolio, BPA anchors capability on process architecture.",
+   "new": "Application-anchored capability mapping: capabilities map onto applications for rationalization and TIME scoring. Owned by Enterprise Architecture. Co-master with BPA: APM anchors capability on application portfolio, BPA anchors capability on process architecture."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 449,
+   "column": "notes",
+   "old": "LOYALTY master; reference data shared with marketing for personalisation.",
+   "new": "LOYALTY master; reference data shared with marketing for personalization."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 475,
+   "column": "notes",
+   "old": "Prioritisation backlog",
+   "new": "Prioritization backlog"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 480,
+   "column": "notes",
+   "old": "Realised-value tracking",
+   "new": "Realized-value tracking"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 482,
+   "column": "notes",
+   "old": "SWP-mastered; SPM consumes for resource-impact modelling",
+   "new": "SWP-mastered; SPM consumes for resource-impact modeling"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 489,
+   "column": "notes",
+   "old": "User policy acknowledgements",
+   "new": "User policy acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 491,
+   "column": "notes",
+   "old": "Curated evidence artefacts; AUDIT consumes",
+   "new": "Curated evidence artifacts; AUDIT consumes"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 498,
+   "column": "notes",
+   "old": "Discovery artefacts; flow to GRC issues",
+   "new": "Discovery artifacts; flow to GRC issues"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 738,
+   "column": "notes",
+   "old": "AGENCY-MGMT consumes won opportunities (CRM-mastered) as the trigger to spin up an agency_job and request scope finalisation.",
+   "new": "AGENCY-MGMT consumes won opportunities (CRM-mastered) as the trigger to spin up an agency_job and request scope finalization."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 820,
+   "column": "notes",
+   "old": "Per-product-line allergen-control programmes.",
+   "new": "Per-product-line allergen-control programs."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 823,
+   "column": "notes",
+   "old": "Adds risk-scoring metadata to FOOD-TRACE-mastered certs for supplier-risk programme.",
+   "new": "Adds risk-scoring metadata to FOOD-TRACE-mastered certs for supplier-risk program."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 832,
+   "column": "notes",
+   "old": "Optimised DTC delivery routes.",
+   "new": "Optimized DTC delivery routes."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 870,
+   "column": "notes",
+   "old": "PAYROLL local-masters org_units for cost-centre and legal-entity allocation of payroll journals when no HCM is deployed; reads from HCM when present.",
+   "new": "PAYROLL local-masters org_units for cost-center and legal-entity allocation of payroll journals when no HCM is deployed; reads from HCM when present."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 892,
+   "column": "notes",
+   "old": "LMS local-masters cost_centers for training-cost allocation only when finance integration exists or training-budget tracking is enabled; many deployments skip cost-centre tagging on training.",
+   "new": "LMS local-masters cost_centers for training-cost allocation only when finance integration exists or training-budget tracking is enabled; many deployments skip cost-center tagging on training."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 901,
+   "column": "notes",
+   "old": "PA reads merit_recommendations to inform attrition modelling (under-promoted, under-merited workers).",
+   "new": "PA reads merit_recommendations to inform attrition modeling (under-promoted, under-merited workers)."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 903,
+   "column": "notes",
+   "old": "PA reads survey_responses (anonymised) to fuse engagement signals into attrition and performance modelling. Distinct from engagement_drivers (aggregate) \u2014 this is row-level.",
+   "new": "PA reads survey_responses (anonymized) to fuse engagement signals into attrition and performance modeling. Distinct from engagement_drivers (aggregate) \u2014 this is row-level."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 904,
+   "column": "notes",
+   "old": "PA reads benefit_enrollments for total-rewards-analytics and benefits-utilisation reporting. Many PA deployments skip benefits analytics.",
+   "new": "PA reads benefit_enrollments for total-rewards-analytics and benefits-utilization reporting. Many PA deployments skip benefits analytics."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1148,
+   "column": "notes",
+   "old": "Some orders carry pickup-from-location / delivery-from-location semantics; OMS local-masters for omnichannel fulfilment scenarios. Optional in pure ship-from-warehouse setups.",
+   "new": "Some orders carry pickup-from-location / delivery-from-location semantics; OMS local-masters for omnichannel fulfillment scenarios. Optional in pure ship-from-warehouse setups."
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1157,
+   "column": "notes",
+   "old": "Strategy-office slice: corporate strategic initiative register with sponsor, benefits realisation, and traceability to strategic objectives. Co-mastered with SPM whose slice is the PMO portfolio view.",
+   "new": "Strategy-office slice: corporate strategic initiative register with sponsor, benefits realization, and traceability to strategic objectives. Co-mastered with SPM whose slice is the PMO portfolio view."
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 98,
+   "column": "notes",
+   "old": "Rating calibration sessions normalise scores before the cycle locks.",
+   "new": "Rating calibration sessions normalize scores before the cycle locks."
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 142,
+   "column": "notes",
+   "old": "Predictive case categorisation, priority scoring, suggested-response drafting, and auto-routing on incoming HR cases.",
+   "new": "Predictive case categorization, priority scoring, suggested-response drafting, and auto-routing on incoming HR cases."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 389,
+   "column": "notes",
+   "old": "Acknowledgement signing on published reviews in regulated industries.",
+   "new": "Acknowledgment signing on published reviews in regulated industries."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 617,
+   "column": "notes",
+   "old": "Update initiative status, milestones, and benefits realisation.",
+   "new": "Update initiative status, milestones, and benefits realization."
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 879,
+   "column": "notes",
+   "old": "Subscription charge (full-season pre-pay or instalment).",
+   "new": "Subscription charge (full-season pre-pay or installment)."
+  },
+  {
+   "table": "domain_modules",
+   "id": 409,
+   "column": "description",
+   "old": "The screening decision and the FCRA/EEOC paperwork chain: adjudication against the eligibility matrix, FCRA disclosures, candidate authorizations, pre-adverse and adverse action notices, summary-of-rights acknowledgements, disputes, individualized assessments, and ban-the-box assessments. Regulation-driven entities that must exist even where a vendor hides them in the order UI.",
+   "new": "The screening decision and the FCRA/EEOC paperwork chain: adjudication against the eligibility matrix, FCRA disclosures, candidate authorizations, pre-adverse and adverse action notices, summary-of-rights acknowledgments, disputes, individualized assessments, and ban-the-box assessments. Regulation-driven entities that must exist even where a vendor hides them in the order UI."
+  },
+  {
+   "table": "domain_modules",
+   "id": 420,
+   "column": "catalog_description",
+   "old": "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgements your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it.",
+   "new": "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgments your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it."
+  },
+  {
+   "table": "domains",
+   "id": 8,
+   "column": "business_logic",
+   "old": "Test runner orchestration (queuing, parallelisation, retry) is engine-like, but the test-management application itself is pure CRUD over cases, runs, and defects.",
+   "new": "Test runner orchestration (queuing, parallelization, retry) is engine-like, but the test-management application itself is pure CRUD over cases, runs, and defects."
+  },
+  {
+   "table": "domains",
+   "id": 14,
+   "column": "description",
+   "old": "Collection, curation, and operationalisation of indicators and adversary intelligence.",
+   "new": "Collection, curation, and operationalization of indicators and adversary intelligence."
+  },
+  {
+   "table": "domains",
+   "id": 80,
+   "column": "business_logic",
+   "old": "CI/CD execution graph runtime, artefact management, and policy enforcement; pipelines and projects are CRUD over this.",
+   "new": "CI/CD execution graph runtime, artifact management, and policy enforcement; pipelines and projects are CRUD over this."
+  },
+  {
+   "table": "domains",
+   "id": 95,
+   "column": "description",
+   "old": "Outbound sales cadences, multi-channel sequencing, dialler, conversation intelligence, and rep productivity. Sits alongside CRM rather than replacing it.",
+   "new": "Outbound sales cadences, multi-channel sequencing, dialer, conversation intelligence, and rep productivity. Sits alongside CRM rather than replacing it."
+  },
+  {
+   "table": "domains",
+   "id": 95,
+   "column": "business_logic",
+   "old": "Conversation intelligence ML (transcription, sentiment, deal-risk signals) and dialler integration; sequencing and outreach are workflow.",
+   "new": "Conversation intelligence ML (transcription, sentiment, deal-risk signals) and dialer integration; sequencing and outreach are workflow."
+  },
+  {
+   "table": "domains",
+   "id": 191,
+   "column": "catalog_description",
+   "old": "Run employment background checks end to end. Build screening packages from criminal, employment, education, identity, driving, and drug components, then invite candidates to a portal to give consent and complete their checks. Adjudicate results against a configurable eligibility matrix, and when a result is disqualifying, walk the full pre-adverse and adverse action chain with disclosures, authorizations, summary-of-rights acknowledgements, and dispute handling. Keep workers cleared after hire with continuous monitoring, rescreening, identity verification, and right-to-work checks.",
+   "new": "Run employment background checks end to end. Build screening packages from criminal, employment, education, identity, driving, and drug components, then invite candidates to a portal to give consent and complete their checks. Adjudicate results against a configurable eligibility matrix, and when a result is disqualifying, walk the full pre-adverse and adverse action chain with disclosures, authorizations, summary-of-rights acknowledgments, and dispute handling. Keep workers cleared after hire with continuous monitoring, rescreening, identity verification, and right-to-work checks."
+  },
+  {
+   "table": "handoffs",
+   "id": 18,
+   "column": "description",
+   "old": "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event.",
+   "new": "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event."
+  },
+  {
+   "table": "handoffs",
+   "id": 22,
+   "column": "description",
+   "old": "New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs.",
+   "new": "New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs."
+  },
+  {
+   "table": "handoffs",
+   "id": 364,
+   "column": "description",
+   "old": "CSA payment events post revenue to ERP-FIN; full-season pre-pays require deferred-revenue accounting amortised across delivery weeks.",
+   "new": "CSA payment events post revenue to ERP-FIN; full-season pre-pays require deferred-revenue accounting amortized across delivery weeks."
+  },
+  {
+   "table": "handoffs",
+   "id": 973,
+   "column": "description",
+   "old": "Captured KDEs are retained as audit-evidence artefacts for FSMA traceability audits.",
+   "new": "Captured KDEs are retained as audit-evidence artifacts for FSMA traceability audits."
+  },
+  {
+   "table": "handoffs",
+   "id": 1204,
+   "column": "description",
+   "old": "Strategy decision from an operating review (e.g. initiative cancellation, reprioritisation) updates the affected initiative records.",
+   "new": "Strategy decision from an operating review (e.g. initiative cancellation, reprioritization) updates the affected initiative records."
+  },
+  {
+   "table": "industries",
+   "id": 3,
+   "column": "description",
+   "old": "Hospitals, clinics, ambulatory care, long-term care, and other patient-care delivery organisations.",
+   "new": "Hospitals, clinics, ambulatory care, long-term care, and other patient-care delivery organizations."
+  },
+  {
+   "table": "industries",
+   "id": 11,
+   "column": "description",
+   "old": "Pharmaceutical manufacturers, biotech, medical devices, and contract research organisations. Heavy regulatory burden (FDA, EMA, GxP) and global-payroll complexity.",
+   "new": "Pharmaceutical manufacturers, biotech, medical devices, and contract research organizations. Heavy regulatory burden (FDA, EMA, GxP) and global-payroll complexity."
+  },
+  {
+   "table": "industries",
+   "id": 12,
+   "column": "description",
+   "old": "Sub-national government entities: states/provinces, counties, municipalities, public agencies. Distinct procurement (StateRAMP, GovCloud), labour rules, and budget cycles from federal Public Sector.",
+   "new": "Sub-national government entities: states/provinces, counties, municipalities, public agencies. Distinct procurement (StateRAMP, GovCloud), labor rules, and budget cycles from federal Public Sector."
+  },
+  {
+   "table": "industries",
+   "id": 13,
+   "column": "description",
+   "old": "Tax-exempt organisations including charities, foundations, religious bodies, advocacy groups. Distinct grant-accounting, fund-balance, donor-restricted-fund requirements.",
+   "new": "Tax-exempt organizations including charities, foundations, religious bodies, advocacy groups. Distinct grant-accounting, fund-balance, donor-restricted-fund requirements."
+  },
+  {
+   "table": "industries",
+   "id": 16,
+   "column": "description",
+   "old": "Law firms, solo practitioners, and legal-service organisations: litigation, transactional, regulatory, IP, real-estate, family, criminal defense, and in-house counsel offshoots. Buyer profile distinct from other professional services by ABA Model Rules, IOLTA trust accounting, conflict-of-interest constraints, and matter-centric workflow. Sub-segment of Professional Services in NAICS.",
+   "new": "Law firms, solo practitioners, and legal-service organizations: litigation, transactional, regulatory, IP, real-estate, family, criminal defense, and in-house counsel offshoots. Buyer profile distinct from other professional services by ABA Model Rules, IOLTA trust accounting, conflict-of-interest constraints, and matter-centric workflow. Sub-segment of Professional Services in NAICS."
+  },
+  {
+   "table": "industries",
+   "id": 21,
+   "column": "description",
+   "old": "NAICS 722. Full-service restaurants, quick-service restaurants (QSR), fast-casual, catering, food trucks, bars, coffee shops, and other prepared-food-for-immediate-consumption operations. Separate top-level (not under Hospitality) because the vendor stack is operationally distinct from lodging: restaurant POS (Toast, Square for Restaurants, TouchBistro), online-ordering aggregation (Olo, Otter), kitchen display systems, restaurant-specific labour scheduling (7shifts, Restaurant365), and direct delivery integrations. Driven by gig-labour and aggregator economics not present in lodging.",
+   "new": "NAICS 722. Full-service restaurants, quick-service restaurants (QSR), fast-casual, catering, food trucks, bars, coffee shops, and other prepared-food-for-immediate-consumption operations. Separate top-level (not under Hospitality) because the vendor stack is operationally distinct from lodging: restaurant POS (Toast, Square for Restaurants, TouchBistro), online-ordering aggregation (Olo, Otter), kitchen display systems, restaurant-specific labor scheduling (7shifts, Restaurant365), and direct delivery integrations. Driven by gig-labor and aggregator economics not present in lodging."
+  },
+  {
+   "table": "industries",
+   "id": 22,
+   "column": "description",
+   "old": "NAICS 111. Row crops (corn, soy, wheat, cotton), specialty crops (vineyards, orchards, market gardens), greenhouse / controlled-environment ag, and field vegetables. Vendor stack diverges sharply by farm size: smallholder FMIS (Farmbrite, AgriWebb) vs enterprise row-crop FMIS (Climate FieldView, Granular, Conservis). USDA Organic certification and state-level pesticide regulations apply. Speciality-crop-specific tooling (Vinsight, AgCode, Croptracker) is a candidate sub-industry \u2014 defer until vendor evidence justifies.",
+   "new": "NAICS 111. Row crops (corn, soy, wheat, cotton), specialty crops (vineyards, orchards, market gardens), greenhouse / controlled-environment ag, and field vegetables. Vendor stack diverges sharply by farm size: smallholder FMIS (Farmbrite, AgriWebb) vs enterprise row-crop FMIS (Climate FieldView, Granular, Conservis). USDA Organic certification and state-level pesticide regulations apply. Specialty-crop-specific tooling (Vinsight, AgCode, Croptracker) is a candidate sub-industry \u2014 defer until vendor evidence justifies."
+  },
+  {
+   "table": "industries",
+   "id": 25,
+   "column": "description",
+   "old": "NAICS 445. Supermarkets, grocery, specialty food retailers, beverage retailers, butcher / fish / produce shops. Sub-segment of Retail because POS / merchandising fundamentals carry over, but distinct perishables management (short shelf life, cold-chain monitoring, dynamic markdowns), thin margins driving aggressive markdown-optimisation tooling, and AP-pay-on-receipt supplier dynamics.",
+   "new": "NAICS 445. Supermarkets, grocery, specialty food retailers, beverage retailers, butcher / fish / produce shops. Sub-segment of Retail because POS / merchandising fundamentals carry over, but distinct perishables management (short shelf life, cold-chain monitoring, dynamic markdowns), thin margins driving aggressive markdown-optimization tooling, and AP-pay-on-receipt supplier dynamics."
+  },
+  {
+   "table": "industries",
+   "id": 29,
+   "column": "description",
+   "old": "Buyout, growth equity, and credit strategies in private companies, characterised by control or significant minority stakes and longer holding periods.",
+   "new": "Buyout, growth equity, and credit strategies in private companies, characterized by control or significant minority stakes and longer holding periods."
+  },
+  {
+   "table": "jurisdictions",
+   "id": 3,
+   "column": "description",
+   "old": "Federal jurisdiction of the United States of America. State-level jurisdictions (e.g. California) are modelled separately as children.",
+   "new": "Federal jurisdiction of the United States of America. State-level jurisdictions (e.g. California) are modeled separately as children."
+  },
+  {
+   "table": "jurisdictions",
+   "id": 11,
+   "column": "description",
+   "old": "Federal jurisdiction. Major Workday delivery centre; localised payroll via partner. Complex statutory deductions (PF, ESI, professional tax, TDS) and state-level variations.",
+   "new": "Federal jurisdiction. Major Workday delivery center; localized payroll via partner. Complex statutory deductions (PF, ESI, professional tax, TDS) and state-level variations."
+  },
+  {
+   "table": "jurisdictions",
+   "id": 16,
+   "column": "description",
+   "old": "US state. NYC Local Law 144 (AEDT bias audit), NY state pay-transparency law (s.194-b), state DOL labour rules.",
+   "new": "US state. NYC Local Law 144 (AEDT bias audit), NY state pay-transparency law (s.194-b), state DOL labor rules."
+  },
+  {
+   "table": "jurisdictions",
+   "id": 18,
+   "column": "description",
+   "old": "US state. Pay-transparency requirements (SB 5761) and L&I labour rules.",
+   "new": "US state. Pay-transparency requirements (SB 5761) and L&I labor rules."
+  },
+  {
+   "table": "regulations",
+   "id": 11,
+   "column": "description",
+   "old": "AML/CTF predicate offences, ultimate-beneficial-owner registers, enhanced due diligence, and sanctions screening obligations for obliged entities.",
+   "new": "AML/CTF predicate offenses, ultimate-beneficial-owner registers, enhanced due diligence, and sanctions screening obligations for obliged entities."
+  },
+  {
+   "table": "regulations",
+   "id": 20,
+   "column": "description",
+   "old": "Expanded HIPAA enforcement, breach-notification rules, and incentivised EHR adoption. Aligns ePHI safeguards with HIPAA Security Rule.",
+   "new": "Expanded HIPAA enforcement, breach-notification rules, and incentivized EHR adoption. Aligns ePHI safeguards with HIPAA Security Rule."
+  },
+  {
+   "table": "regulations",
+   "id": 31,
+   "column": "description",
+   "old": "Standardised security assessment, authorization (ATO), and continuous monitoring for cloud products sold to US federal agencies. Levels: Low / Moderate / High / Tailored.",
+   "new": "Standardized security assessment, authorization (ATO), and continuous monitoring for cloud products sold to US federal agencies. Levels: Low / Moderate / High / Tailored."
+  },
+  {
+   "table": "regulations",
+   "id": 41,
+   "column": "description",
+   "old": "Authorisation, capital, depositary, valuation, and reporting requirements for managers of alternative investment funds in the EU.",
+   "new": "Authorization, capital, depositary, valuation, and reporting requirements for managers of alternative investment funds in the EU."
+  },
+  {
+   "table": "regulations",
+   "id": 45,
+   "column": "description",
+   "old": "Embedded-emissions reporting and (from 2026) charges on imports of cement, iron and steel, aluminium, fertilisers, electricity, and hydrogen.",
+   "new": "Embedded-emissions reporting and (from 2026) charges on imports of cement, iron and steel, aluminum, fertilizers, electricity, and hydrogen."
+  },
+  {
+   "table": "regulations",
+   "id": 64,
+   "column": "description",
+   "old": "Federal prohibition on age-based employment discrimination against workers 40 and older. Drives age-anonymised candidate review and disparate-impact testing in workforce-analytics tooling.",
+   "new": "Federal prohibition on age-based employment discrimination against workers 40 and older. Drives age-anonymized candidate review and disparate-impact testing in workforce-analytics tooling."
+  },
+  {
+   "table": "regulations",
+   "id": 67,
+   "column": "description",
+   "old": "Federal prohibition on use of genetic information in employment decisions and health insurance underwriting. Drives benefits-enrolment data minimisation and wellness-program design.",
+   "new": "Federal prohibition on use of genetic information in employment decisions and health insurance underwriting. Drives benefits-enrollment data minimization and wellness-program design."
+  },
+  {
+   "table": "regulations",
+   "id": 69,
+   "column": "description",
+   "old": "Internet-based work-authorisation verification system. Mandatory for federal contractors and in several US states; voluntary elsewhere. Integrates with I-9 onboarding flow.",
+   "new": "Internet-based work-authorization verification system. Mandatory for federal contractors and in several US states; voluntary elsewhere. Integrates with I-9 onboarding flow."
+  },
+  {
+   "table": "regulations",
+   "id": 84,
+   "column": "description",
+   "old": "US federal statute (15 U.S.C. §1681 et seq.) governing collection, dissemination, and use of consumer credit information including pre-employment background checks. Mandates pre-adverse-action and adverse-action notices, candidate disclosure of report sources, and a Summary of Rights acknowledgement.",
+   "new": "US federal statute (15 U.S.C. §1681 et seq.) governing collection, dissemination, and use of consumer credit information including pre-employment background checks. Mandates pre-adverse-action and adverse-action notices, candidate disclosure of report sources, and a Summary of Rights acknowledgment."
+  },
+  {
+   "table": "solutions",
+   "id": 6,
+   "column": "description",
+   "old": "SAM Pro for entitlement reconciliation and licence optimisation.",
+   "new": "SAM Pro for entitlement reconciliation and license optimization."
+  },
+  {
+   "table": "solutions",
+   "id": 11,
+   "column": "description",
+   "old": "Application inventory, rationalisation, and TIME analysis.",
+   "new": "Application inventory, rationalization, and TIME analysis."
+  },
+  {
+   "table": "solutions",
+   "id": 14,
+   "column": "description",
+   "old": "Vulnerability ingestion, prioritisation, and remediation workflows.",
+   "new": "Vulnerability ingestion, prioritization, and remediation workflows."
+  },
+  {
+   "table": "solutions",
+   "id": 54,
+   "column": "description",
+   "old": "SAM with audit-defence focus.",
+   "new": "SAM with audit-defense focus."
+  },
+  {
+   "table": "solutions",
+   "id": 82,
+   "column": "description",
+   "old": "Vulnerability management and risk prioritisation.",
+   "new": "Vulnerability management and risk prioritization."
+  },
+  {
+   "table": "solutions",
+   "id": 195,
+   "column": "description",
+   "old": "Benefits administration, enrolment, and carrier connectivity.",
+   "new": "Benefits administration, enrollment, and carrier connectivity."
+  },
+  {
+   "table": "solutions",
+   "id": 251,
+   "column": "description",
+   "old": "People-analytics platform with bring-your-own-data modelling.",
+   "new": "People-analytics platform with bring-your-own-data modeling."
+  },
+  {
+   "table": "solutions",
+   "id": 266,
+   "column": "description",
+   "old": "Benefits administration and enrolment platform.",
+   "new": "Benefits administration and enrollment platform."
+  },
+  {
+   "table": "solutions",
+   "id": 268,
+   "column": "description",
+   "old": "Vendor management system for contingent labour.",
+   "new": "Vendor management system for contingent labor."
+  },
+  {
+   "table": "solutions",
+   "id": 277,
+   "column": "description",
+   "old": "ERP for people-centric services organisations.",
+   "new": "ERP for people-centric services organizations."
+  },
+  {
+   "table": "solutions",
+   "id": 345,
+   "column": "description",
+   "old": "AI-driven CPQ and price optimisation.",
+   "new": "AI-driven CPQ and price optimization."
+  },
+  {
+   "table": "solutions",
+   "id": 378,
+   "column": "description",
+   "old": "DXP built on Drupal with CDP and personalisation.",
+   "new": "DXP built on Drupal with CDP and personalization."
+  },
+  {
+   "table": "solutions",
+   "id": 395,
+   "column": "description",
+   "old": "Pure-play strategic workforce planning platform. Built for scenario modelling, skills-gap analysis, and demand/supply forecasting over multi-year horizons.",
+   "new": "Pure-play strategic workforce planning platform. Built for scenario modeling, skills-gap analysis, and demand/supply forecasting over multi-year horizons."
+  },
+  {
+   "table": "solutions",
+   "id": 396,
+   "column": "description",
+   "old": "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modelling, and headcount scenarios on top of HR data.",
+   "new": "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modeling, and headcount scenarios on top of HR data."
+  },
+  {
+   "table": "solutions",
+   "id": 407,
+   "column": "description",
+   "old": "Sales Performance Management platform spanning incentive compensation, territory and quota planning, sales-capacity modelling, and revenue intelligence overlays.",
+   "new": "Sales Performance Management platform spanning incentive compensation, territory and quota planning, sales-capacity modeling, and revenue intelligence overlays."
+  },
+  {
+   "table": "solutions",
+   "id": 410,
+   "column": "description",
+   "old": "Modern incentive compensation management platform with a spreadsheet-style modelling experience for RevOps and finance teams.",
+   "new": "Modern incentive compensation management platform with a spreadsheet-style modeling experience for RevOps and finance teams."
+  },
+  {
+   "table": "solutions",
+   "id": 412,
+   "column": "description",
+   "old": "SAP's cloud incentive compensation management product (formerly SAP Callidus Commissions / CallidusCloud). Plan modelling, calculation, dispute and payee statements.",
+   "new": "SAP's cloud incentive compensation management product (formerly SAP Callidus Commissions / CallidusCloud). Plan modeling, calculation, dispute and payee statements."
+  },
+  {
+   "table": "solutions",
+   "id": 413,
+   "column": "description",
+   "old": "Anaplan's connected-planning application focused on sales \u2014 territory and quota, sales forecasting, incentive comp modeling, and capacity planning, modelled on the Anaplan calculation engine.",
+   "new": "Anaplan's connected-planning application focused on sales \u2014 territory and quota, sales forecasting, incentive comp modeling, and capacity planning, modeled on the Anaplan calculation engine."
+  },
+  {
+   "table": "solutions",
+   "id": 415,
+   "column": "description",
+   "old": "Commission tracking and ICM platform optimised for SMB and mid-market sales teams; rep-facing commission visibility and self-serve plan setup.",
+   "new": "Commission tracking and ICM platform optimized for SMB and mid-market sales teams; rep-facing commission visibility and self-serve plan setup."
+  },
+  {
+   "table": "solutions",
+   "id": 422,
+   "column": "notes",
+   "old": "Replaces and extends the earlier Sales Analytics / High Velocity Sales Einstein insights; positioned against Gong and Clari for Salesforce-standardised shops.",
+   "new": "Replaces and extends the earlier Sales Analytics / High Velocity Sales Einstein insights; positioned against Gong and Clari for Salesforce-standardized shops."
+  },
+  {
+   "table": "solutions",
+   "id": 447,
+   "column": "notes",
+   "old": "Contentstack increasingly markets itself as a composable DXP since acquiring Lytics in 2023; modelled as primary HCMS with secondary DXP coverage.",
+   "new": "Contentstack increasingly markets itself as a composable DXP since acquiring Lytics in 2023; modeled as primary HCMS with secondary DXP coverage."
+  },
+  {
+   "table": "solutions",
+   "id": 448,
+   "column": "description",
+   "old": "Developer-led headless CMS with Slice Machine for component-driven content modelling and visual previews of slices in the local development environment.",
+   "new": "Developer-led headless CMS with Slice Machine for component-driven content modeling and visual previews of slices in the local development environment."
+  },
+  {
+   "table": "solutions",
+   "id": 449,
+   "column": "description",
+   "old": "Lightweight SaaS headless CMS targeted at small teams and marketing sites, with simple content modelling, blogging features, and REST APIs.",
+   "new": "Lightweight SaaS headless CMS targeted at small teams and marketing sites, with simple content modeling, blogging features, and REST APIs."
+  },
+  {
+   "table": "solutions",
+   "id": 471,
+   "column": "description",
+   "old": "SaaS Microsoft 365 management suite (migration, reporting, audit, recovery, license optimisation) consolidating the Metalogix and Cogmotive lineages.",
+   "new": "SaaS Microsoft 365 management suite (migration, reporting, audit, recovery, license optimization) consolidating the Metalogix and Cogmotive lineages."
+  },
+  {
+   "table": "solutions",
+   "id": 472,
+   "column": "description",
+   "old": "Microsoft 365 management platform with delegated administration, license optimisation, configuration baselining (via Simeon Cloud), and reporting.",
+   "new": "Microsoft 365 management platform with delegated administration, license optimization, configuration baselining (via Simeon Cloud), and reporting."
+  },
+  {
+   "table": "solutions",
+   "id": 473,
+   "column": "description",
+   "old": "Microsoft 365 and Exchange monitoring, reporting, and license-optimisation platform.",
+   "new": "Microsoft 365 and Exchange monitoring, reporting, and license-optimization platform."
+  },
+  {
+   "table": "solutions",
+   "id": 486,
+   "column": "notes",
+   "old": "AIP (Artificial Intelligence Platform) is modelled as the AI tier of Foundry on the same ontology \u2014 not a separate solution row. Foundry deploys on Palantir's cloud, hyperscalers, or fully on-prem/air-gapped.",
+   "new": "AIP (Artificial Intelligence Platform) is modeled as the AI tier of Foundry on the same ontology \u2014 not a separate solution row. Foundry deploys on Palantir's cloud, hyperscalers, or fully on-prem/air-gapped."
+  },
+  {
+   "table": "solutions",
+   "id": 500,
+   "column": "description",
+   "old": "Forecasting, scheduling, and adherence management for contact-centre and back-office labour.",
+   "new": "Forecasting, scheduling, and adherence management for contact-center and back-office labor."
+  },
+  {
+   "table": "solutions",
+   "id": 516,
+   "column": "description",
+   "old": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalisation.",
+   "new": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalization."
+  },
+  {
+   "table": "solutions",
+   "id": 542,
+   "column": "description",
+   "old": "MSP-focused remote-control tool (a.k.a. ConnectWise Control / ConnectWise ScreenConnect): attended/unattended sessions with strong customisation, integrated with ConnectWise PSA and RMM.",
+   "new": "MSP-focused remote-control tool (a.k.a. ConnectWise Control / ConnectWise ScreenConnect): attended/unattended sessions with strong customization, integrated with ConnectWise PSA and RMM."
+  },
+  {
+   "table": "solutions",
+   "id": 546,
+   "column": "description",
+   "old": "Mid-market PSA bolt-on to Oracle NetSuite ERP: resource planning, project accounting, time/expense, billing, utilisation. Competes head-to-head with Kantata and Certinia in mid-market RFPs.",
+   "new": "Mid-market PSA bolt-on to Oracle NetSuite ERP: resource planning, project accounting, time/expense, billing, utilization. Competes head-to-head with Kantata and Certinia in mid-market RFPs."
+  },
+  {
+   "table": "solutions",
+   "id": 546,
+   "column": "notes",
+   "old": "Distinct SKU from the broader NetSuite ERP row; modelled separately for accurate PSA market positioning.",
+   "new": "Distinct SKU from the broader NetSuite ERP row; modeled separately for accurate PSA market positioning."
+  },
+  {
+   "table": "solutions",
+   "id": 550,
+   "column": "description",
+   "old": "Modern lightweight PSA aimed at digital/professional services SMBs. Clean UX, strong utilisation/billing analytics.",
+   "new": "Modern lightweight PSA aimed at digital/professional services SMBs. Clean UX, strong utilization/billing analytics."
+  },
+  {
+   "table": "solutions",
+   "id": 557,
+   "column": "description",
+   "old": "B2C marketing automation: cross-channel journeys, AI-recommended audiences, mobile + web personalisation. Acquired by SAP in 2020.",
+   "new": "B2C marketing automation: cross-channel journeys, AI-recommended audiences, mobile + web personalization. Acquired by SAP in 2020."
+  },
+  {
+   "table": "solutions",
+   "id": 564,
+   "column": "description",
+   "old": "AI-driven multichannel sales engagement: email/LinkedIn/calls/SMS cadences with AI personalisation.",
+   "new": "AI-driven multichannel sales engagement: email/LinkedIn/calls/SMS cadences with AI personalization."
+  },
+  {
+   "table": "solutions",
+   "id": 567,
+   "column": "description",
+   "old": "Sales engagement platform: cadences, dialler, email tracking, conversation intelligence, AI rep coaching.",
+   "new": "Sales engagement platform: cadences, dialer, email tracking, conversation intelligence, AI rep coaching."
+  },
+  {
+   "table": "solutions",
+   "id": 568,
+   "column": "description",
+   "old": "Sales engagement platform: cadences, dialler, conversation intelligence (Drift acquisition 2024), forecasting (post-InsightSquared).",
+   "new": "Sales engagement platform: cadences, dialer, conversation intelligence (Drift acquisition 2024), forecasting (post-InsightSquared)."
+  },
+  {
+   "table": "solutions",
+   "id": 569,
+   "column": "description",
+   "old": "Sales engagement + B2B prospecting database in one: cadences, dialler, embedded intent data, contact discovery.",
+   "new": "Sales engagement + B2B prospecting database in one: cadences, dialer, embedded intent data, contact discovery."
+  },
+  {
+   "table": "solutions",
+   "id": 571,
+   "column": "description",
+   "old": "Salesforce-native sales engagement: cadences, dialler, email tracking, deeply integrated with SFDC. Owned by Clari since 2024.",
+   "new": "Salesforce-native sales engagement: cadences, dialer, email tracking, deeply integrated with SFDC. Owned by Clari since 2024."
+  },
+  {
+   "table": "solutions",
+   "id": 574,
+   "column": "description",
+   "old": "Sales engagement layered on ZoomInfo's B2B contact/intent database: cadences, dialler, intent-triggered workflows.",
+   "new": "Sales engagement layered on ZoomInfo's B2B contact/intent database: cadences, dialer, intent-triggered workflows."
+  },
+  {
+   "table": "solutions",
+   "id": 580,
+   "column": "description",
+   "old": "Enterprise monetisation platform for complex recurring revenue: hierarchies, partner billing, telco/media verticals.",
+   "new": "Enterprise monetization platform for complex recurring revenue: hierarchies, partner billing, telco/media verticals."
+  },
+  {
+   "table": "solutions",
+   "id": 581,
+   "column": "description",
+   "old": "Cloud monetisation platform for complex billing scenarios: usage rating, mediation, AR, revenue management.",
+   "new": "Cloud monetization platform for complex billing scenarios: usage rating, mediation, AR, revenue management."
+  },
+  {
+   "table": "solutions",
+   "id": 602,
+   "column": "description",
+   "old": "Project management built around services workflows: client billing, time tracking, resource utilisation, milestone management.",
+   "new": "Project management built around services workflows: client billing, time tracking, resource utilization, milestone management."
+  },
+  {
+   "table": "solutions",
+   "id": 604,
+   "column": "description",
+   "old": "BPMN 2.0 process modelling, repository, simulation, and collaborative publishing. Part of the SAP Signavio Process Transformation Suite (distinct from Signavio Process Intelligence, the mining product).",
+   "new": "BPMN 2.0 process modeling, repository, simulation, and collaborative publishing. Part of the SAP Signavio Process Transformation Suite (distinct from Signavio Process Intelligence, the mining product)."
+  },
+  {
+   "table": "solutions",
+   "id": 604,
+   "column": "notes",
+   "old": "Acquired by SAP in 2021. The Process Manager is the modelling product; Signavio Process Intelligence (id 187) is the mining product. Both are sold as part of the broader Signavio suite.",
+   "new": "Acquired by SAP in 2021. The Process Manager is the modeling product; Signavio Process Intelligence (id 187) is the mining product. Both are sold as part of the broader Signavio suite."
+  },
+  {
+   "table": "solutions",
+   "id": 605,
+   "column": "description",
+   "old": "Veteran enterprise BPA platform: BPMN/EPC modelling, repository, governance workflows, simulation, ARIS Connect publishing, and ARIS Risk & Compliance Manager.",
+   "new": "Veteran enterprise BPA platform: BPMN/EPC modeling, repository, governance workflows, simulation, ARIS Connect publishing, and ARIS Risk & Compliance Manager."
+  },
+  {
+   "table": "solutions",
+   "id": 606,
+   "column": "description",
+   "old": "Process and capability-modelling platform built on Microsoft Azure / Power BI. Ships APQC PCF as reference content; covers BPA, capability maps, risk, and EA views.",
+   "new": "Process and capability-modeling platform built on Microsoft Azure / Power BI. Ships APQC PCF as reference content; covers BPA, capability maps, risk, and EA views."
+  },
+  {
+   "table": "solutions",
+   "id": 607,
+   "column": "description",
+   "old": "BPA platform with integrated process mining (via the Logpickr acquisition). Covers modelling, simulation, conformance, and publishing in one suite.",
+   "new": "BPA platform with integrated process mining (via the Logpickr acquisition). Covers modeling, simulation, conformance, and publishing in one suite."
+  },
+  {
+   "table": "solutions",
+   "id": 609,
+   "column": "description",
+   "old": "Standards-purist BPMN/DMN/CMMN modelling suite with strong decision-modelling and executable workflow features. Used by the OMG community as a reference implementation.",
+   "new": "Standards-purist BPMN/DMN/CMMN modeling suite with strong decision-modeling and executable workflow features. Used by the OMG community as a reference implementation."
+  },
+  {
+   "table": "solutions",
+   "id": 610,
+   "column": "description",
+   "old": "ArchiMate-native enterprise architecture and process architecture platform. Co-flagship: equally strong on BPA (process modelling, capability mapping) and APM (application portfolio, EA).",
+   "new": "ArchiMate-native enterprise architecture and process architecture platform. Co-flagship: equally strong on BPA (process modeling, capability mapping) and APM (application portfolio, EA)."
+  },
+  {
+   "table": "solutions",
+   "id": 622,
+   "column": "description",
+   "old": "Headless BI / semantic-layer platform emphasising SQL-first metric authoring, lineage, and deterministic AI-agent consumption.",
+   "new": "Headless BI / semantic-layer platform emphasizing SQL-first metric authoring, lineage, and deterministic AI-agent consumption."
+  },
+  {
+   "table": "solutions",
+   "id": 623,
+   "column": "description",
+   "old": "Cloud-native headless BI tier emphasising embedded analytics, multi-tenant data products, and semantic-layer governance. Distinct from the older GoodData Platform.",
+   "new": "Cloud-native headless BI tier emphasizing embedded analytics, multi-tenant data products, and semantic-layer governance. Distinct from the older GoodData Platform."
+  },
+  {
+   "table": "solutions",
+   "id": 772,
+   "column": "description",
+   "old": "Cloud dairy herd-management platform with strong reproductive workflows and customisable cow-card views.",
+   "new": "Cloud dairy herd-management platform with strong reproductive workflows and customizable cow-card views."
+  },
+  {
+   "table": "solutions",
+   "id": 788,
+   "column": "description",
+   "old": "CSA platform specialising in personalised share customisation: per-member swap weeks, dietary preferences, pause / vacation handling.",
+   "new": "CSA platform specializing in personalized share customization: per-member swap weeks, dietary preferences, pause / vacation handling."
+  },
+  {
+   "table": "solutions",
+   "id": 790,
+   "column": "description",
+   "old": "CSA-membership-specific software: season setup, share-customisation, delivery / pickup management, recurring billing.",
+   "new": "CSA-membership-specific software: season setup, share-customization, delivery / pickup management, recurring billing."
+  },
+  {
+   "table": "solutions",
+   "id": 846,
+   "column": "description",
+   "old": "Open low-code PLM platform with subscription-only commercial model. Strong growth in industrial OEMs needing customisation.",
+   "new": "Open low-code PLM platform with subscription-only commercial model. Strong growth in industrial OEMs needing customization."
+  },
+  {
+   "table": "solutions",
+   "id": 862,
+   "column": "description",
+   "old": "Microsoft 365-native learning experience surfaced inside Microsoft Teams and the broader Viva employee-experience suite. Aggregates content from LinkedIn Learning, Microsoft Learn, third-party LMS partners (Cornerstone, Skillsoft, Coursera, edX, Pluralsight), and an organisation's own SharePoint/SCORM content. Strongest fit for M365-stack employers wanting in-the-flow-of-work learning recommendations; thinner than a full-blown LMS on compliance training and certifications.",
+   "new": "Microsoft 365-native learning experience surfaced inside Microsoft Teams and the broader Viva employee-experience suite. Aggregates content from LinkedIn Learning, Microsoft Learn, third-party LMS partners (Cornerstone, Skillsoft, Coursera, edX, Pluralsight), and an organization's own SharePoint/SCORM content. Strongest fit for M365-stack employers wanting in-the-flow-of-work learning recommendations; thinner than a full-blown LMS on compliance training and certifications."
+  },
+  {
+   "table": "tools",
+   "id": 675,
+   "column": "tool_name",
+   "old": "query_retail_labour_schedules",
+   "new": "query_retail_labor_schedules"
+  },
+  {
+   "table": "tools",
+   "id": 754,
+   "column": "tool_name",
+   "old": "query_visitor_nda_acknowledgements",
+   "new": "query_visitor_nda_acknowledgments"
+  },
+  {
+   "table": "tools",
+   "id": 1373,
+   "column": "tool_name",
+   "old": "query_harassment_training_acknowledgements",
+   "new": "query_harassment_training_acknowledgments"
+  },
+  {
+   "table": "tools",
+   "id": 1374,
+   "column": "tool_name",
+   "old": "sign_harassment_training_acknowledgement",
+   "new": "sign_harassment_training_acknowledgment"
+  },
+  {
+   "table": "tools",
+   "id": 1994,
+   "column": "tool_name",
+   "old": "query_content_acknowledgements",
+   "new": "query_content_acknowledgments"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1071,
+   "column": "event_name",
+   "old": "retail_labour_schedule.published",
+   "new": "retail_labor_schedule.published"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1072,
+   "column": "event_name",
+   "old": "retail_labour_schedule.shortfall_detected",
+   "new": "retail_labor_schedule.shortfall_detected"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1081,
+   "column": "description",
+   "old": "A service connection (water/gas/electric) has been energised at a premises; downstream billing starts the consumption clock and CSM closes the move-in case.",
+   "new": "A service connection (water/gas/electric) has been energized at a premises; downstream billing starts the consumption clock and CSM closes the move-in case."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1100,
+   "column": "description",
+   "old": "A new lactation cycle has been opened for a cow after calving; downstream feed and breeding cycles initialise, ERP-FIN updates herd KPIs.",
+   "new": "A new lactation cycle has been opened for a cow after calving; downstream feed and breeding cycles initialize, ERP-FIN updates herd KPIs."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1175,
+   "column": "description",
+   "old": "A new in-house legal matter has been opened (litigation hold, regulatory enquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk relationship.",
+   "new": "A new in-house legal matter has been opened (litigation hold, regulatory inquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk relationship."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1343,
+   "column": "event_name",
+   "old": "harassment_training_acknowledgement.signed",
+   "new": "harassment_training_acknowledgment.signed"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1716,
+   "column": "event_name",
+   "old": "content_acknowledgement.recorded",
+   "new": "content_acknowledgment.recorded"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "event_name",
+   "old": "booking.cancelled",
+   "new": "booking.canceled"
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "description",
+   "old": "A booking is cancelled by guest or operator. Releases capacity, may trigger a refund, and frees assigned guides and equipment.",
+   "new": "A booking is canceled by guest or operator. Releases capacity, may trigger a refund, and frees assigned guides and equipment."
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "to_state",
+   "old": "cancelled",
+   "new": "canceled"
+  },
+  {
+   "table": "vendors",
+   "id": 180,
+   "column": "description",
+   "old": "ERP vendor for people-centric services organisations.",
+   "new": "ERP vendor for people-centric services organizations."
+  },
+  {
+   "table": "vendors",
+   "id": 183,
+   "column": "description",
+   "old": "Business-planning and modelling platform.",
+   "new": "Business-planning and modeling platform."
+  },
+  {
+   "table": "vendors",
+   "id": 213,
+   "column": "description",
+   "old": "Pricing optimisation and CPQ software.",
+   "new": "Pricing optimization and CPQ software."
+  },
+  {
+   "table": "vendors",
+   "id": 341,
+   "column": "description",
+   "old": "Remote online notarisation and identity-assured e-signature vendor (formerly Notarize).",
+   "new": "Remote online notarization and identity-assured e-signature vendor (formerly Notarize)."
+  },
+  {
+   "table": "vendors",
+   "id": 376,
+   "column": "description",
+   "old": "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modelling, skills-gap analysis, and capacity planning for large enterprises.",
+   "new": "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modeling, skills-gap analysis, and capacity planning for large enterprises."
+  },
+  {
+   "table": "vendors",
+   "id": 377,
+   "column": "description",
+   "old": "London-based org-design and workforce-planning platform. Strong in restructure modelling, position management, span-of-control analysis, and what-if scenarios on top of HR data.",
+   "new": "London-based org-design and workforce-planning platform. Strong in restructure modeling, position management, span-of-control analysis, and what-if scenarios on top of HR data."
+  },
+  {
+   "table": "vendors",
+   "id": 388,
+   "column": "description",
+   "old": "Modern incentive compensation management vendor designed for ops-led plan modelling.",
+   "new": "Modern incentive compensation management vendor designed for ops-led plan modeling."
+  },
+  {
+   "table": "vendors",
+   "id": 388,
+   "column": "notes",
+   "old": "Founded 2017, HQ San Francisco. Backed by ICONIQ, Sequoia, Y Combinator. Spreadsheet-style modelling experience differentiator vs traditional ICM tools.",
+   "new": "Founded 2017, HQ San Francisco. Backed by ICONIQ, Sequoia, Y Combinator. Spreadsheet-style modeling experience differentiator vs traditional ICM tools."
+  },
+  {
+   "table": "vendors",
+   "id": 447,
+   "column": "description",
+   "old": "AI-native workforce management platform focused on labour optimisation, scheduling, and frontline employee experience for retail / hospitality / healthcare.",
+   "new": "AI-native workforce management platform focused on labor optimization, scheduling, and frontline employee experience for retail / hospitality / healthcare."
+  },
+  {
+   "table": "vendors",
+   "id": 448,
+   "column": "description",
+   "old": "Customer engagement and workforce engagement management vendor; WFM optimisation for contact-centre and back-office labour.",
+   "new": "Customer engagement and workforce engagement management vendor; WFM optimization for contact-center and back-office labor."
+  },
+  {
+   "table": "vendors",
+   "id": 462,
+   "column": "description",
+   "old": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalisation.",
+   "new": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalization."
+  },
+  {
+   "table": "vendors",
+   "id": 500,
+   "column": "description",
+   "old": "Travel and spend-management platform with virtual cards, SaaS-spend optimisation, and bill-pay.",
+   "new": "Travel and spend-management platform with virtual cards, SaaS-spend optimization, and bill-pay."
+  },
+  {
+   "table": "vendors",
+   "id": 515,
+   "column": "description",
+   "old": "Operator of Basecamp \u2014 opinionated project communication and management tool emphasising simplicity.",
+   "new": "Operator of Basecamp \u2014 opinionated project communication and management tool emphasizing simplicity."
+  },
+  {
+   "table": "vendors",
+   "id": 516,
+   "column": "description",
+   "old": "Business-transformation platform vendor focused on process and capability modelling on Microsoft Azure.",
+   "new": "Business-transformation platform vendor focused on process and capability modeling on Microsoft Azure."
+  },
+  {
+   "table": "vendors",
+   "id": 517,
+   "column": "description",
+   "old": "Business process management vendor (Process360 Live platform \u2014 modelling, mining, and intelligence).",
+   "new": "Business process management vendor (Process360 Live platform \u2014 modeling, mining, and intelligence)."
+  },
+  {
+   "table": "vendors",
+   "id": 519,
+   "column": "description",
+   "old": "Standards-driven business automation vendor (Digital Enterprise Suite \u2014 BPMN, DMN, CMMN modelling).",
+   "new": "Standards-driven business automation vendor (Digital Enterprise Suite \u2014 BPMN, DMN, CMMN modeling)."
+  },
+  {
+   "table": "vendors",
+   "id": 519,
+   "column": "notes",
+   "old": "Founded 1996, HQ Quebec City. Strong OMG-standards focus (BPMN/DMN/CMMN); known for decision modelling and pure-play standards compliance.",
+   "new": "Founded 1996, HQ Quebec City. Strong OMG-standards focus (BPMN/DMN/CMMN); known for decision modeling and pure-play standards compliance."
+  },
+  {
+   "table": "vendors",
+   "id": 528,
+   "column": "description",
+   "old": "Analytics platform with a headless-BI tier (GoodData.CN) emphasising embedded analytics, semantic-layer governance, and multi-tenant data products.",
+   "new": "Analytics platform with a headless-BI tier (GoodData.CN) emphasizing embedded analytics, semantic-layer governance, and multi-tenant data products."
+  },
+  {
+   "table": "vendors",
+   "id": 653,
+   "column": "description",
+   "old": "CSA-focused platform specialising in share customisation and member experience.",
+   "new": "CSA-focused platform specializing in share customization and member experience."
+  }
+ ],
+ "labels": [
+  {
+   "table": "capability_domains",
+   "id": 281,
+   "column": "capability_domain_label",
+   "old": "Auto-Dialler and Click-to-Call / Sales Engagement",
+   "new": "Auto-Dialer and Click-to-Call / Sales Engagement"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1322,
+   "column": "data_object_lifecycle_state_label",
+   "old": "harassment_training_acknowledgements.pending",
+   "new": "harassment_training_acknowledgments.pending"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1323,
+   "column": "data_object_lifecycle_state_label",
+   "old": "harassment_training_acknowledgements.acknowledged",
+   "new": "harassment_training_acknowledgments.acknowledged"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1324,
+   "column": "data_object_lifecycle_state_label",
+   "old": "harassment_training_acknowledgements.archived",
+   "new": "harassment_training_acknowledgments.archived"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2802,
+   "column": "data_object_lifecycle_state_label",
+   "old": "supplier_information_requests.cancelled",
+   "new": "supplier_information_requests.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2806,
+   "column": "data_object_lifecycle_state_label",
+   "old": "supplier_tasks.cancelled",
+   "new": "supplier_tasks.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2841,
+   "column": "data_object_lifecycle_state_label",
+   "old": "activity_departures.cancelled",
+   "new": "activity_departures.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2845,
+   "column": "data_object_lifecycle_state_label",
+   "old": "activity_bookings.cancelled",
+   "new": "activity_bookings.canceled"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 412,
+   "column": "data_object_relationship_label",
+   "old": "visitor_registrations acknowledges visitor_nda_acknowledgements",
+   "new": "visitor_registrations acknowledges visitor_nda_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 425,
+   "column": "data_object_relationship_label",
+   "old": "users witnessed nda visitor_nda_acknowledgements",
+   "new": "users witnessed nda visitor_nda_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 688,
+   "column": "data_object_relationship_label",
+   "old": "retail_labour_schedules allocates store_tasks",
+   "new": "retail_labor_schedules allocates store_tasks"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 697,
+   "column": "data_object_relationship_label",
+   "old": "users publishes schedules retail_labour_schedules",
+   "new": "users publishes schedules retail_labor_schedules"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 702,
+   "column": "data_object_relationship_label",
+   "old": "retail_labour_schedules materializes_as work_shifts",
+   "new": "retail_labor_schedules materializes_as work_shifts"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1335,
+   "column": "data_object_relationship_label",
+   "old": "candidates acknowledges_via fcra_summary_of_rights_acknowledgements",
+   "new": "candidates acknowledges_via fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1341,
+   "column": "data_object_relationship_label",
+   "old": "background_checks gated_by fcra_summary_of_rights_acknowledgements",
+   "new": "background_checks gated_by fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1384,
+   "column": "data_object_relationship_label",
+   "old": "compliance_assignments acknowledged_via harassment_training_acknowledgements",
+   "new": "compliance_assignments acknowledged_via harassment_training_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1419,
+   "column": "data_object_relationship_label",
+   "old": "users acknowledges harassment_training_acknowledgements",
+   "new": "users acknowledges harassment_training_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "data_object_relationship_label",
+   "old": "users dialled_call call_recordings",
+   "new": "users dialed_call call_recordings"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2520,
+   "column": "data_object_relationship_label",
+   "old": "frontline_broadcasts is acknowledged by content_acknowledgements",
+   "new": "frontline_broadcasts is acknowledged by content_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2525,
+   "column": "data_object_relationship_label",
+   "old": "users records content_acknowledgements",
+   "new": "users records content_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 959,
+   "column": "domain_data_object_label",
+   "old": "Retail Store Operations / retail_labour_schedules",
+   "new": "Retail Store Operations / retail_labor_schedules"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 984,
+   "column": "domain_data_object_label",
+   "old": "Visitor Management / visitor_nda_acknowledgements",
+   "new": "Visitor Management / visitor_nda_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1262,
+   "column": "domain_data_object_label",
+   "old": "Learning Management / harassment_training_acknowledgements",
+   "new": "Learning Management / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1304,
+   "column": "domain_data_object_label",
+   "old": "Learning Management / dpo_training_acknowledgements",
+   "new": "Learning Management / dpo_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1036,
+   "column": "domain_module_data_object_label",
+   "old": "LMS-COMPLIANCE-TRAINING / harassment_training_acknowledgements",
+   "new": "LMS-COMPLIANCE-TRAINING / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1071,
+   "column": "domain_module_data_object_label",
+   "old": "TRAINING-RECORDS-STARTER / harassment_training_acknowledgements",
+   "new": "TRAINING-RECORDS-STARTER / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1842,
+   "column": "domain_module_data_object_label",
+   "old": "FRONTLINE-COMMS-BROADCAST-ENGAGEMENT / content_acknowledgements",
+   "new": "FRONTLINE-COMMS-BROADCAST-ENGAGEMENT / content_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 2049,
+   "column": "domain_module_data_object_label",
+   "old": "TRAINING-RECORDS-STARTER / dpo_training_acknowledgements",
+   "new": "TRAINING-RECORDS-STARTER / dpo_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 2077,
+   "column": "domain_module_data_object_label",
+   "old": "BGV-ADJUDICATION-COMPLIANCE / fcra_summary_of_rights_acknowledgements",
+   "new": "BGV-ADJUDICATION-COMPLIANCE / fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "handoffs",
+   "id": 934,
+   "column": "handoff_label",
+   "old": "Retail Store Operations → Workforce Management : retail_labour_schedule.published",
+   "new": "Retail Store Operations → Workforce Management : retail_labor_schedule.published"
+  }
+ ]
+}

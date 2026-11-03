@@ -407,7 +407,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "CONTENT-OWNER",
       "business_function": null,
@@ -471,7 +471,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

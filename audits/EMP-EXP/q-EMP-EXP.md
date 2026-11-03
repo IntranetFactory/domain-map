@@ -5,13 +5,13 @@ Listen to your workforce continuously and turn what you hear into action. Run en
 
 ---
 
-q1: (answer this first) The domain has two modules and capabilities but zero roles, which is a hard structural fail. Which personas should I author as the role layer (this drives role-to-module wiring, permissions, and the RACI/persona work that is currently deferred)?
+q1: (answer this first) The domain has two modules and capabilities but zero roles, which is a hard structural fail. Which personas should I author as the persona layer (this drives role-to-module wiring, permissions, and the RACI/persona work that is currently deferred)?
 
 - a) The three recommended personas: Employee Experience Program Manager (owns listening cycles and action planning), HR Business Partner (cross-functional, consumes engagement drivers and runs action planning per org unit), People Manager (cross-functional, owns action plans for their team).
 - b) A leaner two-persona set: Employee Experience Program Manager plus People Manager only.
 - c) A different set you specify.
 
-Recommended: a. These three are the standard split for this market and satisfy the three-role floor for a two-module domain; once chosen, the role_modules, role_permissions, and persona/RACI layer can all be authored.
+Recommended: a. These three are the standard split for this market and satisfy the three-role floor for a two-module domain; once chosen, the persona_modules, role_permissions, and persona/RACI layer can all be authored.
 
 a1:
 
@@ -48,7 +48,7 @@ a4:
 
 ---
 
-q5: Two relationship rows both connect users to survey campaigns: one says "owns", the other says "creates". How should the duplicate be resolved?
+q5: Two relationship rows both relate users to survey campaigns: one says "owns", the other says "creates". How should the duplicate be resolved?
 
 - a) Delete the "creates" row; owner subsumes creator.
 - b) Rename the "creates" verb to "authors" so it is a distinct actor role.
@@ -162,7 +162,7 @@ a17:
 
 q14: Nine extra entities show up across the flagship employee-experience vendors (survey templates, engagement themes, survey invitations, sentiment topics, manager action recommendations, 360 review cycles, recognition events, pulse cohorts, engagement score snapshots). Should I research and add the ones that hold up? (yes/no)
 
-Recommended: yes, but additive and can happen after the role layer exists. The strongest gaps are survey invitations and engagement score snapshots (both flagship-mastered, both fix a real gap); recognition events depends on a separate decision about whether peer recognition becomes its own domain.
+Recommended: yes, but additive and can happen after the persona layer exists. The strongest gaps are survey invitations and engagement score snapshots (both flagship-mastered, both fix a real gap); recognition events depends on a separate decision about whether peer recognition becomes its own domain.
 
 a14:
 

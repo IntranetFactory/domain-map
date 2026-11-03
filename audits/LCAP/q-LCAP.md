@@ -62,7 +62,7 @@ a6:
 
 ---
 
-q7: The em-dash rule forbids the U+2014 character, and the domain's business-logic text currently contains one. Should the suggested rewrite be applied: "Runtime, compiler, and visual modeller. The entire platform is code, the end-user app surface is whatever the customer builds, and the LCAP itself is platform."? (yes/no)
+q7: The em-dash rule forbids the U+2014 character, and the domain's business-logic text currently contains one. Should the suggested rewrite be applied: "Runtime, compiler, and visual modeler. The entire platform is code, the end-user app surface is whatever the customer builds, and the LCAP itself is platform."? (yes/no)
 
 Recommended: yes. The rewrite removes the forbidden character and keeps the original meaning.
 

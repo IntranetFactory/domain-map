@@ -160,9 +160,9 @@ a18:
 
 ---
 
-q19: Five handoffs name a payload that no Expense Management module currently models, so their module link is left empty: shadow IT apps (out to SaaS management), pay slips (in from payroll), employees (in from HR), spend policies (in from spend management), and card authorizations (in from spend management). Should Expense Management add a thin consumer record for each so the link is attributed, or leave them as domain-level signals?
+q19: Five handoffs name a payload that no Expense Management module currently models, so their module relationship is left empty: shadow IT apps (out to SaaS management), pay slips (in from payroll), employees (in from HR), spend policies (in from spend management), and card authorizations (in from spend management). Should Expense Management add a thin consumer record for each so the relationship is attributed, or leave them as domain-level signals?
 
-- a) Add a consumer record on the receiving module for each (attributes the link and captures the dependency).
+- a) Add a consumer record on the receiving module for each (attributes the relationship and captures the dependency).
 - b) Leave them as domain-level signals with no module owner (acceptable per the handoff-attribution rules).
 - c) Per-handoff mix (tell me which to model and which to leave).
 

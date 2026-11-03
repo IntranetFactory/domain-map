@@ -83,15 +83,15 @@ b2:
     question: |
       Should PROD-ANALYTICS include an experimentation module (experiments, variants, assignments, feature
       flags, metric lifts), or should experimentation / feature management be a separate domain that PA
-      links to?
+      relates to?
     options:
-      - "Separate domain: experimentation / feature management is its own domain (feature flags + experiments + assignments); PROD-ANALYTICS gets a consumer edge (experiment exposure logged as events, metric lifts computed on PA's stream)."
+      - "Separate domain: experimentation / feature management is its own domain (feature flags + experiments + assignments); PROD-ANALYTICS gets a consumer relationship (experiment exposure logged as events, metric lifts computed on PA's stream)."
       - "In-scope: PROD-ANALYTICS ships a conditional experimentation module mastering experiments, experiment_variants, experiment_assignments, feature_flags, metric_lifts."
     evidence: |
       Evidence is split. Amplitude (Experiment), PostHog, and Pendo bundle experiments; Mixpanel, Heap, and
       June do NOT (3/6 vendors). LaunchDarkly and Statsig are a distinct feature-management / experimentation
       market, and feature_flags belong with feature management, not analytics. Recommended: keep
-      experimentation a separate domain with a PA consumer edge; build the conditional in-PA module only if
+      experimentation a separate domain with a PA consumer relationship; build the conditional in-PA module only if
       the user wants a wide scope.
     why: |
       Market-shape (scope boundary + a possible separate experimentation/feature-management domain).
@@ -101,17 +101,17 @@ b2:
     summary: "Decide whether session replay / experience analytics (replay, heatmaps) is in-scope of PROD-ANALYTICS or a separate domain."
     question: |
       Should PROD-ANALYTICS include a session-analytics module (session replays, replay events, heatmaps),
-      or should session replay / digital-experience analytics be a separate domain that PA links to from
+      or should session replay / digital-experience analytics be a separate domain that PA relates to from
       funnel drop-off?
     options:
-      - "Separate domain: a digital-experience-analytics domain masters session_replays / heatmaps; PROD-ANALYTICS consumes/links replays from a funnel drop-off."
+      - "Separate domain: a digital-experience-analytics domain masters session_replays / heatmaps; PROD-ANALYTICS consumes/relates replays from a funnel drop-off."
       - "In-scope: PROD-ANALYTICS ships a conditional session_analytics module mastering session_replays, replay_events, heatmaps."
     evidence: |
       Session replay is present in only 3/6 surveyed PA vendors (Amplitude, PostHog, Pendo add it; Mixpanel,
       Heap, June omit it), and there is a robust standalone experience-analytics market (FullStory, Hotjar,
       Contentsquare, LogRocket). The neutral name session_replays is used because session_recordings (id 239)
       is mastered by a remote-support domain. Recommended: keep session replay a separate
-      digital-experience-analytics domain with a PA link from funnel drop-off; build the conditional in-PA
+      digital-experience-analytics domain with a PA relationship from funnel drop-off; build the conditional in-PA
       module only if the user wants a wide scope.
     why: |
       Market-shape (scope boundary + a possible separate digital-experience-analytics domain).

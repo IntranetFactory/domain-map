@@ -20,7 +20,7 @@ import { M_CHECKS } from "./checks_m.ts";
 import { S_CHECKS } from "./checks_s.ts";
 import type { Check } from "./types.ts";
 
-export const CHECKLIST_VERSION = 2;
+export const CHECKLIST_VERSION = 4;
 
 // The 57 IDs of SKILL.md "Per-domain completeness checklist" (there is no M3).
 export const SKILL_CHECKLIST_IDS = [
@@ -36,8 +36,9 @@ export const SKILL_CHECKLIST_IDS = [
   "H1",
 ] as const;
 
-// IDs added by the domain-health plan (Phase 1 step 3). B6b, B9c and E4 are extended in place.
-export const NEW_CHECK_IDS = ["B7b", "B9f", "E4b", "E4c", "E4d"] as const;
+// IDs added on top of those 57: the domain-health plan (Phase 1 step 3), then B7c. B6b, B9c and E4 are
+// extended in place.
+export const NEW_CHECK_IDS = ["B7b", "B7c", "B9f", "E4b", "E4c", "E4d"] as const;
 
 export const CHECKS: Check[] = [
   ...S_CHECKS,

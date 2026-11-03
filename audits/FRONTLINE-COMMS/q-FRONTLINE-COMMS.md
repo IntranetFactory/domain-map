@@ -22,11 +22,11 @@ a1:
 
 q2: Should the existing WorkJam product (currently filed under Workforce Management and Retail Store Operations) also be filed under this new frontline domain as its primary market?
 
-- a) Add a primary frontline-domain link, keep its existing Workforce Management and Retail Store Operations links
-- b) Add a primary frontline-domain link and downgrade the Workforce Management and Retail Store Operations links to secondary
+- a) Add a primary frontline-domain relationship, keep its existing Workforce Management and Retail Store Operations relationships
+- b) Add a primary frontline-domain relationship and downgrade the Workforce Management and Retail Store Operations relates to secondary
 - c) Leave WorkJam where it is
 
-Recommended: a. WorkJam's flagship is the frontline digital workplace (the same product YOOBIC, Speakap, Flip, and Blink compete with), so its primary market is this new domain and Workforce Management and store operations are adjacencies it also touches. Option (a) is purely additive (a new coverage link, nothing overwritten) and is safe to apply now. Option (b) re-points two existing links from primary to secondary, which is a destructive overwrite and is the only reason this is a question rather than an automatic fix; pick (b) only if you want the catalog to assert that frontline is WorkJam's primary and the other two are secondary. The intranet-led vendors already on Employee Communications and Intranet (Staffbase, Simpplr, Firstup) stay where they are; they are comms-led, not ops-led frontline platforms.
+Recommended: a. WorkJam's flagship is the frontline digital workplace (the same product YOOBIC, Speakap, Flip, and Blink compete with), so its primary market is this new domain and Workforce Management and store operations are adjacencies it also touches. Option (a) is purely additive (a new coverage relationship, nothing overwritten) and is safe to apply now. Option (b) re-points two existing relationships from primary to secondary, which is a destructive overwrite and is the only reason this is a question rather than an automatic fix; pick (b) only if you want the catalog to assert that frontline is WorkJam's primary and the other two are secondary. The intranet-led vendors already on Employee Communications and Intranet (Staffbase, Simpplr, Firstup) stay where they are; they are comms-led, not ops-led frontline platforms.
 
 a2:
 

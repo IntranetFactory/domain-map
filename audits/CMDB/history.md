@@ -10,9 +10,9 @@
 - **Bucket 2 (surface-for-user, judgment):** 7 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 12 items.
 
-Structural pass summary: A1 passes (full 7-field domain metadata present); A4 fails (`catalog_tagline` and `catalog_description` empty); A2 / A3 pass; M1 / M2 / M4 pass (3 full modules cover 7 capabilities, each capability has a realizing module); B1 / B2 / B3 partially fail (state-machine and pattern-flag coverage thin); B11 partially fails (`ci_baselines` has 1 alias, the rest 2+; ok); B12 mostly fails (only 1 of 5 masters has lifecycle states authored); B7 user-edges look complete (rows 242 to 246 cover all 5 masters); F1-F4 pass; C1 passes; **E5 drift suspected**: every role has fewer `role_modules` paths through bundle than expected (IT-INFRA-DISCOVERY-OPERATOR has 2 role_modules but only 2 role_permissions, OK; IT-INFRA-CMDB-DATA-STEWARD has 2 role_modules but only 2 role_permissions, OK). No JWT errors.
+Structural pass summary: A1 passes (full 7-field domain metadata present); A4 fails (`catalog_tagline` and `catalog_description` empty); A2 / A3 pass; M1 / M2 / M4 pass (3 full modules cover 7 capabilities, each capability has a realizing module); B1 / B2 / B3 partially fail (state-machine and pattern-flag coverage thin); B11 partially fails (`ci_baselines` has 1 alias, the rest 2+; ok); B12 mostly fails (only 1 of 5 masters has lifecycle states authored); B7 relationships to `users` look complete (rows 242 to 246 cover all 5 masters); F1-F4 pass; C1 passes; **E5 drift suspected**: every role has fewer `persona_modules` paths through bundle than expected (IT-INFRA-DISCOVERY-OPERATOR has 2 persona_modules but only 2 role_permissions, OK; IT-INFRA-CMDB-DATA-STEWARD has 2 persona_modules but only 2 role_permissions, OK). No JWT errors.
 
-Domain Semantius score (strict, across 3 modules): 10/10 = **100%**. All skill_tools are `coverage_tier=platform`. The tools layer is the strongest area of the domain; the gaps are in lifecycle, modularization shape (only one master per module, three of the five masters are config-shape), APQC mapping, and regulation linkage.
+Domain Semantius score (strict, across 3 modules): 10/10 = **100%**. All skill_tools are `coverage_tier=platform`. The tools layer is the strongest area of the domain; the gaps are in lifecycle, modularization shape (only one master per module, three of the five masters are config-shape), APQC mapping, and regulation relationship.
 
 ### Vendor surface basis
 
@@ -28,16 +28,16 @@ The market lacks a regulated-specialist tier in the way ATS has Checkr; the comp
 |---|---|---|---|
 | B1-M1 | `ci_reconciliation_rules` | CMDB-CORE | ServiceNow CMDB (Identification & Reconciliation Engine, IRE); BMC Helix `reconciliation_rules`; Device42 `dedupe_rules`. Reconciliation logic is the load-bearing differentiator across all flagships and is not modeled anywhere in the current footprint. |
 | B1-M2 | `ci_attestations` | CMDB-CORE | ServiceNow CMDB Data Foundations attestation tasks; BMC Helix data-steward review cycles; Device42 verification queue. CI owner periodic attestation is a primary data-quality control. |
-| B1-M3 | `discovery_credentials` | CMDB-CORE (consumer from DISCOVERY when modularized) | All 5 flagships ship credential vaults specifically for discovery scans (vCenter / cloud-tenant / AD / SSH credentials). Even if the canonical master lives in DISCOVERY when that domain is modularized, CMDB needs the consumer link. |
+| B1-M3 | `discovery_credentials` | CMDB-CORE (consumer from DISCOVERY when modularized) | All 5 flagships ship credential vaults specifically for discovery scans (vCenter / cloud-tenant / AD / SSH credentials). Even if the canonical master lives in DISCOVERY when that domain is modularized, CMDB needs the consumer relationship. |
 | B1-M4 | `ci_audit_log` | CMDB-CORE | Universal: every flagship exposes a CI history audit table separate from generic record-history. SOX-ITGC evidence depends on it. |
 
 #### MISSING (statutory / control-framework anchors)
 
 | ID | Entity | Proposed module | Control framework |
 |---|---|---|---|
-| B1-M5 | regulation row `SOX-ITGC` plus `domain_regulations` link | (regulations + domain_regulations) | SOX Section 404 IT General Controls; CMDB is the substrate that change-management and access-recertification controls audit against. Domain currently has zero regulations. |
-| B1-M6 | regulation row `PCI-DSS-11.5` plus `domain_regulations` link | (regulations + domain_regulations) | PCI-DSS v4 requirement 11.5 requires baseline change-detection; the only catalog domain that natively models baselines is CMDB. |
-| B1-M7 | regulation row `ISO-19770-1` plus `domain_regulations` link | (regulations + domain_regulations) | ISO/IEC 19770-1 IT asset management process framework; touches CMDB as the CI substrate ITAM/SAM build on. |
+| B1-M5 | regulation row `SOX-ITGC` plus `domain_regulations` relationship | (regulations + domain_regulations) | SOX Section 404 IT General Controls; CMDB is the substrate that change-management and access-recertification controls audit against. Domain currently has zero regulations. |
+| B1-M6 | regulation row `PCI-DSS-11.5` plus `domain_regulations` relationship | (regulations + domain_regulations) | PCI-DSS v4 requirement 11.5 requires baseline change-detection; the only catalog domain that natively models baselines is CMDB. |
+| B1-M7 | regulation row `ISO-19770-1` plus `domain_regulations` relationship | (regulations + domain_regulations) | ISO/IEC 19770-1 IT asset management process framework; touches CMDB as the CI substrate ITAM/SAM build on. |
 
 #### STRUCTURAL band failures
 
@@ -105,14 +105,14 @@ CMDB neighbor weights (count of cross-domain handoffs with this domain on either
 
 | ID | Pair | Finding | Fix |
 |---|---|---|---|
-| B1-Pair-ITSM-1 | ITSM ↔ CMDB | Missing relationship mirror: handoff 1200 (`ci_baseline.captured` from CMDB-BASELINES-DRIFT to ITSM module 41) implies the change-control workflow reads baselines as a precondition, but `data_object_relationships` has no edge between `ci_baselines` (80) and `service_changes` (50). | Author `service_changes (50) →references→ ci_baselines (80)`, verb `references`, inverse `referenced_by_change`, cardinality many_to_many, kind reference, is_required false, owner_side target. |
+| B1-Pair-ITSM-1 | ITSM ↔ CMDB | Missing relationship mirror: handoff 1200 (`ci_baseline.captured` from CMDB-BASELINES-DRIFT to ITSM module 41) implies the change-control workflow reads baselines as a precondition, but `data_object_relationships` has no relationship between `ci_baselines` (80) and `service_changes` (50). | Author `service_changes (50) →references→ ci_baselines (80)`, verb `references`, inverse `referenced_by_change`, cardinality many_to_many, kind reference, is_required false, owner_side target. |
 
 ### Bucket 2 — Surface-for-user (judgment calls)
 
 1. **B12 config-shape exemption for `ci_classes`.** `ci_classes` carries no workflow (class taxonomy is authored once and edited rarely); per Rule #12 it qualifies for the lifecycle exemption. Rule #15 forbids auto-populating `data_objects.notes` to record this. Options: (a) accept the exemption as a tracked decision here in the audit only; (b) approve a specific notes wording the user authors; (c) author a minimal `defined / active / deprecated` lifecycle to keep the surface uniform. **Independent.**
 2. **Pattern flags across all 5 masters.** All masters carry `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false`. The `configuration_items.registered` workflow gate (state 272, requires_permission=true) plausibly implies `has_submit_lock=true` on `configuration_items`: once a CI is registered with reconciliation rules applied, the canonical record is locked against unscoped edits. Decide: (a) flip `configuration_items.has_submit_lock=true`; (b) leave as-is and surface a note about the gate-without-flag pattern; (c) author the flag plus user-approved notes wording. **Independent.**
 3. **Service map ownership boundary with DISCOVERY.** ServiceNow ships Service Mapping as a Discovery add-on; in the current catalog, `service_maps` (79) masters in CMDB-SERVICE-MAPPING (module 109) but the canonical discovery source is DISCOVERY (domain 5). When DISCOVERY is modularized (Bucket 3 candidate, but the domain row already exists), should `service_maps` move to a DISCOVERY-SERVICE-MAP module and CMDB-SERVICE-MAPPING become a consumer? Options: (a) keep CMDB as master (current); (b) move to DISCOVERY; (c) split (CMDB masters business-service projection, DISCOVERY masters raw topology). **Dependent on Bucket 3 #4** (DISCOVERY modularization). 
-4. **Relationship row 220 vs 232 duplication.** `enterprise_applications (267) → configuration_items (76)` appears twice: row 220 (`mapped_to`, many_to_many) and row 232 (`onboards_into`, one_to_one). The semantics are different (mapping vs onboarding) but the same FK pair triggers ambiguity in label rendering. Options: (a) keep both (they encode distinct edges); (b) collapse to row 220 (mapping is the persistent edge; onboarding is a one-time transition captured better as a trigger event, which it already is via 208 `application.onboarded`); (c) drop row 232 only. **Independent.**
+4. **Relationship row 220 vs 232 duplication.** `enterprise_applications (267) → configuration_items (76)` appears twice: row 220 (`mapped_to`, many_to_many) and row 232 (`onboards_into`, one_to_one). The semantics are different (mapping vs onboarding) but the same FK pair triggers ambiguity in label rendering. Options: (a) keep both (they encode distinct relationships); (b) collapse to row 220 (mapping is the persistent relationship; onboarding is a one-time transition captured better as a trigger event, which it already is via 208 `application.onboarded`); (c) drop row 232 only. **Independent.**
 5. **Roles function-scope.** All 3 CMDB roles use `IT-INFRA-` prefix and anchor on `business_function_id=58`. None have `business_function_id=null` (cross-functional). The Hard-invariant in role-layer rules requires `<FUNCTION-CODE>-<ROLE-NAME>` formatting, but the current codes have an additional `CMDB-` infix (`IT-INFRA-CMDB-ADMIN` vs the cleaner `IT-INFRA-CONFIG-ADMIN`). Decide: (a) keep current names (CMDB-specific personas, easier to find in UI); (b) rename to drop the CMDB infix (cleaner function-scoping); (c) demote to per-module tier permissions and delete the cross-module roles. **Independent.**
 6. **B9 fan-out target for `ci.unauthorized_change_detected`.** Beyond ITSM (currently the only subscriber), the event plausibly fans out to GRC (SOX-ITGC evidence stream) and SECOPS (potential indicator of compromise). Options: (a) add both; (b) GRC only; (c) SECOPS only; (d) keep ITSM-only. Decision shape depends on whether SECOPS is wired to receive infrastructure-anomaly signals or only authentication-anomaly signals. **Independent of Bucket 3.**
 7. **Pairwise reconciliation scope.** Five neighbors at weight >=3 (ITSM 5, DISCOVERY 5, APM 3). DISCOVERY and APM each generated all their gap traffic from null-FK source modules (the other-side modularization gap). Decide: (a) run the full 5-section pairwise diff inline for ITSM only (the only neighbor with a concrete pairwise gap), defer DISCOVERY/APM until they are modularized; (b) run the inline diff for all three but flag the diff outputs as "blocked on neighbor modularization" where applicable; (c) defer all three to follow-up Validate runs once neighbors land. **Independent.**
@@ -147,7 +147,7 @@ Universal-or-near-universal vendor entities the agent surfaced from vendor-knowl
 
 - **Bucket 2 #3 (service-map ownership)** is dependent on **Bucket 3 #B3-D4** (DISCOVERY modularization): if DISCOVERY ships a module that masters `service_maps`, then CMDB-SERVICE-MAPPING demotes to consumer. Resolve B3-D4 first or hold #3.
 - **Bucket 2 #6 (B9 fan-out target)** is loosely dependent on whether GRC and SECOPS audit pre-load `ci.unauthorized_change_detected` subscribers; can be resolved independently.
-- **Buckets 1 #B1-S2 (lifecycle states) and Bucket 2 #1 (config-shape exemption for ci_classes) are linked**: resolving #B1-S2 requires the user's call on Bucket 2 #1 first (do we author lifecycle for `ci_classes` or take the exemption).
+- **Buckets 1 #B1-S2 (lifecycle states) and Bucket 2 #1 (config-shape exemption for ci_classes) are related**: resolving #B1-S2 requires the user's call on Bucket 2 #1 first (do we author lifecycle for `ci_classes` or take the exemption).
 - Everything else is independent.
 
 ### Per-bucket prompts
@@ -190,8 +190,8 @@ The audit header for the 2026-05-30 pass implies `domain_regulations` was empty 
 | Fix ID | Type | Action | Result |
 |---|---|---|---|
 | B1-B1 | FK PATCH | `handoffs.id=51 set data_object_id=47 -> 76` (configuration_items) | PATCHed; mirrors existing relationship row 247 (configuration_items triggers service_incidents) |
-| B1-M5 | INSERT to existing rows | `domain_regulations` link CMDB(4) -> SOX(5), applicability=mandatory | INSERTed as id 255 |
-| B1-M6 | INSERT to existing rows | `domain_regulations` link CMDB(4) -> PCI-DSS(16), applicability=mandatory; PCI-DSS row is the closest existing catalog anchor for the audit's nominal PCI-DSS-11.5 target | INSERTed as id 256 |
+| B1-M5 | INSERT to existing rows | `domain_regulations` relationship CMDB(4) -> SOX(5), applicability=mandatory | INSERTed as id 255 |
+| B1-M6 | INSERT to existing rows | `domain_regulations` relationship CMDB(4) -> PCI-DSS(16), applicability=mandatory; PCI-DSS row is the closest existing catalog anchor for the audit's nominal PCI-DSS-11.5 target | INSERTed as id 256 |
 | B1-H1 (partial) | INSERT handoff_processes | 13 fresh `handoff_processes` rows (handoffs 146, 621, 625, 627, 628, 629, 654, 679, 854, 1199, 1200, 1211, 1212) | INSERTed as ids 428-440, all `proposal_source=agent_curated`, `role=implements`; PCF process_ids 1190 / 1299 / 1309 / 1312 all pre-verified against `external_id` 20752 / 20903 / 20915 / 20918 |
 
 ### Deferred (12 items)
@@ -202,14 +202,14 @@ The audit header for the 2026-05-30 pass implies `domain_regulations` was empty 
 | B1-M2 `ci_attestations` | New entity creation out of scope. |
 | B1-M3 `discovery_credentials` | New entity creation out of scope. |
 | B1-M4 `ci_audit_log` | New entity creation out of scope. |
-| B1-M7 ISO-19770-1 link | No matching regulation row exists (only SOX and PCI-DSS were already in the catalog); creating a new `regulations` row is out of scope per the residual-fix license. |
+| B1-M7 ISO-19770-1 relationship | No matching regulation row exists (only SOX and PCI-DSS were already in the catalog); creating a new `regulations` row is out of scope per the residual-fix license. |
 | B1-S1 catalog_tagline / catalog_description | Rule #20 territory; explicit DEFER per task constraints. |
 | B1-S2 lifecycle states for `ci_relationships` / `service_maps` / `ci_baselines` / `ci_classes` | Audit cross-bucket dependency: gated on Bucket 2 #1 (config-shape exemption decision for `ci_classes`) which is a user-judgment item. |
-| B1-S3 workflow-gate permissions for cmdb-core states 272/274/275 | Audit's stated fix is INSERT 3 new `permissions` rows (and downstream `permission_hierarchy` edges), which is not in the residual-INSERT license. The state+verb pairs themselves (`registered/register_ci`, `retired/retire_ci`, `archived/archive_ci`) were verified already correct on `data_object_lifecycle_states`, so no `permission_verb_override` PATCH was needed. |
+| B1-S3 workflow-gate permissions for cmdb-core states 272/274/275 | Audit's stated fix is INSERT 3 new `permissions` rows (and downstream `permission_hierarchy` relationships), which is not in the residual-INSERT license. The state+verb pairs themselves (`registered/register_ci`, `retired/retire_ci`, `archived/archive_ci`) were verified already correct on `data_object_lifecycle_states`, so no `permission_verb_override` PATCH was needed. |
 | B1-S4 fan-out of `ci.unauthorized_change_detected` to GRC / SECOPS | Listed in audit Bucket 2 #6 as a judgment call (which subscribers to add); user-judgment surface. Also depends on GRC and SECOPS module IDs that are not pre-specified. |
 | B1-S4 NULL-FK B10b items on handoffs 48, 49, 146, 621, 625, 628, 654, 679, 1199 | Cannot derive missing source / target `domain_module_id` from existing modules: DISCOVERY (5), AIOPS (6), RMM (130), NPMD (82), DCIM (84) all carry zero `domain_modules`. Surfaced as report-only follow-ups on those domains' audits in the 2026-05-30 pass; remains report-only here. |
 | B1-H1 REPLACES for handoffs 48, 49, 51, 236, 237 | Existing `discovery_substring` rows (handoff_processes ids 51, 53, 52, 7, 9) would need DELETE+REPLACE. The audit does NOT name those `handoff_processes` row IDs in the "DELETE stale rows" sense (it names the handoffs, not the junction rows), so under the residual rule "DELETE stale rows audit names with IDs" they are out of scope. Recommend a follow-up pass that names the five junction row IDs explicitly. |
-| B1-Pair-ITSM-1 `service_changes -> ci_baselines` relationship | Not a Rule #10 user-edge (both sides are domain-owned data_objects, neither is `kind=platform_builtin`); residual INSERT license for `data_object_relationships` covers only built-in / user-edges per Rule #10. |
+| B1-Pair-ITSM-1 `service_changes -> ci_baselines` relationship | Not a Rule #10 relationship to `users` (both sides are domain-owned data_objects, neither is `kind=platform_builtin`); residual INSERT license for `data_object_relationships` covers only built-in / relationships to `users` per Rule #10. |
 
 ### JWT errors
 
@@ -255,8 +255,8 @@ Structural Validate b1 (S / A / M / B / C / D / E / F / H bands). Fresh audit re
 | B3 | PASS | No bare-word collisions on CMDB masters (configuration_items, ci_relationships, ci_classes, service_maps, ci_baselines all prefixed). |
 | B4 | PARTIAL | Pattern flags all false on every master. Per 2026-05-30 audit Bucket 2 #2 the `configuration_items.has_submit_lock` decision is pending user; remains b2. |
 | B5 | PASS | embedded_masters `org_units` (34) and `locations` (795) both have canonical masters elsewhere. |
-| B6 | PASS | Intra-domain edges populated (rows 235-241, 247-249 cover the master graph). |
-| B7 | PASS | Five user-edges from `users` (748) to each CMDB master populated (rows 242-246). |
+| B6 | PASS | Intra-domain relationships populated (rows 235-241, 247-249 cover the master graph). |
+| B7 | PASS | Five relationships to `users` from `users` (748) to each CMDB master populated (rows 242-246). |
 | B9 | PASS | Every master with state transitions has matching trigger_events; every event has >=1 handoff. |
 | B9b | PASS | Intra-domain handoffs 1211 (108->109) and 1212 (108->110) cover the cross-module `ci.registered` propagation. |
 | B10b | PARTIAL | 6 handoffs carry NULL on the counter-party side (48, 49, 146, 621, 625 source_domain_module_id NULL; 628, 1199 target_domain_module_id NULL; 654, 679 source NULL). All NULLs route to unmodularized neighbors DISCOVERY (5), AIOPS (6), RMM (130), NPMD (82), DCIM (84); CMDB side is correct. Report-only follow-ups owed by neighbor audits, b1b. |
@@ -265,12 +265,12 @@ Structural Validate b1 (S / A / M / B / C / D / E / F / H bands). Fresh audit re
 | C1 | PASS | IT Infrastructure (58) owner, Software Engineering contributor. |
 | C2 | n/a | No diverging capability ownership detected. |
 | D1 | deferred | UI spot-check by user. |
-| E1/E2/E3/E4 | PASS | 3 CMDB roles, each role_modules >=2, all interaction_levels populated, all bundles non-empty. |
+| E1/E2/E3/E4 | PASS | 3 CMDB roles, each persona_modules >=2, all interaction_levels populated, all bundles non-empty. |
 | E5 | PASS | Path A and Path B agree for all 3 roles (10052 spans 108/109/110 both paths; 10053 spans 108/109 both paths; 10054 spans 108/110 both paths). The 2026-05-30 "E5 drift suspected" was a false positive. |
 | F1 | PASS | No legacy domain-level system skills (all 3 skills carry domain_module_id). |
 | F2 | PASS | Exactly one system skill per module (163->108, 164->109, 165->110). |
 | F3 | PASS | All skills have >=1 skill_tools row (5/3/2). |
-| F4 | PASS | All linked tools satisfy operation_kind <-> data_object_id invariant. |
+| F4 | PASS | All related tools satisfy operation_kind <-> data_object_id invariant. |
 | F5 | PASS | strict_score = operational_score = 10/10 = 100% across the domain. |
 | H1 | PARTIAL | 19 cross-domain handoffs; 16 carry agent_curated tags, 3 carry stale discovery_substring tags (handoff_processes ids 7, 9, 52 on handoffs 236, 237, 51). All proposal_source=agent_curated rows still at record_status=new (no human approval yet); coverage (approved) = 0. Process-health side-bar (agent_curated count) = 16 of 19 = 84%. The 3 stale substring rows need DELETE+REPLACE per the 2026-05-30 B1-H1 REPLACES sub-finding. |
 
@@ -284,12 +284,12 @@ Carry-overs and freshly-identified items the agent can apply directly.
 | B1-M2 | MISSING | `ci_attestations` not in catalog. | Phase B insert under CMDB-CORE. |
 | B1-M3 | MISSING | `discovery_credentials` not in catalog. | Phase B insert under CMDB-CORE (consumer once DISCOVERY modularizes). |
 | B1-M4 | MISSING | `ci_audit_log` not in catalog. | Phase B insert under CMDB-CORE. |
-| B1-M7 | MISSING | `regulations` master row for ISO-19770-1 absent; cannot link to CMDB until row exists. | New INSERT to `regulations` master then `domain_regulations` link to CMDB (id 4), applicability=mandatory. |
-| B1-S3 | STRUCTURAL | Lifecycle states 272/274/275 (`configuration_items.registered/retired/archived`) require_permission=true but workflow-gate permissions `cmdb-core:register_ci`, `cmdb-core:retire_ci`, `cmdb-core:archive_ci` are not materialized. | INSERT 3 `permissions` rows under domain_module_id=108, tier=workflow-gate, plus permission_hierarchy edges so they roll up into `cmdb-core:manage` and `cmdb-core:admin`. |
+| B1-M7 | MISSING | `regulations` master row for ISO-19770-1 absent; cannot relate to CMDB until row exists. | New INSERT to `regulations` master then `domain_regulations` relationship to CMDB (id 4), applicability=mandatory. |
+| B1-S3 | STRUCTURAL | Lifecycle states 272/274/275 (`configuration_items.registered/retired/archived`) require_permission=true but workflow-gate permissions `cmdb-core:register_ci`, `cmdb-core:retire_ci`, `cmdb-core:archive_ci` are not materialized. | INSERT 3 `permissions` rows under domain_module_id=108, tier=workflow-gate, plus permission_hierarchy relationships so they roll up into `cmdb-core:manage` and `cmdb-core:admin`. |
 | B1-H1 | APQC TAGGING | 3 stale `discovery_substring` `handoff_processes` rows: id 7 (handoff 236, process 1180 wrong), id 9 (handoff 237, process 1180 wrong), id 52 (handoff 51, process 9 wrong). | DELETE those 3 rows + INSERT replacement agent_curated rows: 236->1312 (Maintain IT asset records 20918), 237->1312, 51->1299 (Triage IT service delivery incidents 20903). |
-| B1-Pair-ITSM-1 | BOUNDARY | Missing relationship edge `service_changes (50) -> references -> ci_baselines (80)` mirroring handoff 1200's change-control read-of-baseline contract. | INSERT `data_object_relationships` row: source=50, related=80, verb=references, inverse=referenced_by_change, cardinality=many_to_many, kind=reference, is_required=false, owner_side=target. |
+| B1-Pair-ITSM-1 | BOUNDARY | Missing relationship `service_changes (50) -> references -> ci_baselines (80)` mirroring handoff 1200's change-control read-of-baseline contract. | INSERT `data_object_relationships` row: source=50, related=80, verb=references, inverse=referenced_by_change, cardinality=many_to_many, kind=reference, is_required=false, owner_side=target. |
 
-Per-bucket prompt: *"Approve and apply these 8 in-scope fixes (B1-M1..M4, B1-M7, B1-S3, B1-H1, B1-Pair-ITSM-1)? Reply 'all', 'just N, M, K' (by ID), or 'skip'. Note: B1-M1..M4 require new data_object rows + DMDO + lifecycle states; B1-M7 needs a new regulations master row; B1-S3 cascades into permission_hierarchy edges."*
+Per-bucket prompt: *"Approve and apply these 8 in-scope fixes (B1-M1..M4, B1-M7, B1-S3, B1-H1, B1-Pair-ITSM-1)? Reply 'all', 'just N, M, K' (by ID), or 'skip'. Note: B1-M1..M4 require new data_object rows + DMDO + lifecycle states; B1-M7 needs a new regulations master row; B1-S3 cascades into permission_hierarchy relationships."*
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
@@ -363,12 +363,12 @@ Plan 3 (those catalog tables were deleted 2026-06-02; gates are now emitter-deri
 |---|---|---|---|
 | B1A-ENTITY-TYPE | PATCH data_objects.entity_type | 5 masters classified off `unclassified`: configuration_items (76) -> operational_workflow; ci_relationships (77) -> junction; ci_classes (78) -> catalog; service_maps (79) -> operational_workflow; ci_baselines (80) -> operational_workflow | 5 rows PATCHed |
 | B2-8 / Rule #20 Catalog UX | PATCH catalog_tagline + catalog_description (only when empty) | Authored buyer-voice copy for the CMDB domain row (4) and all 3 modules (108/109/110); all 8 fields were empty and were filled | domain: 2 fields; modules: 6 fields (8 total) |
-| B1A-M7 | INSERT regulations + domain_regulations | New `regulations` row ISO/IEC 19770-1 (code ISO-19770-1, type industry_standard, jurisdiction_id=1 International, issuing_body ISO/IEC) id 87; `domain_regulations` link CMDB(4) -> 87 applicability=mandatory id 274 | 1 reg + 1 link |
+| B1A-M7 | INSERT regulations + domain_regulations | New `regulations` row ISO/IEC 19770-1 (code ISO-19770-1, type industry_standard, jurisdiction_id=1 International, issuing_body ISO/IEC) id 87; `domain_regulations` relationship CMDB(4) -> 87 applicability=mandatory id 274 | 1 reg + 1 relationship |
 | B1A-Pair-ITSM-1 | INSERT data_object_relationships | service_changes (50) -references-> ci_baselines (80), inverse=referenced_by_change, many_to_many, kind=reference, is_required=false, owner_side=target. Mirrors handoff 1200's change-control read-of-baseline contract | id 2109 |
 
 entity_type classification reasoning: configuration_items / service_maps / ci_baselines are
 real-world objects that move through a publishable/captured workflow (operational_workflow);
-ci_relationships is the N:M graph edge between CIs (junction; lifecycle permitted, still
+ci_relationships is the N:M graph relationship between CIs (junction; lifecycle permitted, still
 proposed under B1B-S2); ci_classes is class taxonomy / rule-shape (catalog -> Rule #12
 lifecycle-exempt, which structurally resolves the old B2-1 exemption without any notes write).
 
@@ -381,7 +381,7 @@ lifecycle-exempt, which structurally resolves the old B2-1 exemption without any
 - **B2-3** service_maps ownership boundary with DISCOVERY (master move = b2; depends on B3-D4).
 - **B2-4** relationship row 220 vs 232 duplication (collapse/drop = destructive).
 - **B2-5** CMDB role naming `IT-INFRA-CMDB-` infix vs `IT-INFRA-` (rename/demote = destructive;
-  also confirm grain post-Plan-3: personas now live in `domain_roles`).
+  also confirm grain post-Plan-3: personas now live in `personas`).
 - **B2-6** B9 fan-out for `ci.unauthorized_change_detected` to GRC/SECOPS (gates B1B-S4).
 - **B2-7** pairwise reconciliation scope (ITSM-only vs all 3 neighbors vs defer).
 - **B2-DESTRUCTIVE-H1** (was B1A-H1): DELETE handoff_processes id IN (7, 9, 52) + INSERT

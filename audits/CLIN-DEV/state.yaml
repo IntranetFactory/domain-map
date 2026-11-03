@@ -58,8 +58,8 @@ last_audit: "2026-06-13"
 
 b1a:
   - id: B1A-S5b
-    summary: "B7 partial: master-to-users relationship edges in the symmetric direction. SURFACED (not auto-executed): inverse_verb already models the master-side view."
-    finding: "The 8 users-to-master data_object_relationships rows (ids 653 to 660) each already carry an inverse_verb (is_owned_by, is_performed_by, is_operated_by, is_reported_by, is_managed_by, is_assigned_to, is_created_by) and owner_side='source', so the master-side view of the same FK is ALREADY modeled on the existing row. Inserting separate master->users rows would double-count the same FK edge. Whether the catalog wants a second set of unidirectional rows or treats inverse_verb as sufficient is a modeling judgment, not a mechanical additive fix; state never pre-spec'd concrete reverse tuples for a reason. Surface to user."
+    summary: "B7 partial: master-to-users relationships in the symmetric direction. SURFACED (not auto-executed): inverse_verb already models the master-side view."
+    finding: "The 8 users-to-master data_object_relationships rows (ids 653 to 660) each already carry an inverse_verb (is_owned_by, is_performed_by, is_operated_by, is_reported_by, is_managed_by, is_assigned_to, is_created_by) and owner_side='source', so the master-side view of the same FK is ALREADY modeled on the existing row. Inserting separate master->users rows would double-count the same FK relationship. Whether the catalog wants a second set of unidirectional rows or treats inverse_verb as sufficient is a modeling judgment, not a mechanical additive fix; state never pre-spec'd concrete reverse tuples for a reason. Surface to user."
     affected_masters:
       - {data_object_id: 610, name: medical_devices, existing_inverse_verb: is_owned_by, proposed_role: owner}
       - {data_object_id: 611, name: device_maintenance_logs, existing_inverse_verb: is_performed_by, proposed_role: technician}
@@ -78,7 +78,7 @@ b1a:
 
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains. SURFACED as a build, gated on B2-S2. Not scaffolded."
-    finding: "Live 2026-06-07: domain 50 has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable. The build (Phase A solutions floor + Phase M modules + capabilities + masters-into-domain_module_data_objects + ONE domain-grain system skill deriving its toolset + lifecycle states + per-module catalog UX) is gated on the B2-S2 module-split decision. Per the UNBUILT rule the build is surfaced, not auto-scaffolded; the whole b1b cascade below stays blocked until modules ship. If the result is multi-module, run Phase P (personas, role_modules, process_raci) afterward."
+    finding: "Live 2026-06-07: domain 50 has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable. The build (Phase A solutions floor + Phase M modules + capabilities + masters-into-domain_module_data_objects + ONE domain-grain system skill deriving its toolset + lifecycle states + per-module catalog UX) is gated on the B2-S2 module-split decision. Per the UNBUILT rule the build is surfaced, not auto-scaffolded; the whole b1b cascade below stays blocked until modules ship. If the result is multi-module, run Phase P (personas, persona_modules, process_raci) afterward."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
 

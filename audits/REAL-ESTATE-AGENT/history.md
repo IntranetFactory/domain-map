@@ -28,7 +28,7 @@ The bundle hosts three markets via `domain_module_host_domains` (domain_module_i
 which is expected for a bundle (a bundle has no standalone market size) and is not a failure per Rule #2.
 
 **Invariant 1 (roles) — PASS.** `GET /domain_module_data_objects?domain_module_id=eq.153` returns 8 rows.
-The 7 domain-owned objects are all `role='embedded_master'`, `necessity='required'`:
+The 7 domain-owned objects are all `held_as='embedded_master'`, `necessity='required'`:
 - legal_contracts (data_object_id 66, kind='domain_owned')
 - crm_leads (99, domain_owned)
 - crm_contacts (98, domain_owned)
@@ -37,12 +37,12 @@ The 7 domain-owned objects are all `role='embedded_master'`, `necessity='require
 - real_estate_transactions (353, domain_owned)
 - disclosure_documents (356, domain_owned)
 
-The 8th row is `users` (data_object_id 748, kind='platform_builtin') with `role='consumer'`,
+The 8th row is `users` (data_object_id 748, kind='platform_builtin') with `held_as='consumer'`,
 `necessity='required'`. Every row is either `embedded_master` on a `domain_owned` object or `consumer`
 on a `platform_builtin` object. No `master`/`derived`/`contributor` rows, and no `consumer` on a
 domain_owned object. The bundle masters nothing, as required.
 
-**Invariant 2 (canonical master exists) — PASS.** For each `embedded_master` object, a `role='master'`
+**Invariant 2 (canonical master exists) — PASS.** For each `embedded_master` object, a `held_as='master'`
 row was confirmed in another module catalog-wide:
 - legal_contracts (66) -> mastered by domain_module 127
 - crm_leads (99) -> mastered by domain_module 47

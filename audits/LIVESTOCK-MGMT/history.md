@@ -36,7 +36,7 @@ Jan 2026); Datamars/Tru-Test and Gallagher supply the EID / weigh data layer.
   none of the masters clearly matched personal-content / submit-lock / single-approver). 12 DMDO
   rows (11 master + GRAZING consumer of livestock_mobs). singular/plural labels only (no
   display_label column live).
-- 17 data_object_relationships: 13 intra-domain + 4 users edges (Rule #10). Mermaid-equivalent edge
+- 17 data_object_relationships: 13 intra-domain + 4 relationships to `users` (Rule #10). Mermaid-equivalent relationship
   set: mob groups animal; animal has weights / treatments / identifiers; mob undergoes movements;
   plan schedules allocations and covers paddocks; allocation occupies paddock and allocates mob;
   movement moves to paddock; users record/administer/log/author.
@@ -58,10 +58,10 @@ Jan 2026); Datamars/Tru-Test and Gallagher supply the EID / weigh data layer.
   side-effects). 16 tools net-new; notify_person and notify_team reused existing shared catalog rows.
   1 domain-grain system skill `livestock-mgmt-system` (463; domain_id=176, domain_module_id=NULL,
   Rule #17).
-- Phase E: 3 personas (Station Manager, Stock Manager, Grazier), each with 2 role_modules (>=2
+- Phase E: 3 personas (Station Manager, Stock Manager, Grazier), each with 2 persona_modules (>=2
   floor). process_raci DEFERRED: no real cross-industry APQC PCF node fits a farm / livestock-
   specific gated process, so per the research carve-out no process was invented; deferred to b2/idea
-  rather than fabricated. Personas + role_modules authored regardless.
+  rather than fabricated. Personas + persona_modules authored regardless.
 
 ### Decisions / open items
 - B2-S1 (gate): confirm distinct-domain vs fold-into-FMIS. Recommended distinct; research grounds it.
@@ -72,7 +72,7 @@ Jan 2026); Datamars/Tru-Test and Gallagher supply the EID / weigh data layer.
 
 ### Verification
 record_status='new' confirmed on domain, skill, masters. Single-master invariant holds (11 distinct
-masters, one role=master each). notes empty on all junctions (the only authored notes are the
+masters, one held_as=master each). notes empty on all junctions (the only authored notes are the
 permitted vendor predecessor/acquisition strings on MaiaGrazing and Performance Livestock Analytics,
 Rule #18 exception). tools operation_kind <-> data_object_id invariant holds. No em-dash, American
 English, no Python, no MCP, no git commit.

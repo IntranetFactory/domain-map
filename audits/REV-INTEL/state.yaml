@@ -23,7 +23,7 @@ b1b:
       FULLY WIRED both sides (207 REV-INTEL->CRM deal_risk_score.escalated source 187 / target 48;
       201 closed_lost and 473 stage_changed CRM->REV-INTEL source 48 / target 187). Boundary integrity
       clean (REV-INTEL embedded_masters crm_opportunities; CRM-PIPELINE-MGT consumes
-      conversation_intelligence_records). The cross-domain relationship edges already exist as single
+      conversation_intelligence_records). The cross-domain relationships already exist as single
       bidirectional rows authored from REV-INTEL's B8 (deal_risk_scores scores crm_opportunities;
       revenue_forecasts forecasts crm_opportunities; captured_activities attributed_to
       crm_opportunities); CRM does NOT owe separate mirror rows (the prior wording here was wrong).

@@ -7,10 +7,10 @@ This domain was just created (the downstream engagement half of the planning-vs-
 
 ---
 
-q1: This domain handles contact-level intent, web-visitor resolution, and engagement, all personal data, so GDPR and CCPA genuinely apply. The compliance is already modeled with consent records and data-subject-request entities. Do you also want explicit regulation links on the domain?
+q1: This domain handles contact-level intent, web-visitor resolution, and engagement, all personal data, so GDPR and CCPA genuinely apply. The compliance is already modeled with consent records and data-subject-request entities. Do you also want explicit regulation relationships on the domain?
 
-- a) Link CPRA (already in the catalog) and create a GDPR regulation row, then link both.
-- b) Link CPRA only (GDPR would be a new regulation row).
+- a) Relationship CPRA (already in the catalog) and create a GDPR regulation row, then relate both.
+- b) Relationship CPRA only (GDPR would be a new regulation row).
 - c) None, the consent and data-subject-request entities already carry the obligation.
 
 Recommended: a. ABM is the part of the stack where contact-level PII concentrates, so an explicit GDPR + CPRA tag on the domain is worth the completeness. Creating the GDPR regulation row is a new catalog entry, which is why it waits for your yes here.

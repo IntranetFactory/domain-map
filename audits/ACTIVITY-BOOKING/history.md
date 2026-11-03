@@ -25,14 +25,14 @@ Rezdy/Bokun are distribution-first and Origin/Flybook do not model OTA at all).
   cross-module embedded shells of activity_bookings/departures/participants on SCHED/WAIVERS/DIST);
   14 aliases; 27 lifecycle states across 6 operational_workflow masters; 9 trigger_events; 9 handoffs
   (3 cross-domain outbound to CRM/ESIGN/FIN + 6 intra-domain lifecycle_progression); 28 relationships
-  (intra-domain + 3 users edges). Two Rule #9 collisions avoided by prefixing: payment_transactions ->
+  (intra-domain + 3 relationships to `users`). Two Rule #9 collisions avoided by prefixing: payment_transactions ->
   `booking_payments`, trip_itineraries -> `activity_itineraries`.
 - Phase C: 4 business_function_domains (owner Business Operations; contributors Sales + Marketing;
   consumer Customer Service).
 - Phase S: domain skill `activity-booking` (skill_type=domain, brand-free trigger description +
   keywords); 24 tools (reusing notify_person, query_customers, sign_document); 26 domain_module_tools.
 - Phase E: 4 personas (Reservations Manager, Booking Agent, Guide and Trip Leader, Distribution
-  Manager) + 10 role_modules reach (each persona >=2 modules).
+  Manager) + 10 persona_modules reach (each persona >=2 modules).
 
 **Checklist verification (this pass):** A1-A4 pass; M1/M2/M4/M6/M7/M8 pass (4 modules, single-master
 integrity clean, capability<->module bipartite closed); B1/B2/B3/B12/B13 pass (6 workflow masters all

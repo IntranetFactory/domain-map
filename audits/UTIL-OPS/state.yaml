@@ -15,7 +15,7 @@ next_action_by: user
 last_audit: "2026-06-13"
 
 # UNBUILT domain: 0 domain_modules (M1 fail), 0 capability_domains. Every module-grain
-# fix (relationships, users edges, lifecycle states, intra-domain handoffs, source-side
+# fix (relationships, relationships to users, lifecycle states, intra-domain handoffs, source-side
 # handoff FK patches) is blocked on the build (B1B-S1) which is in turn gated on the
 # structural Bucket-2 decision B2-5 (umbrella vs. promote). The 2026-06-07 state-driven
 # pass executed every additive/corrective item that is NOT module-gated:
@@ -51,19 +51,19 @@ b1b:
 
   - id: B1B-S2
     summary: "Author 7 capabilities + capability_domains rows alongside the module build."
-    finding: "Zero capabilities linked (A2 hard fail). Phase A floor is >=3. Proposal: METER-TO-CASH, METER-DATA-MGMT, OUTAGE-MGMT, NETWORK-ASSET-MGMT, FIELD-WORK-EXECUTION, REGULATORY-REPORTING, GRID-RELIABILITY-MONITORING. Loads alongside modules per Phase A; module assignment shifts if B2-5 lands on demote."
+    finding: "Zero capabilities related (A2 hard fail). Phase A floor is >=3. Proposal: METER-TO-CASH, METER-DATA-MGMT, OUTAGE-MGMT, NETWORK-ASSET-MGMT, FIELD-WORK-EXECUTION, REGULATORY-REPORTING, GRID-RELIABILITY-MONITORING. Loads alongside modules per Phase A; module assignment shifts if B2-5 lands on demote."
     blocked_by:
       - {type: depends_on, ref: B1B-S1}
 
   - id: B1B-S5
     summary: "Author 8 intra-domain data_object_relationships baseline rows (B1-R1 to R8)."
-    finding: "Only 1 data_object_relationships row touches UTIL-OPS masters (470, cross-domain into CSM). Zero intra-domain edges. Pre-specified 8 edges: utility_customer_accounts holds service_connections; service_connections metered_by utility_meters; utility_meters produces meter_reads; service_connections billed_via utility_bills; meter_reads feeds utility_bills; utility_assets triggers outage_events; outage_events spawns utility_service_orders; utility_meters serviced_by utility_service_orders. Grouped under post-build for module attribution."
+    finding: "Only 1 data_object_relationships row touches UTIL-OPS masters (470, cross-domain into CSM). Zero intra-domain relationships. Pre-specified 8 relationships: utility_customer_accounts holds service_connections; service_connections metered_by utility_meters; utility_meters produces meter_reads; service_connections billed_via utility_bills; meter_reads feeds utility_bills; utility_assets triggers outage_events; outage_events spawns utility_service_orders; utility_meters serviced_by utility_service_orders. Grouped under post-build for module attribution."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S6
-    summary: "Author 5 users edges (Rule #10, B1-U1 to U5)."
-    finding: "Zero edges from UTIL-OPS masters to platform users (id 748). Pre-specified: users created utility_customer_accounts (CSR); dispatched utility_service_orders (dispatcher); declared outage_events (operator); issued utility_bills (billing analyst); collected meter_reads (manual reader; AMI reads system-collected). Grouped with post-build load by 2026-05-30 sequencing."
+    summary: "Author 5 relationships to users (Rule #10, B1-U1 to U5)."
+    finding: "Zero relationships from UTIL-OPS masters to platform users (id 748). Pre-specified: users created utility_customer_accounts (CSR); dispatched utility_service_orders (dispatcher); declared outage_events (operator); issued utility_bills (billing analyst); collected meter_reads (manual reader; AMI reads system-collected). Grouped with post-build load by 2026-05-30 sequencing."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
 
@@ -96,7 +96,7 @@ b1b:
 
   - id: B1B-S11
     summary: "Author data_object_lifecycle_states on all 8 workflow-bearing masters."
-    finding: "Zero data_object_lifecycle_states rows. entity_type is now operational_workflow on all 8 (set 2026-06-07), so B12 expects >=1 state row each. Each state machine needs domain_module_id attribution per M5, so the load is gated on the build. Workflow-gate states (utility_bill.posted/paid, outage_event.declared/restored, utility_service_order.completed/cancelled) need requires_permission=true with permission_verb_override where auto-derivation is awkward."
+    finding: "Zero data_object_lifecycle_states rows. entity_type is now operational_workflow on all 8 (set 2026-06-07), so B12 expects >=1 state row each. Each state machine needs domain_module_id attribution per M5, so the load is gated on the build. Workflow-gate states (utility_bill.posted/paid, outage_event.declared/restored, utility_service_order.completed/canceled) need requires_permission=true with permission_verb_override where auto-derivation is awkward."
     blocked_by:
       - {type: depends_on, ref: B1B-S1}
     affected_masters:
@@ -106,8 +106,8 @@ b1b:
       - {data_object_id: 663, name: service_connections, workflow: "pending_connect -> active -> disconnected -> retired"}
       - {data_object_id: 664, name: utility_assets, workflow: "acquired -> in_service -> derated -> failed -> retired"}
       - {data_object_id: 665, name: outage_events, workflow: "reported -> declared -> dispatched -> restored -> cause_classified -> closed"}
-      - {data_object_id: 666, name: utility_service_orders, workflow: "created -> scheduled -> dispatched -> in_progress -> completed -> cancelled"}
-      - {data_object_id: 667, name: utility_bills, workflow: "draft -> posted -> issued -> paid -> overdue -> cancelled"}
+      - {data_object_id: 666, name: utility_service_orders, workflow: "created -> scheduled -> dispatched -> in_progress -> completed -> canceled"}
+      - {data_object_id: 667, name: utility_bills, workflow: "draft -> posted -> issued -> paid -> overdue -> canceled"}
 
   - id: B1B-S12-PARTIAL
     summary: "Remaining RACI: Engineering / Asset Management contributor (no clean 20-function-spine match)."

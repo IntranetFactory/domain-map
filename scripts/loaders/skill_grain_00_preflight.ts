@@ -36,8 +36,8 @@ const [skills, modules, st, dmdo, praci, entCheck] = await Promise.all([
   pg(`/skills?select=id,skill_name,skill_type,domain_id,domain_module_id,process_id,record_status&limit=${LIMIT}`),
   pg(`/domain_modules?select=id,domain_id,domain_module_code,module_kind&limit=${LIMIT}`),
   pg(`/skill_tools?select=id,skill_id,tool_id,requirement_level,record_status&limit=${LIMIT}`),
-  pg(`/domain_module_data_objects?select=domain_module_id,data_object_id,role&limit=${LIMIT}`),
-  pg(`/process_raci?select=actor_skill_id&limit=${LIMIT}`),
+  pg(`/domain_module_data_objects?select=domain_module_id,data_object_id,held_as&limit=${LIMIT}`),
+  pg(`/process_raci?select=skill_id&limit=${LIMIT}`),
   pg(`/entities?table_name=in.(domain_module_tools,process_tools)&select=table_name`),
 ]);
 // host set is DERIVED (the domain_module_host_domains table was dropped); see deriveHostDomains.
@@ -120,7 +120,7 @@ check("process skill ids == {124,125,126}",
 for (const s of processSkills) {
   console.log(`    process skill ${s.id} (${s.skill_name}) -> ${stCount(s.id)} skill_tools, process_id=${s.process_id}`);
 }
-check("process skills have null process_id (not yet linked)", processSkills.every(s => s.process_id == null));
+check("process skills have null process_id (not yet related)", processSkills.every(s => s.process_id == null));
 
 console.log(`\n== Per-domain skill split (zero-module vs multi-module) ==`);
 const modulesByDomain = new Map<number, number>();
@@ -166,8 +166,8 @@ const stStatuses = new Set(st.map(r => r.record_status));
 check("skill_tools.record_status all 'new'", [...stStatuses].every(v => v === "new"), `${JSON.stringify([...stStatuses])}`);
 check("domain_module_tools + process_tools do NOT exist yet", entCheck.length === 0,
   `found: ${JSON.stringify(entCheck.map(e => e.table_name))}`);
-const nonNullActor = praci.filter(r => r.actor_skill_id != null).length;
-check("process_raci.actor_skill_id has 0 non-null", nonNullActor === 0, `${nonNullActor} non-null`);
+const nonNullActor = praci.filter(r => r.skill_id != null).length;
+check("process_raci.skill_id has 0 non-null", nonNullActor === 0, `${nonNullActor} non-null`);
 
 console.log(`\n${failures === 0 ? "ALL PREFLIGHT CHECKS PASSED" : `${failures} PREFLIGHT CHECK(S) FAILED - DO NOT PROCEED`}`);
 process.exit(failures === 0 ? 0 : 1);

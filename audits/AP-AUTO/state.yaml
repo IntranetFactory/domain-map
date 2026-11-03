@@ -65,7 +65,7 @@ b1b:
     finding: >-
       Zero domain_modules.domain_id=29 rows and zero domain_module_host_domains.domain_id=29
       rows. Rule #14 requires every domains row to have at least one module_kind=full
-      module. This blocks B1B-S2/S3/S10/S11 and the BOUNDARY mirror edges. Recommended
+      module. This blocks B1B-S2/S3/S10/S11 and the BOUNDARY mirror relationships. Recommended
       baseline shape: 3 modules AP-AUTO-INVOICE-CAPTURE (contributor on supplier_invoices),
       AP-AUTO-MATCHING (masters invoice_matches), AP-AUTO-PAYMENT-RUNS (masters payment_runs).
     blocked_by:

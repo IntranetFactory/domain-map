@@ -151,10 +151,10 @@ The DomainMap-emitted structured snapshot of this domain. Read on demand (not lo
 - Capabilities and the modules that realize them
 - Modules with their masters, embedded-masters, consumers
 - Per-master aliases, lifecycle states, and the per-entity `has_personal_content` hint
-- Intra-domain relationships and edges to platform built-ins
+- Intra-domain relationships and relationships to platform built-ins
 - Domain-level APQC process rollup (`apqc_processes_touched`) for cross-domain process queries
 - System skills and tool sets per module
-- Expected role personas with their module footprints
+- Expected personas with their module footprints
 - Catalog enum vocabularies for any column the skill might write
 
 **Treat `spec.json` as the read-only "as-designed" shape.** What this deployment actually configured lives in `state.jsonc`.

@@ -11,7 +11,7 @@ q1: (answer this first) How should Telecommunications OSS/BSS be split into modu
 - b) Five modules: a commercial module (order plus catalog), an operational module (provisioning plus inventory), and Billing, Subscriptions, Assurance kept separate.
 - c) Three starter modules: Order-to-Cash, Provisioning-and-Inventory, and Assurance.
 
-Recommended: a. It mirrors the TM Forum eTOM Level 2 process areas the whole market organizes against, and matches how the flagship suites lay out their products. This choice gates the entire build (capabilities, modules, lifecycle states, internal relationships, user edges, and source-module backfill all wait on it), so it unlocks everything else.
+Recommended: a. It mirrors the TM Forum eTOM Level 2 process areas the whole market organizes against, and matches how the flagship suites lay out their products. This choice gates the entire build (capabilities, modules, lifecycle states, internal relationships, relationships to `users`, and source-module backfill all wait on it), so it unlocks everything else.
 
 a1:
 

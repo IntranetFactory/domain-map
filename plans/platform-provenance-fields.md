@@ -99,7 +99,7 @@ Values:
 - `reference` - relatively static lookup data (locations, sources, categories)
 - `transaction` - operational records with a lifecycle (applications, offers)
 - `log` - append-only audit/history/event rows, not user-edited
-- `junction` - M:N link table
+- `junction` - M:N junction table
 
 **`modules.catalog_domain_code`** - owning catalog `domain_code` (e.g. `ATS`) for single-domain
 modules. **Leave empty for cross-domain starters/bundles** (e.g. REAL-ESTATE-AGENT spans

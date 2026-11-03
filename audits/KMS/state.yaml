@@ -50,7 +50,7 @@ b1b:
   - id: B1B-S4-CCAAS
     summary: One outbound cross-domain relationship deferred (knowledge_base_articles -> assists -> contact_center_agents) because CCAAS contact_center_agents master not yet enumerated in catalog
     finding: >-
-      The B8 outbound edge knowledge_base_articles (410) -> assists ->
+      The B8 outbound relationship knowledge_base_articles (410) -> assists ->
       contact_center_agents was deferred in the 2026-05-31 continuation block.
       CCAAS has no contact_center_agents row in data_objects yet, so the FK
       target does not exist. Loads when CCAAS publishes the master.

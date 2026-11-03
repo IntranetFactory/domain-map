@@ -48,7 +48,7 @@ The 85 pending missing-domain candidates whose estimated strict Semantius score 
 | ITAD | IT Asset Disposition | Secure data sanitization, chain of custody, certificate-of-destruction, resale, and regulatory disposal reporting. |
 | ITPA | IT Process Automation (Runbook Automation) | Runbook authoring, approval-gated orchestration, parametric execution, and audit-trailed runs. |
 | K1-TAX-DOCS | K-1 Partnership Tax Document Generation | Generates Schedule K-1/K-3 and state schedules with LP tax-package portal delivery. |
-| LEGAL-HOLD | Legal Hold and Preservation | Custodian identification, hold-notice issuance, acknowledgement, in-place preservation, and release. |
+| LEGAL-HOLD | Legal Hold and Preservation | Custodian identification, hold-notice issuance, acknowledgment, in-place preservation, and release. |
 | M365-MGMT | Microsoft 365 Tenant Management | Tenant health monitoring, license reporting, delegated administration, and bulk tenant operations. |
 | MAM | Mobile Application Management | App wrapping, config policies, app-level data containers, and selective wipe of corporate app data. |
 | MED-DEVICE-QMS | Medical Device QMS | Design history files, 21 CFR 820.30 design controls, CAPA, complaint handling, and eMDR submissions. |
@@ -77,13 +77,13 @@ The 85 pending missing-domain candidates whose estimated strict Semantius score 
 | SPACE-BOOKING | Space and Room Booking | Study/meeting room reservations, equipment booking, recurring bookings, waitlists, and conflict resolution. |
 | SPREADSHEET-PLATFORM | Online Spreadsheet Platform | Cell-grid editing with real-time co-editing, a formula engine, charts, and pivot tables. |
 | SSE-SASE | Security Service Edge / SASE | Secure web gateway, ZTNA, inline TLS inspection, edge DLP, and unified web/SaaS/private-app policy. |
-| STORE-COMMS | Store Communications and Knowledge Distribution | Store-targeted messaging, acknowledgement tracking, district memos, and store-level knowledge bases. |
+| STORE-COMMS | Store Communications and Knowledge Distribution | Store-targeted messaging, acknowledgment tracking, district memos, and store-level knowledge bases. |
 | TAX-PROVISION | Corporate Tax Provision and Compliance | ASC 740 provision, deferred-tax calculation, effective-tax-rate analysis, and multi-jurisdictional disclosures. |
 | TENANT-EXPERIENCE | Tenant Experience Platform | Tenant mobile app for amenity booking, communications, work-order intake, and access integration. |
 | TENANT-MIGRATION | Collaboration Tenant Migration | Pre-migration assessment, content mapping, incremental delta sync, and post-migration validation. |
 | TIRE-MGMT | Fleet Tire Management | Tire-asset tracking, tread-depth monitoring, retread workflow, and cost-per-mile analytics. |
-| TMS | Translation Management System | Translation memory, glossary management, machine-translation orchestration, and translator workbench. |
 | TRANSACT-EMAIL | Transactional Email Infrastructure | Transactional send API, SMTP relay, deliverability monitoring, and bounce/complaint handling. |
+| TRANSLATION-MGMT | Translation Management System | Translation memory, glossary management, machine-translation orchestration, and translator workbench. |
 | UTIL-GIS | Utility Geographic Information System | Network-topology modeling, connectivity tracing, as-built capture, and facility data management. |
 | UTIL-OMS | Outage Management System | Outage prediction, crew dispatch, restoration tracking, storm management, and ETR estimation. |
 | VEHICLE-RECALL-MGMT | Vehicle Recall Management | NHTSA VIN-matched recall ingestion, per-vehicle campaign tracking, and OEM reimbursement claims. |

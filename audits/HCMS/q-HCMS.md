@@ -89,9 +89,9 @@ a7:
 
 ---
 
-q8: Two adjacent markets show up around HCMS and may deserve their own domains: Translation Management (TMS) and Digital Personalization. Should I research and queue these as candidate domains? (yes/no)
+q8: Two adjacent markets show up around HCMS and may deserve their own domains: Translation Management and Digital Personalization. Should I research and queue these as candidate domains? (yes/no)
 
-Recommended: yes, as research only. Both are already noted as missing-domain candidates and connect to HCMS through translation and personalization, but standing up a new domain is a separate, non-blocking decision.
+Recommended: yes, as research only. Both are already noted as missing-domain candidates and relate to HCMS through translation and personalization, but standing up a new domain is a separate, non-blocking decision.
 
 a8:
 

@@ -5,8 +5,8 @@
 ### Summary
 
 - Current footprint: 6 master data_objects (`rental_units`, `property_tenants`, `rental_applications`, `rent_payments`, `tenant_maintenance_requests`, `rental_leases`) plus 1 contributor (`supplier_invoices`, mastered by S2P); 6 capabilities; 7 solutions; **0 `domain_modules`**; **0 `domain_regulations`**; 10 trigger events; 7 outbound handoffs (all with NULL `source_domain_module_id` and `target_domain_module_id`); 1 inbound handoff from RE-BROKERAGE; 1 legacy domain-level system skill (`re-prop-mgmt-system`, id 98) with 8 `skill_tools` rows.
-- Market surface basis: pure-play residential property management vendors AppFolio Property Manager, Buildium, Yardi Breeze, Entrata, RealPage, Rent Manager, Yardi Voyager (all 7 already linked at `coverage_level=primary`). Compliance specialists for FCRA (TransUnion SmartMove, Experian RentBureau, RentPrep) and Fair Housing (NAA, NMHC training programs) cited for regulatory entity coverage.
-- Structural pass: A pass except A4 (`catalog_tagline` / `catalog_description` empty); **M fails outright** (zero modules; 6 capabilities mandate two or more full modules per Rule #14); B fails broadly (B3 naming arbitration unverified, B6 intra-domain relationships absent, B7 users edges absent, B11 aliases absent, B12 lifecycle states absent, B9 trigger events missing `event_category` on rows 957-961, B10b every handoff carries NULL module FKs); C passes; D not yet run; E vacuous (no roles can attach to a zero-module domain); F fails (legacy domain-level skill, no per-module system skills); H1 fails (1/8 cross-domain handoffs carries any APQC tag).
+- Market surface basis: pure-play residential property management vendors AppFolio Property Manager, Buildium, Yardi Breeze, Entrata, RealPage, Rent Manager, Yardi Voyager (all 7 already related at `coverage_level=primary`). Compliance specialists for FCRA (TransUnion SmartMove, Experian RentBureau, RentPrep) and Fair Housing (NAA, NMHC training programs) cited for regulatory entity coverage.
+- Structural pass: A pass except A4 (`catalog_tagline` / `catalog_description` empty); **M fails outright** (zero modules; 6 capabilities mandate two or more full modules per Rule #14); B fails broadly (B3 naming arbitration unverified, B6 intra-domain relationships absent, B7 relationships to `users` absent, B11 aliases absent, B12 lifecycle states absent, B9 trigger events missing `event_category` on rows 957-961, B10b every handoff carries NULL module FKs); C passes; D not yet run; E vacuous (no roles can attach to a zero-module domain); F fails (legacy domain-level skill, no per-module system skills); H1 fails (1/8 cross-domain handoffs carries any APQC tag).
 - Semantius score (legacy skill 98 only): strict = 7/8 = 87.5% (`sign_document`, id 42, is `external`). Score will need recomputation once modules and their system skills land.
 - **Bucket 1 (in-scope, agent fixable):** 17 items.
 - **Bucket 2 (surface-for-user, judgment):** 7 items.
@@ -22,9 +22,9 @@ This domain has **never been modularized**: the entire structural substrate beyo
 
 ### Pass 3, Neighbor discovery
 
-Auto-derived from existing `handoffs` rows (NULL module FKs aside, the domain edges resolve).
+Auto-derived from existing `handoffs` rows (NULL module FKs aside, the domain relationships resolve).
 
-| Neighbor | Edge weight | Direction(s) | Notes |
+| Neighbor | Relationship weight | Direction(s) | Notes |
 |---|---|---|---|
 | RE-INVEST | 2 | outbound (handoffs 301, 864) | Rent payments and lease executions feed investor reporting (owner distributions). |
 | RE-BROKERAGE | 1 | inbound (handoff 296 on `real_estate_transaction.closed`) | Closed sale starts a property under management. |
@@ -35,7 +35,7 @@ Auto-derived from existing `handoffs` rows (NULL module FKs aside, the domain ed
 | FIN | 1 | outbound (handoff 864 on `rent_payment.received`) | GL posting. |
 | CSM | 1 | outbound (handoff 865 on `rental_unit.vacant`) | Resident off-boarding ticket / case. |
 
-Every neighbor is at edge weight under 3 individually, so Pass 4 collapses to a one-line per-neighbor note (no full 5-section diff). The aggregate finding is that **every cross-domain edge above is structurally incomplete** (NULL module FKs on the source side, because there are no source modules to attribute to). The B10b backfill cannot run until the M-band ships.
+Every neighbor is at relationship weight under 3 individually, so Pass 4 collapses to a one-line per-neighbor note (no full 5-section diff). The aggregate finding is that **every cross-domain relationship above is structurally incomplete** (NULL module FKs on the source side, because there are no source modules to attribute to). The B10b backfill cannot run until the M-band ships.
 
 ### Pass 4, Pairwise reconciliation (light)
 
@@ -58,8 +58,8 @@ No in-scope fixes from this domain land in Pass 4; everything routes through Buc
 | B1-S3 | M4 | All 6 capabilities (RE-PM-TENANT-SCREENING, RE-PM-RENT-COLLECTION, RE-PM-MAINT-REQUEST, RE-PM-LEASING-PIPELINE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING) are capability-orphaned (no realizing module). | Author `domain_module_capabilities` rows once the module set lands. |
 | B1-S4 | A4 | `catalog_tagline` and `catalog_description` are empty strings (Rule #20 backfill). | Draft both fields in Bucket 2 #2 for user review before writing (Rule #20 forbids overwrite without per-row approval, but empty-to-content backfill is allowed with surface). |
 | B1-S5 | B3 | Naming arbitration not recorded for 6 masters (`is_canonical_bare_word=false`, `naming_authority_rationale=''`). The names are all already prefixed (`rental_units`, `property_tenants`, `rental_leases`, `rental_applications`, `rent_payments`, `tenant_maintenance_requests`), so they pass automatically; PATCH the `is_canonical_bare_word=true` flag on bare-word candidates only if a future rename targets the unprefixed form. **Pass automatically (prefixed names).** | No action; recorded for traceability. |
-| B1-S6 | B6 | Zero intra-domain `data_object_relationships` among the 6 masters. Expected edges: `rental_units` opens-from `real_estate_transactions` exists (row 473), but every in-domain edge is absent: `rental_units` has-many `rental_leases`, `rental_leases` covers `rental_units`, `rental_applications` results-in `rental_leases`, `property_tenants` signs `rental_leases`, `rental_leases` generates `rent_payments`, `rental_units` receives `tenant_maintenance_requests`, `property_tenants` submits `tenant_maintenance_requests`. | Draft 7 in-domain edges (verb + inverse_verb + cardinality + necessity + owner_side), load via the cluster-drafts loader pattern. |
-| B1-S7 | B7 | Zero `users` edges on any of the 6 masters. Expected: `users` manages `rental_units` (property_manager), `users` assigned-to `tenant_maintenance_requests` (coordinator), `users` reviews `rental_applications` (leasing_agent), `users` approves `rental_applications` (manager), `users` records `rent_payments` (bookkeeper). | Author 5 `data_object_relationships` rows with `related_data_object_id=748` (users built-in) per Rule #10. |
+| B1-S6 | B6 | Zero intra-domain `data_object_relationships` among the 6 masters. Expected relationships: `rental_units` opens-from `real_estate_transactions` exists (row 473), but every in-domain relationship is absent: `rental_units` has-many `rental_leases`, `rental_leases` covers `rental_units`, `rental_applications` results-in `rental_leases`, `property_tenants` signs `rental_leases`, `rental_leases` generates `rent_payments`, `rental_units` receives `tenant_maintenance_requests`, `property_tenants` submits `tenant_maintenance_requests`. | Draft 7 in-domain relationships (verb + inverse_verb + cardinality + necessity + owner_side), load via the cluster-drafts loader pattern. |
+| B1-S7 | B7 | Zero relationships to `users` on any of the 6 masters. Expected: `users` manages `rental_units` (property_manager), `users` assigned-to `tenant_maintenance_requests` (coordinator), `users` reviews `rental_applications` (leasing_agent), `users` approves `rental_applications` (manager), `users` records `rent_payments` (bookkeeper). | Author 5 `data_object_relationships` rows with `related_data_object_id=748` (users built-in) per Rule #10. |
 | B1-S8 | B9 | Five trigger events (rows 957, 958, 959, 960, 961) have `event_category=''`. Allowed values are `lifecycle`, `state_change`, `threshold`, `signal`. Proposed: 957 `rental_unit.listed` -> `lifecycle`; 958 `rental_unit.occupied` -> `state_change`; 959 `rental_unit.vacant` -> `state_change`; 960 `rental_lease.executed` -> `lifecycle`; 961 `rental_lease.renewed` -> `lifecycle`. | PATCH `event_category` on rows 957-961. |
 | B1-S9 | B9 | Four trigger events have no subscriber (`handoffs` rows): 287 (`rental_application.approved`) only fires to GRC; 289 (`rent_payment.delinquent`), 957 (`rental_unit.listed`), 958 (`rental_unit.occupied`), 960 (`rental_lease.executed`), 961 (`rental_lease.renewed`) have ZERO handoffs. | Author handoffs for the missing fan-out (delinquent -> CSM/collections, listed -> CSM/CDP/vacancy syndication, executed -> RE-INVEST, renewed -> RE-INVEST). |
 | B1-S10 | B10b | All 7 outbound handoffs (298, 299, 300, 301, 310, 864, 865) and the 1 inbound (296) have NULL on at least one module FK. Outbound: every `source_domain_module_id` is NULL (root cause is the M-band failure); some `target_domain_module_id` rows are also NULL pending the partner-domain audit (AP-AUTO, RE-INVEST, LSD, GRC, FSM, FIN, CSM). | After the M-band lands, run the per-handoff backfill: `source_domain_module_id` resolves from the new RE-PROP-MGMT module that masters the event's data_object. |
@@ -81,8 +81,8 @@ Two regulations themselves are also missing from `regulations`:
 
 | ID | Regulation | Notes |
 |---|---|---|
-| B1-M6 | Fair Housing Act (and a `domain_regulations` link) | Federal anti-discrimination statute (Title VIII Civil Rights Act); protected classes; applies to every residential landlord with rare exemptions. Not present anywhere in `regulations`. |
-| B1-M7 | `domain_regulations` link to FCRA (id 84, already in `regulations` as "Fair Credit Reporting Act") | FCRA is the catalog regulation that governs `tenant_screening_reports` and `fcra_adverse_action_notices`. Currently no `domain_regulations` row connects FCRA to RE-PROP-MGMT. |
+| B1-M6 | Fair Housing Act (and a `domain_regulations` relationship) | Federal anti-discrimination statute (Title VIII Civil Rights Act); protected classes; applies to every residential landlord with rare exemptions. Not present anywhere in `regulations`. |
+| B1-M7 | `domain_regulations` relationship to FCRA (id 84, already in `regulations` as "Fair Credit Reporting Act") | FCRA is the catalog regulation that governs `tenant_screening_reports` and `fcra_adverse_action_notices`. Currently no `domain_regulations` row relates FCRA to RE-PROP-MGMT. |
 
 #### MISSING (universal-vendor entities, non-regulatory)
 
@@ -138,7 +138,7 @@ Deferred to Discover Pass 3 (no clean PCF cross-industry match):
 
 3. **Fair Housing Act scope decision.** Federal Title VIII applies to nearly every residential landlord, with rare exemptions (owner-occupied small properties, religious housing). Should `domain_regulations.applicability` be `mandatory` catalog-wide, or `mandatory_with_exemptions`? Independent of Bucket 3.
 
-4. **State landlord-tenant regulations (model strategy).** Each state has its own landlord-tenant act (CA Civil Code 1940 series, NY RPL Article 7, TX Property Code Chapter 92, FL Statutes Chapter 83) with distinct security-deposit holding periods, eviction notice timing, and required disclosures. Two options: (a) add one umbrella `state_landlord_tenant_statutes` regulation and link it to RE-PROP-MGMT; (b) defer to per-jurisdiction modeling once a `jurisdictions` rollup is loaded. Independent of Bucket 3.
+4. **State landlord-tenant regulations (model strategy).** Each state has its own landlord-tenant act (CA Civil Code 1940 series, NY RPL Article 7, TX Property Code Chapter 92, FL Statutes Chapter 83) with distinct security-deposit holding periods, eviction notice timing, and required disclosures. Two options: (a) add one umbrella `state_landlord_tenant_statutes` regulation and relate it to RE-PROP-MGMT; (b) defer to per-jurisdiction modeling once a `jurisdictions` rollup is loaded. Independent of Bucket 3.
 
 5. **Pattern-flag re-evaluation.** Reading the master shapes against Rule #12: `rental_applications` plausibly has `has_personal_content=true` (SSN, credit data); `rental_leases` plausibly has `has_submit_lock=true` (post-signing); `tenant_screening_reports` (B1-M1) plausibly has `has_personal_content=true`. None of the current 6 masters carries any flag set. Surface per row: confirm flags before they go live.
 
@@ -161,8 +161,8 @@ Candidates surfaced from vendor knowledge but not yet anchored to a formal Phase
 
 ### Cross-bucket dependencies
 
-- Bucket 1 STRUCTURAL B1-S1 through B1-S4 (M-band failures) block every B and F band fix. Bucket 2 #1 (module split) is the prerequisite, the rest of Bucket 1 lands afterwards.
-- Bucket 1 MISSING entities B1-M1 and B1-M2 (`tenant_screening_reports`, `fcra_adverse_action_notices`) depend on Bucket 1 B1-M7 (FCRA `domain_regulations` link). Load regulations link before the entities.
+- Bucket 1 STRUCTURAL B1-S1 through B1-S4 (M-band failures) block every B and F band fix. Bucket 2 #1 (module split) is the prerequisite, the rest of Bucket 1 lands afterward.
+- Bucket 1 MISSING entities B1-M1 and B1-M2 (`tenant_screening_reports`, `fcra_adverse_action_notices`) depend on Bucket 1 B1-M7 (FCRA `domain_regulations` relationship). Load regulations relationship before the entities.
 - Bucket 2 #1 (module split) determines the `proposed_module` for every Bucket 1 MISSING entity. If the user picks option (b) or (c), the column needs re-mapping.
 - Bucket 2 #6 (`vendor_work_orders` placement) determines whether the `RE-PM-MAINTENANCE` module masters or embeds. Independent of Bucket 3.
 - Bucket 3 candidates B3-1, B3-2, B3-5 will likely land as Bucket 1 once vetted; B3-4 may be rejected as CSM scope-creep. Independent of Bucket 2 decisions.
@@ -206,8 +206,8 @@ Loader: [.tmp_deploy/fix_re_prop_mgmt_b1_technical_2026_05_31.ts](../.tmp_deploy
 | Fix | Detail | Rows |
 |---|---|---|
 | B1-S8 (B9 enum backfill) | PATCH `trigger_events.event_category` on ids 957/958/959/960/961 per audit-pre-specified mapping (lifecycle/state_change). | 5 |
-| B1-S7 (B7 users edges, Rule #10) | INSERT `data_object_relationships` from `users` (id 748) to RE-PROP-MGMT masters: manages rental_units (357), assigned maintenance requests (361), reviewed applications (359), approved applications (359), recorded rent payments (360). `owner_side=target`, `one_to_many`, `reference`. | 5 |
-| B1-M7 (FCRA link) | INSERT `domain_regulations` row (`domain_id=144`, `regulation_id=84`, `applicability=mandatory`). | 1 |
+| B1-S7 (B7 relationships to `users`, Rule #10) | INSERT `data_object_relationships` from `users` (id 748) to RE-PROP-MGMT masters: manages rental_units (357), assigned maintenance requests (361), reviewed applications (359), approved applications (359), recorded rent payments (360). `owner_side=target`, `one_to_many`, `reference`. | 5 |
+| B1-M7 (FCRA relationship) | INSERT `domain_regulations` row (`domain_id=144`, `regulation_id=84`, `applicability=mandatory`). | 1 |
 | B1-S11 (B11 aliases) | INSERT `data_object_aliases`: rental_units (Apartment, Unit, Door), property_tenants (Resident, Renter, Lessee), rental_applications (Application, Lease App), rental_leases (Lease, Rental Agreement). | 10 |
 | APQC TAGGING | INSERT `handoff_processes` for confident/medium L3/L4 pairs the audit pre-specifies and that lacked the exact (handoff_id, process_id) pair: 298→303, 864→1353, 300→1627, 301→1351. All `proposal_source=agent_curated`, `record_status=new`. Handoff 296→1860 and 299→824 were already tagged; 310 and 865 deferred per audit. | 4 |
 
@@ -217,7 +217,7 @@ Total: 25 rows touched (5 PATCH + 20 INSERT). All inserts ship `record_status='n
 
 - **M-band (B1-S1, B1-S2, B1-S3, B1-S4)**: new `domain_modules` + Rule #20 catalog UX backfill. Gated on Bucket 2 #1 (module split decision) and #2 (catalog UX wording).
 - **B1-S5**: no action (prefixed names pass automatically).
-- **B1-S6 (intra-domain relationships)**: audit lists 7 edges in prose, but does not pre-specify the per-edge `owner_side`, `relationship_kind`, `is_required` tuples; judgment per edge needed.
+- **B1-S6 (intra-domain relationships)**: audit lists 7 relationships in prose, but does not pre-specify the per-relationship `owner_side`, `relationship_kind`, `is_required` tuples; judgment per relationship needed.
 - **B1-S9 (missing handoffs for delinquent/listed/executed/renewed/occupied)**: new handoffs without pre-specified handoff_id, also gated on missing target modules.
 - **B1-S10 (B10b FK PATCHes)**: `source_domain_module_id` blocked by zero RE-PROP-MGMT modules; `target_domain_module_id` not derivable. Confirmed live: target domains AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), FIN (65) have zero `domain_modules`; CSM modules (112-114) and FSM modules (161-163) do not hold any RE-PROP-MGMT payload data_object via `domain_module_data_objects` (handoff 299's `target_domain_module_id=161` was already set pre-audit and is left as-is).
 - **B1-S12 (lifecycle states)**: per-state `domain_module_id` required by Rule #14 and M5; blocked by M-band.
@@ -232,7 +232,7 @@ Total: 25 rows touched (5 PATCH + 20 INSERT). All inserts ship `record_status='n
 
 ### Verification
 
-Spot queries confirm: 5 trigger_events now carry valid `event_category` enum values; 5 new `data_object_relationships` rows on `users` to RE-PROP-MGMT masters (ids 1907-1911); 1 new `domain_regulations` row (id 272) linking FCRA at `mandatory`; 10 new `data_object_aliases`; 4 new `handoff_processes` (totaling 7 tags across 5 distinct handoffs including the pre-existing 296, 299, 301 rows).
+Spot queries confirm: 5 trigger_events now carry valid `event_category` enum values; 5 new `data_object_relationships` rows on `users` to RE-PROP-MGMT masters (ids 1907-1911); 1 new `domain_regulations` row (id 272) relating FCRA at `mandatory`; 10 new `data_object_aliases`; 4 new `handoff_processes` (totaling 7 tags across 5 distinct handoffs including the pre-existing 296, 299, 301 rows).
 
 UI:
 - https://tests.semantius.app/domain_map/trigger_events
@@ -274,7 +274,7 @@ Validate b1 structural audit (passes A, M, B, C, D, E, F, H) against live state 
 | B2 | pass | Every master has `singular_label` + `plural_label`. |
 | B3 | pass | Every master is prefixed (`rental_units`, `property_tenants`, `rental_applications`, `rent_payments`, `tenant_maintenance_requests`, `rental_leases`); no bare-word canonical claim required. |
 | B5 | n/a | 0 `embedded_master` rows in the domain footprint to integrity-check. |
-| B7 | pass | 5 `users` edges loaded 2026-05-31 (ids 1907 to 1911: manages `rental_units`, assigned `tenant_maintenance_requests`, reviewed `rental_applications`, approved `rental_applications`, recorded `rent_payments`). |
+| B7 | pass | 5 relationships to `users` loaded 2026-05-31 (ids 1907 to 1911: manages `rental_units`, assigned `tenant_maintenance_requests`, reviewed `rental_applications`, approved `rental_applications`, recorded `rent_payments`). |
 | B9 | partial | 10 trigger events loaded; all 5 originally-empty `event_category` values backfilled. **B9 sub-gap**: events 289 (`rent_payment.delinquent`), 957 (`rental_unit.listed`), 958 (`rental_unit.occupied`), 960 (`rental_lease.executed`), 961 (`rental_lease.renewed`) have zero handoff rows. Carry-forward as B1-S9. |
 | B9b | n/a | Zero modules so no intra-domain cross-module surface to verify. |
 | B10b | fail | Every outbound handoff (298, 299, 300, 301, 310, 864, 865) carries `source_domain_module_id=null`. Inbound handoff 296 carries `target_domain_module_id=null`. Root cause is M1. |
@@ -298,13 +298,13 @@ Validate b1 structural audit (passes A, M, B, C, D, E, F, H) against live state 
 | B1-S2 | M2 | 6 capabilities, 0 modules; Rule #14 needs at least two full modules. | Resolves with B1-S1. |
 | B1-S3 | M4 | All 6 capabilities orphaned. | Author `domain_module_capabilities` after B1-S1. |
 | B1-S4 | A4 | `catalog_tagline` + `catalog_description` empty. | Apply Bucket 2 #2 wording per Rule #20. |
-| B1-S6 | B6 | Zero intra-domain `data_object_relationships` among 6 masters. Expected 7 edges (see 2026-05-30 narrative). | Draft 7 edges + load via cluster-drafts pattern. |
+| B1-S6 | B6 | Zero intra-domain `data_object_relationships` among 6 masters. Expected 7 relationships (see 2026-05-30 narrative). | Draft 7 relationships + load via cluster-drafts pattern. |
 | B1-S9 | B9 | 5 trigger events (289, 957, 958, 960, 961) have no subscriber handoff. | Author missing handoffs (delinquent to CSM/collections, listed to CSM/CDP/vacancy syndication, executed to RE-INVEST, renewed to RE-INVEST). Gated on target modules existing. |
 | B1-S10 | B10b | All 7 outbound handoffs carry `source_domain_module_id=null`; inbound 296 carries `target_domain_module_id=null`. | Derives after M-band lands. |
 | B1-S11b | B11 | Two masters still have no aliases (`rent_payments`, `tenant_maintenance_requests`). Candidates: `rent_payments` (Rent Charge, Payment, Receipt); `tenant_maintenance_requests` (Work Order, Maintenance Ticket, Service Request). | Author 4 to 6 more alias rows. |
 | B1-S12 | B12 | Zero `data_object_lifecycle_states` rows on the 6 masters. | Draft state machines per master; blocked on M-band for per-module attribution. |
 | B1-S13 | F1 | Legacy domain-level skill 98 still present. | DELETE after Phase S authors per-module replacements. |
-| B1-S14 | B6 | Existing `data_object_relationships` row 473 (`rental_units` opens `customer_cases` 103, inverse `opened_from`) appears mis-pointed: payload should be `real_estate_transactions` (353), not `customer_cases` (103). Promoted from 2026-05-30 "report-only" to in-scope (source row sits on a RE-PROP-MGMT master). | Either PATCH `related_data_object_id` to 353 (if intended edge is property handover from a closed sale) OR DELETE the row. User judgment. |
+| B1-S14 | B6 | Existing `data_object_relationships` row 473 (`rental_units` opens `customer_cases` 103, inverse `opened_from`) appears mis-pointed: payload should be `real_estate_transactions` (353), not `customer_cases` (103). Promoted from 2026-05-30 "report-only" to in-scope (source row sits on a RE-PROP-MGMT master). | Either PATCH `related_data_object_id` to 353 (if intended relationship is property handover from a closed sale) OR DELETE the row. User judgment. |
 
 #### MISSING
 
@@ -317,7 +317,7 @@ Carry-forward, unchanged:
 | B1-M3 | `fair_housing_inquiries` | RE-PM-LEASING-PIPELINE | Fair Housing Act |
 | B1-M4 | `security_deposits` | RE-PM-RENT-COLLECTION | State landlord-tenant statutes |
 | B1-M5 | `eviction_cases` | RE-PM-RENT-COLLECTION | State eviction statutes |
-| B1-M6 | Fair Housing Act regulation row + `domain_regulations` link | regulations + junction | Bucket 2 #3 (applicability) |
+| B1-M6 | Fair Housing Act regulation row + `domain_regulations` relationship | regulations + junction | Bucket 2 #3 (applicability) |
 | B1-U1 | `owner_distributions` | RE-PM-PROP-ACCOUNTING | Universal-vendor |
 | B1-U2 | `lease_charges` | RE-PM-RENT-COLLECTION | Universal-vendor |
 | B1-U3 | `late_fee_assessments` | RE-PM-RENT-COLLECTION | Universal-vendor |
@@ -358,7 +358,7 @@ Carry-forward from 2026-05-30, restated tersely. Per-item options unchanged; no 
 4. **State landlord-tenant strategy.** Single umbrella `state_landlord_tenant_statutes` regulation vs deferred per-jurisdiction modeling.
 5. **Pattern-flag re-evaluation** per Rule #12: `rental_applications.has_personal_content=true`, `rental_leases.has_submit_lock=true`, `tenant_screening_reports.has_personal_content=true` (after B1-M1 lands). All 6 current masters carry every flag false-by-default; positive confirmation owed before flipping.
 6. **`vendor_work_orders` placement.** Master in RE-PM-MAINTENANCE vs `embedded_master + optional` (FSM canonical).
-7. **Pairwise reconciliation rerun.** Re-run Pass 4 against RE-INVEST (edge weight 2) and RE-BROKERAGE (only inbound source) once M-band lands. Independent.
+7. **Pairwise reconciliation rerun.** Re-run Pass 4 against RE-INVEST (relationship weight 2) and RE-BROKERAGE (only inbound source) once M-band lands. Independent.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -378,7 +378,7 @@ Carry-forward, unchanged.
 - Bucket 2 #1 (module split) is the prerequisite for B1-S1 / B1-S2 / B1-S3 / B1-S9 / B1-S10 / B1-S12 / B1-S13 / every MISSING entity's `proposed_module` mapping / E and F bands. Almost the entire Bucket 1 fix tree gates on it.
 - Bucket 2 #2 (catalog UX wording) is the prerequisite for B1-S4.
 - Bucket 2 #3 (FHA applicability) is the prerequisite for B1-M6.
-- Bucket 1 MISSING B1-M1, B1-M2 depend on FCRA-linked tenant-screening module landing (FCRA itself is now linked; FHA is the unresolved part).
+- Bucket 1 MISSING B1-M1, B1-M2 depend on FCRA-related tenant-screening module landing (FCRA itself is now related; FHA is the unresolved part).
 - Bucket 3 candidates B3-1, B3-2, B3-5 plausibly migrate to Bucket 1 once eyeball-mode or Phase 0 vets them.
 
 ### Report-only follow-ups (owed by other domains)
@@ -448,11 +448,11 @@ Loader: [.tmp_deploy/fix_re_prop_mgmt_b1a_2026-06-06.ts](../../.tmp_deploy/fix_r
 | B1A-S11B-ALIASES | DONE | `data_object_aliases` +6: rent_payments(360) -> Rent Charge, Payment, Receipt; tenant_maintenance_requests(361) -> Work Order, Maintenance Ticket, Service Request. All `synonym`. |
 | B1A-LIFECYCLE-STATES | DONE | `data_object_lifecycle_states` +35 across all 6 masters with `domain_module_id` per mapping: rental_units(357)/286 6 states; property_tenants(358)/285 5; rental_applications(359)/285 6; rent_payments(360)/287 5; tenant_maintenance_requests(361)/286 6; rental_leases(362)/285 7. One `is_initial` per master; terminal + `requires_permission` flags derived per the state.yaml workflow narrative (gated verbs: approve/decline application, sign/terminate/renew lease, evict tenant, place-in-collections, approve unit). |
 | B1A-HANDOFF-SOURCE-FK | DONE (7 of 8) / 1 SKIPPED | `handoffs` PATCH `source_domain_module_id`: 298->287, 299->286, 300->285, 301->287, 310->285, 864->287, 865->286 (prior value NULL on all 7). Inbound 296 `target_domain_module_id` SKIPPED (see deviation note). |
-| B1A-INTRA-DOMAIN-RELS | DONE (7 edges) / row 473 SKIPPED | `data_object_relationships` +7 in-domain edges (see table below). Row 473 PATCH/DELETE left to user (B1A-REL-473, user_decision). |
+| B1A-INTRA-DOMAIN-RELS | DONE (7 relationships) / row 473 SKIPPED | `data_object_relationships` +7 in-domain relationships (see table below). Row 473 PATCH/DELETE left to user (B1A-REL-473, user_decision). |
 | B1A-CATALOG-UX | DONE | `domains.144` catalog_tagline + catalog_description (prior empty) written with the B2-CATALOG-WORDING draft. `domain_modules` 285/286/287 catalog_tagline + catalog_description written (prior empty) with module-grain buyer-voice copy. Empty-guard applied per field; no non-empty value overwritten. |
 | B1A-SYSTEM-SKILLS | DONE | `skills` +3 system skills (319 re-prop-mgmt-leasing_agent/285, 320 re-prop-mgmt-operations_agent/286, 321 re-prop-mgmt-financials_agent/287; each `domain_id=144` per the legacy `domain_required_when_skill_type_is_system` rule). `tools` +10 platform mutate tools. `skill_tools` +22 (LEASING 11, OPERATIONS 6, FINANCIALS 5). Legacy skill 98 DELETED (its 8 `skill_tools` cascade) after confirming all 3 replacements exist. |
 
-### Intra-domain relationship edges loaded (B1A-INTRA-DOMAIN-RELS)
+### Intra-domain relationships loaded (B1A-INTRA-DOMAIN-RELS)
 
 | from -> to | type / kind | verb / inverse | owner_side |
 |---|---|---|---|
@@ -464,15 +464,15 @@ Loader: [.tmp_deploy/fix_re_prop_mgmt_b1a_2026-06-06.ts](../../.tmp_deploy/fix_r
 | property_tenants(358) -> tenant_maintenance_requests(361) | one_to_many / reference | submits / is submitted by | source |
 | rental_applications(359) -> rental_units(357) | many_to_many / association | applies for / is applied for by | target |
 
-All `is_required=false`. This covers the 7 expected edges in the state.yaml B6 narrative (rental_units has-many leases; applications results-in leases; tenants sign leases; leases generate payments; units receive maintenance; tenants submit maintenance) plus an applications->units association in place of the prose "covers" duplicate.
+All `is_required=false`. This covers the 7 expected relationships in the state.yaml B6 narrative (rental_units has-many leases; applications results-in leases; tenants sign leases; leases generate payments; units receive maintenance; tenants submit maintenance) plus an applications->units association in place of the prose "covers" duplicate.
 
 ### New Phase-S tools (B1A-SYSTEM-SKILLS)
 
-10 platform mutate tools (`operation_kind='mutate'`, `coverage_tier='platform'`, `data_object_id` set per master): create_rental_application, approve_rental_application, create_rental_lease, update_rental_lease, update_property_tenant (LEASING masters); update_rental_unit, create_tenant_maintenance_request, assign_tenant_maintenance_request (OPERATIONS); create_rent_payment, update_rent_payment (FINANCIALS). Existing query tools (658-663), `notify_person`(913), `sign_document`(42) were reused (dedup by tool_name; nothing new created for shared primitives). `notify_person` used for generic notifications per the channel-vs-capability rule; `sign_document` linked on LEASING because lease e-signature is a channel-specific contract.
+10 platform mutate tools (`operation_kind='mutate'`, `coverage_tier='platform'`, `data_object_id` set per master): create_rental_application, approve_rental_application, create_rental_lease, update_rental_lease, update_property_tenant (LEASING masters); update_rental_unit, create_tenant_maintenance_request, assign_tenant_maintenance_request (OPERATIONS); create_rent_payment, update_rent_payment (FINANCIALS). Existing query tools (658-663), `notify_person`(913), `sign_document`(42) were reused (dedup by tool_name; nothing new created for shared primitives). `notify_person` used for generic notifications per the channel-vs-capability rule; `sign_document` related on LEASING because lease e-signature is a channel-specific contract.
 
 ### Semantius score (post-load, F5 computable)
 
-- OPERATIONS (320) and FINANCIALS (321): strict 100% (all linked tools `platform`, including `notify_person`).
+- OPERATIONS (320) and FINANCIALS (321): strict 100% (all related tools `platform`, including `notify_person`).
 - LEASING (319): below 100% strict because `sign_document` (id 42, `external`, required) is in the set; operational score adds curated integrations. This matches the talent/contract-domain pattern (e-signature is the one external dependency).
 
 ### Deviations and skips
@@ -487,7 +487,7 @@ All `is_required=false`. This covers the 7 expected edges in the state.yaml B6 n
 - `data_object_aliases` on 360/361: 6 rows (3 each).
 - `data_object_lifecycle_states` on the 6 masters: 35 rows; exactly one `is_initial=true` per master; `domain_module_id` set on every row.
 - `handoffs` source FKs: 298/299/300/301/310/864/865 all non-null per the mapping above; 296 target still null (skipped).
-- `data_object_relationships` in-domain master-to-master edges: 7 new rows (was 0).
+- `data_object_relationships` in-domain master-to-master relationships: 7 new rows (was 0).
 - `skills` system on 285/286/287: 3 rows (ids 319/320/321), each `domain_id=144`; skill 98 returns empty (deleted).
 - `skill_tools` for 319/320/321: 22 rows; F4 tool-invariant holds (query tools carry `data_object_id`+`platform`; side_effect tools null `data_object_id`).
 - `domains.144` + `domain_modules` 285/286/287 catalog_tagline/catalog_description: all non-empty.

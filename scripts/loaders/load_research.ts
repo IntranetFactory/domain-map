@@ -82,11 +82,11 @@ const topDomains = [
   { domain_code: "OBS", domain_name: "Observability", description: "Unified metrics, logs, and traces for distributed systems, primarily targeting engineering teams." },
   { domain_code: "TEST-MGMT", domain_name: "Test Management", description: "Authoring, execution, and tracking of manual and automated software tests." },
   { domain_code: "SPM", domain_name: "Strategic Portfolio Management", description: "Top-down planning of investments, demand, resources, and agile delivery across portfolios." },
-  { domain_code: "APM", domain_name: "Application Portfolio Management", description: "Inventory and rationalisation of the enterprise application landscape, including business capabilities, technology fit, and lifecycle." },
+  { domain_code: "APM", domain_name: "Application Portfolio Management", description: "Inventory and rationalization of the enterprise application landscape, including business capabilities, technology fit, and lifecycle." },
   { domain_code: "SECOPS", domain_name: "Security Operations", description: "Detection, response, and remediation of security incidents, vulnerabilities, and threats." },
   { domain_code: "SOAR", domain_name: "Security Orchestration, Automation and Response", description: "Playbook-driven automation of security operations workflows across alerts and case management." },
-  { domain_code: "VULN-MGMT", domain_name: "Vulnerability Management", description: "Identification, prioritisation, and remediation of security vulnerabilities across endpoints, cloud, and applications." },
-  { domain_code: "THREAT-INTEL", domain_name: "Threat Intelligence", description: "Collection, curation, and operationalisation of indicators and adversary intelligence." },
+  { domain_code: "VULN-MGMT", domain_name: "Vulnerability Management", description: "Identification, prioritization, and remediation of security vulnerabilities across endpoints, cloud, and applications." },
+  { domain_code: "THREAT-INTEL", domain_name: "Threat Intelligence", description: "Collection, curation, and operationalization of indicators and adversary intelligence." },
   { domain_code: "GRC", domain_name: "Governance, Risk and Compliance", description: "Integrated risk management spanning policy, controls, risk assessment, and compliance evidence." },
   { domain_code: "AUDIT", domain_name: "Audit Management", description: "Planning, fieldwork, evidence, and issue tracking for internal and external audits." },
   { domain_code: "BCM", domain_name: "Business Continuity Management", description: "Business impact analysis, continuity planning, and exercise execution for resilience." },
@@ -95,7 +95,7 @@ const topDomains = [
   { domain_code: "PRIV-MGMT", domain_name: "Privacy Management", description: "Data subject rights, consent, processing inventory, and privacy assessments." },
   { domain_code: "ESG", domain_name: "ESG Management", description: "Environmental, social, and governance data collection, disclosure, and reporting." },
   { domain_code: "HRSD", domain_name: "HR Service Delivery", description: "Employee case management, knowledge, journeys, and document management for the HR function." },
-  { domain_code: "IWMS", domain_name: "Workplace and Space Management", description: "Workplace booking, space optimisation, real-estate management, and visitor handling." },
+  { domain_code: "IWMS", domain_name: "Workplace and Space Management", description: "Workplace booking, space optimization, real-estate management, and visitor handling." },
   { domain_code: "VIS-MGMT", domain_name: "Visitor Management", description: "Pre-registration, check-in, badging, and tracking of physical-site visitors." },
   { domain_code: "LSD", domain_name: "Legal Service Delivery", description: "Intake, matter management, and operational workflows for the in-house legal function." },
   { domain_code: "CLM", domain_name: "Contract Lifecycle Management", description: "Authoring, negotiation, execution, and post-signature management of contracts." },
@@ -104,8 +104,8 @@ const topDomains = [
   { domain_code: "AP-AUTO", domain_name: "Accounts Payable Automation", description: "Invoice capture, matching, approval, and payment execution for accounts payable." },
   { domain_code: "CSM", domain_name: "Customer Service Management", description: "Case management, omnichannel engagement, and self-service for external customer support." },
   { domain_code: "FSM", domain_name: "Field Service Management", description: "Dispatch, scheduling, mobile work order, and parts management for on-site service technicians." },
-  { domain_code: "OMS", domain_name: "Order Management", description: "Order capture, orchestration, and fulfilment across channels and inventory pools." },
-  { domain_code: "KMS", domain_name: "Knowledge Management", description: "Authoring, governance, and retrieval of organisational knowledge for internal and external audiences." },
+  { domain_code: "OMS", domain_name: "Order Management", description: "Order capture, orchestration, and fulfillment across channels and inventory pools." },
+  { domain_code: "KMS", domain_name: "Knowledge Management", description: "Authoring, governance, and retrieval of organizational knowledge for internal and external audiences." },
   { domain_code: "CONV-AI", domain_name: "Conversational AI", description: "Virtual agents, chatbots, and voice bots for customer and employee self-service." },
   { domain_code: "IGA", domain_name: "Identity Governance and Administration", description: "Joiner-mover-leaver workflows, access reviews, segregation-of-duties, and entitlement governance." },
   { domain_code: "IPAAS", domain_name: "Integration Platform as a Service", description: "Cloud-native iPaaS for integrating SaaS and on-prem applications via prebuilt connectors and flows." },
@@ -113,14 +113,14 @@ const topDomains = [
   { domain_code: "RPA", domain_name: "Robotic Process Automation", description: "UI-level automation of repetitive, rule-based tasks across legacy and modern applications." },
   { domain_code: "IDP", domain_name: "Intelligent Document Processing", description: "Capture, classification, extraction, and validation of structured and unstructured documents." },
   { domain_code: "PROC-MIN", domain_name: "Process Mining", description: "Event-log-driven discovery, conformance, and enhancement of business processes." },
-  { domain_code: "FINOPS", domain_name: "Cloud Financial Operations", description: "Visibility, allocation, optimisation, and accountability for cloud spending across business units." },
+  { domain_code: "FINOPS", domain_name: "Cloud Financial Operations", description: "Visibility, allocation, optimization, and accountability for cloud spending across business units." },
   { domain_code: "TELCO-BSS", domain_name: "Telecommunications OSS/BSS", description: "Operations and business support systems for service providers: catalog, order, inventory, billing." },
   { domain_code: "BANK-OPS", domain_name: "Banking Operations", description: "Origination, onboarding, servicing, and case-management workflows for retail and commercial banking." },
   { domain_code: "INS-CLAIMS", domain_name: "Insurance Claims Management", description: "First notice of loss, adjudication, settlement, and recovery workflows for P&C and life insurance." },
   { domain_code: "HC-PATIENT", domain_name: "Healthcare Patient Operations", description: "Patient scheduling, care coordination, and clinical workflow management for providers." },
   { domain_code: "PS-LIC", domain_name: "Public-Sector Licensing and Permitting", description: "Application, review, issuance, inspection, and renewal of licenses and permits for governments." },
   { domain_code: "MFG-OPS", domain_name: "Manufacturing Connected Operations", description: "Shop-floor execution, work-instruction delivery, and operator-case management for manufacturers." },
-  { domain_code: "RET-STORE", domain_name: "Retail Store Operations", description: "Task management, labour scheduling, and store-associate workflows for retail." },
+  { domain_code: "RET-STORE", domain_name: "Retail Store Operations", description: "Task management, labor scheduling, and store-associate workflows for retail." },
   { domain_code: "UTIL-OPS", domain_name: "Utilities Operations", description: "Meter-to-cash, outage, work, and asset workflows for electric, gas, and water utilities." },
   { domain_code: "CLIN-DEV", domain_name: "Clinical Device Management", description: "Medical-device inventory, preventive maintenance, recalls, and clinical engineering workflows." },
 ];
@@ -130,7 +130,7 @@ const topDomains = [
 // ============================================================
 const subDomains: Array<{ domain_code: string; domain_name: string; description: string; parent: string }> = [
   { domain_code: "HAM", parent: "ITAM", domain_name: "Hardware Asset Management", description: "Inventory, lifecycle, and disposal management of physical IT hardware assets." },
-  { domain_code: "SAM", parent: "ITAM", domain_name: "Software Asset Management", description: "Discovery, normalisation, entitlement reconciliation, and audit defence for software licences." },
+  { domain_code: "SAM", parent: "ITAM", domain_name: "Software Asset Management", description: "Discovery, normalization, entitlement reconciliation, and audit defense for software licenses." },
   { domain_code: "EAM", parent: "ITAM", domain_name: "Enterprise Asset Management", description: "Maintenance, work order, and lifecycle management for physical plant, equipment, and infrastructure." },
 ];
 
@@ -290,15 +290,15 @@ const solutions: SolutionDef[] = [
   { solution_name: "ServiceNow IT Operations Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Discovery, service mapping, event management, and operations intelligence.", primary: ["ITOM"], secondary: ["DISCOVERY", "AIOPS", "CMDB"] },
   { solution_name: "ServiceNow CMDB", vendor: "ServiceNow Inc", solution_type: "saas", description: "Configuration management database, CSDM-aligned.", primary: ["CMDB"] },
   { solution_name: "ServiceNow IT Asset Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Unified hardware, software, and cloud asset management on the Now Platform.", primary: ["ITAM"], secondary: ["HAM", "SAM"] },
-  { solution_name: "ServiceNow Software Asset Management Pro", vendor: "ServiceNow Inc", solution_type: "saas", description: "SAM Pro for entitlement reconciliation and licence optimisation.", primary: ["SAM"] },
+  { solution_name: "ServiceNow Software Asset Management Pro", vendor: "ServiceNow Inc", solution_type: "saas", description: "SAM Pro for entitlement reconciliation and license optimization.", primary: ["SAM"] },
   { solution_name: "ServiceNow Hardware Asset Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "HAM Pro for lifecycle and stockroom management of physical assets.", primary: ["HAM"] },
   { solution_name: "ServiceNow Cloud Insights", vendor: "ServiceNow Inc", solution_type: "saas", description: "Cloud-cost visibility and FinOps capabilities on the Now Platform.", primary: ["FINOPS"] },
   { solution_name: "ServiceNow Enterprise Asset Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "EAM for physical-asset maintenance and operations.", primary: ["EAM"] },
   { solution_name: "ServiceNow Strategic Portfolio Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "SPM for demand, project, agile, resource, and portfolio planning.", primary: ["SPM"] },
-  { solution_name: "ServiceNow Application Portfolio Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Application inventory, rationalisation, and TIME analysis.", primary: ["APM"] },
+  { solution_name: "ServiceNow Application Portfolio Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Application inventory, rationalization, and TIME analysis.", primary: ["APM"] },
   { solution_name: "ServiceNow Test Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Test cases, suites, and execution tied to change and stories.", primary: ["TEST-MGMT"] },
   { solution_name: "ServiceNow Security Incident Response", vendor: "ServiceNow Inc", solution_type: "saas", description: "SOAR-style security incident response on the Now Platform.", primary: ["SOAR"], secondary: ["SECOPS"] },
-  { solution_name: "ServiceNow Vulnerability Response", vendor: "ServiceNow Inc", solution_type: "saas", description: "Vulnerability ingestion, prioritisation, and remediation workflows.", primary: ["VULN-MGMT"], secondary: ["SECOPS"] },
+  { solution_name: "ServiceNow Vulnerability Response", vendor: "ServiceNow Inc", solution_type: "saas", description: "Vulnerability ingestion, prioritization, and remediation workflows.", primary: ["VULN-MGMT"], secondary: ["SECOPS"] },
   { solution_name: "ServiceNow Threat Intelligence", vendor: "ServiceNow Inc", solution_type: "saas", description: "Threat intelligence enrichment and case-management workflows.", primary: ["THREAT-INTEL"] },
   { solution_name: "ServiceNow Integrated Risk Management", vendor: "ServiceNow Inc", solution_type: "saas", description: "Policy, controls, risk, vendor, audit, BCM, and resilience on the Now Platform.", primary: ["GRC"], secondary: ["AUDIT", "BCM", "OP-RES", "TPRM", "PRIV-MGMT", "ESG"] },
   { solution_name: "ServiceNow HR Service Delivery", vendor: "ServiceNow Inc", solution_type: "saas", description: "Employee case management, knowledge, journeys, and document management.", primary: ["HRSD"] },
@@ -344,7 +344,7 @@ const solutions: SolutionDef[] = [
   // ====== ITAM / SAM / HAM / FinOps / EAM ======
   { solution_name: "Flexera One", vendor: "Flexera", solution_type: "saas", description: "ITAM, SAM, and FinOps platform.", primary: ["ITAM", "SAM"], secondary: ["FINOPS", "HAM"] },
   { solution_name: "Snow License Manager", vendor: "Snow Software", solution_type: "saas", description: "Software-asset management and entitlement reconciliation.", primary: ["SAM"] },
-  { solution_name: "USU Software Asset Management", vendor: "USU Software", solution_type: "saas", description: "SAM with audit-defence focus.", primary: ["SAM"] },
+  { solution_name: "USU Software Asset Management", vendor: "USU Software", solution_type: "saas", description: "SAM with audit-defense focus.", primary: ["SAM"] },
   { solution_name: "Lansweeper", vendor: "Lansweeper", solution_type: "saas", description: "Network discovery, hardware and software asset inventory.", primary: ["HAM"], secondary: ["DISCOVERY", "SAM"] },
   { solution_name: "Apptio Cloudability", vendor: "IBM", solution_type: "saas", description: "Cloud-financial management and FinOps platform.", primary: ["FINOPS"] },
   { solution_name: "CloudHealth", vendor: "Broadcom", solution_type: "saas", description: "Cloud-cost-management platform.", primary: ["FINOPS"] },
@@ -378,7 +378,7 @@ const solutions: SolutionDef[] = [
   { solution_name: "Tines", vendor: "Tines", solution_type: "saas", description: "No-code automation for security operations.", primary: ["SOAR"] },
   { solution_name: "Tenable One", vendor: "Tenable", solution_type: "saas", description: "Exposure-management platform across IT, OT, cloud.", primary: ["VULN-MGMT"] },
   { solution_name: "Qualys VMDR", vendor: "Qualys", solution_type: "saas", description: "Vulnerability management, detection, and response.", primary: ["VULN-MGMT"] },
-  { solution_name: "Rapid7 InsightVM", vendor: "Rapid7", solution_type: "saas", description: "Vulnerability management and risk prioritisation.", primary: ["VULN-MGMT"] },
+  { solution_name: "Rapid7 InsightVM", vendor: "Rapid7", solution_type: "saas", description: "Vulnerability management and risk prioritization.", primary: ["VULN-MGMT"] },
   { solution_name: "Wiz Cloud Security Platform", vendor: "Wiz", solution_type: "saas", description: "Cloud-native application protection (CNAPP).", primary: ["VULN-MGMT"] },
   { solution_name: "Recorded Future Intelligence Cloud", vendor: "Recorded Future", solution_type: "saas", description: "Threat-intelligence platform.", primary: ["THREAT-INTEL"] },
   { solution_name: "Anomali ThreatStream", vendor: "Anomali", solution_type: "saas", description: "Threat-intelligence management platform.", primary: ["THREAT-INTEL"] },
@@ -556,23 +556,23 @@ async function main() {
 
   console.log("\n=== Solution Domains ===");
   // Read existing junctions so we don't duplicate
-  const existingLinks = await get("/solution_domains?select=solution_id,domain_id,coverage_level&limit=10000");
-  const existingLinkSet = new Set(
-    existingLinks.map(r => `${r.solution_id}:${r.domain_id}:${r.coverage_level}`),
+  const existingRelationships = await get("/solution_domains?select=solution_id,domain_id,coverage_level&limit=10000");
+  const existingRelationshipSet = new Set(
+    existingRelationships.map(r => `${r.solution_id}:${r.domain_id}:${r.coverage_level}`),
   );
 
-  const newLinks: Row[] = [];
+  const newRelationships: Row[] = [];
   let skipped = 0;
   for (const s of solutions) {
     const sid = solutionMap.get(s.solution_name);
     if (!sid) throw new Error(`Solution id missing for ${s.solution_name}`);
-    const buildLink = (code: string, coverage: "primary" | "secondary" | "partial") => {
+    const buildRelationship = (code: string, coverage: "primary" | "secondary" | "partial") => {
       const did = allDomainMap.get(code);
       if (!did) { console.warn(`  ! domain ${code} not found for ${s.solution_name}`); return; }
       const key = `${sid}:${did}:${coverage}`;
-      if (existingLinkSet.has(key)) { skipped++; return; }
-      existingLinkSet.add(key);
-      newLinks.push({
+      if (existingRelationshipSet.has(key)) { skipped++; return; }
+      existingRelationshipSet.add(key);
+      newRelationships.push({
         solution_id: sid,
         domain_id: did,
         coverage_level: coverage,
@@ -580,15 +580,15 @@ async function main() {
         notes: "",
       });
     };
-    for (const code of s.primary ?? []) buildLink(code, "primary");
-    for (const code of s.secondary ?? []) buildLink(code, "secondary");
-    for (const code of s.partial ?? []) buildLink(code, "partial");
+    for (const code of s.primary ?? []) buildRelationship(code, "primary");
+    for (const code of s.secondary ?? []) buildRelationship(code, "secondary");
+    for (const code of s.partial ?? []) buildRelationship(code, "partial");
   }
-  if (newLinks.length > 0) {
-    console.log(`  inserting ${newLinks.length} new solution_domains rows (${skipped} already present)`);
-    await insert("/solution_domains", newLinks);
+  if (newRelationships.length > 0) {
+    console.log(`  inserting ${newRelationships.length} new solution_domains rows (${skipped} already present)`);
+    await insert("/solution_domains", newRelationships);
   } else {
-    console.log(`  no new solution_domains links to insert (${skipped} already present)`);
+    console.log(`  no new solution_domains relationships to insert (${skipped} already present)`);
   }
 
   // Final counts

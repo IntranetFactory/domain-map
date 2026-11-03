@@ -32,10 +32,10 @@ For the target domain `<CODE>`:
    - `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind`
 
 3. Pull the full DMDO footprint across all those modules:
-   `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)`
+   `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,held_as,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)`
 
 4. (Optional, deprecated source) Pull the legacy `domain_data_objects` rollup for cross-check ONLY:
-   `/domain_data_objects?domain_id=eq.<id>&select=role,is_install_optional,data_objects(data_object_name)`
+   `/domain_data_objects?domain_id=eq.<id>&select=held_as,is_install_optional,data_objects(data_object_name)`
    The masters set is the per-module junction from step 3, never this rollup: `domain_data_objects` is a derived rollup that was never regenerated after domains modularized and under-counts (deprecated as a masters source 2026-06-16). A delta between the two is expected drift, not a finding.
 
 5. **Pull the domain's cross-domain handoffs and their APQC coverage** (for the APQC tagging pass in Step 3):
@@ -66,13 +66,13 @@ The subagent produces `audits/<DOMAIN>/<DOMAIN>-market-surface-<YYYY-MM-DD>.json
 | **2. Surface-for-user (judgment calls)** | Items needing user judgment, not vetted vendor research: Rule #15 notes wording, policy decisions (is this regulation correctly scoped?), reverts of legacy pollution. **A `master + embedded_master` pair is NOT in this bucket: see the guard below the table.** | Answer per item. Each answer may unblock a Bucket 1 fix or change a Bucket 2 row's resolution. |
 | **3. Phase 0 pending** | Speculative findings the market-audit pass produced from vendor knowledge but which weren't anchored to a formal Phase 0 vendor-surface document. These are candidate gaps, not vetted gaps. | Choose: (a) **vetted route** — agent runs focused Phase 0 vendor research on this domain, produces a confirmed gap list, survivors become Bucket 1 items in a follow-up pass; (b) **eyeball route** — user names which candidates ring true; named candidates become Bucket 1 items immediately. |
 
-> **GUARD: never surface a `master + embedded_master` pair as a question.** A data_object with `role='master'` in one module and `role='embedded_master'` in another is the **correct, by-design shape** under autonomous-deployable-units. It is a settled **PASS** (Rule #19; SKILL.md B1a self-containment check; M7 was rewritten on 2026-05-28 to drop the bogus soft-fail). This holds whether the `embedded_master` lives on a **starter** (`module_kind='starter'`, e.g. `REAL-ESTATE-AGENT` embedding `legal_contracts`) or on a standalone full module. Do **NOT**:
+> **GUARD: never surface a `master + embedded_master` pair as a question.** A data_object with `held_as='master'` in one module and `held_as='embedded_master'` in another is the **correct, by-design shape** under autonomous-deployable-units. It is a settled **PASS** (Rule #19; SKILL.md B1a self-containment check; M7 was rewritten on 2026-05-28 to drop the bogus soft-fail). This holds whether the `embedded_master` lives on a **starter** (`module_kind='starter'`, e.g. `REAL-ESTATE-AGENT` embedding `legal_contracts`) or on a standalone full module. Do **NOT**:
 > - put it in Bucket 2 as an "architectural intent" or "intent vs redundancy bug" judgment call;
-> - author a `q-` question asking whether to "keep the lite path vs. refactor the starter to consume the full module." That fork is false: the `embedded_master` role **already is** the lite-path-when-standalone, and co-deployment **automatically** demotes the shell to a consumer of the canonical master (Rule #19 "Upgrade behavior"). "Refactor a starter to consume" is not even legal: starter invariant #1 forbids `consumer + domain_owned` and the platform `starter_no_master` validation_rule plus the loader pre-flight reject it.
+> - author a `q-` question asking whether to "keep the lite path vs. refactor the starter to consume the full module." That fork is false: the `embedded_master` value **already is** the lite-path-when-standalone, and co-deployment **automatically** demotes the shell to a consumer of the canonical master (Rule #19 "Upgrade behavior"). "Refactor a starter to consume" is not even legal: starter invariant #1 forbids `consumer + domain_owned` and the platform `starter_no_master` validation_rule plus the loader pre-flight reject it.
 >
 > The decision shape does not exist, so there is no question to ask. The user has asked for this to stop being raised more than once; if you are tempted to surface it, re-read this guard instead.
 >
-> **The only master/embedded_master findings that reach the user are genuine structural fails**, and they belong to the structural band checks (M7 / B5), NOT Bucket 2: (a) **two `role='master'` rows** for the same `data_object_id` anywhere in the catalog (M7 catalog-wide single-master hard fail, surface the demotion decision), or (b) an `embedded_master` / `contributor` / `consumer` with **NO canonical `master` anywhere** and not a platform built-in (B5 orphan: add the master or drop the orphan). Neither of those is "is this pattern intentional?"; both have deterministic fixes with their own checks.
+> **The only master/embedded_master findings that reach the user are genuine structural fails**, and they belong to the structural band checks (M7 / B5), NOT Bucket 2: (a) **two `held_as='master'` rows** for the same `data_object_id` anywhere in the catalog (M7 catalog-wide single-master hard fail, surface the demotion decision), or (b) an `embedded_master` / `contributor` / `consumer` with **NO canonical `master` anywhere** and not a platform built-in (B5 orphan: add the master or drop the orphan). Neither of those is "is this pattern intentional?"; both have deterministic fixes with their own checks.
 
 #### Explicit-prompt discipline
 
@@ -245,7 +245,7 @@ Current state (read these first; live PostgREST queries, NOT deploy scripts):
 
   semantius call crud postgrestRequest '{"method":"GET","path":"/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind"}'
 
-  semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)"}'
+  semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,held_as,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)"}'
 
 Task:
 

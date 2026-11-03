@@ -123,9 +123,9 @@ a9:
 
 ---
 
-q10: RE-INVEST currently has no regulation linkages. Should I research and add the ones that apply (SEC Custody Rule, AIFMD, GAAP ASC 946, IFRS 9 and IFRS 13, FATCA and FBAR, state Blue Sky laws)? (yes/no)
+q10: RE-INVEST currently has no regulation relationships. Should I research and add the ones that apply (SEC Custody Rule, AIFMD, GAAP ASC 946, IFRS 9 and IFRS 13, FATCA and FBAR, state Blue Sky laws)? (yes/no)
 
-Recommended: yes, but additive and non-blocking. A quick verification pass should confirm which apply before linking.
+Recommended: yes, but additive and non-blocking. A quick verification pass should confirm which apply before relating.
 
 a10:
 

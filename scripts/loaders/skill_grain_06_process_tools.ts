@@ -2,7 +2,7 @@
 /**
  * skill_grain_06_process_tools.ts - Step 5 of plans/per-domain-skill-restoration.md.
  *
- * The 3 `process` skills (124/125/126) get a real `processes` target each, are linked via
+ * The 3 `process` skills (124/125/126) get a real `processes` target each, are related via
  * skills.process_id, and their 226 skill_tools migrate into process_tools.
  *
  *   - Create exactly 3 `processes` rows (source_framework='custom', the only legal non-APQC value;
@@ -96,12 +96,12 @@ for (const vs of VALUE_STREAMS) {
     console.log(`  = process ${proc.id} (${vs.process_key}) already exists`);
   }
   processIdBySkill.set(skill.id, proc.id);
-  // 2. link the skill
+  // 2. relate the skill
   if (skill.process_id !== proc.id) {
     await patch(`/skills?id=eq.${skill.id}`, { process_id: proc.id });
-    console.log(`    ~ linked skill ${skill.id} (${vs.skillName}) -> process ${proc.id}`);
+    console.log(`    ~ related skill ${skill.id} (${vs.skillName}) -> process ${proc.id}`);
   } else {
-    console.log(`    = skill ${skill.id} already linked to process ${proc.id}`);
+    console.log(`    = skill ${skill.id} already related to process ${proc.id}`);
   }
 }
 
@@ -153,9 +153,9 @@ const [stAfter, skillsAfter] = await Promise.all([
   get(`/skill_tools?select=id&limit=${LIMIT}`),
   get(`/skills?id=in.(124,125,126)&select=id,process_id`),
 ]);
-const allLinked = skillsAfter.every(s => s.process_id != null);
+const allRelated = skillsAfter.every(s => s.process_id != null);
 console.log(`\nskill_tools now: ${stAfter.length} (expect 1917 = 2143 - 226)`);
 console.log(`skills 124/125/126 process_id: ${skillsAfter.map(s => `${s.id}->${s.process_id}`).join(", ")}`);
-const ok = stAfter.length === 1917 && ptCount === 226 && allLinked;
-console.log(ok ? "VERIFIED: 3 processes created, skills linked, 226 in process_tools, 226 skill_tools deleted." : "MISMATCH - investigate.");
+const ok = stAfter.length === 1917 && ptCount === 226 && allRelated;
+console.log(ok ? "VERIFIED: 3 processes created, skills related, 226 in process_tools, 226 skill_tools deleted." : "MISMATCH - investigate.");
 if (!ok) process.exit(1);

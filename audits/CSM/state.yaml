@@ -64,7 +64,7 @@ b1a:
     summary: "B9d: 10 inbound payloads (vertical-industry masters) have NO master row anywhere; surface on the senders, never drop."
     status: report_only
     finding: >-
-      The carried payload has no role=master row in any domain (no owner can be credited).
+      The carried payload has no held_as=master row in any domain (no owner can be credited).
       Per the B9d UNOWNED rule these are surfaced on the SENDER, never dropped from CSM.
       They overlap the existing B1B-B10B-CLASS-B / B2-CROSS-DOMAIN-INTEGRITY set (q3): the
       senders own the missing master rows; CSM's only action is the consumer-DMDO decision
@@ -115,7 +115,7 @@ b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     status: deferred
-    finding: "3 domain_modules and 0 domain_roles reaching this domain via role_modules. E1 fires on this multi-module domain."
+    finding: "3 domain_modules and 0 personas reaching this domain via persona_modules. E1 fires on this multi-module domain."
     defer_reason: >-
       Persona authoring is entangled with the OPEN B2-CSM-KNOWLEDGE-MASTER decision
       (CSM-KNOWLEDGE may demote to starter, which reshapes persona reach) and
@@ -126,8 +126,8 @@ b1a:
     summary: "6 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
     status: surfaced_destructive
     finding: >-
-      6 domain_module_data_objects rows on CSM modules are role=contributor or
-      role=consumer+necessity=required, pointing at an entity mastered by another
+      6 domain_module_data_objects rows on CSM modules are held_as=contributor or
+      held_as=consumer+necessity=required, pointing at an entity mastered by another
       domain and not embedded_master here. Converting role->embedded_master or
       necessity->optional rewrites existing rows (destructive); awaiting approval.
     extra_m9_shapes:
@@ -277,7 +277,7 @@ b2:
     summary: Decide whether CSM-KNOWLEDGE (114) needs a domain-owned master, demotion to starter, or accept as-is.
     question: >-
       CSM-KNOWLEDGE holds knowledge_articles as contributor+required and customer_cases as
-      consumer+optional. No DMDO with role=master. Rule #14 allows module-without-master only
+      consumer+optional. No DMDO with held_as=master. Rule #14 allows module-without-master only
       for leadership-tier domains; CSM is not leadership-tier.
     options:
       - "(a) accept as-is and document the rationale (editorial/audience-filtered view onto ITSM-mastered knowledge_articles)"
@@ -313,7 +313,7 @@ b2:
   - id: B2-PAIRWISE-SCHEDULING
     summary: Decide whether to schedule full pairwise reconciliation passes against SUB-MGMT and CRM.
     question: >-
-      SUB-MGMT (edge weight 12) and CRM (edge weight 6) got full 5-section diffs inline in
+      SUB-MGMT (relationship weight 12) and CRM (relationship weight 6) got full 5-section diffs inline in
       the 2026-05-30 audit. Schedule them as separate Validate runs on those domains?
     options:
       - "(a) accept inline summaries, no further passes"
@@ -337,7 +337,7 @@ b2:
       (SUB-MGMT), and CSM's real action is opening/working a case. Re-keying is the same fix B1B-B1
       proposes. PATCHing trigger_events.data_object_id is a corrective overwrite (destructive) and a
       handoff_processes re-point/delete needs sign-off; both await the user. Surfaced as q-CSM.md q12;
-      cross-linked to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
+      cross-related to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
     blocked_by:
       - {type: user_decision, ref: B1B-B1, reason: "Same mis-attributed payment.failed event; resolve together."}
     extra_b9d_added: "2026-06-13"

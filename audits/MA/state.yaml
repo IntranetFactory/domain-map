@@ -6,7 +6,7 @@ last_audit: "2026-06-13"
 
 # 2026-06-08 review (Rule #21): all prior b1b items EXECUTED as additive content at
 # record_status='new' (see history.md "## 2026-06-08 - Review"). B12 lifecycle, B6 intra-rels,
-# B7 user edges, B11 aliases, B4 pattern flags, B13 entity_type all done. E1-E3 personas authored.
+# B7 relationships to users, B11 aliases, B4 pattern flags, B13 entity_type all done. E1-E3 personas authored.
 # F-band reconciled to the per-domain-skill model (one ma-system skill id 414; 12 domain_module_tools;
 # F5 score 0.83). Stale B2-SYSTEM-SKILL-SPLIT-REVIEW removed (the 343-346 per-module skills are gone).
 # 2026-06-13 B9d run (b9d_resolver, both directions): B1A-B9D-VERIFY EXECUTED and removed.
@@ -93,7 +93,7 @@ b3:
     proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
   - id: B3-JOURNEY-STEP-EVENTS
     candidate: "journey_step_events"
-    rationale: "Per-step traversal events distinct from generic customer_events (latency, abandon, branch-taken); links to DXP journey_step.abandoned (handoff 811). Verify via Braze Canvas, Iterable Journey Steps, SFMC Journey Builder."
+    rationale: "Per-step traversal events distinct from generic customer_events (latency, abandon, branch-taken); relationships to DXP journey_step.abandoned (handoff 811). Verify via Braze Canvas, Iterable Journey Steps, SFMC Journey Builder."
     proposed_module: "MA-JOURNEY-ORCH (198)"
   - id: B3-MA-COMPLIANCE-MODULE
     candidate: "MA-COMPLIANCE (or MA-PRIVACY) module"

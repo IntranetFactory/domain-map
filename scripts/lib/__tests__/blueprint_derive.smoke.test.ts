@@ -16,7 +16,7 @@ import {
 } from "./fixtures/build";
 
 // A tiny help desk: one module mastering tickets (operational_workflow, personal content) and
-// ticket categories (catalog), a users edge, a gated `resolved` state wired to one process with a
+// ticket categories (catalog), a relationship to users, a gated `resolved` state wired to one process with a
 // Responsible and an Accountable persona, and one owning business function.
 const D = 1, M = 10, USERS = 100, TICKETS = 101, CATEGORIES = 102, PROC = 500;
 
@@ -39,10 +39,10 @@ function helpDeskFixture() {
       lifecycleState({ id: 2, data_object_id: TICKETS, state_name: "resolved", state_order: 2, requires_permission: true, process_id: PROC }),
       lifecycleState({ id: 3, data_object_id: TICKETS, state_name: "closed", state_order: 3, is_terminal: true }),
     ],
-    domainRoles: [{ id: 7, role_code: "SUPPORT-AGENT" }, { id: 8, role_code: "SUPPORT-LEAD" }],
+    personas: [{ id: 7, persona_code: "SUPPORT-AGENT" }, { id: 8, persona_code: "SUPPORT-LEAD" }],
     processRaci: [
-      { id: 1, process_id: PROC, actor_role_id: 7, actor_skill_id: null, raci: "responsible", consultation_blocking: false },
-      { id: 2, process_id: PROC, actor_role_id: 8, actor_skill_id: null, raci: "accountable", consultation_blocking: false },
+      { id: 1, process_id: PROC, persona_id: 7, skill_id: null, raci: "responsible", consultation_blocking: false },
+      { id: 2, process_id: PROC, persona_id: 8, skill_id: null, raci: "accountable", consultation_blocking: false },
     ],
     processes: [{ id: PROC, process_name: "Resolve tickets", process_key: "resolve_tickets", process_code: "1.2.3", external_id: "99999", hierarchy_level: 3, description: "" }],
     businessFunctions: [{ id: 3, business_function_name: "Customer Service" }],
@@ -60,7 +60,7 @@ test("deriveModuleModel assembles every section offline from a tiny fixture", ()
     tickets: ":manage",
     ticket_categories: ":admin",
   });
-  // §5: one intra-scope edge and one users edge, each with a resolved delete mode.
+  // §5: one intra-scope relationship and one relationship to users, each with a resolved delete mode.
   expect(model.relationships.intra.map((r) => r.deleteMode.mode)).toEqual(["restrict"]);
   expect(model.relationships.userRels.map((r) => r.deleteMode.mode)).toEqual(["clear"]);
   // §6: no handoffs in this fixture.

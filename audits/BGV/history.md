@@ -22,7 +22,7 @@ What was built (all rows record_status='new', nothing approved per Rule #1):
   background_check_components (878), drug_health_screenings (1041),
   background_check_adjudications (880), fcra_disclosures (879), pre_adverse_action_notices (898),
   adverse_action_notices (881), background_check_disputes (882),
-  fcra_summary_of_rights_acknowledgements (902); plus right_to_work_verifications (1257)
+  fcra_summary_of_rights_acknowledgments (902); plus right_to_work_verifications (1257)
   from ATS-PRE-EMPLOYEE-RECORD (mod 8). **M7 verified: each of the 11 has exactly ONE
   master (BGV) and an ATS embedded_master row.**
 - **22 new masters (a7):** 21 net-new data_objects inserted (entity_type classified, no

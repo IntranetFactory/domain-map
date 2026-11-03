@@ -44,7 +44,7 @@ b1a:
       - {handoff_id: 845, direction: in, source_domain: DLP, target_domain: IGA, trigger_event: dlp_user_activity.flagged, payload: dlp_user_activity_logs, null_field: none}
   - id: B1A-SELF-CONTAIN
     summary: "DESTRUCTIVE (rewrite role/necessity on existing DMDO rows, M9): 4 contributor/required-consumer rows break module self-containment; embed or relax each. NOT applied by the 2026-06-07 pass (rewriting an existing DMDO row's role/necessity needs sign-off)."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=consumer with necessity=required, pointing at an entity mastered by another domain (HCM employees) and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are held_as=consumer with necessity=required, pointing at an entity mastered by another domain (HCM employees) and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
     action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Both edits rewrite an existing non-default value -> surface for sign-off, do not apply. Do not document the dependency."
     extra_m9_shapes:
       - {entity: employees, module: IGA-ACCESS-CERTIFICATION, role: consumer, master_domain: HCM}
@@ -54,14 +54,14 @@ b1a:
     extra_phase_p_triage: "2026-06-02"
   - id: B1A-PHASE-P
     summary: "DEFER (personas/RACI not authored by audit): multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail). Author the persona / RACI layer is a deferred, user-owned build, not an agent additive write."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Candidate personas suggested by the module surface and the 4 retired IAM roles: IAM-IDENTITY-ADMIN (admin across all 5 modules), IAM-ACCESS-REQUEST-APPROVER (144), IAM-ACCESS-CERTIFIER (145), IAM-SOD-ANALYST (146), plus an entitlement-catalog owner (147) and a provisioning operator (148)."
-    action: "DEFERRED per audit policy: do not author. When commissioned, author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Candidate personas suggested by the module surface and the 4 retired IAM roles: IAM-IDENTITY-ADMIN (admin across all 5 modules), IAM-ACCESS-REQUEST-APPROVER (144), IAM-ACCESS-CERTIFIER (145), IAM-SOD-ANALYST (146), plus an entitlement-catalog owner (147) and a provisioning operator (148)."
+    action: "DEFERRED per audit policy: do not author. When commissioned, author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M7-SIBLING-CONSUMERS
     summary: "8 sibling-consumer DMDO rows on IGA modules failing M7 within-domain; await user PROMOTE-vs-DELETE call from B2-M7-DECIDE before fix."
-    finding: "M7 within-domain hard fail unresolved: 4 IGA masters carry role='master' in one IGA module AND role IN (consumer, contributor) in 1-4 sibling IGA modules. iga_access_requests (704) master in 144, consumer in 148. iga_entitlement_definitions (706) master in 147, consumer in 144, 145, 146, 148. iga_sod_violations (707) master in 146, consumer in 144. iga_provisioning_events (708) master in 148, consumer in 144, 145, 146. 8 sibling-consumer rows total. Per M7 the two valid resolutions are (a) PROMOTE every consumer row to embedded_master accepting runtime demotion when modules co-deploy, or (b) DELETE all 8 rows accepting always-co-installed semantics. Recommendation (a)."
+    finding: "M7 within-domain hard fail unresolved: 4 IGA masters carry held_as='master' in one IGA module AND held_as IN (consumer, contributor) in 1-4 sibling IGA modules. iga_access_requests (704) master in 144, consumer in 148. iga_entitlement_definitions (706) master in 147, consumer in 144, 145, 146, 148. iga_sod_violations (707) master in 146, consumer in 144. iga_provisioning_events (708) master in 148, consumer in 144, 145, 146. 8 sibling-consumer rows total. Per M7 the two valid resolutions are (a) PROMOTE every consumer row to embedded_master accepting runtime demotion when modules co-deploy, or (b) DELETE all 8 rows accepting always-co-installed semantics. Recommendation (a)."
     blocked_by:
       - {type: user_decision, ref: B2-M7-DECIDE}
     affected_modules: [144, 145, 146, 147, 148]
@@ -102,7 +102,7 @@ b2:
     summary: "M7 within-domain hard fail: PROMOTE 8 sibling-consumer rows to embedded_master, or DELETE them?"
     question: "Are IGA modules intended as autonomous deployable units (PROMOTE consumer -> embedded_master, accept runtime demotion when co-deployed) or always co-installed (DELETE the 8 sibling-consumer rows)?"
     options:
-      - "PROMOTE: PATCH 8 rows role='consumer' -> role='embedded_master' (audit recommendation; preserves standalone-deploy story for each module)"
+      - "PROMOTE: PATCH 8 rows held_as='consumer' -> held_as='embedded_master' (audit recommendation; preserves standalone-deploy story for each module)"
       - "DELETE: DELETE the 8 rows; the 4 master rows remain authoritative for the whole domain"
     why: "M7 rejects within-domain master+consumer coexistence. Either resolution is valid; the choice depends on whether IGA-AUTO-PROVISIONING (148) is meant to deploy standalone against an external identity store without IGA-ACCESS-REQUEST (144), etc. Both are destructive (rewrite or delete existing rows); never run unapproved."
   - id: B2-S1-CARRY

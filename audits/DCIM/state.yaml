@@ -12,10 +12,10 @@ last_audit: "2026-06-07"
 #   dc_change_requests (1025) authored + assigned to 326.
 # Phase B completion: lifecycle states for the 3 operational_workflow masters (dc_racks 546,
 #   dc_power_circuits 549, dc_capacity_plans 553); data_object_relationships +13 (intra-domain,
-#   users edges, cross-domain raises->service_incidents); +8 lifecycle-cover trigger_events;
+#   relationships to users, cross-domain raises->service_incidents); +8 lifecycle-cover trigger_events;
 #   handoff module-FK backfill (9 outbound source_domain_module_id; 0 inbound handoffs exist).
 # Phase S: tools + domain_module_tools wired so dcim-system derives a non-empty toolset.
-# Phase E: 4 personas + role_modules.
+# Phase E: 4 personas + persona_modules.
 # Only user-judgment decisions remain.
 
 b1a:

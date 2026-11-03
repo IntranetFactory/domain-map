@@ -7,10 +7,10 @@ Build and publish your product catalog, run the storefront customers shop in, an
 
 ---
 
-q1: (answer this first) This domain is currently filed as a child of CRM. Digital Commerce platforms (Shopify Plus, BigCommerce, commercetools) sell as standalone markets, not as CRM add-ons. How should the parent link be set?
+q1: (answer this first) This domain is currently filed as a child of CRM. Digital Commerce platforms (Shopify Plus, BigCommerce, commercetools) sell as standalone markets, not as CRM add-ons. How should the parent relationship be set?
 
-- a) Clear the parent link, so Digital Commerce stands on its own.
-- b) Keep the CRM parent link as a curated affinity or cluster signal only.
+- a) Clear the parent relationship, so Digital Commerce stands on its own.
+- b) Keep the CRM parent relationship as a curated affinity or cluster signal only.
 - c) Point it at a different parent (no obvious candidate today).
 
 Recommended: a. The point-solution-market test does not treat Digital Commerce as a CRM sub-domain, so a standalone domain is the truer shape.

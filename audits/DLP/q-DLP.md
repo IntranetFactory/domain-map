@@ -64,7 +64,7 @@ a6:
 q7: For the three remaining objects that need a person attached, which actor and verb fits each?
 
 - a) Quarantine items: a reviewer reviews them, and a release approver approves their release.
-- b) Activity log: it records the behavior of the user being monitored (note this points the opposite way from the usual person-owns-record edge).
+- b) Activity log: it records the behavior of the user being monitored (note this points the opposite way from the usual person-owns-record relationship).
 - c) Exfiltration attempts: an actor initiates or attempts them.
 
 Recommended: all three as listed. They follow the project's verb-on-the-actor convention, with the activity log deliberately reversed because the log records the user rather than the user owning the log.

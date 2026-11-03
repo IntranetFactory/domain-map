@@ -44,12 +44,12 @@ b1a:
     classification: gated_on_b2  # blocked on B2-CAP capability-granularity decision
     finding: |
       Module 100 IWMS-ROOM-RESERVATION still has zero rows in domain_module_capabilities (confirmed
-      via prior audits; unchanged). Audit-default fix links to existing REAL-SPACE-OPTIM (374). Held
+      via prior audits; unchanged). Audit-default fix relates to existing REAL-SPACE-OPTIM (374). Held
       because B2-CAP option (b) would author a new REAL-MEETING-MGMT capability instead, which would
       orphan a 374 insert.
     action: |
       If B2-CAP picks (a): POST /domain_module_capabilities [{"domain_module_id":100,"capability_id":374}].
-      If (b): author new capability first, then link.
+      If (b): author new capability first, then relate.
     blocked_by:
       - {type: user_decision, ref: B2-CAP}
     affected_modules: [100]
@@ -86,8 +86,8 @@ b1a:
     summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer — DEFERRED."
     classification: deferred_personas  # B1A-PHASE-P: author later; not auto-authored this pass
     finding: |
-      Live triage carried from 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain
-      via role_modules after Plan 3 deleted the old _core personas. Persona / RACI authoring is
+      Live triage carried from 2026-06-02: 5 domain_modules and 0 personas reaching this domain
+      via persona_modules after Plan 3 deleted the old _core personas. Persona / RACI authoring is
       explicitly deferred per the Rule #21 contract (personas are not auto-authored).
     candidate_personas:
       - Workplace Manager (Facilities and Real Estate)
@@ -95,8 +95,8 @@ b1a:
       - Workplace Coordinator (Facilities and Real Estate)
       - Employee Workplace User (consumer-grain)
     action: |
-      When scheduled: author domain_roles (function-anchored per references/roles.md section 7),
-      wire role_modules reach across the 5 modules, add process_raci rows, wire
+      When scheduled: author personas (function-anchored per references/personas.md section 7),
+      wire persona_modules reach across the 5 modules, add process_raci rows, wire
       data_object_lifecycle_states.process_id. ATS is the worked reference
       (scripts/loaders/load_ats_personas_pilot.ts).
     extra_phase_p_triage: "2026-06-02"
@@ -150,7 +150,7 @@ b1b:
       - {data_object_id: 590, name: desk_bookings, target_module_id: 148, workflow: IGA_consumer_DMDO_pending}
 
   - id: B1B-B8
-    summary: 4 outbound cross-domain data_object_relationships edges missing; need neighbor master FK
+    summary: 4 outbound cross-domain data_object_relationships rows missing; need neighbor master FK
     finding: |
       B8 outbound check: workplace_experience_feedback flows_into <HCM master> (handoff 869);
       space_utilization_reports signals <REAL-EST master> (handoff 870); workplace_service_requests
@@ -171,7 +171,7 @@ b1b:
       Only 2 intra-domain handoffs (1167, 1168) on a 5-module domain. Expected coverage per the
       master relationship graph: LOCATION-MASTER (98) -> all 4 sibling modules on a new
       location.created trigger_event (4 handoff rows + 1 event); DESK -> ANALYTICS on
-      desk_booking.cancelled (969) and desk_booking.completed (new event); ROOM -> ANALYTICS on
+      desk_booking.canceled (969) and desk_booking.completed (new event); ROOM -> ANALYTICS on
       room_reservation.completed (new event); WSD -> ANALYTICS on
       workplace_service_request.resolved (1250). Total potential: 7 handoff rows + 3 trigger_events.
       Volume scales with B2-SPLIT.
@@ -186,10 +186,10 @@ b1b:
 b2:
   - id: B2-CAP
     summary: M6 capability fix path for IWMS-ROOM-RESERVATION
-    question: Which capability should be linked to IWMS-ROOM-RESERVATION (100) to cure M6?
+    question: Which capability should be related to IWMS-ROOM-RESERVATION (100) to cure M6?
     options:
-      - (a) link to existing REAL-SPACE-OPTIM (374); audit default; matches DESK/ANALYTICS pattern
-      - (b) author new REAL-MEETING-MGMT capability and link it; more granular; may force the same split on DESK
+      - (a) relate to existing REAL-SPACE-OPTIM (374); audit default; matches DESK/ANALYTICS pattern
+      - (b) author new REAL-MEETING-MGMT capability and relate it; more granular; may force the same split on DESK
       - (c) mixed (specify per module)
     why: |
       Capability granularity decision; some flagships market desk + room as one workflow while others

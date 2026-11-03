@@ -59,9 +59,9 @@ b1b:
     extra_band: B12
 
   - id: B1B-PERSONAS-RACI
-    summary: "Phase E/P: author domain_roles + role_modules + process_raci personas for the 5 modules (none exist; deferred while UNBUILT, now unblocked)."
+    summary: "Phase E/P: author personas + persona_modules + process_raci personas for the 5 modules (none exist; deferred while UNBUILT, now unblocked)."
     finding: |
-      TPRM now has 5 modules but 0 domain_roles / role_modules / process_raci rows. Candidate personas
+      TPRM now has 5 modules but 0 personas / persona_modules / process_raci rows. Candidate personas
       surfaced 2026-06-07: Vendor Risk Analyst, Third-Party Risk Manager, Procurement Risk Reviewer,
       InfoSec Vendor Assessor. Phase P was blocked on the build; it is now authorable.
     action: |

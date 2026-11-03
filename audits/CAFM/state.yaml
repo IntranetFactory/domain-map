@@ -72,7 +72,7 @@ b1b:
       - {type: depends_on, ref: B1B-S1, reason: "role count depends on module count"}
   - id: B1B-S7
     summary: "domain_module_capabilities cannot be populated (M4 fail by virtue of M1 fail)."
-    finding: "The three CAFM capabilities (374, 376, 377) are not linked to any module because no module exists. Catalog cannot answer 'which CAFM module realizes Space Optimization'."
+    finding: "The three CAFM capabilities (374, 376, 377) are not related to any module because no module exists. Catalog cannot answer 'which CAFM module realizes Space Optimization'."
     action: "After B1B-S1 lands modules, populate domain_module_capabilities for each capability-to-realizing-module pair. Capability renames are b2 B2-CAPABILITY-RENAME (user judgment)."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "modules must exist before capability junctions"}
@@ -86,7 +86,7 @@ b1b:
   - id: B1B-M1
     summary: "Missing entity facility_service_requests (SMB-tier light work request)."
     finding: "Vendor surface (1st-class on three flagship CAFM products) carries an SMB-tier work request entity lighter than IWMS workplace_service_requests. Distinct from IWMS only if CAFM stays separate; if folded into IWMS, the entity is the IWMS-mastered one."
-    action: "Insert facility_service_requests as a CAFM-mastered data_object with DMDO role=master / necessity=required, lifecycle states, pattern flags. Conditional on B1B-S1 (module must exist) and B2-FOLD-VS-DISTINCT."
+    action: "Insert facility_service_requests as a CAFM-mastered data_object with DMDO held_as=master / necessity=required, lifecycle states, pattern flags. Conditional on B1B-S1 (module must exist) and B2-FOLD-VS-DISTINCT."
     blocked_by:
       - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
       - {type: depends_on, ref: B1B-S1, reason: "needs a host module"}

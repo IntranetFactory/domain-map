@@ -36,7 +36,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SPLIT}
     extra_default_split: 4-module
-    extra_cascade: "M1 unblocks: A2 capabilities + domain_module_capabilities; A3 vendors/solutions/solution_domains; B10b source_domain_module_id backfill on the 9 outbound handoffs; per-domain system-skill toolset derivation (domain_module_tools); roles/role_modules; and reattaching the alert lifecycle states (currently domain_module_id NULL) to the realizing module."
+    extra_cascade: "M1 unblocks: A2 capabilities + domain_module_capabilities; A3 vendors/solutions/solution_domains; B10b source_domain_module_id backfill on the 9 outbound handoffs; per-domain system-skill toolset derivation (domain_module_tools); roles/persona_modules; and reattaching the alert lifecycle states (currently domain_module_id NULL) to the realizing module."
   - id: B1B-B3
     summary: Stamp is_canonical_bare_word and naming_authority_rationale on the 8 NPMD masters (Rule #9 arbitration).
     finding: "B3 open. is_canonical_bare_word=false and naming_authority_rationale='' across all 8 masters (DB default, no positive review). Collision risk: network_interfaces on bare word interfaces; saas_application_performance overlaps the APM domain headline application_performance. naming_authority_rationale is freeform text and the arbitration is a judgment call, so it is surfaced rather than auto-stamped."
@@ -47,7 +47,7 @@ b1b:
       - {data_object_id: 543, name: "saas_application_performance", collision: "overlaps APM 'application_performance'"}
   - id: B1B-B8
     summary: Author up to 6 cross-domain outbound data_object_relationships mirroring the outbound handoffs.
-    finding: "B8 open (outbound). 0 cross-domain outbound relationship rows. Some target masters (aiops_signals, telemetry_streams, digital_experience_sessions) may not exist; load must be existence-gated. The saas_application_performance.degraded edge target depends on the B2-SAAS-VS-DEM scope decision."
+    finding: "B8 open (outbound). 0 cross-domain outbound relationship rows. Some target masters (aiops_signals, telemetry_streams, digital_experience_sessions) may not exist; load must be existence-gated. The saas_application_performance.degraded relationship target depends on the B2-SAAS-VS-DEM scope decision."
     blocked_by:
       - {type: user_decision, ref: B2-SAAS-VS-DEM}
       - {type: catalog_addition, scope: data_objects, trigger: "target masters for AIOPS / OBS / DEM may need to be authored first"}
@@ -86,7 +86,7 @@ b2:
       - "(a) keep in NPMD; DEM authors parallel digital_experience_sessions"
       - "(b) move to DEM; NPMD becomes contributor"
       - "(c) split into network_path_to_saas_performance (NPMD) and saas_user_experience_sessions (DEM)"
-    why: Affects the B1B-B8 SaaS-degradation edge target master and the A3 vendor research.
+    why: Affects the B1B-B8 SaaS-degradation relationship target master and the A3 vendor research.
   - id: B2-NETWORK-DEVICES
     summary: Master for network_devices (NPMD master / NPMD embedded_master / consume CMDB configuration_items).
     question: How does NPMD model network devices (router, switch, firewall, SD-WAN edge, packet broker)?
@@ -118,7 +118,7 @@ b2:
       - "(a) add both"
       - "(b) add NOC only"
       - "(c) add neither (keep IT Infrastructure as sole owner)"
-    why: The functional spine already has both functions; question is whether to record the link. Resolve the exact business_function_id values for NOC / Security before writing.
+    why: The functional spine already has both functions; question is whether to record the relationship. Resolve the exact business_function_id values for NOC / Security before writing.
 
 b3:
   - id: B3-SYNTHETIC-TESTS

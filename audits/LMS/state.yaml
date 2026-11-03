@@ -34,7 +34,7 @@ last_audit: "2026-06-06"
 #     /868 on handoffs 1313/1314, process 369) stay as-is; their correct APQC home follows
 #     where privacy lands, which is gated on the PRIV-MGMT build (a2). Postpone -> stays b1b.
 # Re-opened by a question (user did NOT decide; Rule #22 "a question keeps it open"):
-#   a3 (B2-SKILLS-MGMT-ATTRIBUTION): user asked the GENERAL pattern (one entity linking to an
+#   a3 (B2-SKILLS-MGMT-ATTRIBUTION): user asked the GENERAL pattern (one entity relating to an
 #     optional entity in another domain -> isn't that the optional embedded-master pattern?).
 #     Answered + folded into the regenerated q-file; decision still open.
 #   a4 (B2-1121-ROUTING): user asked how other vendors handle HR-case-category -> LMS. Answered
@@ -50,10 +50,10 @@ b1b:
     summary: "Resolve LMS x SKILLS-MGMT capability orphan (capability id 20)."
     finding: >-
       capability_domains row 20 carries an LMS x SKILLS-MGMT (capability id 20 'Skills Management')
-      link but no LMS module realizes it (M4 fail). Fix is either DELETE the LMS capability_domains
+      relationship but no LMS module realizes it (M4 fail). Fix is either DELETE the LMS capability_domains
       row (SKILLS-MGMT domain 169 owns it; the capability shows on LMS only because LMS-COURSE-DELIVERY
       consumes course_tags for skill tagging) or realize it in LMS-PATHS after skill_targets (now
-      loaded, id 1277) is wired with a proficiency edge. Destructive either way the delete needs
+      loaded, id 1277) is wired with a proficiency relationship. Destructive either way the delete needs
       sign-off; the realize-here path is additive but a market-shape choice.
     blocked_by:
       - {type: user_decision, ref: B2-SKILLS-MGMT-ATTRIBUTION}
@@ -97,7 +97,7 @@ b1b:
 b2:
   - id: B2-SKILLS-MGMT-ATTRIBUTION
     summary: "M4: resolve the LMS x SKILLS-MGMT capability orphan (capability id 20). User asked for the GENERAL pattern, not a one-off ruling."
-    question: "For 'one domain's entity links to an optional entity owned by another domain', do we delete the orphan LMS capability link (SKILLS-MGMT owns the capability), or model it as the optional embedded-master pattern and realize it in LMS-PATHS?"
+    question: "For 'one domain's entity relates to an optional entity owned by another domain', do we delete the orphan LMS capability relationship (SKILLS-MGMT owns the capability), or model it as the optional embedded-master pattern and realize it in LMS-PATHS?"
     user_question: "how do we handle that situation in general? isn't that usually the optional embedded-master pattern? anything different here?"
     agent_answer: >-
       The user's instinct is right about the GENERAL data-entity pattern but this specific orphan is on a
@@ -115,15 +115,15 @@ b2:
       semantically owned and realized by the SKILLS-MGMT domain; it appears on LMS only because LMS-COURSE-
       DELIVERY consumes course_tags for skill tagging (downstream consumption, not realization). So the
       capability-junction has no embedded-master middle option: either (a) delete the LMS capability_domains
-      link (SKILLS-MGMT is the owner; cleanest, removes the orphan, destructive so needs sign-off), or
+      relationship (SKILLS-MGMT is the owner; cleanest, removes the orphan, destructive so needs sign-off), or
       (b) make LMS-PATHS genuinely realize it now that skill_targets (id 1277, path-step <-> skill +
       proficiency) has shipped, by adding a domain_module_capabilities row (additive). The 'optional
-      embedded master' shape does not apply to a capability link the way it does to a shared data entity;
+      embedded master' shape does not apply to a capability relationship the way it does to a shared data entity;
       that difference is the answer to "anything different here?".
     options:
       - "(a) DELETE the LMS x capability-20 capability_domains row (recommended; SKILLS-MGMT owns and realizes it; the LMS appearance is downstream course_tag consumption, not realization). Destructive -> sign-off."
-      - "(b) KEEP the link and add a domain_module_capabilities row so LMS-PATHS (34) realizes capability 20, now that skill_targets (1277) has shipped. Additive, but asserts LMS co-realizes Skills Management."
-    why: "User asked the general rule. The general data-entity rule is the per-domain role on domain_module_data_objects (embedded_master/consumer), and LMS already follows it. But this orphan is a capability_domains link, which has no embedded-master option, so it reduces to delete-the-orphan vs realize-it-here. Destructive (a) needs sign-off."
+      - "(b) KEEP the relationship and add a domain_module_capabilities row so LMS-PATHS (34) realizes capability 20, now that skill_targets (1277) has shipped. Additive, but asserts LMS co-realizes Skills Management."
+    why: "User asked the general rule. The general data-entity rule is the per-domain role on domain_module_data_objects (embedded_master/consumer), and LMS already follows it. But this orphan is a capability_domains relationship, which has no embedded-master option, so it reduces to delete-the-orphan vs realize-it-here. Destructive (a) needs sign-off."
     evidence: >-
       Capability ownership pattern across the catalog: a capability is mastered/realized by the domain whose
       flagship products deliver it. Skills Management as a market is owned by skills-intelligence / talent-
@@ -131,7 +131,7 @@ b2:
       Intelligence Hub, Eightfold, Gloat) - these MASTER the skills taxonomy and proficiency model. Flagship
       LMS products (Docebo, 360Learning, Absorb, Cornerstone Learning) CONSUME a skills taxonomy to tag
       courses and align learning paths; they do not master the skills graph. So the catalog's realizing
-      owner is SKILLS-MGMT and LMS is a consumer, which is why the LMS capability link reads as an orphan.
+      owner is SKILLS-MGMT and LMS is a consumer, which is why the LMS capability relationship reads as an orphan.
       The general "shared entity" reuse pattern (per-domain embedded_master/consumer on domain_module_data_
       objects, deprecating domain_module_host_domains) is documented in references/deprecations.md (Knowledge
       Mgmt: ITSM masters knowledge_articles, HRSD embedded_master, CSM contributor on the SAME entity).

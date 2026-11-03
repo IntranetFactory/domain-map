@@ -25,15 +25,15 @@ ServiceNow Discovery (anchored to CMDB, agentless + agent-based, classifier patt
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-S1 | A1 | `domains.business_logic` contains a U+2014 character between `agents` and `code-dominant collection plane.` violating the project-wide no-em-dash rule. The current value is roughly `"Scanning, fingerprinting, and credentialed inspection across networks, cloud APIs, and agents [U+2014] code-dominant collection plane."` | PATCH `business_logic` to `"Scanning, fingerprinting, and credentialed inspection across networks, cloud APIs, and agents (code-dominant collection plane)."` |
-| B1-S2 | A2 | Zero rows in `capability_domains` for DISCOVERY. Domain has no defined capabilities. | Author 5-7 capabilities (`network-asset-discovery`, `agentless-credentialed-scan`, `cloud-api-discovery`, `service-dependency-mapping`, `reconciliation-and-normalization`, `discovery-source-management`, `passive-network-discovery`) and link via `capability_domains`. |
+| B1-S2 | A2 | Zero rows in `capability_domains` for DISCOVERY. Domain has no defined capabilities. | Author 5-7 capabilities (`network-asset-discovery`, `agentless-credentialed-scan`, `cloud-api-discovery`, `service-dependency-mapping`, `reconciliation-and-normalization`, `discovery-source-management`, `passive-network-discovery`) and relate via `capability_domains`. |
 | B1-S3 | A3 | Solution coverage thin: 4 rows total, 2 primary + 2 secondary. Missing: Tanium Asset (primary inventory leg), Microsoft Defender for Cloud Inventory, Qualys Asset Inventory, optionally runZero (passive network specialist). | INSERT `solutions` + `solution_domains` for 2-4 additional flagship vendors. |
 | B1-S4 | A4 | `catalog_tagline` and `catalog_description` both empty. Rule #20 backfill is allowed with user surface; values draft only, not auto-write. | Draft both fields in buyer voice, surface to user for review BEFORE writing. **Do not overwrite when non-empty** without explicit per-row approval. |
 | B1-S5 | M1 / Rule #14 | Zero `domain_modules` rows on DISCOVERY. Hard fail. Every downstream concern (DMDO, lifecycle states, system skills, role bundling) is structurally undefined until modules exist. | Author the module set per the Bucket 2 #1 modularization hypothesis the user selects. Recommended seed: `DISCOVERY-NETWORK-SCAN`, `DISCOVERY-CLOUD-INVENTORY`, `DISCOVERY-SERVICE-MAPPING`, `DISCOVERY-RECONCILIATION`. Capability count (post B1-S2) will be ≥3, so M2 forces ≥2 full modules. |
 | B1-S6 | M4 / Rule #14 | Once capabilities are loaded (B1-S2), each requires ≥1 realizing module via `domain_module_capabilities`. | Author `domain_module_capabilities` rows after B1-S5 finalizes the module set. |
 | B1-S7 | M6 | Every module realizes ≥1 capability (reverse of M4). | Same loader pass as B1-S6. |
-| B1-S8 | B1 | `domain_data_objects` masters 3 entities but DMDO is empty. Migration from legacy rollup to module-anchored DMDO is required for any modularized domain (rollup is derived from DMDO post-Rule-#14). | Re-anchor `discovery_scans` (81), `discovered_devices` (82), `discovery_sources` (83) as `role=master, necessity=required` in `domain_module_data_objects` against the realizing modules from B1-S5. Then the legacy `domain_data_objects` rows should be **deleted** (DMDO becomes the source of truth). |
-| B1-S9 | B6 | Zero `data_object_relationships` touching `discovery_scans`, `discovered_devices`, `discovery_sources`. The internal graph (scan emits candidates, candidate normalizes to CI, source drives scan) is unmodeled. | Author intra-domain edges: `discovery_sources → discovery_scans` (drives, one_to_many, composition), `discovery_scans → discovered_devices` (emits, one_to_many, composition), `discovered_devices → configuration_items` (promotes_to, one_to_one, reference, owner_side=source, is_required=false), `discovered_devices → hardware_assets` (links_to, many_to_many, reference). |
-| B1-S10 | B7 / Rule #10 | Three masters have user-typed actors but no `→ users` edges in `data_object_relationships`: `discovery_scans` (initiated_by / scan_operator), `discovered_devices` (reviewer / approver during reconciliation), `discovery_sources` (credential_owner / connector_owner). | Author 3 edges per Rule #10, against the seeded `users` row (`data_objects.kind='platform_builtin'`). |
+| B1-S8 | B1 | `domain_data_objects` masters 3 entities but DMDO is empty. Migration from legacy rollup to module-anchored DMDO is required for any modularized domain (rollup is derived from DMDO post-Rule-#14). | Re-anchor `discovery_scans` (81), `discovered_devices` (82), `discovery_sources` (83) as `held_as=master, necessity=required` in `domain_module_data_objects` against the realizing modules from B1-S5. Then the legacy `domain_data_objects` rows should be **deleted** (DMDO becomes the source of truth). |
+| B1-S9 | B6 | Zero `data_object_relationships` touching `discovery_scans`, `discovered_devices`, `discovery_sources`. The internal graph (scan emits candidates, candidate normalizes to CI, source drives scan) is unmodeled. | Author intra-domain relationships: `discovery_sources → discovery_scans` (drives, one_to_many, composition), `discovery_scans → discovered_devices` (emits, one_to_many, composition), `discovered_devices → configuration_items` (promotes_to, one_to_one, reference, owner_side=source, is_required=false), `discovered_devices → hardware_assets` (links_to, many_to_many, reference). |
+| B1-S10 | B7 / Rule #10 | Three masters have user-typed actors but no `→ relationships to `users` in `data_object_relationships`: `discovery_scans` (initiated_by / scan_operator), `discovered_devices` (reviewer / approver during reconciliation), `discovery_sources` (credential_owner / connector_owner). | Author 3 relationships per Rule #10, against the seeded `users` row (`data_objects.kind='platform_builtin'`). |
 | B1-S11 | B11 | Zero `data_object_aliases` on the 3 masters. Vendor terms differ widely: ServiceNow uses `CI Candidate` for `discovered_devices`, BMC ADDM uses `Topology Snapshot` for `discovery_scans`, Tanium uses `Asset Record` for `discovered_devices`, CAASM vendors use `Asset Record` broadly. | Author ≥1 alias per non-self-explanatory master (B2 borderline aliases: `discovery_scans → topology_snapshot`, `discovered_devices → ci_candidate`, `discovered_devices → asset_record`, `discovery_sources → discovery_connector`). |
 | B1-S12 | B12 / Rule #12 | Zero `data_object_lifecycle_states` on the 3 masters. `discovery_scans` (queued → running → completed / failed) and `discovered_devices` (raw → normalized → reconciled / excluded) clearly carry state machines and are NOT config-shape. `discovery_sources` (configured → connected / disconnected) also has explicit state. | Author lifecycle-states per master, with `requires_permission=true` on terminal-and-key states. Permission prefix uses the realizing module's `domain_module_code`, set post B1-S5. |
 | B1-S13 | F1 (naming) | The single `skills` row uses kebab `discovery-system` with the legacy `system` suffix; convention per Phase-S is snake `<module_code_lower>_agent`. Also `domain_module_id=NULL` (Rule #17 requires module anchoring). | After B1-S5 ships modules, replace the single legacy skill with one `skill_type='system'` row per module, named `<module_code_lower>_agent`. The 3 existing `skill_tools` rows (409/410/411) target the right tools but need re-anchoring to the per-module skills. |
@@ -44,7 +44,7 @@ ServiceNow Discovery (anchored to CMDB, agentless + agent-based, classifier patt
 | ID | Finding | Fix |
 |---|---|---|
 | B1-B1 | Stale `handoff_processes` rows: handoff 48 (`ci.discovered → CMDB`) tagged with PCF process 9 (`Manage Financial Resources`), handoff 49 (`relationship.discovered → CMDB`) tagged with PCF process 12 (`Manage External Relationships`). Both are clearly `discovery_substring` false positives matching `manage` only. | DELETE the two `handoff_processes` rows (48→9, 49→12) before authoring the correct APQC tags in B1-H1. Handoff 33 → 1258 (`Confirm hardware/software operational status`) is a reasonable match, keep. |
-| B1-B2 | Legacy `domain_data_objects` row claims DISCOVERY masters `service_maps` (79), but the live DMDO master is in CMDB-SERVICE-MAPPING. The legacy rollup is wrong. | DELETE the legacy `domain_data_objects` row (data_object_id=79, domain_id=5, role=master). Add as `consumer` if DISCOVERY references service-map output (likely no, service mapping is mastered by CMDB). |
+| B1-B2 | Legacy `domain_data_objects` row claims DISCOVERY masters `service_maps` (79), but the live DMDO master is in CMDB-SERVICE-MAPPING. The legacy rollup is wrong. | DELETE the legacy `domain_data_objects` row (data_object_id=79, domain_id=5, held_as=master). Add as `consumer` if DISCOVERY references service-map output (likely no, service mapping is mastered by CMDB). |
 
 #### B9 trigger-event coverage
 
@@ -109,7 +109,7 @@ Universal-or-near-universal vendor entities surfaced from agent enumeration of t
 | `discovery_schedules` | per realizing module | ServiceNow Discovery Schedules, BMC ADDM Schedules, Lansweeper Scanning Schedules. Cron-shaped recurrence per scan. |
 | `reconciliation_rules` | DISCOVERY-RECONCILIATION (option d only) | ServiceNow IRE Rules, BMC ADDM Normalization, Device42 Reconciliation. The logic that maps a `discovered_device` into a `configuration_item`. Heavy in CMDB-anchored vendors. |
 | `discovery_exclusions` | per realizing module | Universal: scope exclusions (subnet ranges, IP exclusions, OU exclusions). Operational hygiene entity. |
-| `network_segments` | DISCOVERY-NETWORK-SCAN | Subnets / CIDR ranges + IPAM-adjacent. Possibly belongs in a future IPAM domain (not currently catalogued); flag during Phase 0. |
+| `network_segments` | DISCOVERY-NETWORK-SCAN | Subnets / CIDR ranges + IPAM-adjacent. Possibly belongs in a future IPAM domain (not currently cataloged); flag during Phase 0. |
 | `cloud_accounts` | DISCOVERY-CLOUD-INVENTORY | Cloud subscription / account boundary entity. Almost certainly belongs in a cross-cutting `cloud_resources` master in CSPM / CNAPP territory; DISCOVERY would `consumer` / `embedded_master` rather than `master`. |
 | `asset_tags` | DISCOVERY-RECONCILIATION (or cross-cutting) | Universal labeling axis (`environment=prod`, `owner=team-x`). Could be a cross-cutting concern shared with ITAM. |
 
@@ -128,7 +128,7 @@ Universal-or-near-universal vendor entities surfaced from agent enumeration of t
 
 ### Report-only follow-ups (owed by other domains)
 
-- **ITOM + RMM owe (M7 catalog-wide single-master):** `monitoring_policies` (86) has two `role=master` rows in legacy `domain_data_objects` (one for ITOM, one for RMM). DMDO is empty for this data_object today, so the conflict is currently legacy-rollup only, but M7 will hard-fail once those domains modularize. The decision (which of ITOM or RMM canonically masters) lives in the next ITOM and RMM Validate runs, not in DISCOVERY. DISCOVERY only contributes to `monitoring_policies` via legacy rollup.
+- **ITOM + RMM owe (M7 catalog-wide single-master):** `monitoring_policies` (86) has two `held_as=master` rows in legacy `domain_data_objects` (one for ITOM, one for RMM). DMDO is empty for this data_object today, so the conflict is currently legacy-rollup only, but M7 will hard-fail once those domains modularize. The decision (which of ITOM or RMM canonically masters) lives in the next ITOM and RMM Validate runs, not in DISCOVERY. DISCOVERY only contributes to `monitoring_policies` via legacy rollup.
 - **SMP audit owes (Bucket 2 #4 alternative):** if handoff 47 (`sso_login.unsanctioned_app → SMP`) should be re-sourced from SMP rather than DISCOVERY (because SSO-driven detection is SMP's native channel), the fix is a SMP-side change. Surface during the next SMP audit.
 - **CMDB audit owes:** the inbound handoff 1199 (`ci_class.published → DISCOVERY`, payload `ci_classes`) is a CMDB-published event. CMDB's audit can re-check whether the subscriber list (DISCOVERY only) is complete or whether HAM / SAM / ITAM should also subscribe to schema-class updates.
 
@@ -145,7 +145,7 @@ Applied only the truly-technical, no-judgment Bucket 1 fixes; everything gated o
 - **B1-S1**: PATCHed `domains.business_logic` on DISCOVERY (id 5), replacing the U+2014 em-dash with parenthesized phrasing per project CLAUDE.md.
 - **B1-B1**: DELETEd 2 stale `handoff_processes` rows (ids 51, 53) tagging handoffs 48 and 49 with PCF processes 9 ("Manage Financial Resources") and 12 ("Manage External Relationships"). Both were `discovery_substring` false-positives on the verb "manage".
 - **B1-B2**: DELETEd legacy `domain_data_objects` row (id 145) for DISCOVERY x `service_maps` (data_object 79). Live role was `contributor` (audit notes had said `master`); either way the row is stale because CMDB-SERVICE-MAPPING canonically masters `service_maps` in the live DMDO layer.
-- **B1-S10**: INSERTed 3 `data_object_relationships` rows per Rule #10, pointing each DISCOVERY master at the platform_builtin `users` row (id 748): `discovery_scans -[initiated by]-> users`, `discovered_devices -[reviewed by]-> users`, `discovery_sources -[owned by]-> users`. All `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false` (catalog convention for actor edges).
+- **B1-S10**: INSERTed 3 `data_object_relationships` rows per Rule #10, pointing each DISCOVERY master at the platform_builtin `users` row (id 748): `discovery_scans -[initiated by]-> users`, `discovered_devices -[reviewed by]-> users`, `discovery_sources -[owned by]-> users`. All `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false` (catalog convention for actor relationships).
 - **B1-H1**: INSERTed 9 new `agent_curated` `handoff_processes` rows for DISCOVERY-related handoffs that had no prior agent-curated tag:
   - 32 -> 1312 (Maintain IT asset records)
   - 47 -> 294 (Manage infrastructure resource administration)
@@ -166,13 +166,13 @@ Applied only the truly-technical, no-judgment Bucket 1 fixes; everything gated o
 
 ### Deferred (17 Bucket-1 items)
 
-- **B1-S2** (5-7 capabilities + `capability_domains` links): new entities; deferred.
+- **B1-S2** (5-7 capabilities + `capability_domains` relationships): new entities; deferred.
 - **B1-S3** (2-4 additional `solutions` + `solution_domains`): new entities; deferred.
 - **B1-S4** (catalog_tagline / catalog_description): Rule #20 surface-to-user; never auto-write.
 - **B1-S5** (4 `domain_modules`): new entities; gated on Bucket 2 #1 modularization hypothesis.
 - **B1-S6 / B1-S7** (`domain_module_capabilities`): gated on B1-S5.
 - **B1-S8** (DMDO re-anchoring of the 3 masters): gated on B1-S5.
-- **B1-S9** (intra-domain `data_object_relationships`): not Rule #10 user-edges; outside this pass's technical scope (proposed edges include `discovered_devices -> configuration_items` and `-> hardware_assets` which involve judgment about cross-domain shape).
+- **B1-S9** (intra-domain `data_object_relationships`): not Rule #10 relationships to `users`; outside this pass's technical scope (proposed relationships include `discovered_devices -> configuration_items` and `-> hardware_assets` which involve judgment about cross-domain shape).
 - **B1-S11** (`data_object_aliases`): audit flags as "B2 borderline" with vendor-terminology context; outside the "exact tuples" pre-specification requirement, and Rule #18 risks vendor names landing in the alias notes.
 - **B1-S12** (`data_object_lifecycle_states` for the 3 masters): gated on B1-S5 (workflow-gate permission prefix needs realizing-module `domain_module_code`).
 - **B1-S13 / B1-S14** (system-skill rename + per-module anchoring): gated on B1-S5.
@@ -184,7 +184,7 @@ No JWT errors encountered. The 4-pass audit's headline gap (DISCOVERY not modula
 
 ### Summary
 
-Structural Validate b1 audit. DISCOVERY (id 5) still has zero `domain_modules`, zero `capability_domains`, zero DMDO, zero lifecycle states, and zero aliases. The technical Bucket 1 fixes from the prior 2026-05-31 continuation are confirmed loaded: `business_logic` em-dash removed, stale `handoff_processes` rows 51/53 deleted, legacy `domain_data_objects` row for `service_maps` removed, 3 Rule #10 `users` edges in place on the 3 masters, 9 `agent_curated` APQC tags inserted (13 of 14 handoffs now tagged with `agent_curated`; handoff 33 still carries the prior `discovery_substring` tag at the correct PCF 1258).
+Structural Validate b1 audit. DISCOVERY (id 5) still has zero `domain_modules`, zero `capability_domains`, zero DMDO, zero lifecycle states, and zero aliases. The technical Bucket 1 fixes from the prior 2026-05-31 continuation are confirmed loaded: `business_logic` em-dash removed, stale `handoff_processes` rows 51/53 deleted, legacy `domain_data_objects` row for `service_maps` removed, 3 Rule #10 relationships to `users` in place on the 3 masters, 9 `agent_curated` APQC tags inserted (13 of 14 handoffs now tagged with `agent_curated`; handoff 33 still carries the prior `discovery_substring` tag at the correct PCF 1258).
 
 Headline gap unchanged: DISCOVERY is not modularized (M1 hard fail), so M2 / M4 / M6 / M8 / B1 (DMDO migration) / B12 (lifecycle prefix) / E1-E5 / F2-F5 all cascade off the same blocker. Carry-forward Bucket 1 items consolidate behind Bucket 2 #1 (modularization shape).
 
@@ -207,7 +207,7 @@ Headline gap unchanged: DISCOVERY is not modularized (M1 hard fail), so M2 / M4 
 | M4 / M6 / M8 | cascade | Same. |
 | M7 | n/a | No DMDO master rows on DISCOVERY today (live DMDO is empty for domain 5), so the catalog-wide single-master check has nothing to evaluate here. Legacy `domain_data_objects` `monitoring_policies` (86) ITOM-vs-RMM dual-master conflict surfaces during their audits, not DISCOVERY's. |
 | B5 | pass | No `embedded_master` rows on DISCOVERY in DMDO. |
-| B7 | pass | 3 `users` edges loaded per Rule #10 (verified live: 81/82/83 → 748). |
+| B7 | pass | 3 relationships to `users` loaded per Rule #10 (verified live: 81/82/83 → 748). |
 | B9 | partial pass | 5 trigger events on the 3 masters; every event has ≥1 handoff. Event categories on events 630/631/632/633 are empty strings (should be `lifecycle` or `state_change`). Routes to B1A-EVENT-CATEGORY. |
 | B9b | n/a | Domain has <2 modules; B9b vacuously skipped per pre-check. |
 | B10b | fail | All 14 handoffs touching DISCOVERY have `source_domain_module_id=null` on the DISCOVERY side; opposite-side nulls are other-domain B10b concerns. Cannot cure until M1 cured. Routes to B1B-HANDOFF-ATTRIB (blocked on M1). |
@@ -314,7 +314,7 @@ Two payload sets have NO master row anywhere because DISCOVERY is unbuilt (no mo
 - 8.7.7.1 (pid 1309) on handoffs 147 (RMM->DISCOVERY), 621, 625 (DISCOVERY->CMDB): carries discovered_devices, discovery_scans, discovery_sources.
 - 8.7.7.4 (pid 1312) on handoffs 622, 623 (DISCOVERY->HAM/SAM): carries discovery_scans.
 
-These are DISCOVERY's own three masters (ids 81/82/83). They get `role=master` DMDO rows once B1B-MODULES + B1B-DMDO-MIGRATE run (both gated on B2-MOD-SHAPE), at which point the UNOWNED findings reclassify. No new state item invented; already covered by the existing b1b build items. No fabricated masters (Rule #21 anti-pattern avoided).
+These are DISCOVERY's own three masters (ids 81/82/83). They get `held_as=master` DMDO rows once B1B-MODULES + B1B-DMDO-MIGRATE run (both gated on B2-MOD-SHAPE), at which point the UNOWNED findings reclassify. No new state item invented; already covered by the existing b1b build items. No fabricated masters (Rule #21 anti-pattern avoided).
 
 ### state.yaml change
 

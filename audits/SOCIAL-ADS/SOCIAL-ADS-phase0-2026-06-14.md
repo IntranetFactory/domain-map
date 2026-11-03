@@ -79,7 +79,7 @@ Masters to load: social_ad_campaigns, social_ad_sets, social_ad_creatives, ad_bu
 
 ## Adjacency / handoff map
 
-- **SMM** (organic publishing) <-> SOCIAL-ADS (paid): "boost"/promote an organic post becomes a paid campaign; cross-domain edge + handoff (campaign published -> SMM context). Boundary is the gate question.
+- **SMM** (organic publishing) <-> SOCIAL-ADS (paid): "boost"/promote an organic post becomes a paid campaign; cross-domain relationship + handoff (campaign published -> SMM context). Boundary is the gate question.
 - **MA** (lifecycle): audience sync / suppression lists feed ad_audiences; conversion outcomes feed nurture.
 - **REV-INTEL**: conversion/attribution data -> pipeline/revenue analytics (outbound handoff).
 

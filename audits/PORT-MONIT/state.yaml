@@ -36,7 +36,7 @@ b1a:
   - id: B1A-S3-ROLES
     summary: Author >=3 roles bundling PORT-MONIT modules so E1-E5 pass. Subsumed by the persona/RACI pass (B1A-PHASE-P); DEFERRED, do not author this audit.
     finding: |
-      /role_modules?domain_module_id=in.(16,17,18,19) returns []. The domain has 4 modules
+      /persona_modules?domain_module_id=in.(16,17,18,19) returns []. The domain has 4 modules
       (>=2 floor) but no roles touch any module, so E1-E5 fail together. Permissions on the 4
       modules are also empty. Roles are the operational-persona layer, which the persona/RACI
       pass (B1A-PHASE-P) owns. Per Rule #21 the persona/RACI layer is DEFERRED, not agent-authored.
@@ -85,7 +85,7 @@ b1a:
       and prevents the methodology-tagged audit trail the module's description claims.
     action: |
       Phase-B insert: data_objects row (kind=domain_owned), domain_module_data_objects row
-      on module 17 (role=master, necessity=required), data_object_relationships row
+      on module 17 (held_as=master, necessity=required), data_object_relationships row
       portco_valuations -> valuation_methodologies (reference, many_to_one).
     proposed_module: PORT-MONIT-VALUATIONS
 
@@ -136,8 +136,8 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per Rule #21 (do not author)."
-    finding: "Live triage: 4 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per Rule #21 the persona/RACI layer is deferred, not agent-authored."
-    action: "When the persona pass runs: author domain_roles (operational personas) function-anchored per references/roles.md section 7 (candidates listed in B1A-S3-ROLES), wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage: 4 domain_modules and 0 personas reach this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per Rule #21 the persona/RACI layer is deferred, not agent-authored."
+    action: "When the persona pass runs: author personas (operational) function-anchored per references/personas.md section 7 (candidates listed in B1A-S3-ROLES), wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     status_note: deferred_personas
 
 b1b:
@@ -225,7 +225,7 @@ b2:
       any subset is the user's policy call; the audit cannot pick scope without that intent.
 
   - id: B2-2-VERB-CORRECTNESS
-    summary: PATCH the verb columns on the 7 users-edges (885, 886, 1831-1835) or keep as-is. DESTRUCTIVE (overwrite of non-empty values).
+    summary: PATCH the verb columns on the 7 relationships to users (885, 886, 1831-1835) or keep as-is. DESTRUCTIVE (overwrite of non-empty values).
     question: |
       Continuation rels 1831-1835 inserted with relationship_kind=reference / owner_side=target;
       existing rels 885 (observes) and 886 (computes) were flagged as analyst-side verbs that may
@@ -268,7 +268,7 @@ b2:
     question: |
       Capability 504 is currently single-domain. Promote to a domain-neutral
       ESG-METRIC-COLLECTION capability and add capability_domains row to ESG (21)?
-      Options: (a) keep domain-prefixed; (b) rename + add cross-cutting link.
+      Options: (a) keep domain-prefixed; (b) rename + add cross-cutting relationship.
     options: [keep, promote]
 
   - id: B2-6-APPLICABILITY-WORDING

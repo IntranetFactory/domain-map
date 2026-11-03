@@ -31,7 +31,7 @@ Mandatory regulatory training assignment, tracking, and certification: sexual ha
 | Compliance Training Campaigns | `compliance_training_campaigns` | Campaigns that bundle compliance training assignments by audience and due date, such as an annual code-of-conduct cycle. |
 | FDA Part 11 Audit Trails | `fda_part11_audit_trails` | Tamper-evident, retention-locked audit-trail rows for regulated training, meeting electronic-records requirements. |
 | GxP Training Signoffs | `gxp_training_signoffs` | Witnessed electronic signatures binding learner, course, content version, and timestamp for regulated life-sciences training. |
-| Harassment Training Acknowledgments | `harassment_training_acknowledgements` | Statutory acknowledgments that harassment training was completed, carrying a signed timestamp and IP address. |
+| Harassment Training Acknowledgments | `harassment_training_acknowledgments` | Statutory acknowledgments that harassment training was completed, carrying a signed timestamp and IP address. |
 | Phishing Simulation Results | `phishing_simulation_results` | Per-recipient outcomes of a phishing simulation, recording whether each person clicked, reported, or ignored the test message. |
 | Phishing Simulations | `phishing_simulations` | Configured simulated-phishing campaigns used for security-awareness training and PCI DSS compliance. |
 | Recertification Schedules | `recertification_schedules` | Recurrence configurations that drive periodic compliance-refresh assignment cycles for regulations like FINRA, HIPAA, and OSHA. |
@@ -40,8 +40,8 @@ Mandatory regulatory training assignment, tracking, and certification: sexual ha
 | Certifications | `learner_certifications` | Credentials issued to a worker (internal, vendor, or regulatory), with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns. |
 | Cost Centers | `cost_centers` | Organizational units for cost allocation, with code, manager, hierarchy, and currency, driving variance and departmental reporting. |
 | Courses | `courses` | Learning units such as e-learning modules, videos, live sessions, or blended programs, with format, duration, and prerequisites. |
-| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 | Positions | `hcm_positions` | Approved org slots with role definition, cost center, reporting line, location, and FTE allocation. Each can be open, filled, or eliminated. |
 | Signature Records | `signature_records` | E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one contract may have many. |
 | Onboarding Tasks | `onboarding_tasks` | Discrete to-do items within an onboarding journey, each with an assignee, due date, type, and completion state, some triggering handoffs to other systems. |
@@ -65,7 +65,7 @@ flowchart TD
   compliance_training_campaigns["Compliance Training Campaigns"]
   compliance_audit_records["Compliance Audit Records"]
   training_evidence_records["Training Evidence Records"]
-  harassment_training_acknowledgements["Harassment Training Acknowledgments"]
+  harassment_training_acknowledgments["Harassment Training Acknowledgments"]
   recertification_schedules["Recertification Schedules"]
   regulator_filing_exports["Regulator Filing Exports"]
   signature_records["Signature Records"]
@@ -79,7 +79,7 @@ flowchart TD
   compliance_assignments -->|"evidences"| compliance_audit_records
   compliance_audit_records -->|"rolled_into"| training_evidence_records
   training_evidence_records -->|"supplies"| regulator_filing_exports
-  compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgements
+  compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgments
   recertification_schedules -->|"triggers"| compliance_training_campaigns
   compliance_assignments -->|"produces"| fda_part11_audit_trails
   org_units -->|"groups"| employees
@@ -96,12 +96,12 @@ flowchart TD
   org_units -->|"rolls_up_to"| org_units
   compliance_regulations -->|"is_evidenced_by"| training_evidence_records
   users -->|"owns"| courses
-  users -->|"acknowledges"| harassment_training_acknowledgements
+  users -->|"acknowledges"| harassment_training_acknowledgments
   users -->|"audit_trailed_in"| fda_part11_audit_trails
   users -->|"attests to policies"| policy_attestations
   policy_attestations -->|"has attester"| users
   users -->|"signed"| signature_records
-  employees -->|"is_linked_to"| users
+  employees -->|"is_related_to"| users
   users -->|"manages"| hcm_positions
   users -->|"leads"| org_units
   users -->|"owns"| cost_centers
@@ -124,7 +124,7 @@ flowchart TD
   class compliance_training_campaigns master;
   class compliance_audit_records master;
   class training_evidence_records master;
-  class harassment_training_acknowledgements master;
+  class harassment_training_acknowledgments master;
   class recertification_schedules master;
   class regulator_filing_exports master;
   class signature_records embedded_master;
@@ -147,7 +147,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `compliance_audit_records` | `compliance_audit_records` | Compliance Audit Record | Compliance Audit Records | master | - | - | required | yes | operational_workflow | `:manage` | - |
 | 2 | `compliance_regulations` | `compliance_regulations` | Compliance Regulation | Compliance Regulations | master | - | - | required | - | catalog | `:admin` | - |
@@ -155,7 +155,7 @@ flowchart TD
 | 4 | `compliance_training_campaigns` | `compliance_training_campaigns` | Compliance Training Campaign | Compliance Training Campaigns | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 5 | `fda_part11_audit_trails` | `fda_part11_audit_trails` | FDA Part 11 Audit Trail | FDA Part 11 Audit Trails | master | - | - | optional | yes | operational_workflow | `:manage` | - |
 | 6 | `gxp_training_signoffs` | `gxp_training_signoffs` | GxP Training Signoff | GxP Training Signoffs | master | - | - | optional | yes | operational_workflow | `:manage` | - |
-| 7 | `harassment_training_acknowledgements` | `harassment_training_acknowledgements` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | master | - | - | required | yes | operational_workflow | `:manage` | - |
+| 7 | `harassment_training_acknowledgments` | `harassment_training_acknowledgments` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | master | - | - | required | yes | operational_workflow | `:manage` | - |
 | 8 | `phishing_simulation_results` | `phishing_simulation_results` | Phishing Simulation Result | Phishing Simulation Results | master | - | - | optional | yes | operational_record | `:manage` | - |
 | 9 | `phishing_simulations` | `phishing_simulations` | Phishing Simulation | Phishing Simulations | master | - | - | optional | - | catalog | `:admin` | - |
 | 10 | `recertification_schedules` | `recertification_schedules` | Recertification Schedule | Recertification Schedules | master | - | - | required | - | catalog | `:admin` | - |
@@ -177,7 +177,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -185,7 +185,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `compliance_assignments` | evidences | `compliance_audit_records` | one_to_many | reference | optional | target | clear | reference | - |
 | `compliance_audit_records` | rolled_into | `training_evidence_records` | one_to_many | reference | optional | target | clear | reference | - |
 | `training_evidence_records` | supplies | `regulator_filing_exports` | many_to_many | association | optional | source | clear | reference | - |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgements` | one_to_many | reference | optional | target | clear | reference | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | reference | optional | target | clear | reference | - |
 | `recertification_schedules` | triggers | `compliance_training_campaigns` | one_to_many | reference | optional | target | clear | reference | - |
 | `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | reference | optional | target | clear | reference | - |
 | `org_units` | groups | `employees` | one_to_many | reference | required | source | restrict | reference | - |
@@ -202,17 +202,17 @@ _(none: no industry-scoped aliases for this scope)_
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 | `compliance_regulations` | is_evidenced_by | `training_evidence_records` | one_to_many | reference | optional | target | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | owns | `courses` | one_to_many | optional | source | clear | reference | - |
-| `users` | acknowledges | `harassment_training_acknowledgements` | one_to_many | required | source | restrict | reference | - |
+| `users` | acknowledges | `harassment_training_acknowledgments` | one_to_many | required | source | restrict | reference | - |
 | `users` | audit_trailed_in | `fda_part11_audit_trails` | one_to_many | optional | source | clear | reference | - |
 | `users` | attests to policies | `policy_attestations` | one_to_many | optional | source | clear | reference | - |
 | `policy_attestations` | has attester | `users` | many_to_many | required | source | restrict | reference | - |
 | `users` | signed | `signature_records` | one_to_many | optional | source | clear | reference | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
 | `users` | manages | `hcm_positions` | one_to_many | optional | source | clear | reference | - |
 | `users` | leads | `org_units` | one_to_many | optional | source | clear | reference | - |
 | `users` | owns | `cost_centers` | one_to_many | optional | source | clear | reference | - |
@@ -224,7 +224,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | holds | `learner_certifications` | one_to_many | required | source | restrict | reference | - |
 | `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -237,7 +237,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `compliance_obligations` | tracked by | `compliance_assignments` | one_to_many | optional | none | n/a | - |
 | `compliance_assignments` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -342,7 +342,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `compliance_assignments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
 | `compliance_assignments` | HRSD-CASE-MGMT (HR Case Management) - HRSD | consumer | optional | - |
@@ -351,7 +351,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `compliance_assignments` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | required | - |
 | `compliance_regulations` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | optional | - |
 | `fda_part11_audit_trails` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | optional | - |
-| `harassment_training_acknowledgements` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | optional | - |
+| `harassment_training_acknowledgments` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | optional | - |
 | `training_evidence_records` | TRAINING-RECORDS-STARTER (Training Records (Compliance Documentation Starter)) - LMS | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -379,7 +379,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
 | LMS-COMPLIANCE-TRAINING | HCM | HCM-LIFECYCLE-WORKFLOWS | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | Compliance assignment due-date nudges to HCM-mastered manager/employee record. HCM surfaces the impending obligation on the employee profile and routes a reminder to the line manager. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
@@ -396,7 +396,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
 | LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_training_campaign.launched` | _(lifecycle)_ | `compliance_training_campaigns` | lifecycle_progression | low | - |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
@@ -419,19 +419,19 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the linked legal_contract transitions out_for_signature -> signed. |
+| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the related legal_contract transitions out_for_signature -> signed. |
 | HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
 | HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
 | LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_policy.updated` | `published` → `republished` _(state_change)_ | `policy_attestations` | api_call | medium | Policy version triggers LMS compliance-training requirement for scoped users. |
 | LMS-COMPLIANCE-TRAINING | LMS | LMS-COURSE-DELIVERY | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | ONBOARDING | ONB-JOURNEY-MGMT | `task.compliance_training_required` | _(state_change)_ | `onboarding_tasks` | api_call | medium | Compliance training items (security awareness, anti-harassment, HIPAA, country-specific code-of-conduct, role-specific certifications) trigger LMS enrollments. LMS masters the enrollment record and completion certificate; Onboarding consumes the completion event to close out its task. Friction sits in keeping the training catalog mapped to roles/jurisdictions. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `cost_centers` | embedded_master | optional | FIN-GL-CLOSE (FIN) | - |
 | `courses` | embedded_master | required | LMS-COURSE-DELIVERY (LMS) | - |
@@ -514,7 +514,7 @@ _This scope holds `employees` as **embedded_master**; the canonical state machin
 | 2 | `signed` | - | - | ✓ | `lms-compliance-training:sign` | - |
 | 3 | `locked` | - | ✓ | ✓ | `lms-compliance-training:lock` | - |
 
-### `harassment_training_acknowledgements` (Harassment Training Acknowledgment)
+### `harassment_training_acknowledgments` (Harassment Training Acknowledgment)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -567,7 +567,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `lms-compliance-training:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `lms-compliance-training:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `lms-compliance-training:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `lms-compliance-training:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
@@ -646,7 +646,7 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `lms-compliance-training:submit` | workflow-gate (lifecycle) | Transition `compliance_audit_records` into state `submitted` | ✓ |
 | `lms-compliance-training:archive` | workflow-gate (lifecycle) | Transition `compliance_audit_records` into state `archived` | ✓ |
 | `lms-compliance-training:finalize` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `finalized` | ✓ |
-| `lms-compliance-training:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgements` into state `acknowledged` | ✓ |
+| `lms-compliance-training:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgments` into state `acknowledged` | ✓ |
 | `lms-compliance-training:file` | workflow-gate (lifecycle) | Transition `regulator_filing_exports` into state `filed` | ✓ |
 | `lms-compliance-training:sign` | workflow-gate (lifecycle) | Transition `gxp_training_signoffs` into state `signed` | ✓ |
 | `lms-compliance-training:lock` | workflow-gate (lifecycle) | Transition `gxp_training_signoffs` into state `locked` | ✓ |
@@ -662,8 +662,8 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `lms-compliance-training:manage_all_compliance_audit_records` | override (personal_content) | Manage all `compliance_audit_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:view_all_training_evidence_records` | override (personal_content) | View all `training_evidence_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:manage_all_training_evidence_records` | override (personal_content) | Manage all `training_evidence_records` rows beyond row-scope | ✓ |
-| `lms-compliance-training:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgements` rows beyond row-scope | ✓ |
-| `lms-compliance-training:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgements` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
 | `lms-compliance-training:view_all_signature_records` | override (personal_content) | View all `signature_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:manage_all_signature_records` | override (personal_content) | Manage all `signature_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
@@ -682,7 +682,7 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_certifications` / `lms-compliance-training:manage_all_certifications` |
 | `compliance_audit_record_edit_scope` | `compliance_audit_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_compliance_audit_records` / `lms-compliance-training:manage_all_compliance_audit_records` |
 | `training_evidence_record_edit_scope` | `training_evidence_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_training_evidence_records` / `lms-compliance-training:manage_all_training_evidence_records` |
-| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgements` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_harassment_training_acknowledgments` / `lms-compliance-training:manage_all_harassment_training_acknowledgments` |
+| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgments` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_harassment_training_acknowledgments` / `lms-compliance-training:manage_all_harassment_training_acknowledgments` |
 | `signature_record_edit_scope` | `signature_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_signature_records` / `lms-compliance-training:manage_all_signature_records` |
 | `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_fda_part_11_audit_trails` / `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
 | `gxp_training_signoff_edit_scope` | `gxp_training_signoffs` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_gxp_training_signoffs` / `lms-compliance-training:manage_all_gxp_training_signoffs` |

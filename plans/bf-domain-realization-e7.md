@@ -46,10 +46,10 @@ findings drove this rewrite, each verified:
    persona touches, in any responsibility. `PEOPLE-MANAGER` touches HCM, so it would attach to all six
    HCM-declaring functions (Executive, Finance, GRC, Human Resources, IT Operations, Payroll);
    `HIRING-MANAGER` touches ATS and HCM, attaching to eight. So `Finance --consumer--> ATS` would render
-   **populated** (via `HIRING-MANAGER`), even though rev.9 itself treats that edge as the anti-fiasco
+   **populated** (via `HIRING-MANAGER`), even though rev.9 itself treats that relationship as the anti-fiasco
    arbitration question. The Phase-1 reveal (loose: co-declares the domain) and the Phase-2 resolver
    (strict: an actual I/C row warranted by an inbound handoff) then told opposite stories about the same
-   edge, and the "empty cell = the work" premise broke.
+   relationship, and the "empty cell = the work" premise broke.
 4. **No market (domain) axis, though the goal says "per market."** rev.9's flat process list could not
    answer "who is R/A/C/I for **market D**" for a multi-domain function (Legal touches ATS, HCM, and LMS;
    Human Resources with roll-up spans four domains). The market disappeared into one undifferentiated list.
@@ -80,8 +80,8 @@ lookup. The next review succeeds when:
 - A consumer or contributor function with no own, no descendant, and no owner-anchored seam actor reads as
   **honestly empty** (`raci: []`). Empty is the Phase-2 backlog signal, and a cross-functional persona can
   no longer fill it by accident (finding 3 is closed by the owner-anchored seam rule in §3).
-- The classification and write model in Phase 2 are sized to the 6 consumer edges that actually need work,
-  and Phase 2's realized test agrees with Phase 1's reveal: an edge that reads empty in the reveal is an
+- The classification and write model in Phase 2 are sized to the 6 consumer relationships that actually need work,
+  and Phase 2's realized test agrees with Phase 1's reveal: a relationship that reads empty in the reveal is an
   open question in the resolver, never both empty and realized.
 
 ## 1. Two phases, in this order
@@ -91,13 +91,13 @@ Deterministic, one committed file, no catalog writes, no resolver. It exposes wh
 (the new result rev.8 never produced) and makes every Phase-2 gap legible as an empty cell. Ship it first
 and review it on its own.
 
-**Phase 2 (fill the gaps): a small committed resolver for the unrealized edges.** Only after Phase 1 shows
-where the holes are. On today's data this is 6 consumer edges; each resolves to a single uniform terminal
+**Phase 2 (fill the gaps): a small committed resolver for the unrealized relationships.** Only after Phase 1 shows
+where the holes are. On today's data this is 6 consumer relationships; each resolves to a single uniform terminal
 (arbitration), so Phase 2's first run authors zero fabricated rows and surfaces a handful of plain-language
 questions, and its realized test is the same owner-anchored test the reveal uses.
 
 Phase 1 is the load-bearing change for the user's goal. Phase 2 only stops the revealed view from leaving
-the consumer edges silently empty.
+the consumer relationships silently empty.
 
 ## 2. Phase 1: the emitter change (committed, exact)
 
@@ -116,7 +116,7 @@ semantics, useful on its own), and **add** the authoritative actor list:
 type FunctionRaciRef = {
   domain: string;          // the market this row is attributed to (a domain the function declares)
   responsibility: string;  // the function's responsibility on that domain: owner | contributor | consumer
-  persona: string;         // role_code of the actor
+  persona: string;         // persona_code of the actor
   persona_via: string;     // own | descendant | seam (how the actor relates to this function)
   process_key: string;
   process_name: string;
@@ -136,7 +136,7 @@ list.
 
 In the `functionsOut` builder ([lines 769-804](../scripts/emit_domain_map.ts#L769-L804)), build the
 effective actor set as the union of three sources, **keyed by `role_id`** so the RACI map is reachable
-(rev.9 keyed `personaCodesByFunction` by `role_code`, [lines 762-768](../scripts/emit_domain_map.ts#L762-L768),
+(rev.9 keyed `personaCodesByFunction` by `persona_code`, [lines 762-768](../scripts/emit_domain_map.ts#L762-L768),
 which cannot reach `raciProcessesByPersona`):
 
 - **own** (`persona_via: "own"`): personas with `business_function_id == fn.id`.
@@ -177,12 +177,12 @@ letter)` in `raciProcessesByPersona.get(e.role_id)`:
    descendant actors, `declaredDomains` is every domain the subtree declares (owner / contributor /
    consumer). For seam actors, restrict to the **owned** domain(s) that anchored the attachment.
 2. For each `D` in `markets`, emit one `FunctionRaciRef` with `domain = D.code`, `responsibility =
-   resp(fn-subtree, D)`, `persona = e.role_code`, `persona_via`, the process key and name, and the RACI
+   resp(fn-subtree, D)`, `persona = e.persona_code`, `persona_via`, the process key and name, and the RACI
    letter.
 3. If `markets` is empty for an **own or descendant** actor (the actor has RACI on a process attributed to
    no domain the function declares), emit a single row with `domain: "(undeclared)"` and log it: this is a
    real anomaly, a persona doing work in a market the function does not declare, i.e. a missing
-   `business_function_domains` edge worth surfacing, never a silent drop.
+   `business_function_domains` relationship worth surfacing, never a silent drop.
 
 Dedup rows by `(domain, persona, process_key, raci)`. Sort as in §2.1. `personas[]` stays the literal own
 members. A function with no own, no descendant, and no seam actor gets `raci: []`.
@@ -219,14 +219,14 @@ D1 changes which rows appear, not whether the field exists or whether it is self
 A committed script at **`scripts/analytics/b9e_resolver.ts`** (TypeScript, run with `bun` from the project
 root; never `.tmp_deploy/`). It is the deliverable, not a spec. It does only what the revealed empty cells
 require, and its realized test is the **same owner-anchored test** the reveal uses (§2.2), so the two
-phases never disagree about an edge.
+phases never disagree about a relationship.
 
-**Inputs (read-only):** `business_function_domains`, `process_raci` (read `actor_skill_id` so skill-R is
+**Inputs (read-only):** `business_function_domains`, `process_raci` (read `skill_id` so skill-R is
 visible), `handoffs` + `handoff_processes`, `data_object_lifecycle_states` (the gated predicate),
-`data_objects.entity_type` (REFERENCE-READ), `domain_roles` + `role_modules` (reach), and the
+`data_objects.entity_type` (REFERENCE-READ), `personas` + `persona_modules` (reach), and the
 `domain_module_data_objects` mastery used to resolve the owner.
 
-**Per edge `(F, D, resp)`, in order:**
+**Per relationship `(F, D, resp)`, in order:**
 
 1. **REALIZED already** (the reveal shows a non-empty `raci[]` for this market on this function): no
    action. Owner uses B9d's R/A-only helpers; consumer uses a four-letter check that reads C and I and both
@@ -236,11 +236,11 @@ visible), `handoffs` + `handoff_processes`, `data_object_lifecycle_states` (the 
    realizing persona and the delivering inbound handoff both already exist. Author the single unambiguous
    `process_raci` row directly as additive (Rule #21), idempotency-keyed (§6), with a one-line owner-visible
    note. This is the only direct-write path.
-4. **Everything else is one question.** No connecting handoff, unbuilt owner, ambiguous persona, or an
-   over-declared edge all resolve to a single plain-language arbitration/deferral question on the owner
+4. **Everything else is one question.** No handoff between them, unbuilt owner, ambiguous persona, or an
+   over-declared relationship all resolve to a single plain-language arbitration/deferral question on the owner
    function, rendered by reusing `b9d_resolver.ts`'s `renderOrphanQ` + the `BANNED`/`lintHuman` gate
    ([b9d_resolver.ts:264-272, 406-457](../scripts/analytics/b9d_resolver.ts#L264-L457)) so it is lingo-free
-   by construction. On today's data all 6 consumer edges land here (no inbound handoff to a domain the
+   by construction. On today's data all 6 consumer relationships land here (no inbound handoff to a domain the
    consuming function owns; the consuming functions own no released domain), so the first run authors zero
    rows and emits at most a handful of questions, which is the honest, proportionate result, and it matches
    the reveal showing those same six functions empty.
@@ -256,10 +256,10 @@ predicate; verified). On the consumed gated D-process(es):
 | `resp` | REALIZED when | actor scope |
 |--------|---------------|-------------|
 | **owner** | >=1 **A** AND >=1 **R** | **A** must be a persona of **F** at the process's grain; **R** may be anyone (descendant, an owner-anchored seam persona, or a skill actor) |
-| **contributor** | >=1 **R**, OR >=1 **C** with `consultation_blocking=true` | persona of **F**/descendant, or an owner-anchored seam persona on the edge's handoff chain |
+| **contributor** | >=1 **R**, OR >=1 **C** with `consultation_blocking=true` | persona of **F**/descendant, or an owner-anchored seam persona on the relationship's handoff chain |
 | **consumer** | an actual `process_raci` **I** (or non-blocking **C**) row on a persona of F/descendant or an owner-anchored seam persona, on a process with a producing R+A, warranted by an inbound `handoffs` row (D -> a domain a function in F's subtree owns) carrying the payload; OR a REFERENCE-READ | the I/C actor is a persona of F/descendant or an owner-anchored seam persona; the handoff is the **precondition** that warrants the row, never a substitute for it |
 
-A consumer edge is REALIZED only on an **actual `process_raci` I/C row**, never on a structural edge alone,
+A consumer relationship is REALIZED only on an **actual `process_raci` I/C row**, never on a structural relationship alone,
 and the seam actor must be **owner-anchored** to the domain the function's subtree owns, the same rule the
 reveal uses (so a consumer function that owns no released domain can never read realized in either phase).
 No inbound handoff means over-declared, which is arbitration (the anti-fiasco case), never a fabricated
@@ -273,11 +273,11 @@ I-row. The catalog stores no `trigger_event`->persona/function FK and no `webhoo
 Two consequences:
 
 1. **Idempotency.** Before any `process_raci` INSERT, SELECT on the composite natural key
-   **`(process_id, actor_role_id` or `actor_skill_id, raci)`** (exactly one actor FK non-null per the
+   **`(process_id, persona_id` or `skill_id, raci)`** (exactly one actor FK non-null per the
    `exactly_one_actor` constraint) and no-op if present. **`consultation_blocking` is NOT in the key**: it
    is an attribute of a consulted fact, not an identity axis (the platform's own `process_raci_label` omits
    it), so keying on it would let two contradictory C rows (blocking and advisory) both insert instead of
-   no-oping. The same SELECT-then-INSERT guards `role_modules` reach writes on `(role_id,
+   no-oping. The same SELECT-then-INSERT guards `persona_modules` reach writes on `(persona_id,
    domain_module_id)`. A second run produces zero new rows. There is no DB unique constraint on
    `process_raci`, so this is enforced caller-side, in the resolver, by code (not a comment).
 2. **Review handle.** Since the row cannot carry `record_status='new'`, each directly-authored row gets a
@@ -286,7 +286,7 @@ Two consequences:
    a table with no status to quarantine.
 
 Direct authoring is limited to §4 step 3 (the unambiguous, built-owner case). Every other case is a
-question. Destructive steps (dropping or re-pointing an edge) always need sign-off (Rule #1).
+question. Destructive steps (dropping or re-pointing a relationship) always need sign-off (Rule #1).
 
 ## 7. Schema facts (carried from rev.9, re-verified)
 
@@ -314,8 +314,8 @@ question. Destructive steps (dropping or re-pointing an edge) always need sign-o
   proof), not a one-line mention. State that the per-function reveal is produced by the emitter, carries
   the persona-process-RACI triple per market, and that B9e's job is to fill its empty cells with the same
   owner-anchored realized test.
-- **`references/roles.md`**: §5/§7, contributor/consumer realized as `process_raci` C/I on the consumed
-  D-process, authored per the §6 write model; correct the §5 line ([roles.md:82](../.claude/skills/domain-map-analyst/references/roles.md#L82))
+- **`references/personas.md`**: §5/§7, contributor/consumer realized as `process_raci` C/I on the consumed
+  D-process, authored per the §6 write model; correct the §5 line ([personas.md:82](../.claude/skills/domain-map-analyst/references/personas.md#L82))
   that still says I realizes via `trigger_event`/`webhook_receiver` (those do not exist in `domain_map`).
 - **`references/skill-changelog.md`**: B9e as the per-function reveal (the triple, per market) plus a
   minimal owner-anchored gap-filler; record the rev.9 goal-vs-design contradiction, the split-set
@@ -338,7 +338,7 @@ question. Destructive steps (dropping or re-pointing an edge) always need sign-o
    --consumer--> ATS` must land in §4 step 4 (one arbitration question), never a fabricated I-row, and must
    match the Phase-1 reveal showing Finance empty. Assert the question passes the `lintHuman` ban gate.
 4. **Pilot Phase 2 on 2-3 released domains**: `--write`, then re-run and confirm **zero new
-   `process_raci`/`role_modules` rows** (idempotency proven) and that each authored row appears in the
+   `process_raci`/`persona_modules` rows** (idempotency proven) and that each authored row appears in the
    per-function reveal after re-emitting.
 5. **Roll out**, then confirm §10.
 
@@ -356,16 +356,16 @@ question. Destructive steps (dropping or re-pointing an edge) always need sign-o
   domain read `raci: []`, so the empty cell is a true Phase-2 signal, not masked by a borrowed actor.
 - **Realizations are visible per function.** Every row Phase 2 authors, including on descendant and
   owner-anchored seam personas, appears under the declaring function and its market after re-emit.
-- **Phase 2 is proportionate, honest, and agrees with Phase 1.** Every released edge resolves to REALIZED,
+- **Phase 2 is proportionate, honest, and agrees with Phase 1.** Every released relationship resolves to REALIZED,
   REFERENCE-READ, a single direct-authored unambiguous row, or one plain-language question, using the same
-  owner-anchored realized test as the reveal; no edge is empty in the reveal yet realized in the resolver.
+  owner-anchored realized test as the reveal; no relationship is empty in the reveal yet realized in the resolver.
   No bucket or cross-check exists with zero rows to run against. The committed resolver exists at
   `scripts/analytics/b9e_resolver.ts` (not `.tmp_deploy/`).
-- **Idempotency proven.** A second Phase-2 pass authors zero new `process_raci`/`role_modules` rows (the §6
+- **Idempotency proven.** A second Phase-2 pass authors zero new `process_raci`/`persona_modules` rows (the §6
   key, without `consultation_blocking`, holds).
 - **Anti-fiasco holds.** `Finance --consumer--> ATS` resolves to one arbitration question, never a
   fabricated row, and reads empty in the reveal.
-- **No report-only.** Every released edge lands in a grounded terminal; questions are authored to the owner
+- **No report-only.** Every released relationship lands in a grounded terminal; questions are authored to the owner
   function, never deferred as a to-do.
 
 ## 11. What rev.10 deferred, and when to add it back
@@ -373,7 +373,7 @@ question. Destructive steps (dropping or re-pointing an edge) always need sign-o
 Deliberately not built now, because there is no data for it: the 7-bucket MECE classifier, the X1/X2/X3
 canonical-derivation cross-checks, the CONFIRMED/DIVERGENT split, and the override-with-date terminal.
 These all operate on **already-realized** consumer rows, and consumer realization is 0/6 today, so they
-would be dead code. Add them back the first time a consumer edge gains a **built realizer** (a function in
+would be dead code. Add them back the first time a consumer relationship gains a **built realizer** (a function in
 the consuming function's subtree owns a released domain and authors a real I-row): at that point there is a
 realized row to cross-check, and the divergence machinery earns its place. Building it before then is
 exactly the rev.8 mistake. The same discipline applies to the `persona_via` set: if a future released

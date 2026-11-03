@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 7 master data_objects (skill_taxonomies, skills, competency_models, skill_profiles, skill_assessments, skill_endorsements, skill_inference_runs) + 2 embedded_master (employees, job_profiles) + 4 contributor/consumer (performance_goals, skills_gap_analyses, learner_certifications, course_enrollments) across 2 full modules (SKILLS-MGMT-TAXONOMY, SKILLS-MGMT-PROFILE). 8 capabilities. 12 solutions (5 primary, 7 secondary). 0 regulations. 1 outbound + 11 inbound handoffs. 0 roles. 2 system skills + 29 skill_tools links.
+- Current footprint: 7 master data_objects (skill_taxonomies, skills, competency_models, skill_profiles, skill_assessments, skill_endorsements, skill_inference_runs) + 2 embedded_master (employees, job_profiles) + 4 contributor/consumer (performance_goals, skills_gap_analyses, learner_certifications, course_enrollments) across 2 full modules (SKILLS-MGMT-TAXONOMY, SKILLS-MGMT-PROFILE). 8 capabilities. 12 solutions (5 primary, 7 secondary). 0 regulations. 1 outbound + 11 inbound handoffs. 0 roles. 2 system skills + 29 skill_tools relationships.
 - Vendor-surface basis: Lightcast Open Skills (open ontology specialist), TechWolf Skills Engine (inference specialist), SkyHive Quantum Labor Market (labor-market-data anchored), Reejig Workforce Intelligence (ethics + skills-graph), 365Talents Skills Platform (European inference specialist). Diversified suites referenced as secondary basis only: Workday Skills Cloud, SAP SuccessFactors Talent Intelligence Hub, Cornerstone Skills Graph, Oracle Dynamic Skills, Eightfold, Gloat, Fuel50.
 - Domain Semantius score (strict, across both modules): (13 + 14) / (13 + 16) = 27 / 29 = approximately 93.1%. Non-platform tools driving the 2-tool gap: `run_skill_inference` (compute, external, required on SKILLS-MGMT-PROFILE) and `compute_skills_gap` (compute, external, required on SKILLS-MGMT-PROFILE). Inference + gap-compute are the entire reason the module exists as a runtime substrate; both being external is structurally fine for now, but worth tracking as a future platform-coverage target.
 - **Bucket 1 (in-scope, agent fixable):** 11 items.
@@ -13,7 +13,7 @@
 
 Structural pass: A1-A3 / M1-M7 / B1-B8 / B10 / C1-C2 / F1-F5 / F7 pass. A4, B9, B9b, B10b, B11 partial, B12 partial, E1, H1 fail. M7 catalog-wide single-master integrity holds for every SKILLS-MGMT master. The H-band is the largest single finding by item count.
 
-Vendor-surface basis chosen pure-play first (Lightcast, TechWolf, SkyHive, Reejig, 365Talents) so the surface matrix reflects what a buyer evaluating a specialist skills-engine sees, not what a diversified HCM suite bundles. Suite solutions stay as secondary linkage on `solution_domains`.
+Vendor-surface basis chosen pure-play first (Lightcast, TechWolf, SkyHive, Reejig, 365Talents) so the surface matrix reflects what a buyer evaluating a specialist skills-engine sees, not what a diversified HCM suite bundles. Suite solutions stay as secondary relationship on `solution_domains`.
 
 ### Bucket 1 - In-scope confirmed gaps
 
@@ -34,7 +34,7 @@ Vendor-surface basis chosen pure-play first (Lightcast, TechWolf, SkyHive, Reeji
 | ID | Entity | Proposed module | Vendor evidence | Notes |
 |---|---|---|---|---|
 | B1-M1 | `skill_proficiency_levels` | SKILLS-MGMT-TAXONOMY | Lightcast, TechWolf, SkyHive, Reejig, 365Talents (5 / 5) | Controlled vocabulary for proficiency scale (Novice-Expert, 1-5, Beginner-Master). Today `skill_assessments` carries a numeric rating with no row table to anchor the scale or per-taxonomy override. Universal pure-play entity. |
-| B1-M2 | `skill_relationships` | SKILLS-MGMT-TAXONOMY | Lightcast (parent / related / equivalent), TechWolf (graph edges), SkyHive (cluster), Reejig (related-to), 365Talents (parent / child / synonym) (5 / 5) | Edge table on the skills ontology itself: parent / child / related / equivalent / merged-into. Today `data_object_relationships` carries an intra-row relationship between `skills` (1268, 1269, 1270) at the conceptual schema layer but no per-row taxonomy edges. Universal pure-play entity; the ontology cannot be navigated without it. |
+| B1-M2 | `skill_relationships` | SKILLS-MGMT-TAXONOMY | Lightcast (parent / related / equivalent), TechWolf (graph edges), SkyHive (cluster), Reejig (related-to), 365Talents (parent / child / synonym) (5 / 5) | Relationship table on the skills ontology itself: parent / child / related / equivalent / merged-into. Today `data_object_relationships` carries an intra-row relationship between `skills` (1268, 1269, 1270) at the conceptual schema layer but no per-row taxonomy relationships. Universal pure-play entity; the ontology cannot be navigated without it. |
 
 #### STRUCTURAL band failures
 
@@ -44,8 +44,8 @@ Vendor-surface basis chosen pure-play first (Lightcast, TechWolf, SkyHive, Reeji
 | B1-S2 | B9 | Six published / workflow-bearing lifecycle states have NO matching `trigger_events` row. States missing events: `skill_taxonomies.active` (state_order 2), `skill_taxonomies.deprecated` (3), `competency_models.published` (2), `competency_models.archived` (3), `skill_profiles.validated` (3), `skill_profiles.inactive` (4), plus the `skill_assessments.completed` (state 2) terminal which a downstream consumer (gap analytics, profile refresh) needs as a fire. Today only `skill_profile.updated` (id 440) exists. | Draft 7 missing trigger_events: `skill_taxonomy.activated`, `skill_taxonomy.deprecated`, `competency_model.published`, `competency_model.archived`, `skill_profile.validated`, `skill_profile.deactivated`, `skill_assessment.completed`. Then chain B1-S3 (B9b intra-domain handoffs) on top. |
 | B1-S3 | B9b | Zero intra-domain `handoffs` rows between SKILLS-MGMT-TAXONOMY (173) and SKILLS-MGMT-PROFILE (174), despite the cross-module relationship `skill_profiles assessed against competency_models` (row 1275) and the PROFILE module consuming `skill_taxonomies` / `competency_models`. When TAXONOMY publishes a new active taxonomy or a competency-model version, PROFILE has no event signaling it should re-run inference or revalidate profiles against the new substrate. Same for `competency_model.archived` (in-flight profiles need re-mapping or archival). | Once B1-S2 events are loaded, draft 4 intra-domain handoffs: `skill_taxonomy.activated` (173 -> 174), `skill_taxonomy.deprecated` (173 -> 174), `competency_model.published` (173 -> 174), `competency_model.archived` (173 -> 174); all `integration_pattern: lifecycle_progression`, `friction_level: low`, `source_domain_id = target_domain_id = 169`. |
 | B1-S4 | B12 | Two `master + required` data_objects have ZERO lifecycle states: `skill_endorsements` (id 856, master in SKILLS-MGMT-PROFILE) and `skill_inference_runs` (id 858, master in SKILLS-MGMT-PROFILE). Endorsements have a real workflow (requested -> issued -> revoked) and inference runs have a job-execution workflow (queued -> running -> completed / failed). Neither is config-shaped. | Draft lifecycle states: `skill_endorsements`: requested (initial) -> issued (workflow-gate `endorse_skill`) -> revoked (workflow-gate `revoke_endorsement`, terminal). `skill_inference_runs`: queued (initial) -> running -> completed (terminal) / failed (terminal). Annotate `domain_module_id = 174` on every gate. |
-| B1-S5 | B7 | Three masters with user-typed actors lack explicit `users` edges in `data_object_relationships`: `skill_taxonomies` (curator / publisher), `skills` (created_by / curator on the ontology row), `skill_inference_runs` (initiated_by, when manually triggered). Rule #10 requires these recorded against `users` (id 748). Existing edges cover `skill_profiles`, `skill_assessments`, `skill_endorsements`, `competency_models` only. | Author 3 edges, owner_side=source, kind=reference: users -> skill_taxonomies (verb `curates`), users -> skills (verb `authors`), users -> skill_inference_runs (verb `initiates`). All `is_required=false` (most inference runs are scheduled, not manually initiated). |
-| B1-S6 | E1 | Zero roles authored for SKILLS-MGMT despite the domain having 2 modules and 8 capabilities. Multi-module domains under Rule #14 must satisfy E1's >= 3 roles threshold across roles whose `role_modules` touch SKILLS-MGMT modules. Today: 0 rows in `role_modules` for module 173 or 174. | Draft 3 function-scoped roles: `TALENT-DEV-SKILL-ARCHITECT` (touches both modules, owns ontology authoring; primary on 173, secondary on 174), `TALENT-DEV-SKILL-ANALYST` (consumes inference runs and gap analyses; primary on 174), and cross-functional `MANAGER` extension (secondary on 174 for skill-profile validate gate). Each role: >= 2 role_modules entries (already satisfied for SKILL-ARCHITECT and SKILL-ANALYST since both touch 173 / 174). Role bundles: tier-level `:read` and `:manage` per module plus targeted workflow gates (`activate_taxonomy`, `publish_competency_model`, `validate`). |
+| B1-S5 | B7 | Three masters with user-typed actors lack explicit relationships to `users` in `data_object_relationships`: `skill_taxonomies` (curator / publisher), `skills` (created_by / curator on the ontology row), `skill_inference_runs` (initiated_by, when manually triggered). Rule #10 requires these recorded against `users` (id 748). Existing relationships cover `skill_profiles`, `skill_assessments`, `skill_endorsements`, `competency_models` only. | Author 3 relationships, owner_side=source, kind=reference: users -> skill_taxonomies (verb `curates`), users -> skills (verb `authors`), users -> skill_inference_runs (verb `initiates`). All `is_required=false` (most inference runs are scheduled, not manually initiated). |
+| B1-S6 | E1 | Zero roles authored for SKILLS-MGMT despite the domain having 2 modules and 8 capabilities. Multi-module domains under Rule #14 must satisfy E1's >= 3 roles threshold across roles whose `persona_modules` touch SKILLS-MGMT modules. Today: 0 rows in `persona_modules` for module 173 or 174. | Draft 3 function-scoped roles: `TALENT-DEV-SKILL-ARCHITECT` (touches both modules, owns ontology authoring; primary on 173, secondary on 174), `TALENT-DEV-SKILL-ANALYST` (consumes inference runs and gap analyses; primary on 174), and cross-functional `MANAGER` extension (secondary on 174 for skill-profile validate gate). Each role: >= 2 persona_modules entries (already satisfied for SKILL-ARCHITECT and SKILL-ANALYST since both touch 173 / 174). Role bundles: tier-level `:read` and `:manage` per module plus targeted workflow gates (`activate_taxonomy`, `publish_competency_model`, `validate`). |
 
 #### BOUNDARY
 
@@ -92,7 +92,7 @@ Provenance note: every confident row above uses `proposal_source='agent_curated'
 
 4. **Embedded-master + consumer optional necessity flip (B1-B2).** `course_enrollments` (DMDO 918) and `learner_certifications` (DMDO 917) are today `contributor + required` on SKILLS-MGMT-PROFILE. Rule #16 says infrastructure-shape externals stay `optional` on non-master rows. PROFILE can degrade to assessment-only (no LMS feed) for SMBs. User picks: (a) flip both to `optional` (consistent with rule), (b) keep `required` because the inference pipeline is documented to require an LMS feed for any meaningful skill rollup (today's likely intent). Independent of Bucket 3.
 
-5. **MISSING entities scope split.** The two confirmed MISSING entities (`skill_proficiency_levels`, `skill_relationships`) clearly belong in SKILLS-MGMT-TAXONOMY. The Bucket 3 speculative list adds 6 more potential entities; if the user approves Bucket 1 MISSING items and Bucket 3 vetting later produces 3-4 additional masters, SKILLS-MGMT-TAXONOMY could end up holding 6 to 8 masters and warrant a sub-module split (e.g. `SKILLS-MGMT-ONTOLOGY-VERSIONING` for taxonomy / model versioning). Decide now: keep 2-module shape, or pre-commit to a potential third module shaped around taxonomy versioning + ontology edges? Has a Bucket 3 dependency: the splitting decision is informed by which speculative entities land.
+5. **MISSING entities scope split.** The two confirmed MISSING entities (`skill_proficiency_levels`, `skill_relationships`) clearly belong in SKILLS-MGMT-TAXONOMY. The Bucket 3 speculative list adds 6 more potential entities; if the user approves Bucket 1 MISSING items and Bucket 3 vetting later produces 3-4 additional masters, SKILLS-MGMT-TAXONOMY could end up holding 6 to 8 masters and warrant a sub-module split (e.g. `SKILLS-MGMT-ONTOLOGY-VERSIONING` for taxonomy / model versioning). Decide now: keep 2-module shape, or pre-commit to a potential third module shaped around taxonomy versioning + ontology relationships? Has a Bucket 3 dependency: the splitting decision is informed by which speculative entities land.
 
 6. **Alias gap on bare-ontology masters.** `skill_taxonomies`, `skills`, `skill_assessments`, `skill_endorsements`, `skill_inference_runs` have no `data_object_aliases` rows. The bare-noun masters (`skills`) and assessment-shaped masters (`skill_assessments`) are reasonably self-explanatory; `skill_taxonomies` has industry synonyms (`skills ontology`, `competency framework`). User picks which (if any) to alias. Recommended: `skill_taxonomies` -> alias `skills ontology`, alias_type `synonym`; rest stay un-aliased. Independent of Bucket 3.
 
@@ -135,9 +135,9 @@ These are NOT this domain's audit blockers. They surface during this pass so the
 
 ### Pass 3 - Neighbor discovery
 
-Neighbor set auto-discovered from `handoffs` (in / out) and cross-domain DMDO + relationship edges. Ranked by combined edge weight (handoffs + dependencies).
+Neighbor set auto-discovered from `handoffs` (in / out) and cross-domain DMDO + relationships. Ranked by combined relationship weight (handoffs + dependencies).
 
-| Neighbor | Inbound handoffs | Outbound handoffs | DMDO / relationship edges | Edge weight | Pass 4 depth |
+| Neighbor | Inbound handoffs | Outbound handoffs | DMDO / relationships | Relationship weight | Pass 4 depth |
 |---|---|---|---|---|---|
 | LMS | 7 (1079, 1080, 1287, 1288, 1295, 1307, 1315) | 0 | course_enrollments / learner_certifications contributor; LMS-PATHS consumes skill_profiles | 9 | full 4-leg |
 | HCM | 1 (388) | 0 | employees / job_profiles embedded_master; HCM-LIFECYCLE-WORKFLOWS consumes skill_profiles | 5 | full 4-leg |
@@ -147,9 +147,9 @@ Neighbor set auto-discovered from `handoffs` (in / out) and cross-domain DMDO + 
 | PA | 1 (1106) | 0 | none beyond the handoff | 1 | summary only |
 | ATS | 0 | 0 | 1 relationship (skill_profiles feeds candidates) | 1 | summary only |
 
-### Pass 4 - Pairwise reconciliation per neighbor (edge weight >= 3)
+### Pass 4 - Pairwise reconciliation per neighbor (relationship weight >= 3)
 
-#### SKILLS-MGMT <-> LMS (edge weight 9)
+#### SKILLS-MGMT <-> LMS (relationship weight 9)
 
 1. **Existing handoffs, fully wired.** 1079, 1080, 1287, 1288, 1295, 1315 (6 rows). All carry both module FKs. Sanity check pass.
 2. **Existing handoffs with NULL module FK.** 1307 — see B1-B1 / Bucket 2 item 3 (DELETE candidate).
@@ -159,7 +159,7 @@ Neighbor set auto-discovered from `handoffs` (in / out) and cross-domain DMDO + 
 
 Verdict: clean except handoff 1307 (Bucket 2 item 3).
 
-#### SKILLS-MGMT <-> HCM (edge weight 5)
+#### SKILLS-MGMT <-> HCM (relationship weight 5)
 
 1. **Existing handoffs, fully wired.** 388 (HCM job_profile.published -> SKILLS-MGMT-PROFILE). Sanity-check pass.
 2. **Existing handoffs with NULL module FK.** None.
@@ -169,7 +169,7 @@ Verdict: clean except handoff 1307 (Bucket 2 item 3).
 
 Verdict: clean on SKILLS-MGMT's side. HCM has 3 outbound handoff gaps (`employee.hired / role_changed / terminated`) reported above.
 
-#### SKILLS-MGMT <-> TALENT-MGMT (edge weight 5)
+#### SKILLS-MGMT <-> TALENT-MGMT (relationship weight 5)
 
 1. **Existing handoffs, fully wired.** 432 (SKILLS-MGMT -> TALENT-MGMT skill_profile.updated), 440 (TALENT-MGMT -> SKILLS-MGMT performance_goal.set). Both wired.
 2. **Existing handoffs with NULL module FK.** None.
@@ -179,7 +179,7 @@ Verdict: clean on SKILLS-MGMT's side. HCM has 3 outbound handoff gaps (`employee
 
 Verdict: clean on SKILLS-MGMT's side. 1-2 TALENT-MGMT outbound candidates reported above.
 
-#### SKILLS-MGMT <-> TLNT-INTEL (edge weight 5)
+#### SKILLS-MGMT <-> TLNT-INTEL (relationship weight 5)
 
 1. **Existing handoffs, fully wired.** ZERO handoff rows in either direction, despite TLNT-INTEL holding three `consumer + required` DMDOs on skill_profiles / competency_models / skill_taxonomies. **This is the most material pairwise finding.**
 2. **Existing handoffs with NULL module FK.** N/A.
@@ -221,7 +221,7 @@ Subagent pass applying truly-technical B1 items only; judgment items deferred. L
 
 | Fix | Type | Count | Detail |
 |---|---|---|---|
-| B1-S5 | INSERT data_object_relationships (user-edges per Rule #10) | 3 | ids 1556 (users -> skill_taxonomies, `curates`), 1557 (users -> skills, `authors`), 1558 (users -> skill_inference_runs, `initiates`); all `is_required=false`, `owner_side=source`, `relationship_kind=reference` |
+| B1-S5 | INSERT data_object_relationships (relationships to `users` per Rule #10) | 3 | ids 1556 (users -> skill_taxonomies, `curates`), 1557 (users -> skills, `authors`), 1558 (users -> skill_inference_runs, `initiates`); all `is_required=false`, `owner_side=source`, `relationship_kind=reference` |
 | B1-B2 | PATCH domain_module_data_objects.necessity (Rule #16) | 2 | DMDO 917 (learner_certifications) and 918 (course_enrollments): `required` -> `optional` on SKILLS-MGMT-PROFILE (module 174). DMDO 919 (performance_goals) was already `optional`, no PATCH |
 | B1-H1 | INSERT handoff_processes (agent_curated, audit pre-specified) | 9 | handoff ids 388, 432, 440, 456, 1079, 1080, 1106, 1288, 1295 mapped to PCF process ids 1036, 1033, 226, 1038, 1033, 1873, 1038, 1033, 1873; `proposal_source='agent_curated'`, `record_status='new'`. Resulting handoff_processes ids 331-339 |
 
@@ -233,7 +233,7 @@ Subagent pass applying truly-technical B1 items only; judgment items deferred. L
 | B1-S2 | New trigger_events entities; pre-specified set of 7 but creating new event rows + their downstream chain is judgment-shaped authoring, not a derivable PATCH |
 | B1-S3 | Gated on B1-S2 (intra-domain handoffs depend on the 7 new events existing first) |
 | B1-S4 | New data_object_lifecycle_states + workflow-gate permissions; non-trivial state-machine authoring (requested/issued/revoked, queued/running/completed/failed). Defer to user |
-| B1-S6 | New roles authoring (3 function-scoped roles + role_modules + role_permissions); user-judgment territory |
+| B1-S6 | New roles authoring (3 function-scoped roles + persona_modules + role_permissions); user-judgment territory |
 | B1-B1 | Handoff 1307 disposition surfaced as Bucket 2 item 3 ("user picks (a) DELETE vs (b) PATCH-and-keep") |
 | Bucket 2 item 2 | Permission prefix rename (`skills-mgmt:validate_skill_profile` etc.) is in Bucket 2 surface-for-user (audit recommends but does not pre-resolve options (a) vs (b)) |
 | Bucket 2 item 6 | Alias gap surfaced as user-judgment ("user picks which (if any) to alias") |
@@ -244,7 +244,7 @@ None during this pass.
 
 ### Re-audit recommendation
 
-H1 now passes for 9 of 12 cross-domain handoffs (75% coverage); the 3 unresolved are handoff 1307 (Bucket 2 item 3 DELETE/PATCH decision) and the 2 LMS content-publication events (1287, 1315) flagged for Discover Pass 3 custom-process authoring. B7 closes for SKILLS-MGMT (`skill_taxonomies`, `skills`, `skill_inference_runs` now carry the missing Rule #10 user-edges). B2/B12 unchanged.
+H1 now passes for 9 of 12 cross-domain handoffs (75% coverage); the 3 unresolved are handoff 1307 (Bucket 2 item 3 DELETE/PATCH decision) and the 2 LMS content-publication events (1287, 1315) flagged for Discover Pass 3 custom-process authoring. B7 closes for SKILLS-MGMT (`skill_taxonomies`, `skills`, `skill_inference_runs` now carry the missing Rule #10 relationships to `users`). B2/B12 unchanged.
 
 ## 2026-05-31, Audit
 
@@ -252,14 +252,14 @@ H1 now passes for 9 of 12 cross-domain handoffs (75% coverage); the 3 unresolved
 
 - Re-audit run after the 2026-05-31 continuation pass. Many B1 items were applied; new structural state revealed via fresh queries.
 - Current footprint: 7 master data_objects (skill_taxonomies, skills, competency_models, skill_profiles, skill_assessments, skill_endorsements, skill_inference_runs) + 2 embedded_master (employees, job_profiles) + 4 contributor / consumer (performance_goals optional, skills_gap_analyses required, learner_certifications optional, course_enrollments optional) + 3 consumer rows on taxonomy entities from the PROFILE module (skill_taxonomies, skills, competency_models), across 2 full modules (SKILLS-MGMT-TAXONOMY id 173, SKILLS-MGMT-PROFILE id 174). 8 capabilities. 12 solutions (5 primary, 7 secondary). 0 regulations. 1 outbound + 11 inbound handoffs (12 cross-domain total). 0 intra-domain handoffs. 0 domain-specific catalog roles (only platform Administrator role_id=2 holds the 12 SKILLS-MGMT permissions).
-- Lifecycle states now exist for skill_taxonomies (3: draft / active / deprecated), competency_models (3: draft / published / archived), skill_profiles (4: initialized / self_assessed / validated / inactive), and skill_assessments (3: pending / completed / cancelled). Zero states still on skill_endorsements (856) and skill_inference_runs (858). 12 permissions on the 173 + 174 modules (3 baseline each + 6 workflow gates).
+- Lifecycle states now exist for skill_taxonomies (3: draft / active / deprecated), competency_models (3: draft / published / archived), skill_profiles (4: initialized / self_assessed / validated / inactive), and skill_assessments (3: pending / completed / canceled). Zero states still on skill_endorsements (856) and skill_inference_runs (858). 12 permissions on the 173 + 174 modules (3 baseline each + 6 workflow gates).
 - 9 / 12 handoffs carry agent_curated handoff_processes rows. 3 unresolved: 1287 / 1315 (LMS content-publication, no clean PCF) and 1307 (NULL target_module, duplicate-of-1295 DELETE candidate). Catalog quality = 0 approved out of 9 tagged; process health = 9 / 12 agent_curated.
 - Strict Semantius score across both modules: 25 / 27 = approximately 92.6%. Same 2-tool gap as prior audit: run_skill_inference (tool 1522, compute, external) and compute_skills_gap (tool 1523, compute, external), both required on skill 247 (SKILLS-MGMT-PROFILE). Operational score same (no integration-tier tools).
 - Bucket 1 (in-scope, agent fixable): 8 items.
 - Bucket 2 (surface-for-user, judgment): 6 items.
 - Bucket 3 (Phase 0 pending, speculative): 8 items.
 
-Structural pass per band: A1-A3 pass; A4 fail (catalog UX empty on domain row); M1-M7 pass; M8 fail (both modules empty on catalog UX); B1-B8 pass; B9 partial (only skill_profile.updated trigger event exists for the 7 published / workflow-bearing states; 6 state-bearing events still missing); B9b fail (zero intra-domain handoffs); B10b pass on outbound, partial on inbound (one inbound handoff 1307 NULL target_module); B11 partial (skill_taxonomies, skill_assessments, skill_endorsements, skill_inference_runs, skills have no aliases; user judgment remaining per prior B2-6); B12 partial (skill_endorsements + skill_inference_runs zero states); C1-C2 pass; D1 not validated; E1-E5 fail (zero catalog roles touching either module); F1-F4 pass; F5 partial (score computable at 92.6%, gap is the 2 external compute tools); F7 pass (only notify_person abstraction linked, no channel primitives); H1 partial (9 / 12 tagged, 0 approved). The H-band approved-count is still 0.
+Structural pass per band: A1-A3 pass; A4 fail (catalog UX empty on domain row); M1-M7 pass; M8 fail (both modules empty on catalog UX); B1-B8 pass; B9 partial (only skill_profile.updated trigger event exists for the 7 published / workflow-bearing states; 6 state-bearing events still missing); B9b fail (zero intra-domain handoffs); B10b pass on outbound, partial on inbound (one inbound handoff 1307 NULL target_module); B11 partial (skill_taxonomies, skill_assessments, skill_endorsements, skill_inference_runs, skills have no aliases; user judgment remaining per prior B2-6); B12 partial (skill_endorsements + skill_inference_runs zero states); C1-C2 pass; D1 not validated; E1-E5 fail (zero catalog roles touching either module); F1-F4 pass; F5 partial (score computable at 92.6%, gap is the 2 external compute tools); F7 pass (only notify_person abstraction related, no channel primitives); H1 partial (9 / 12 tagged, 0 approved). The H-band approved-count is still 0.
 
 ### Vendor surface basis
 
@@ -284,7 +284,7 @@ Same vendor surface as 2026-05-30 audit (Lightcast Open Skills, TechWolf Skills 
 | ID | Entity | Proposed module | Vendor evidence | Notes |
 |---|---|---|---|---|
 | B1-M1 | skill_proficiency_levels | SKILLS-MGMT-TAXONOMY | Lightcast, TechWolf, SkyHive, Reejig, 365Talents (5 / 5) | Controlled vocabulary for proficiency scale. Not loaded |
-| B1-M2 | skill_relationships | SKILLS-MGMT-TAXONOMY | Lightcast, TechWolf, SkyHive, Reejig, 365Talents (5 / 5) | Edge table on ontology (parent / child / related / equivalent / merged). Not loaded |
+| B1-M2 | skill_relationships | SKILLS-MGMT-TAXONOMY | Lightcast, TechWolf, SkyHive, Reejig, 365Talents (5 / 5) | Relationship table on ontology (parent / child / related / equivalent / merged). Not loaded |
 
 #### STRUCTURAL band failures
 
@@ -294,7 +294,7 @@ Same vendor surface as 2026-05-30 audit (Lightcast Open Skills, TechWolf Skills 
 | B1-S2 | B9 / B12 | Six published / workflow-bearing lifecycle states still have NO matching trigger_events row: skill_taxonomies.active (state id 1144), skill_taxonomies.deprecated (1145), competency_models.published (1141), competency_models.archived (1142), skill_profiles.validated (186), skill_profiles.inactive (187). skill_assessments.completed (1138) is terminal and would benefit from a publishing event. Only skill_profile.updated (id 440) exists for the whole domain. | Draft 7 trigger_events with event_category=state_change: skill_taxonomy.activated, skill_taxonomy.deprecated, competency_model.published, competency_model.archived, skill_profile.validated, skill_profile.deactivated, skill_assessment.completed |
 | B1-S3 | B9b | Zero intra-domain handoffs between modules 173 and 174 despite cross-module dependencies (PROFILE has 3 consumer rows on TAXONOMY masters; skill_profiles assessed against competency_models). | Once B1-S2 lands, draft 4 intra-domain handoffs: skill_taxonomy.activated 173 -> 174, skill_taxonomy.deprecated 173 -> 174, competency_model.published 173 -> 174, competency_model.archived 173 -> 174; integration_pattern=lifecycle_progression, friction_level=low |
 | B1-S4 | B12 | Two master + required data_objects still have ZERO lifecycle states: skill_endorsements (856) and skill_inference_runs (858). Endorsements workflow (requested -> issued -> revoked); inference runs workflow (queued -> running -> completed / failed). Neither config-shaped. | Draft state machines + workflow-gate permissions. skill_endorsements: requested (initial) -> issued (gate endorse_skill) -> revoked (gate revoke_endorsement, terminal). skill_inference_runs: queued (initial) -> running -> completed (terminal) / failed (terminal). domain_module_id=174. Gates use skills-mgmt-profile:* prefix per Rule #14 |
-| B1-S5 | E1-E5 | Zero domain-specific catalog roles. Only platform Administrator (role_id 2) bundles the 12 SKILLS-MGMT permissions. Rule #14 floor is 3 roles for a 2-module + 8-capability domain. | Draft 3 function-scoped roles in Talent Development: TALENT-DEV-SKILL-ARCHITECT (173 primary + 174 secondary, owns ontology), TALENT-DEV-SKILL-ANALYST (174 primary, consumes inference + gap), MANAGER cross-functional extension (174 secondary for validate gate). Each role: >= 2 role_modules entries (E2), interaction_level set (E3), role_permissions bundle authored (E4), Path A and Path B agree (E5) |
+| B1-S5 | E1-E5 | Zero domain-specific catalog roles. Only platform Administrator (role_id 2) bundles the 12 SKILLS-MGMT permissions. Rule #14 floor is 3 roles for a 2-module + 8-capability domain. | Draft 3 function-scoped roles in Talent Development: TALENT-DEV-SKILL-ARCHITECT (173 primary + 174 secondary, owns ontology), TALENT-DEV-SKILL-ANALYST (174 primary, consumes inference + gap), MANAGER cross-functional extension (174 secondary for validate gate). Each role: >= 2 persona_modules entries (E2), interaction_level set (E3), role_permissions bundle authored (E4), Path A and Path B agree (E5) |
 
 #### BOUNDARY
 

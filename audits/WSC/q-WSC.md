@@ -5,7 +5,7 @@ Persistent, channel-based team chat with voice and video huddles and governed ex
 
 ---
 
-q1: (answer this first) The cross-domain handoff notes on 10 WSC rows (the 8 outbound rows plus the inbound row 790) carry old auto-written "target NULL until X is modularized" provenance text that the current rules no longer allow. Handoff 790's note is also factually stale after earlier fixes wired its module and consumer link. How should these notes be handled?
+q1: (answer this first) The cross-domain handoff notes on 10 WSC rows (the 8 outbound rows plus the inbound row 790) carry old auto-written "target NULL until X is modularized" provenance text that the current rules no longer allow. Handoff 790's note is also factually stale after earlier fixes wired its module and consumer relationship. How should these notes be handled?
 
 - a) Revert all 10 rows to empty and log a Rule #15 incident entry.
 - b) Leave them in place (you confirm they were approved when first loaded).
@@ -49,12 +49,12 @@ a5:
 
 ---
 
-q6: Microsoft Viva Connections is linked to WSC at coverage_level "partial", but it is an intranet portal product, not a chat surface, and Microsoft's chat is already linked as primary via the correct WSC vehicle. Should that partial link be deleted (Viva moves to INTRANET only), or left in place?
+q6: Microsoft Viva Connections is related to WSC at coverage_level "partial", but it is an intranet portal product, not a chat surface, and Microsoft's chat is already related as primary via the correct WSC vehicle. Should that partial relationship be deleted (Viva moves to INTRANET only), or left in place?
 
-- a) Delete the partial solution link (Viva becomes INTRANET only).
+- a) Delete the partial solution relationship (Viva becomes INTRANET only).
 - b) Leave it as partial (the embedded chat surface inside the intranet product justifies it).
 
-Recommended: a. The chat surface is already covered by the primary Microsoft Teams link, so the partial Viva link reads as scope creep. Deleting a solution link is destructive, so it needs your sign-off.
+Recommended: a. The chat surface is already covered by the primary Microsoft Teams relationship, so the partial Viva relationship reads as scope creep. Deleting a solution relationship is destructive, so it needs your sign-off.
 
 a6:
 

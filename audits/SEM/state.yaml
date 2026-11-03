@@ -21,8 +21,8 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Personas/RACI authoring is deferred per the bulk-batch persona-defer policy (B1A-PHASE-P)."
-    action: "DEFERRED. When the persona phase is run: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate operational personas from the prior footprint: Chief of Staff, Strategy Office Analyst, Head of Department (these existed as 10055/10056/10057 before Plan 3 deleted the _core personas)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Personas/RACI authoring is deferred per the bulk-batch persona-defer policy (B1A-PHASE-P)."
+    action: "DEFERRED. When the persona phase is run: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate operational personas from the prior footprint: Chief of Staff, Strategy Office Analyst, Head of Department (these existed as 10055/10056/10057 before Plan 3 deleted the _core personas)."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
 
@@ -64,7 +64,7 @@ b1b:
       - {type: domain_audit, blocking_domain: EPM, milestone: phase_b_modules_loaded}
     affected_handoffs:
       - {handoff_id: 1205, direction: outbound, source_domain: SEM, target_domain: SPM, trigger_event: strategic_initiative.approved, payload: strategic_initiatives, null_field: target_domain_module_id}
-      - {handoff_id: 1206, direction: outbound, source_domain: SEM, target_domain: SPM, trigger_event: strategic_initiative.cancelled, payload: strategic_initiatives, null_field: target_domain_module_id}
+      - {handoff_id: 1206, direction: outbound, source_domain: SEM, target_domain: SPM, trigger_event: strategic_initiative.canceled, payload: strategic_initiatives, null_field: target_domain_module_id}
       - {handoff_id: 1207, direction: outbound, source_domain: SEM, target_domain: EPM, trigger_event: strategic_initiative.approved, payload: strategic_initiatives, null_field: target_domain_module_id}
       - {handoff_id: 1208, direction: outbound, source_domain: SEM, target_domain: EPM, trigger_event: strategic_objective.cascaded, payload: okr_objectives, null_field: target_domain_module_id}
 
@@ -115,17 +115,17 @@ b1b:
       any revert; the remaining live candidates are: (i) data_objects.notes on
       strategy_maps (808) config-shape rationale prose; (ii) up-to-5
       domain_data_objects.notes rows on domain 166 (master/consumer rationale prose);
-      (iii) role_modules.notes rows for the SEM roles (per-role per-module prose);
-      (iv) role_permissions.notes rows on workflow-gate grants. Roles/role_modules/
+      (iii) persona_modules.notes rows for the SEM roles (per-role per-module prose);
+      (iv) role_permissions.notes rows on workflow-gate grants. Roles/persona_modules/
       role_permissions may themselves have been deleted by Plan 3 (E1 now reports 0
-      domain_roles), so re-confirm which polluted rows still exist before drafting any
+      personas), so re-confirm which polluted rows still exist before drafting any
       revert. All wording reads as auto-populated by loaders.
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_entities:
       - "data_objects.notes on row 808 (strategy_maps): re-verify"
       - "domain_data_objects.notes on domain 166 rows: re-verify (up to 5)"
-      - "role_modules.notes / role_permissions.notes: re-verify existence post-Plan-3"
+      - "persona_modules.notes / role_permissions.notes: re-verify existence post-Plan-3"
 
 b2:
   - id: B1A-S8
@@ -144,7 +144,7 @@ b2:
     summary: "Confirm whether the polluted notes rows were user-approved or auto-populated (and re-scope post-Plan-3)."
     question: >-
       Were any of the surviving polluted notes rows (data_objects 808 +
-      domain_data_objects on 166 + any remaining role_modules / role_permissions)
+      domain_data_objects on 166 + any remaining persona_modules / role_permissions)
       user-approved at load time, or are they all loader-auto-populated and should be
       reverted to empty string per Rule #15? The original 45-row tally included 27
       skill_tools rows that are now moot (skill_tools retired by Plan 3); re-verify the
@@ -175,7 +175,7 @@ b2:
       (accept the zero-inbound asymmetry as workflow-correct, decline B1B-S1)?
       Also folds in the earlier pattern-flag re-evaluation: should
       strategic_initiatives.has_submit_lock flip to true for terminal states
-      completed / cancelled?
+      completed / canceled?
     options:
       - "(a) Integrated path; load the inbound handoffs and flip pattern flags."
       - "(b) Write-mostly path; accept zero inbound as the SEM market shape and leave pattern flags."
@@ -186,7 +186,7 @@ b2:
   # recorded b2 about SEM/SPM overlap. SEM (Strategy Execution Management, 166) and SPM
   # are modeled as distinct markets here (SEM = strategy-office OKR/Hoshin/cascade; SPM =
   # PMO-led portfolio delivery). No SEM-vs-SPM merge surfaced in this pass (the SEM/SPM
-  # edges are outbound handoffs 1205-1208, not a duplicate-master collision). If a merge
+  # relationships are outbound handoffs 1205-1208, not a duplicate-master collision). If a merge
   # question is raised on the SPM side, resolve it there; do not resolve unilaterally here.
   - id: B2-B9D-OWN-1652
     summary: "Strategy Execution Management: name an owner for \"Establish portfolio strategy\" (no one is responsible for it today)"

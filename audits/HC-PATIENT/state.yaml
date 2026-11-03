@@ -15,10 +15,10 @@ next_action_by: user
 last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B7-USER-EDGES
+  - id: B1A-B7-USER-RELATIONSHIPS
     summary: Author 6 `data_object_relationships` rows from each master to `users` (id 748) per Rule #10. Verb / inverse_verb tuples need user review before insert.
-    finding: B7 fails. Zero edges between any HC-PATIENT master and the platform built-in `users` (id 748). Each master has a user-typed actor (scheduler, encountering provider, ordering clinician, signing provider, care coordinator, referring provider). The 2026-05-30 audit lists actor roles but not concrete verb / inverse_verb tuples, so the row shapes are not fully specified for auto-insert.
-    action: Draft 6 edges with concrete verb + inverse_verb + cardinality + owner_side per master. Surface for user review BEFORE insert. Load via `data_object_relationships` insert.
+    finding: B7 fails. Zero relationships between any HC-PATIENT master and the platform built-in `users` (id 748). Each master has a user-typed actor (scheduler, encountering provider, ordering clinician, signing provider, care coordinator, referring provider). The 2026-05-30 audit lists actor roles but not concrete verb / inverse_verb tuples, so the row shapes are not fully specified for auto-insert.
+    action: Draft 6 relationships with concrete verb + inverse_verb + cardinality + owner_side per master. Surface for user review BEFORE insert. Load via `data_object_relationships` insert.
     affected_masters:
       - {data_object_id: 617, name: patient_appointments, target_module_id: null, workflow: scheduler_or_scheduling_user}
       - {data_object_id: 618, name: clinical_encounters, target_module_id: null, workflow: encountering_provider}
@@ -71,7 +71,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Confirmed live 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. The build (modules + capabilities + DMDO + the domain-grain system skill) is the gate for B1A-S1-MODULES, B1A-B10b-SOURCE-MODULES, B1A-B10b-TARGET-MODULES, B1A-F1-LEGACY-SKILL, and Phase P."
-    action: "Resolve B2-1 (module split), then run Phase A then M then B-finish then S to author the module set, capabilities, masters into domain_module_data_objects, and ONE domain-grain system skill (per the 2026-06-06 supersession; NOT per-module skills). If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Lifecycle states (loaded 2026-06-07) carry domain_module_id=null; PATCH them onto the realizing module at build time."
+    action: "Resolve B2-1 (module split), then run Phase A then M then B-finish then S to author the module set, capabilities, masters into domain_module_data_objects, and ONE domain-grain system skill (per the 2026-06-06 supersession; NOT per-module skills). If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Lifecycle states (loaded 2026-06-07) carry domain_module_id=null; PATCH them onto the realizing module at build time."
     extra_phase_p_triage: "2026-06-02"
     blocked_by:
       - {type: user_decision, ref: B2-1}
@@ -101,7 +101,7 @@ b1a:
 
   # --- RETIRED per the 2026-06-06 supersession header (per-module skill grain) ---
   # B1A-S1-MODULES (per-module system skills + skill_tools), B1A-F1-LEGACY-SKILL (DELETE skill 66
-  # then re-link skill_tools), and B1A-F7-CHANNEL-ABSTRACTION (PATCH/DELETE skill 66 send_sms link)
+  # then re-relate skill_tools), and B1A-F7-CHANNEL-ABSTRACTION (PATCH/DELETE skill 66 send_sms relationship)
   # are reframed: the per-module `system` skill grain and `skill_tools` are dropped. The domain now
   # carries (after build) exactly ONE domain-grain system skill that derives its toolset from
   # domain_module_tools. Legacy skill 66's disposition (retire vs convert to the single domain-grain

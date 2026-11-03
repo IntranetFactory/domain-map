@@ -4,14 +4,14 @@
 
 ### Summary
 
-- Current footprint: **8 master data_objects + 1 legacy consumer rollup row** (`legal_contracts`), **0 `domain_modules` rows** (primary host = 0; cross-cutting host junctions = 0), 2 capabilities (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL), 5 solutions (all `coverage_level=primary`), 2 regulations (EIDAS, EU-WHISTLE), 2 business-function-domains rows (Legal owner + IT Operations contributor), 12 trigger events on LSD masters, **11 outbound + 3 inbound cross-domain handoffs** (14 total cross-domain), 0 intra-domain handoffs, 16 aliases on 8 masters, 0 lifecycle states across every master, 0 handoff_processes (APQC) rows, 0 LSD-anchored roles, 0 LSD-anchored role_modules, 1 legacy domain-level `system` skill (`lsd-system`, kebab + system suffix), 10 skill_tools on that legacy skill.
+- Current footprint: **8 master data_objects + 1 legacy consumer rollup row** (`legal_contracts`), **0 `domain_modules` rows** (primary host = 0; cross-cutting host junctions = 0), 2 capabilities (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL), 5 solutions (all `coverage_level=primary`), 2 regulations (EIDAS, EU-WHISTLE), 2 business-function-domains rows (Legal owner + IT Operations contributor), 12 trigger events on LSD masters, **11 outbound + 3 inbound cross-domain handoffs** (14 total cross-domain), 0 intra-domain handoffs, 16 aliases on 8 masters, 0 lifecycle states across every master, 0 handoff_processes (APQC) rows, 0 LSD-anchored roles, 0 LSD-anchored persona_modules, 1 legacy domain-level `system` skill (`lsd-system`, kebab + system suffix), 10 skill_tools on that legacy skill.
 - Vendor-surface basis (flagship vendors enumerated): **ServiceNow Legal Service Delivery** (LSD-anchor for in-house legal workflows, intake-portal-led), **LawVu** (in-house legal platform, matter + intake + contract registry), **Onit Enterprise Legal Management** (intake, matter, e-billing, workflow), **Litera** (matter-doc productivity, drafting, comparison), **iManage Cloud** (legal-shaped document and matter management). All five are pure-play or legal-vertical specialists. ServiceNow LSD and LawVu anchor the intake-portal motion; Onit anchors the matter-spend leg; Litera and iManage anchor the document leg.
 - **Bucket 1 (in-scope, agent fixable):** 10 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 6 items.
 - **Candidates queued to `audits/_missing-domains.md`:** 1 (ELM, Enterprise Legal Management).
 
-**Headline structural verdict.** LSD is in a pre-modular legacy shape: the `domains` row, 8 mastered data_objects, capability links, regulations, business-function links, trigger events, B6 + B7 + B8 relationships, aliases, the legacy `domain_data_objects` rollup, an outbound + inbound handoff set, and a domain-anchored `system` skill all exist, but **not a single `domain_modules` row exists** for LSD. That single fact cascades into M1, M2, M4, M6 hard fails, B10b 100%-null on every LSD-side handoff, B12 deferred (no module to host states), F1 + F2 fail (legacy `lsd-system` skill present, zero module-level system skills), E1 vacuously passes only because the 2-module floor blocks roles. The fix sequence is forced: **modularize LSD first (B1-M1 below)**, then everything else lands cleanly. No B-band, C-band, E-band, F-band, or H-band can be properly cured until the module set is loaded.
+**Headline structural verdict.** LSD is in a pre-modular legacy shape: the `domains` row, 8 mastered data_objects, capability relationships, regulations, business-function relationships, trigger events, B6 + B7 + B8 relationships, aliases, the legacy `domain_data_objects` rollup, an outbound + inbound handoff set, and a domain-anchored `system` skill all exist, but **not a single `domain_modules` row exists** for LSD. That single fact cascades into M1, M2, M4, M6 hard fails, B10b 100%-null on every LSD-side handoff, B12 deferred (no module to host states), F1 + F2 fail (legacy `lsd-system` skill present, zero module-level system skills), E1 vacuously passes only because the 2-module floor blocks roles. The fix sequence is forced: **modularize LSD first (B1-M1 below)**, then everything else lands cleanly. No B-band, C-band, E-band, F-band, or H-band can be properly cured until the module set is loaded.
 
 **Catalog quality (H-band headline):** 0 of 14 cross-domain handoffs carry an approved `handoff_processes` tag (0%). **Process health (side-bar):** 0 `agent_curated` proposals on the catalog today; this audit proposes 11 new `agent_curated` rows in Bucket 1 (H1) below (3 of the 14 deferred to Discover Pass 3 per the no-clean-PCF-match rule).
 
@@ -55,7 +55,7 @@ The regulated leg is anchored by EIDAS (trust-services / qualified electronic si
 | M4 (every capability has >=1 realizing module) | fail | KNOWLEDGE-MGMT and SELF-SERVICE-PORTAL have realizing modules in ITSM / HRSD / CSM, but none on LSD. After M1 + A2 are cured, LSD's own modules must realize them. |
 | M5 (workflow-gate states have `domain_module_id`) | vacuously passes | No lifecycle states exist at all. Routes to B12. |
 | M6 (every module realizes >=1 capability) | vacuously passes | No modules exist to check. |
-| M7 (single-master integrity) | pass | 8 masters; each has exactly one `domain_data_objects.role='master'` row; no within-domain master/consumer conflicts. The future LSD `domain_module_data_objects` master rows will need to preserve this. |
+| M7 (single-master integrity) | pass | 8 masters; each has exactly one `domain_data_objects.held_as='master'` row; no within-domain master/consumer conflicts. The future LSD `domain_module_data_objects` master rows will need to preserve this. |
 
 **B-band (Phase B).**
 
@@ -66,8 +66,8 @@ The regulated leg is anchored by EIDAS (trust-services / qualified electronic si
 | B3 (naming arbitration) | pass | All 8 masters use the prefixed form (`legal_*`, `in_house_legal_*`, `outside_counsel_*`, `regulatory_*`, `ediscovery_*`); zero canonical-bare-word claims required. |
 | B4 (pattern flags considered) | partial | All 8 masters have all three flags = false. **The flags need positive consideration** (see Bucket 2): `legal_advice_records` plausibly has `has_personal_content=true` (privileged content); `legal_holds` plausibly has `has_submit_lock=true` once issued; `outside_counsel_engagements` plausibly has `has_single_approver=true` (GC sign-off). Surface for user decision. |
 | B5 (embedded_master integrity) | pass | No `embedded_master` rows on LSD's side (LSD's only non-master rollup is `legal_contracts` as `consumer`; the canonical owner is CLM-REPOSITORY, valid). |
-| B6 (intra-domain relationships) | pass | 9 verbed edges between LSD masters (rows 358-366): `legal_intake_requests opens in_house_legal_matters`; `in_house_legal_matters engages outside_counsel_engagements`, `produces legal_advice_records`, `tracks legal_case_dockets`, `places legal_holds`, `spawns ediscovery_requests`, `responds_to regulatory_inquiries`, `references legal_contracts`; `legal_holds preserves ediscovery_requests`. |
-| B7 (users edges) | pass | 8 user edges authored (rows 367-374): `users` submits intake / leads matter / authored advice / owns docket / issued hold / runs discovery / approves engagement / responds to inquiry. |
+| B6 (intra-domain relationships) | pass | 9 verbed relationships between LSD masters (rows 358-366): `legal_intake_requests opens in_house_legal_matters`; `in_house_legal_matters engages outside_counsel_engagements`, `produces legal_advice_records`, `tracks legal_case_dockets`, `places legal_holds`, `spawns ediscovery_requests`, `responds_to regulatory_inquiries`, `references legal_contracts`; `legal_holds preserves ediscovery_requests`. |
+| B7 (relationships to `users`) | pass | 8 relationships to `users` authored (rows 367-374): `users` submits intake / leads matter / authored advice / owns docket / issued hold / runs discovery / approves engagement / responds to inquiry. |
 | B8 (outbound cross-domain relationships) | pass | Cross-domain relationship rows present: matters trigger compliance_obligations (GRC), regulatory_inquiries trigger audit_engagements (AUDIT), legal_holds evidence audit_engagements, matters share_outcome_with audit_engagements, legal_holds identify_custodians_from employees (HCM), legal_advice_records reference employees, legal_holds freeze content_documents (ECM), ediscovery_requests collect_from content_documents, matters provision document_folders (ECM), legal_advice_records files_to / is_filed_in content_documents (ECM). |
 | B9 (outbound trigger_events + handoffs) | partial | 12 trigger_events on LSD masters; 11 outbound handoffs. `legal_case_docket.updated` (event 1047) has zero subscribers (potential leaf); `legal_intake.submitted` (event 1041) has zero outbound handoffs (correct as intake creates the matter, no cross-domain emission until matter.opened). `outside_counsel.engaged` (event 1045) has zero subscribers (likely real B9 gap to S2P / CLM / SPEND-MGMT). **All 12 trigger_events have `event_category=''` (empty string); should be `lifecycle` or `state_change` per the catalog enum.** |
 | B9b (intra-domain cross-module handoffs) | n/a | Skipped: no modules to derive pairs from. Will become applicable once M1 is cured. |
@@ -94,8 +94,8 @@ The regulated leg is anchored by EIDAS (trust-services / qualified electronic si
 | ID | Result | Detail |
 |---|---|---|
 | E1 (role coverage) | vacuously passes (0 modules) but underlying gap | The 5 legal roles (LEGAL-COUNSEL 10085, LEGAL-ATTORNEY 10093, LEGAL-PARALEGAL 10094, LEGAL-CONFLICTS-PARTNER 10096, LEGAL-OFFICE-MGR 10097) are all bound to LEGAL-PRACT-MGMT / CLM modules, not LSD. Once LSD modules exist, an LSD-anchored persona set (LEGAL-OPS-MGR or IN-HOUSE-COUNSEL for matters/advice/holds; LEGAL-INTAKE-COORDINATOR for the intake portal; perhaps LITIGATION-PARALEGAL for ediscovery/case-dockets) needs to be authored. |
-| E2 (2-module floor on role_modules) | n/a | No LSD-anchored roles. |
-| E3 (`interaction_level` set) | n/a | No LSD-anchored role_modules. |
+| E2 (2-module floor on persona_modules) | n/a | No LSD-anchored roles. |
+| E3 (`interaction_level` set) | n/a | No LSD-anchored persona_modules. |
 | E4 (non-empty role_permissions bundle) | n/a | No LSD-anchored roles. |
 | E5 (Path A / Path B agreement) | n/a | No LSD-anchored roles. |
 | E6 (permission-bundle drift) | n/a | No LSD-anchored permissions. |
@@ -127,14 +127,14 @@ The regulated leg is anchored by EIDAS (trust-services / qualified electronic si
 - `legal_spend_invoices`: outside-counsel invoices in LEDES format. **This is the strongest signal toward queueing ELM as a separate domain** (queued). Whether LSD should consume invoices or hand them entirely to ELM is a Bucket 2 boundary call.
 - `legal_matter_budgets`: pre-engagement budget envelope per matter. **Bucket 3 / ELM-scoped.**
 - `regulatory_inquiry_responses`: typed response packages (interrogatory answer set, document production, witness statement). Currently the response is implicit on `regulatory_inquiries`; separating allows multi-response matter chains. **Bucket 3.**
-- `legal_knowledge_articles`: KNOWLEDGE-MGMT capability is linked but no LSD-specific knowledge data_object exists; either fold into the cross-cutting `knowledge_articles` master (ITSM-KNOWLEDGE) as a `consumer` row, or master a legal-scoped one. **Bucket 2.**
+- `legal_knowledge_articles`: KNOWLEDGE-MGMT capability is related but no LSD-specific knowledge data_object exists; either fold into the cross-cutting `knowledge_articles` master (ITSM-KNOWLEDGE) as a `consumer` row, or master a legal-scoped one. **Bucket 2.**
 
 **WRONG-OWNERSHIP**: none identified (every LSD master is in its right scope on the legacy `domain_data_objects` rollup).
 
 **SCOPE-CREEP.**
 
 - `legal_contracts` (id 66, mastered by CLM-REPOSITORY) sits as a `consumer + required` on LSD's legacy `domain_data_objects` rollup. This is acceptable because LSD matters reference contracts. The `required` necessity could become `optional` under Rule #16 (CLM is not infrastructure but contracts can be locally embedded shells for matter-doc productivity). **Surface to user (Bucket 2).**
-- The 2 cross-cutting capability links (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL) are legitimate cross-cutting capabilities under the convention; not scope creep but **realizing modules need to be added on the LSD side after M1**.
+- The 2 cross-cutting capability relationships (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL) are legitimate cross-cutting capabilities under the convention; not scope creep but **realizing modules need to be added on the LSD side after M1**.
 
 **MODULARIZATION-ISSUE.** **Major.** LSD's market shape (per vendors) clusters cleanly into 4-5 modules:
 
@@ -145,13 +145,13 @@ The regulated leg is anchored by EIDAS (trust-services / qualified electronic si
 5. **LSD-REGULATORY-RESPONSE** (regulator inquiries, subpoenas, agency responses): masters `regulatory_inquiries`. Adjacent to GRC and AUDIT but distinctly an in-house legal workflow.
 6. **LSD-KNOWLEDGE** (legal knowledge management; either consumer of cross-cutting knowledge_articles or master of legal-scoped variant): realizes KNOWLEDGE-MGMT.
 
-This module set covers all 8 existing masters + the 2 capability links + the future legal-knowledge surface. With 4+ proper capabilities the M2 (>=2 modules when >=3 capabilities) floor is satisfied; M4 (every capability has >=1 realizing module) is satisfied. **The exact module shape is a Bucket 2 decision**: the user picks whether to ship 4 modules (collapsing INTAKE into MATTER), 5 modules (the listed set without KNOWLEDGE), or 6 modules (full set). **This decision is the gating one for the whole audit.**
+This module set covers all 8 existing masters + the 2 capability relationships + the future legal-knowledge surface. With 4+ proper capabilities the M2 (>=2 modules when >=3 capabilities) floor is satisfied; M4 (every capability has >=1 realizing module) is satisfied. **The exact module shape is a Bucket 2 decision**: the user picks whether to ship 4 modules (collapsing INTAKE into MATTER), 5 modules (the listed set without KNOWLEDGE), or 6 modules (full set). **This decision is the gating one for the whole audit.**
 
 ### Pass 3, Neighbor discovery
 
-Edges discovered by union of `handoffs.source_domain_id=25 OR handoffs.target_domain_id=25` plus DMDO cross-references (legacy rollup):
+Relationships discovered by union of `handoffs.source_domain_id=25 OR handoffs.target_domain_id=25` plus DMDO cross-references (legacy rollup):
 
-| Neighbor | Outbound | Inbound | DMDO cross-refs | Edge weight | Pairwise deep dive? |
+| Neighbor | Outbound | Inbound | DMDO cross-refs | Relationship weight | Pairwise deep dive? |
 |---|---|---|---|---|---|
 | ECM | 5 | 1 | `legal_contracts` (consumer on LSD; CLM masters) | 7 | yes (weight >=3) |
 | AUDIT | 3 | 0 | 0 | 3 | yes |
@@ -161,11 +161,11 @@ Edges discovered by union of `handoffs.source_domain_id=25 OR handoffs.target_do
 | RE-PROP-MGMT | 0 | 1 | 0 | 1 | summary |
 | HCMS | 0 | 1 | 0 | 1 | summary (suspicious; see Bucket 2) |
 
-### Pass 4, Pairwise reconciliation per neighbor (edge weight >=3)
+### Pass 4, Pairwise reconciliation per neighbor (relationship weight >=3)
 
 Because LSD has zero `domain_modules`, every pairwise diff is partially blocked: every `target_domain_module_id` (when LSD is target) and every `source_domain_module_id` (when LSD is source) is NULL, by construction. The four pairwise sections below report what the boundary should look like once M1 is cured; the actual per-row fixes are folded into the B10b backfill that runs after the module set is loaded.
 
-**LSD vs. ECM (edge weight 7).**
+**LSD vs. ECM (relationship weight 7).**
 
 | Section | Finding |
 |---|---|
@@ -175,7 +175,7 @@ Because LSD has zero `domain_modules`, every pairwise diff is partially blocked:
 | Boundary integrity gaps (B5 routing) | None: `content_documents` is canonically mastered by ECM and consumed properly. |
 | Cross-domain `data_object_relationships` mirror check | Mirrors present (rows 381 freezes, 382 collects_from, 383 provisions, 384/584 files_to / is_filed_in). |
 
-**LSD vs. AUDIT (edge weight 3).**
+**LSD vs. AUDIT (relationship weight 3).**
 
 | Section | Finding |
 |---|---|
@@ -185,7 +185,7 @@ Because LSD has zero `domain_modules`, every pairwise diff is partially blocked:
 | Boundary integrity gaps | None. |
 | Cross-domain `data_object_relationships` mirror | Mirrors present (376 triggers, 377 evidences, 378 shares_outcome_with). |
 
-**LSD vs. HCM (edge weight 3).**
+**LSD vs. HCM (relationship weight 3).**
 
 | Section | Finding |
 |---|---|
@@ -195,7 +195,7 @@ Because LSD has zero `domain_modules`, every pairwise diff is partially blocked:
 | Boundary integrity gaps | None: `employees` is platform-builtin-adjacent (mastered by HCM); LSD's cross-rels to `employees` (379 identifies_custodians_from, 380 references) are valid. |
 | Cross-domain `data_object_relationships` mirror | Mirrors present. |
 
-**LSD vs. GRC (edge weight 3).**
+**LSD vs. GRC (relationship weight 3).**
 
 | Section | Finding |
 |---|---|
@@ -203,7 +203,7 @@ Because LSD has zero `domain_modules`, every pairwise diff is partially blocked:
 | Existing handoffs with NULL module FK | 1 (1030 `in_house_legal_matter.regulatory_disclosure_required`). Cure: 1030 source = LSD-MATTER-MGMT. |
 | Missing handoffs the catalog implies should exist | Bidirectional flow likely: GRC's `compliance_obligation.opened` should fan-in to LSD-MATTER-MGMT as a matter trigger (`matter.opened_from_obligation`). **Bucket 3, B9 candidate on GRC side, B10 owed to LSD.** |
 | Boundary integrity gaps | None. |
-| Cross-domain `data_object_relationships` mirror | Row 375 (`in_house_legal_matters triggers compliance_obligations`) covers the LSD-to-GRC direction. GRC-to-LSD mirror would need a new edge. |
+| Cross-domain `data_object_relationships` mirror | Row 375 (`in_house_legal_matters triggers compliance_obligations`) covers the LSD-to-GRC direction. GRC-to-LSD mirror would need a new relationship. |
 
 **Lighter-neighbor summaries.**
 
@@ -218,7 +218,7 @@ Because LSD has zero `domain_modules`, every pairwise diff is partially blocked:
 | ID | Item | Proposed action |
 |---|---|---|
 | B1-M1 | Zero `domain_modules` rows for LSD | Author the LSD module set (recommended: 4-6 modules; default proposal is 5: LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE). Final shape depends on Bucket 2 #1. |
-| B1-M2 | Capability under-count (only 2 cross-cutting capabilities linked) | Author legal-specific capabilities (proposed: `LEGAL-INTAKE-TRIAGE`, `LEGAL-MATTER-MGMT`, `LEGAL-HOLD-MGMT`, `LEGAL-EDISCOVERY`, `OUTSIDE-COUNSEL-MGMT`, `REGULATORY-RESPONSE`) plus keep the existing two. Final list depends on Bucket 2 #1 module shape. |
+| B1-M2 | Capability under-count (only 2 cross-cutting capabilities related) | Author legal-specific capabilities (proposed: `LEGAL-INTAKE-TRIAGE`, `LEGAL-MATTER-MGMT`, `LEGAL-HOLD-MGMT`, `LEGAL-EDISCOVERY`, `OUTSIDE-COUNSEL-MGMT`, `REGULATORY-RESPONSE`) plus keep the existing two. Final list depends on Bucket 2 #1 module shape. |
 
 #### STRUCTURAL band failures
 
@@ -273,7 +273,7 @@ Counts: **11 agent_curated `handoff_processes` proposals + 3 deferred = 14 total
    - **(c) 6 modules**: add LSD-KNOWLEDGE as a distinct module realizing KNOWLEDGE-MGMT for legal-scoped articles. Closest to ServiceNow LSD's own taxonomy.
    - **(d) Defer modularization and ship LSD as a single LSD-FULL module** (capability count < 3 path). Only viable if Bucket 2 question 1 also drops legal-specific capabilities below 3.
 2. **`legal_contracts` necessity demotion.** Currently `consumer + required` from CLM. Per Rule #16 (infrastructure masters are `optional` on non-master rows), should this drop to `optional`? Reading Rule #16 strictly: contracts are not infrastructure (they carry workflow), so the `required` necessity may be correct because a matter genuinely cannot reference a contract without the CLM master being deployed. Confirm or demote.
-3. **Knowledge-management surface for legal.** The KNOWLEDGE-MGMT capability is linked to LSD. Options: (a) author a legal-specific `legal_knowledge_articles` master in a new LSD-KNOWLEDGE module; (b) consume the cross-cutting `knowledge_articles` master (already in ITSM-KNOWLEDGE) as a `consumer` row; (c) drop the capability link as not load-bearing for LSD. Vendor evidence: LawVu carries a "Knowledge" object distinctly; ServiceNow LSD reuses Now Knowledge with legal-scoped article types. (a) and (b) both have vendor backing; (c) is the "scope creep" exit.
+3. **Knowledge-management surface for legal.** The KNOWLEDGE-MGMT capability is related to LSD. Options: (a) author a legal-specific `legal_knowledge_articles` master in a new LSD-KNOWLEDGE module; (b) consume the cross-cutting `knowledge_articles` master (already in ITSM-KNOWLEDGE) as a `consumer` row; (c) drop the capability relationship as not load-bearing for LSD. Vendor evidence: LawVu carries a "Knowledge" object distinctly; ServiceNow LSD reuses Now Knowledge with legal-scoped article types. (a) and (b) both have vendor backing; (c) is the "scope creep" exit.
 4. **Pattern flags review on 8 masters.** Per B1-S4: the proposed flag patches are `legal_advice_records.has_personal_content=true`, `legal_holds.has_submit_lock=true`, `outside_counsel_engagements.has_single_approver=true`. Confirm per row.
 5. **Suspicious inbound handoffs** (300 RE-PROP-MGMT -> LSD, 807 HCMS -> LSD). Both carry a source-mastered payload (`property_tenants`, `editorial_workflows`) into LSD, which is the wrong payload shape for an intake-creation handoff. Options per row: (i) reroute the target to RE-PROP-MGMT or HCMS internal-legal modules if those will be authored; (ii) repaint the payload as `legal_intake_requests` (the LSD master that gets created); (iii) delete as misrouted. Likely (ii) once LSD-INTAKE-PORTAL exists.
 6. **Pairwise reconciliation depth.** Pass 4 above ran four neighbors at weight >=3 (ECM, AUDIT, HCM, GRC) with abbreviated diffs because every LSD-side module FK is NULL. Decide: rerun pairwise after B1-M1 lands (recommended, every row gets concrete fix targets then), or accept the abbreviated form now and skip the rerun.
@@ -365,7 +365,7 @@ Bucket 2 #1 (module shape) remains the single gating decision: every remaining B
 
 ### Summary
 
-- Current footprint: **8 master data_objects + 1 consumer rollup** (`legal_contracts`), **0 `domain_modules` rows** (primary host = 0; cross-cutting host junctions = 0), 2 capabilities (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL), 5 solutions (all `coverage_level=primary`), 2 regulations (eIDAS, EU Whistleblower), 2 business_function_domains rows (Legal owner + IT Operations contributor), 12 trigger_events on LSD masters (9 lifecycle + 3 state_change, all populated post-continuation), 11 outbound + 3 inbound cross-domain handoffs (14 total), 0 intra-domain handoffs, 16 aliases on 8 masters, **0 lifecycle states across every master**, **13 of 14 handoff_processes rows** (92.9% coverage; only handoff 807 HCMS untagged), 0 LSD-anchored roles, 0 LSD-anchored role_modules, 1 legacy domain-level `system` skill (`lsd-system` id 82) with 10 skill_tools.
+- Current footprint: **8 master data_objects + 1 consumer rollup** (`legal_contracts`), **0 `domain_modules` rows** (primary host = 0; cross-cutting host junctions = 0), 2 capabilities (KNOWLEDGE-MGMT, SELF-SERVICE-PORTAL), 5 solutions (all `coverage_level=primary`), 2 regulations (eIDAS, EU Whistleblower), 2 business_function_domains rows (Legal owner + IT Operations contributor), 12 trigger_events on LSD masters (9 lifecycle + 3 state_change, all populated post-continuation), 11 outbound + 3 inbound cross-domain handoffs (14 total), 0 intra-domain handoffs, 16 aliases on 8 masters, **0 lifecycle states across every master**, **13 of 14 handoff_processes rows** (92.9% coverage; only handoff 807 HCMS untagged), 0 LSD-anchored roles, 0 LSD-anchored persona_modules, 1 legacy domain-level `system` skill (`lsd-system` id 82) with 10 skill_tools.
 - Vendor-surface basis (flagship vendors enumerated): **ServiceNow Legal Service Delivery**, **LawVu**, **Onit Enterprise Legal Management**, **Litera**, **iManage Cloud**. Unchanged from 2026-05-30 audit; ServiceNow LSD + LawVu anchor intake-portal motion, Onit anchors matter-spend leg, Litera + iManage anchor document leg.
 - **Bucket 1 (in-scope, agent fixable):** 8 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
@@ -407,7 +407,7 @@ Same as 2026-05-30 audit. In-house legal service delivery as the buyer-shaped ma
 | M4 (every capability has >=1 realizing module) | fail | KNOWLEDGE-MGMT and SELF-SERVICE-PORTAL have realizing modules in ITSM / HRSD / CSM, but none on LSD. |
 | M5 (workflow-gate states have `domain_module_id`) | vacuous pass | No lifecycle states exist. |
 | M6 (every module realizes >=1 capability) | vacuous pass | No modules exist. |
-| M7 (single-master integrity) | pass | 8 masters; each has exactly one `domain_data_objects.role='master'` row; zero rows in `domain_module_data_objects` for these 8 masters (consistent with M1 zero state). |
+| M7 (single-master integrity) | pass | 8 masters; each has exactly one `domain_data_objects.held_as='master'` row; zero rows in `domain_module_data_objects` for these 8 masters (consistent with M1 zero state). |
 | M8 (per-module catalog UX) | n/a | No modules to check. |
 
 **B-band (Phase B).**
@@ -419,9 +419,9 @@ Same as 2026-05-30 audit. In-house legal service delivery as the buyer-shaped ma
 | B3 (naming arbitration) | pass | All 8 masters use prefixed form; zero canonical-bare-word claims. |
 | B4 (pattern flags considered) | partial | **Update from 2026-05-30:** `legal_holds.has_submit_lock=true` is now set (cured between the two audits). `legal_advice_records.has_personal_content` and `outside_counsel_engagements.has_single_approver` still default-false; B1-S4 remains for those two. |
 | B5 (embedded_master integrity) | pass | No `embedded_master` rows on LSD's side. `legal_contracts` consumer points at canonical CLM-REPOSITORY master, valid. |
-| B6 (intra-domain relationships) | pass | 9 verbed edges between LSD masters (rows 358-366). |
-| B7 (users edges) | pass | 8 user edges authored (rows 367-374), all reverse direction (users -> masters). |
-| B8 (outbound cross-domain relationships) | pass | 11 cross-domain edges present (rows 375-384, 584): matters trigger compliance_obligations (GRC); regulatory_inquiries trigger audit_engagements (AUDIT); legal_holds evidences / matters shares_outcome_with audit_engagements; legal_holds identifies_custodians_from / legal_advice_records references employees (HCM); legal_holds freezes / ediscovery_requests collects_from / legal_advice_records files_to + is_filed_in content_documents (ECM); matters provisions document_folders (ECM). |
+| B6 (intra-domain relationships) | pass | 9 verbed relationships between LSD masters (rows 358-366). |
+| B7 (relationships to `users`) | pass | 8 relationships to `users` authored (rows 367-374), all reverse direction (users -> masters). |
+| B8 (outbound cross-domain relationships) | pass | 11 cross-domain relationships present (rows 375-384, 584): matters trigger compliance_obligations (GRC); regulatory_inquiries trigger audit_engagements (AUDIT); legal_holds evidences / matters shares_outcome_with audit_engagements; legal_holds identifies_custodians_from / legal_advice_records references employees (HCM); legal_holds freezes / ediscovery_requests collects_from / legal_advice_records files_to + is_filed_in content_documents (ECM); matters provisions document_folders (ECM). |
 | B9 (outbound trigger_events + handoffs) | partial | 12 trigger_events on LSD masters; 11 outbound handoffs. `legal_intake.submitted` (1041) has zero outbound (correct, internal). `outside_counsel.engaged` (1045) has zero subscribers (likely real B9 gap to S2P / CLM / SPEND-MGMT). `legal_case_docket.updated` (1047) has zero subscribers (potential leaf). **All 12 event_category now populated correctly (9 lifecycle + 3 state_change) - B1-S2 cured by 2026-05-31 continuation.** |
 | B9b (intra-domain cross-module handoffs) | n/a | Skipped: no modules to derive pairs from. Will become applicable once M1 cures. |
 | B10 (inbound handoffs, REPORT ONLY) | partial | 3 inbound: 300 RE-PROP-MGMT (`property_tenant.evicted`), 807 HCMS (`editorial_workflow.review_required`), 824 ECM (`content_document.legal_hold_applied`). All three observation-only; 300 + 807 suspicious shape (Bucket 2 #5). |
@@ -447,8 +447,8 @@ Same as 2026-05-30 audit. In-house legal service delivery as the buyer-shaped ma
 | ID | Result | Detail |
 |---|---|---|
 | E1 (role coverage) | vacuous pass (0 modules) | Zero LSD-anchored roles (queries on `LSD`, `LEGAL-OPS`, `LEGAL-INTAKE` patterns returned []). |
-| E2 (2-module floor on role_modules) | n/a | No LSD-anchored roles. |
-| E3 (`interaction_level` set) | n/a | No LSD-anchored role_modules. |
+| E2 (2-module floor on persona_modules) | n/a | No LSD-anchored roles. |
+| E3 (`interaction_level` set) | n/a | No LSD-anchored persona_modules. |
 | E4 (non-empty role_permissions bundle) | n/a | No LSD-anchored roles. |
 | E5 (Path A / Path B agreement) | n/a | No LSD-anchored roles. |
 
@@ -476,7 +476,7 @@ Unchanged from 2026-05-30 audit. MISSING candidates: `matter_assignments`, `lega
 
 Unchanged neighbor weights: ECM (7), AUDIT (3), HCM (3), GRC (3), CLM (2), RE-PROP-MGMT (1), HCMS (1).
 
-### Pass 4, Pairwise reconciliation per neighbor (edge weight >=3)
+### Pass 4, Pairwise reconciliation per neighbor (relationship weight >=3)
 
 All four pairwise diffs remain partially blocked by NULL LSD-side module FKs. Concrete fix targets land once M1 cures. Pairwise sections from 2026-05-30 audit still apply verbatim.
 
@@ -487,7 +487,7 @@ All four pairwise diffs remain partially blocked by NULL LSD-side module FKs. Co
 | ID | Item | Proposed action |
 |---|---|---|
 | B1-M1 | Zero `domain_modules` rows for LSD | Author the LSD module set (recommended default: 5 modules: LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE). Final shape gated on Bucket 2 #1. |
-| B1-M2 | Capability under-count (only 2 cross-cutting capabilities linked) | Author legal-specific capabilities (proposed: LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE) plus keep the existing two. Gated on Bucket 2 #1. |
+| B1-M2 | Capability under-count (only 2 cross-cutting capabilities related) | Author legal-specific capabilities (proposed: LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE) plus keep the existing two. Gated on Bucket 2 #1. |
 
 #### STRUCTURAL band failures
 
@@ -515,7 +515,7 @@ Counts: **0 new agent_curated proposals in this audit pass** (all 11 from 2026-0
 
 1. **LSD module shape.** Unchanged gating decision. Options (a) 5 modules (recommended), (b) 4 modules, (c) 6 modules (add LSD-KNOWLEDGE), (d) LSD-FULL single module. **This decision blocks B1-M1 / B1-M2 / B1-S1 / B1-B1 / B1-S5.**
 2. **`legal_contracts` necessity demotion.** Currently `consumer + required` from CLM. Per Rule #16 reading: contracts carry workflow (not infrastructure), so `required` may stand. Confirm or demote to `optional`.
-3. **Knowledge-management surface for legal.** KNOWLEDGE-MGMT linked but no realizing LSD module. Options: (a) author legal-specific `legal_knowledge_articles` master in new LSD-KNOWLEDGE module, (b) consume cross-cutting `knowledge_articles` master as `consumer` row, (c) drop the capability link.
+3. **Knowledge-management surface for legal.** KNOWLEDGE-MGMT related but no realizing LSD module. Options: (a) author legal-specific `legal_knowledge_articles` master in new LSD-KNOWLEDGE module, (b) consume cross-cutting `knowledge_articles` master as `consumer` row, (c) drop the capability relationship.
 4. **Pattern flags review.** Remaining proposed flips: `legal_advice_records.has_personal_content=true` (privilege), `outside_counsel_engagements.has_single_approver=true` (GC sign-off). `legal_holds.has_submit_lock` already true.
 5. **Suspicious inbound handoffs** (300 RE-PROP-MGMT to LSD, 807 HCMS to LSD). Both carry source-mastered payload; wrong shape for intake-creation handoff. Options per row: (i) reroute target to source's internal-legal module, (ii) repaint payload as `legal_intake_requests`, (iii) delete as misrouted. Likely (ii) once LSD-INTAKE-PORTAL exists.
 6. **Pairwise reconciliation depth.** Re-run pairwise after B1-M1 lands (recommended), or accept abbreviated form now.
@@ -590,7 +590,7 @@ Tenant confirmed `ma@adenin.com` / org `adenin` (domain_map id 1001) via `getCur
 
 - **B2-MODULE-SHAPE** (gating): LSD is UNBUILT (0 modules). Pick (a) 5 modules / (b) 4 / (c) 6 with KNOWLEDGE / (d) single LSD-FULL. Blocks B1B-M1, B1B-M2, B1B-S1, B1B-B1. Agent does not scaffold until resolved.
 - **B2-LEGAL-CONTRACTS-NECESSITY** (destructive): keep legal_contracts (id 66) consumer necessity=required, or demote to optional per Rule #16. Demotion overwrites a non-empty value.
-- **B2-KNOWLEDGE-SURFACE**: realize KNOWLEDGE-MGMT via (a) legal-specific master / (b) consume cross-cutting knowledge_articles / (c) drop the link.
+- **B2-KNOWLEDGE-SURFACE**: realize KNOWLEDGE-MGMT via (a) legal-specific master / (b) consume cross-cutting knowledge_articles / (c) drop the relationship.
 - **B2-PATTERN-FLAGS** (destructive): approve `legal_advice_records.has_personal_content=true` and/or `outside_counsel_engagements.has_single_approver=true` (flips on live master rows). `legal_holds.has_submit_lock` already true.
 - **B2-SUSPICIOUS-INBOUNDS** (destructive): handoffs 300 (RE-PROP-MGMT, payload property_tenants) and 807 (HCMS, payload editorial_workflows) carry source-mastered payloads; per row reroute / repaint to legal_intake_requests / delete. B1B-H1-807 closes when this resolves.
 - **B2-OUTSIDE-COUNSEL-FANOUT**: trigger_event 1045 outside_counsel.engaged has zero subscribers; pick fan-out targets among SPEND-MGMT / CLM / GRC for the agent to author handoffs after M1.
@@ -649,8 +649,8 @@ B1A-B9D-VERIFY resolved and removed; `b1a` now empty. No agent-executable work r
 User renamed q-LSD.md to a-LSD.md and instructed "process them" + "build both now". Answers applied:
 
 - **a1 = a (B2-MODULE-SHAPE)**: 5 modules. Built LSD-INTAKE-PORTAL (380), LSD-MATTER-MGMT (381), LSD-LEGAL-HOLD (382), LSD-OUTSIDE-COUNSEL (383), LSD-REGULATORY-RESPONSE (384), all `module_kind=full`, with buyer-voice catalog copy.
-- **B1B-M2**: authored 6 legal capabilities (LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT existing 422, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE) + capability_domains links; 8 domain_module_capabilities (incl. KNOWLEDGE-MGMT provisional on MATTER-MGMT pending a3, SELF-SERVICE-PORTAL on INTAKE-PORTAL).
-- **B1B-S1**: 9 master DMDOs (8 LSD masters role=master/required) + 1 consumer (content_documents 429 on LSD-LEGAL-HOLD). 34 lifecycle states authored across the 8 masters with workflow gates (open_matter, close_matter, approve/reject/route_intake, issue_hold, release_hold, produce_ediscovery, engage_counsel, complete_engagement, issue_advice, respond_inquiry, close_docket).
+- **B1B-M2**: authored 6 legal capabilities (LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT existing 422, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE) + capability_domains relationships; 8 domain_module_capabilities (incl. KNOWLEDGE-MGMT provisional on MATTER-MGMT pending a3, SELF-SERVICE-PORTAL on INTAKE-PORTAL).
+- **B1B-S1**: 9 master DMDOs (8 LSD masters held_as=master/required) + 1 consumer (content_documents 429 on LSD-LEGAL-HOLD). 34 lifecycle states authored across the 8 masters with workflow gates (open_matter, close_matter, approve/reject/route_intake, issue_hold, release_hold, produce_ediscovery, engage_counsel, complete_engagement, issue_advice, respond_inquiry, close_docket).
 - **B1B-B1**: backfilled source_domain_module_id on 11 outbound handoffs; repainted suspicious inbounds 300 (RE-PROP-MGMT) and 807 (HCMS) payload to legal_intake_requests (634) with target LSD-INTAKE-PORTAL (a6/a7 = b); backfilled 824 target to LSD-LEGAL-HOLD.
 - **a4 / a5 (B2-PATTERN-FLAGS)**: legal_advice_records (638) has_personal_content=true; outside_counsel_engagements (637) has_single_approver=true.
 - **a8 = d (B2-OUTSIDE-COUNSEL-FANOUT)**: authored 3 fan-out handoffs on trigger 1045 (outside_counsel.engaged) to SPEND-MGMT (133), CLM (26), GRC (15); target module NULL (partner owns its split per the B10b asymmetry rule).

@@ -42,9 +42,9 @@ a3:
 
 ---
 
-q4: The two analyst-side verbs on the user edges ("observes" portfolio companies, "computes" valuations) read differently from peer domains. Change them?
+q4: The two analyst-side verbs on the relationships to `users` ("observes" portfolio companies, "computes" valuations) read differently from peer domains. Change them?
 
-- a) Keep all seven user-edge verbs as-is.
+- a) Keep all seven `users` relationship verbs as-is.
 - b) Patch to the more standard verbs (for example monitors and produces) for symmetry with peer domains.
 - c) Patch each row individually.
 
@@ -67,7 +67,7 @@ a5:
 
 ---
 
-q6: The ESG/diversity-tracking capability is currently single-domain. Promote it to a shared, domain-neutral ESG metric-collection capability and link it to the ESG domain too? (yes/no)
+q6: The ESG/diversity-tracking capability is currently single-domain. Promote it to a shared, domain-neutral ESG metric-collection capability and relate it to the ESG domain too? (yes/no)
 
 Recommended: yes. The ESG domain already exists and vendors market the same collection shape across both, so a cross-cutting capability is the right model. Renaming the capability is destructive, so it needs your confirmation.
 
@@ -141,9 +141,9 @@ a10:
 
 ---
 
-q11: Should the LP-Reporting module reference the capital-call notice (mastered in Fund Administration), either as a consumer link or a runtime cross-reference? (yes/no)
+q11: Should the LP-Reporting module reference the capital-call notice (mastered in Fund Administration), either as a consumer relationship or a runtime cross-reference? (yes/no)
 
-Recommended: yes, pending q1. If LP-Reporting splits or moves, this reshapes against the new home; otherwise a consumer link is the lighter option.
+Recommended: yes, pending q1. If LP-Reporting splits or moves, this reshapes against the new home; otherwise a consumer relationship is the lighter option.
 
 a11:
 

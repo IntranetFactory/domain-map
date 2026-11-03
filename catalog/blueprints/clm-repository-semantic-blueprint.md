@@ -33,7 +33,7 @@ Executed-contract index. Masters legal_contracts (post-signature) and signature_
 | Contracts | `legal_contracts` | Contracts with counterparties or suppliers, covering type, value, key dates, governing law, and lifecycle from draft to terminated. |
 | Data Protection Addenda | `data_protection_addenda` | Data processing addenda attached to contracts that govern how personal data is handled, each with its own approval and renewal cycle. |
 | Signature Records | `signature_records` | E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one contract may have many. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 | Envelopes | `envelopes` | E-signature transactions wrapping one or more signature requests against a document, tracked from created through completed, declined, or voided. |
 
 ```mermaid
@@ -82,7 +82,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `contract_amendments` | `contract_amendments` | Contract Amendment | Contract Amendments | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `contract_counterparties` | `contract_counterparties` | Contract Counterparty | Contract Counterparties | master | - | - | optional | yes | operational_record | `:manage` | - |
@@ -98,7 +98,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `contract_counterparties` | is party to | `legal_contracts` | one_to_many | reference | optional | source | clear | reference | - |
 | `legal_contracts` | has data protection addendum | `data_protection_addenda` | one_to_many | composition | optional | source | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -124,7 +124,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | approves | `contract_amendments` | one_to_many | optional | source | clear | reference | - |
 | `users` | approves | `data_protection_addenda` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -161,7 +161,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `legal_contracts` | has milestone | `contract_milestones` | one_to_many | optional | none | n/a | - |
 | `legal_contracts` | is negotiated in | `contract_negotiation_threads` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -184,7 +184,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `legal_contracts` | AGENCY-MGMT-JOB-TRAFFIC (Job and Traffic Management) - AGENCY-MGMT | consumer | required | - |
 | `legal_contracts` | CRM-PIPELINE-MGT (Opportunity and Pipeline Management) - CRM | consumer | optional | - |
@@ -226,7 +226,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `legal_contract.approved` | _(state_change)_ | `legal_contracts` | lifecycle_progression | low | - |
-| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the linked legal_contract transitions out_for_signature -> signed. |
+| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the related legal_contract transitions out_for_signature -> signed. |
 | CLM-REPOSITORY | CLM | CLM-RENEWAL | `legal_contract.renewed` | _(state_change)_ | `legal_contracts` | lifecycle_progression | low | - |
 | CLM-REPOSITORY | S2P | _(domain-level)_ | `sourcing.contract_drafted` | _(state_change)_ | `legal_contracts` | api_call | medium | Sourcing decision in S2P hands off to CLM to author the contract. Friction sits in clause selection, redline coordination with the counterparty, and the legal-review loop with LSD. |
 | CLM-REPOSITORY | CPQ | CPQ-QUOTE-BUILDER | `quote.accepted` | `accepted` _(state_change)_ | `legal_contracts` | api_call | medium | Accepted quote hands off to CLM for contract authoring - pulls in clause language, populates the agreed terms, routes for signature. |
@@ -236,7 +236,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `envelopes` | consumer | optional | _(no canonical owner recorded)_ | - |
@@ -298,7 +298,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `clm-repository:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `clm-repository:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `clm-repository:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `clm-repository:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 

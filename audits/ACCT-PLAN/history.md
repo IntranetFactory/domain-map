@@ -122,8 +122,8 @@ Vacuous (zero masters; B1 leadership-tier exemption).
 #### A-band
 
 - **A1, domains metadata.** Pass. All 7 business-meaningful columns populated; crud_percentage 80 reflects the form-and-workflow shape of the market (org charts, white-space grids, mutual action plans, QBR templates), with the remaining 20% being graph rollups (account hierarchies, influence chains) and matching algorithms (product-by-account whitespace scoring) that need procedural compute.
-- **A2, capabilities linked.** Pass. 7 capabilities: `RELATIONSHIP-MAPPING`, `WHITESPACE-MAPPING`, `ACCOUNT-PLAN-AUTHORING`, `MUTUAL-ACTION-PLANS`, `QBR-AUTOMATION`, `KEY-ACCOUNT-METRICS`, `POLITICAL-MAP-VISUALIZATION`.
-- **A3, solutions linked.** Pass. 5 solutions, all coverage_level set, all primary. Vendor names current and correct (Upland Altify, Revegy, DemandFarm, Prolifiq CRUSH, Demandbase Account Planning).
+- **A2, capabilities related.** Pass. 7 capabilities: `RELATIONSHIP-MAPPING`, `WHITESPACE-MAPPING`, `ACCOUNT-PLAN-AUTHORING`, `MUTUAL-ACTION-PLANS`, `QBR-AUTOMATION`, `KEY-ACCOUNT-METRICS`, `POLITICAL-MAP-VISUALIZATION`.
+- **A3, solutions related.** Pass. 5 solutions, all coverage_level set, all primary. Vendor names current and correct (Upland Altify, Revegy, DemandFarm, Prolifiq CRUSH, Demandbase Account Planning).
 - **A4, catalog UX fields.** FAIL. Both `catalog_tagline` and `catalog_description` are empty strings. See Bucket 1 B1-A1 for drafts (Rule #20 buyer-voice; surfaced for user approval before any PATCH).
 - **A5, vendor ownership refresh.** Skipped (opt-in, not requested).
 
@@ -143,7 +143,7 @@ Vacuous (zero masters; B1 leadership-tier exemption).
 - **B8 outbound `data_object_relationships`.** Vacuous (zero ACCT-PLAN masters). Once Bucket 2 B2-L1 resolves in favor of loading masters (B1-V*), B8 becomes the outbound mirror surface for handoffs 209 and 210 plus any new cross-domain handoffs surfaced in the audit.
 - **B9 outbound `trigger_events` and `handoffs`.** Two outbound handoffs exist (209 to CSM, 210 to SALES-ENG), both citing `customers` (id 97) as payload. ACCT-PLAN owns zero `trigger_events` rows. The two events cited are 169 (`account_health.declined`) and 170 (`whitespace.identified`); both fire on `customers`, a CRM-mastered data_object, so under the Phase D rule the events live with CRM by current attribution. Event 169 (`account_health.declined`) is also published by CRM (handoff 1216 fires CRM → FARMER-DIRECT-SALES on the same event_id), confirming the events sit on CRM's `customers` master. There is also event 197 (`health_score.declined`) on `customers`, a near-duplicate of 169; surfaced as B2-T1 alongside the analytics-side trigger event question. Net: B9 publishes 2 outbound handoffs whose events are not ACCT-PLAN-mastered — see B1-S2.
 - **B9b intra-domain cross-module handoffs.** Vacuous (zero modules, no cross-module surface).
-- **B10 inbound handoffs (report only).** 0 rows. Acceptable for a publisher-shaped domain: account-planning is the analytics / planning side that *informs* CSM, SALES-ENG, REV-INTEL, CRM, but is not itself the subscriber to most workflow events. Once ACCT-PLAN owns masters (B2-L1 / B1-V*), one expected inbound is `crm_opportunity.closed_won` → ACCT-PLAN to refresh the account plan; surfaced in Bucket 3 as a candidate cross-domain edge.
+- **B10 inbound handoffs (report only).** 0 rows. Acceptable for a publisher-shaped domain: account-planning is the analytics / planning side that *informs* CSM, SALES-ENG, REV-INTEL, CRM, but is not itself the subscriber to most workflow events. Once ACCT-PLAN owns masters (B2-L1 / B1-V*), one expected inbound is `crm_opportunity.closed_won` → ACCT-PLAN to refresh the account plan; surfaced in Bucket 3 as a candidate cross-domain relationship.
 - **B10b per-module attribution on `handoffs`.** Outbound query returns 2 rows with `source_domain_module_id=NULL` because ACCT-PLAN has zero modules. Inbound query returns 0 rows. The fix is upstream (load modules first via B1-M1, then re-run the B10b backfill). See Bucket 1 B1-S1.
 - **B11, aliases for non-self-explanatory masters.** Vacuous (no masters yet).
 - **B12, lifecycle states.** Vacuous (no masters yet). Once `account_plans`, `mutual_action_plans`, `qbr_instances` ship as masters, each has a real workflow with `requires_permission=true` states (`approved`, `executed`, `closed`, `archived` for plans; `scheduled`, `held`, `actioned` for QBRs).
@@ -159,7 +159,7 @@ Vacuous (zero masters; B1 leadership-tier exemption).
 
 #### E-band
 
-Vacuous: no modules, no role-modules surface, no role authoring possible. Will become applicable once B1-M1 resolves and at least 2 modules ship. Likely role candidates once the role layer is authored: Strategic Account Manager (cross-functional, business_function_id NULL — touches Sales and CSM), Key Account Director (Sales), Customer Success Account Manager (Customer Success), Sales Operations Analyst (Sales Operations). No KAM-shaped role exists in the catalog today; tracked as Bucket 2 B2-E1.
+Vacuous: no modules, no role-modules surface, no role authoring possible. Will become applicable once B1-M1 resolves and at least 2 modules ship. Likely role candidates once the persona layer is authored: Strategic Account Manager (cross-functional, business_function_id NULL — touches Sales and CSM), Key Account Director (Sales), Customer Success Account Manager (Customer Success), Sales Operations Analyst (Sales Operations). No KAM-shaped role exists in the catalog today; tracked as Bucket 2 B2-E1.
 
 #### F-band
 
@@ -189,12 +189,12 @@ The Strategic Account Planning market has a stable union surface across Upland A
 **Master records, mutual-action-plan side:**
 - `mutual_action_plans` (a.k.a. mutual close plans, joint success plans, shared roadmaps; a buyer-shared plan attached to an opportunity or an installed-base expansion)
 - `mutual_action_plan_milestones` (named milestones with owner role on either side)
-- `mutual_action_plan_acknowledgements` (buyer-side e-signed acknowledgement of plan progress)
+- `mutual_action_plan_acknowledgments` (buyer-side e-signed acknowledgment of plan progress)
 
 **Master records, relationship-map side:**
 - `relationship_maps` (the per-account org chart with influence and sentiment)
 - `stakeholder_records` (named decision-makers, roles, influence, sentiment, last-touched)
-- `stakeholder_relationships` (the edges: reports_to, influenced_by, blocked_by, championed_by)
+- `stakeholder_relationships` (the relationships: reports_to, influenced_by, blocked_by, championed_by)
 - `political_maps` (the influence overlay over the org chart, often a derived view)
 
 **Master records, white-space side:**
@@ -234,7 +234,7 @@ The Strategic Account Planning market has a stable union surface across Upland A
 | Module code | Scope | Capabilities |
 |---|---|---|
 | `ACCT-PLAN-CORE` | `account_plans` + `account_plan_objectives` + `account_plan_strategies` + `account_plan_templates` + `key_accounts` + `key_account_segments`. The planning surface plus the curated subset of accounts the plans are written against. | `ACCOUNT-PLAN-AUTHORING` |
-| `ACCT-PLAN-MUTUAL-ACTION` | `mutual_action_plans` + `mutual_action_plan_milestones` + `mutual_action_plan_acknowledgements` + `mutual_action_plan_templates`. The buyer-shared plan surface, distinct because it has a separate workflow (buyer e-sign, shared milestone owner roles). | `MUTUAL-ACTION-PLANS` |
+| `ACCT-PLAN-MUTUAL-ACTION` | `mutual_action_plans` + `mutual_action_plan_milestones` + `mutual_action_plan_acknowledgments` + `mutual_action_plan_templates`. The buyer-shared plan surface, distinct because it has a separate workflow (buyer e-sign, shared milestone owner roles). | `MUTUAL-ACTION-PLANS` |
 | `ACCT-PLAN-RELATIONSHIP` | `relationship_maps` + `stakeholder_records` + `stakeholder_relationships` + `political_maps`. The org-chart and influence surface; Revegy / DemandFarm anchor here. | `RELATIONSHIP-MAPPING`, `POLITICAL-MAP-VISUALIZATION` |
 | `ACCT-PLAN-WHITESPACE` | `white_space_maps` + `white_space_opportunities` + `product_coverage_records` + `white_space_grids`. The cross-sell / upsell substrate; this is where ACCT-PLAN's outbound `whitespace.identified` event fires from. | `WHITESPACE-MAPPING` |
 | `ACCT-PLAN-QBR` | `qbr_decks` + `qbr_meetings` + `qbr_action_items` + `qbr_audit_trails` + `qbr_templates`. The quarterly review surface, distinct workflow with its own meeting cadence and action-item carryover. | `QBR-AUTOMATION` |
@@ -251,30 +251,30 @@ The Strategic Account Planning market has a stable union surface across Upland A
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges with other domains, ranked by edge weight (handoff count + DMDO dependency count). No DMDO surface exists yet (zero modules), so this reduces to handoff count for now:
+Cross-domain relationships with other domains, ranked by relationship weight (handoff count + DMDO dependency count). No DMDO surface exists yet (zero modules), so this reduces to handoff count for now:
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Edge weight | Notes |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Relationship weight | Notes |
 |---|---|---|---|---|---|
 | CSM | 1 (209) | 0 | n/a (no DMDO surface yet) | 1 | `account_health.declined` is the planning-side flag that hands off to CSM for retention engagement. |
 | SALES-ENG | 1 (210) | 0 | n/a | 1 | `whitespace.identified` hands off to SALES-ENG for outbound prospecting against the opportunity. |
 | CRM | 0 | 0 | n/a (no DMDO; will be heavy once `customers` consumer DMDO ships) | 0 | The substrate neighbor. Every proposed ACCT-PLAN master references `customers` directly or transitively. Once modules ship, CRM is the heaviest pairwise neighbor by DMDO weight, not by handoff weight. |
-| SALES-PERF | 0 | 0 | n/a | 0 | Conceptual: account-tier changes feed quota allocation. Not loaded; surfaced as Bucket 3 candidate cross-domain edge. |
+| SALES-PERF | 0 | 0 | n/a | 0 | Conceptual: account-tier changes feed quota allocation. Not loaded; surfaced as Bucket 3 candidate cross-domain relationship. |
 | REV-INTEL | 0 | 0 | n/a | 0 | Conceptual: account health is the planning-side analytic that aligns with REV-INTEL's deal-side analytic, distinct buyer surface (account team vs. rep). |
 | CLM | 0 | 0 | n/a | 0 | Conceptual: `mutual_action_plans` cross to CLM when contractualized; not modeled today. |
-| ABM (no domain) | 0 | 0 | n/a | 0 | Demandbase Account Planning has heavy ABM integration; no ABM domain in the catalog (closest is MA + CDP + segments). Bucket 3 candidate cross-domain edge. |
+| ABM (no domain) | 0 | 0 | n/a | 0 | Demandbase Account Planning has heavy ABM integration; no ABM domain in the catalog (closest is MA + CDP + segments). Bucket 3 candidate cross-domain relationship. |
 | GTM-PLAN | 0 | 0 | n/a | 0 | Conceptual: ICP and segmentation from GTM-PLAN feed `key_account_segments`. Not loaded. |
 
-Default deep-dive threshold (edge weight ≥ 3) is not met for any neighbor. Per the prompt, lighter neighbors (weight 1-2) get a one-line summary instead of the full 5-section diff. Pairwise diffs are also gated on B1-M1 resolving (both module FKs on every handoff are NULL today).
+Default deep-dive threshold (relationship weight ≥ 3) is not met for any neighbor. Per the prompt, lighter neighbors (weight 1-2) get a one-line summary instead of the full 5-section diff. Pairwise diffs are also gated on B1-M1 resolving (both module FKs on every handoff are NULL today).
 
 ### Pass 4, Pairwise reconciliation per neighbor
 
-**CSM (edge weight 1):** One-line summary. Handoff 209 (`account_health.declined`) leaves ACCT-PLAN's `source_domain_module_id` NULL and the CSM side's `target_domain_module_id` NULL (the CSM modules exist; the target attribution is the next pairwise question). The substantive PCF activity on the source side is "Manage customer relationships" (PCF id 718) since account-health detection IS the relationship-management activity surfacing a need. The trigger event is CRM-attributed (event 169 lives on `customers`, a CRM master), so the canonical publisher is CRM and ACCT-PLAN is forwarding a derived signal; surfaced in B2-T1. Section-by-section work blocked until B1-M1 and the B2-T1 attribution decision.
+**CSM (relationship weight 1):** One-line summary. Handoff 209 (`account_health.declined`) leaves ACCT-PLAN's `source_domain_module_id` NULL and the CSM side's `target_domain_module_id` NULL (the CSM modules exist; the target attribution is the next pairwise question). The substantive PCF activity on the source side is "Manage customer relationships" (PCF id 718) since account-health detection IS the relationship-management activity surfacing a need. The trigger event is CRM-attributed (event 169 lives on `customers`, a CRM master), so the canonical publisher is CRM and ACCT-PLAN is forwarding a derived signal; surfaced in B2-T1. Section-by-section work blocked until B1-M1 and the B2-T1 attribution decision.
 
-**SALES-ENG (edge weight 1):** One-line summary. Handoff 210 (`whitespace.identified`) leaves both module FKs NULL. Once B1-M1 lands and ACCT-PLAN ships `ACCT-PLAN-WHITESPACE`, the source FK attributes to that module; SALES-ENG's `SALES-ENG-OUTBOUND-CADENCE` (or its actual module name; resolve at backfill time) is the target. Again the trigger event lives on CRM's `customers` master per Phase D, so the publisher-vs-detector tension repeats; B2-T1 covers the broader question.
+**SALES-ENG (relationship weight 1):** One-line summary. Handoff 210 (`whitespace.identified`) leaves both module FKs NULL. Once B1-M1 lands and ACCT-PLAN ships `ACCT-PLAN-WHITESPACE`, the source FK attributes to that module; SALES-ENG's `SALES-ENG-OUTBOUND-CADENCE` (or its actual module name; resolve at backfill time) is the target. Again the trigger event lives on CRM's `customers` master per Phase D, so the publisher-vs-detector tension repeats; B2-T1 covers the broader question.
 
-**CRM (edge weight 0 today, will be heavy once modules ship):** Pairwise blocked. CRM is the substrate-mastering neighbor: every ACCT-PLAN master will reference `customers` (CRM-mastered, id 97), and several will reference `crm_opportunities` (id 100, CRM-mastered) and `crm_contacts` (id 98, CRM-mastered). Once B1-M1 lands and ACCT-PLAN ships 6 modules, each module's `domain_module_data_objects` will carry `consumer + required` (or `embedded_master + optional` for a deployment-detached starter) rows on `customers`. The pairwise diff will then surface: which CRM-published events ACCT-PLAN should subscribe to (`crm_opportunity.closed_won`, `account.tier_changed`, `customer.signed_up`), and which ACCT-PLAN-published events CRM should subscribe to in the reverse direction (planning-surface promotions to `key_accounts`, strategic-tier flags).
+**CRM (relationship weight 0 today, will be heavy once modules ship):** Pairwise blocked. CRM is the substrate-mastering neighbor: every ACCT-PLAN master will reference `customers` (CRM-mastered, id 97), and several will reference `crm_opportunities` (id 100, CRM-mastered) and `crm_contacts` (id 98, CRM-mastered). Once B1-M1 lands and ACCT-PLAN ships 6 modules, each module's `domain_module_data_objects` will carry `consumer + required` (or `embedded_master + optional` for a deployment-detached starter) rows on `customers`. The pairwise diff will then surface: which CRM-published events ACCT-PLAN should subscribe to (`crm_opportunity.closed_won`, `account.tier_changed`, `customer.signed_up`), and which ACCT-PLAN-published events CRM should subscribe to in the reverse direction (planning-surface promotions to `key_accounts`, strategic-tier flags).
 
-**No other neighbors at edge weight ≥ 1.** SALES-PERF, REV-INTEL, CLM, GTM-PLAN, MA / CDP (ABM substitute), KAM (no domain in catalog) are all expected future neighbors once the master surface ships; surfaced as Bucket 3 cross-domain edge candidates.
+**No other neighbors at relationship weight ≥ 1.** SALES-PERF, REV-INTEL, CLM, GTM-PLAN, MA / CDP (ABM substitute), KAM (no domain in catalog) are all expected future neighbors once the master surface ships; surfaced as Bucket 3 cross-domain relationship candidates.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -291,7 +291,7 @@ Drafts for B1-A1 (per Rule #20 buyer-voice rule):
 - `catalog_tagline` draft: "Plan, run, and review your strategic accounts the way the best account teams do. Map relationships, find white space, write joint plans, and close on QBR commitments, all in one place."
 - `catalog_description` draft (3 short paragraphs):
   - "Strategic Account Planning gives account teams a structured surface to plan against named key accounts: who decides, who buys today, and where the next opportunity sits. Relationship maps make the org chart and the political reality visible. White-space maps show every product the account hasn't bought yet, on a per-business-unit grid. Account plans hold the named objectives and strategies the team will pursue this year."
-  - "Mutual action plans extend the planning surface to the buyer: the named milestones both sides commit to, owned roles on either side, and signed acknowledgements as the plan progresses. QBR templates and meeting workflows close the loop on every quarterly review: actions logged, commitments tracked, and last quarter's promises checked against this quarter's progress."
+  - "Mutual action plans extend the planning surface to the buyer: the named milestones both sides commit to, owned roles on either side, and signed acknowledgments as the plan progresses. QBR templates and meeting workflows close the loop on every quarterly review: actions logged, commitments tracked, and last quarter's promises checked against this quarter's progress."
   - "Built for strategic account managers, customer success directors, and sales operations, sitting on top of your CRM and CSM systems rather than replacing them. Account health and growth metrics roll up across the portfolio; key-account-team assignments make staffing legible. Whitespace identified by the planning workflow flows to sales engagement; account-health decline flows to customer success."
 
 #### MISSING (vendor-surface entities, all gated on B1-M1 and B2-L1)
@@ -325,7 +325,7 @@ Deferred to Discover: 0.
 
 #### BOUNDARY findings per neighbor
 
-Skipped (no neighbor at edge weight ≥ 3; the two weight-1 neighbors are summarized in Pass 4 above). Will become applicable once B1-M1 + B1-V* land and CRM becomes the heavy DMDO-side neighbor.
+Skipped (no neighbor at relationship weight ≥ 3; the two weight-1 neighbors are summarized in Pass 4 above). Will become applicable once B1-M1 + B1-V* land and CRM becomes the heavy DMDO-side neighbor.
 
 ### Bucket 2, Surface-for-user (judgment calls)
 
@@ -337,7 +337,7 @@ Skipped (no neighbor at edge weight ≥ 3; the two weight-1 neighbors are summar
 
 4. **B2-D1, Duplicate trigger event `health_score.declined` (197) vs. `account_health.declined` (169).** Both live on `customers`, both describe an account/customer-health decline. Event 169 is used by handoffs 209 (ACCT-PLAN → CSM) and 1216 (CRM → FARMER-DIRECT-SALES); event 197 is used by handoff 1217 (CRM → FARMER-DIRECT-SALES). Options: (a) consolidate on event 169 and DELETE event 197 + re-point handoff 1217 to 169 (cleanest if both names describe the same signal), (b) keep both because `health_score.declined` is the analytics-side signal (CRM's score going down) and `account_health.declined` is the planning-side detection (ACCT-PLAN flagging an action need; subset semantics), (c) keep both as a known catalog redundancy. Independent of B2-T1 but together they expose the same root cause (CRM substrate-vs-ACCT-PLAN-overlay attribution question). Cross-catalog: surfaces in the next CRM or FARMER-DIRECT-SALES audit.
 
-5. **B2-K1, `key_accounts` vs. flag on `customers`.** Strategic Account Planning treats key accounts as a curated subset of customers with extra structure (tier, segment, assigned team). Two shapes: (a) `key_accounts` as a separate master in `ACCT-PLAN-CORE` referencing `customers` (the proposal in Pass 2), (b) `customers` gains a `key_account_tier` enum field and an `assigned_account_team` JSON column (no new master, CRM extension), (c) a new junction `key_account_designations` on (`customers`, `key_account_segments`) without elevating to a full master. The flagship vendors split on this: Altify and Revegy treat key accounts as a separate first-class record; DemandFarm and Demandbase keep them as an enriched customer attribute. Option (a) is cleanest for the cross-domain edge (CSM and SALES-PERF want to filter by `key_account_tier` and the structured master makes that legible); (b) is the lower-touch shape that piggybacks on CRM. Independent of Bucket 3.
+5. **B2-K1, `key_accounts` vs. flag on `customers`.** Strategic Account Planning treats key accounts as a curated subset of customers with extra structure (tier, segment, assigned team). Two shapes: (a) `key_accounts` as a separate master in `ACCT-PLAN-CORE` referencing `customers` (the proposal in Pass 2), (b) `customers` gains a `key_account_tier` enum field and an `assigned_account_team` JSON column (no new master, CRM extension), (c) a new junction `key_account_designations` on (`customers`, `key_account_segments`) without elevating to a full master. The flagship vendors split on this: Altify and Revegy treat key accounts as a separate first-class record; DemandFarm and Demandbase keep them as an enriched customer attribute. Option (a) is cleanest for the cross-domain relationship (CSM and SALES-PERF want to filter by `key_account_tier` and the structured master makes that legible); (b) is the lower-touch shape that piggybacks on CRM. Independent of Bucket 3.
 
 6. **B2-C1, Function-spine: contributors and consumers.** Only Sales is loaded as owner. The vendor base argues that Customer Success (id 23) and Sales Operations (id 52) are routine contributors. The buyer / persona footprint at flagship deployments is Sales (account director, KAM, strategic account manager), Customer Success (CSM owning installed-base growth on the same account), and Sales Operations (rolling up account plans into pipeline forecasts and quota assignments). Options: (a) add Customer Success and Sales Operations as `contributor` rows, (b) add only Customer Success (KAM-CSM is the most reliable cross-functional pattern), (c) leave as-is and revisit when E-band gets authored. Independent of Bucket 3.
 
@@ -433,7 +433,7 @@ H-band coverage after this pass: handoff 209 still untagged (deferred, see below
 
 ### Not applicable to this pass
 
-The TECHNICAL surface in the prompt also covers: enum backfills (no enum gaps named in the audit), B10b FK PATCHes derivable from existing modules (none — ACCT-PLAN has zero modules), inserts to `domain_regulations` (none — ACCT-PLAN has no regulation directly bearing per the audit), stale-row DELETEs with named IDs (none named), naming renames (none named), `data_object_relationships` user-edges (no ACCT-PLAN masters yet, so no Rule #10 user-edges to author), `permission_verb_override` PATCHes (no lifecycle states exist), `notes=''` reverts (no specific row IDs flagged for revert in the audit), and bulk `data_object_aliases` inserts (B2-A1 is a judgment call, no pre-specified tuples).
+The TECHNICAL surface in the prompt also covers: enum backfills (no enum gaps named in the audit), B10b FK PATCHes derivable from existing modules (none — ACCT-PLAN has zero modules), inserts to `domain_regulations` (none — ACCT-PLAN has no regulation directly bearing per the audit), stale-row DELETEs with named IDs (none named), naming renames (none named), `data_object_relationships` relationships to `users` (no ACCT-PLAN masters yet, so no Rule #10 `users` relationships to author), `permission_verb_override` PATCHes (no lifecycle states exist), `notes=''` reverts (no specific row IDs flagged for revert in the audit), and bulk `data_object_aliases` inserts (B2-A1 is a judgment call, no pre-specified tuples).
 
 Status frontmatter left as-is; the audit is still in `feedback_needed` pending Buckets 2 and 3 decisions.
 
@@ -491,7 +491,7 @@ Handoff 210 already tagged in the 2026-05-31 technical continuation (handoff_pro
 
 #### BOUNDARY findings
 
-Skipped (no neighbor at edge weight >= 3). The two weight-1 neighbors (CSM, SALES-ENG) get one-line summaries in the 2026-05-30 narrative. CRM will be the heaviest pairwise neighbor by DMDO weight once B1-M1 plus B1-V* land.
+Skipped (no neighbor at relationship weight >= 3). The two weight-1 neighbors (CSM, SALES-ENG) get one-line summaries in the 2026-05-30 narrative. CRM will be the heaviest pairwise neighbor by DMDO weight once B1-M1 plus B1-V* land.
 
 ### Bucket 2, Surface-for-user (judgment calls)
 

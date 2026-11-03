@@ -43,7 +43,7 @@ b1a:
       then B then S to author domain_modules, domain_module_capabilities (every capability
       gets >=1 realizing module), masters via domain_module_data_objects (NOT the deprecated
       domain_data_objects rollup), lifecycle_states, aliases, and the single domain-grain
-      system skill. If multi-module, run Phase P (personas / role_modules / process_raci)
+      system skill. If multi-module, run Phase P (personas / persona_modules / process_raci)
       afterward. Reuse the existing compensation_plans data_object (id 153) rather than
       minting a new one; arbitrate co-mastership vs consumer with domain 60.
     blocked_by:
@@ -79,12 +79,12 @@ b1b:
     finding: |
       compensation_plans (data_objects id 153, entity_type operational_workflow) already
       exists, mastered by domain 60 (domain_module_data_objects module 78, role master) and
-      consumed by domains 63/others. SALES-PERF has no link to it today. The ICM vendor
+      consumed by domains 63/others. SALES-PERF has no relationship to it today. The ICM vendor
       surface (9 of 9) makes this a Core SALES-PERF master, so the build must add a
       SALES-PERF domain_module_data_objects row (co-master or consumer per arbitration) on
       the realizing module from B1A-BUILD, NOT a new data_object.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1A-BUILD, reason: master link must anchor to a real domain_modules row}
+      - {type: prerequisite_entity, ref: B1A-BUILD, reason: master relationship must anchor to a real domain_modules row}
       - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
     vendor_evidence: [Varicent, Xactly Incent, Salesforce Spiff, CaptivateIQ, Performio, SAP Commissions, beqom Pay, QuotaPath, Anaplan Sales Planning]
     extra_existing_data_object_id: 153
@@ -124,7 +124,7 @@ b1b:
   - id: B1B-V5
     summary: "Vendor-surface master placeholder, commission_statements - 9 of 9 ICM vendors master this entity; gated on the build."
     finding: "commission_statements is a Core master across every flagship ICM vendor. Currently absent."
-    action: "On build: create data_object commission_statements; apply Rule #12 has_submit_lock (statements lock once issued); domain_module_data_objects(role master, necessity required, module SALES-PERF-COMMISSIONS); lifecycle (draft / issued / acknowledged / disputed / finalized) and statement_acknowledgements junction."
+    action: "On build: create data_object commission_statements; apply Rule #12 has_submit_lock (statements lock once issued); domain_module_data_objects(role master, necessity required, module SALES-PERF-COMMISSIONS); lifecycle (draft / issued / acknowledged / disputed / finalized) and statement_acknowledgments junction."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-BUILD, reason: master must anchor to a real domain_modules row}
       - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
@@ -144,7 +144,7 @@ b1b:
   - id: B1B-V7
     summary: "Vendor-surface master placeholder, payees - 9 of 9 ICM vendors master this entity; Rule #9 collision check vs users/hcm_employees; gated on the build."
     finding: "payees is a Core master (sales reps and managers receiving commissions). Subject to Rule #9 collision check against the platform_builtin users entity; typically a thin extension FK to users/hcm_employees with comp-specific attributes. Currently absent."
-    action: "On build: create data_object payees (Rule #9 naming arbitration); Rule #12 has_personal_content flag (PII); domain_module_data_objects(role master, necessity required, module SALES-PERF-COMMISSIONS or a shared SALES-PERF-PARTIES per chosen shape); Rule #10 platform_builtin edge to users."
+    action: "On build: create data_object payees (Rule #9 naming arbitration); Rule #12 has_personal_content flag (PII); domain_module_data_objects(role master, necessity required, module SALES-PERF-COMMISSIONS or a shared SALES-PERF-PARTIES per chosen shape); Rule #10 platform_builtin relationship to users."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-BUILD, reason: master must anchor to a real domain_modules row}
       - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape (a shared SALES-PERF-PARTIES module is one of the open options)}
@@ -172,7 +172,7 @@ b2:
 
   - id: B2-R1
     summary: "Regulation coverage for SALES-PERF (currently 0 domain_regulations rows); ASC 606-21 / IFRS 15 cover commission capitalization, SOX covers internal controls, GDPR covers payee PII, Reg BI / FINRA cover commissioned sellers in regulated financial products."
-    question: "Which regulations should the SALES-PERF domain link to?"
+    question: "Which regulations should the SALES-PERF domain relationship to?"
     options:
       - {label: "a", regulations: [ASC 606-21]}
       - {label: "b", regulations: [ASC 606-21, SOX]}
@@ -191,11 +191,11 @@ b2:
     why: "Both (a) and (b) are destructive on an existing non-agent-authored row, so the agent will not act unapproved. The discovery_substring row remains at record_status='new' and skews the H-band provenance report; user picks the disposition."
 
   - id: B2-P1
-    summary: "Pairwise reconciliation timing post-build - CRM (edge weight 2) and REV-INTEL (edge weight 1) are below the default deep-dive threshold (>=3); SALES-PERF cannot reconcile until it has modules."
+    summary: "Pairwise reconciliation timing post-build - CRM (relationship weight 2) and REV-INTEL (relationship weight 1) are below the default deep-dive threshold (>=3); SALES-PERF cannot reconcile until it has modules."
     question: "When the build lands, which pairwise passes do you want scheduled?"
     options:
       - {label: "a", action: "schedule both CRM and REV-INTEL pairwise passes immediately after the build lands"}
-      - {label: "b", action: "defer until edge weight independently crosses 3"}
+      - {label: "b", action: "defer until relationship weight independently crosses 3"}
       - {label: "c", action: "only run CRM pairwise (REV-INTEL has modularized but the SALES-PERF side must build first)"}
     why: "Cross-domain reconciliation is read-only by construction and not a structural blocker; timing is your call."
 

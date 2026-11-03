@@ -64,7 +64,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `clause_libraries` | `clause_libraries` | Clause Library | Clause Libraries | master | - | - | optional | - | catalog | `:admin` | - |
 | 2 | `contract_clauses` | `contract_clauses` | Contract Clause | Contract Clauses | master | - | - | required | - | catalog | `:admin` | - |
@@ -78,7 +78,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -86,7 +86,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `contract_templates` | published_to | `contract_drafts` | one_to_many | reference | optional | source | clear | reference | - |
 | `clause_libraries` | contains | `contract_clauses` | one_to_many | composition | optional | source | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -95,7 +95,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | approved | `contract_templates` | one_to_many | optional | source | clear | reference | - |
 | `users` | approved | `contract_clauses` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -107,7 +107,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `legal_contracts` | contains | `contract_clauses` | one_to_many | optional | none | n/a | - |
 | `negotiation_playbooks` | defines positions for | `contract_clauses` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -139,7 +139,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `contract_drafts` | consumer | optional | CPQ-APPROVALS-CONTRACTS (CPQ) | - |
 | `sourcing_events` | consumer | required | _(no canonical owner recorded)_ | - |

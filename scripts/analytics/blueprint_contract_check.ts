@@ -259,28 +259,28 @@ export const CATEGORY_LABEL: Record<Category, string> = {
 };
 
 // One section 7 gated row of the checked copy, parsed from its text.
-type S7Row = { entity: string; role: string; ownerNote: string; state: string; gate: string; used: boolean };
+type S7Row = { entity: string; held_as: string; ownerNote: string; state: string; gate: string; used: boolean };
 
 function parseSection7(text: string): S7Row[] {
   const lines = text.split("\n");
   const start = lines.findIndex((l) => /^##\s+7\./.test(l));
   if (start < 0) return [];
   const out: S7Row[] = [];
-  let entity = "", role = "master", ownerNote = "";
+  let entity = "", heldAs = "master", ownerNote = "";
   let header: string[] | null = null;
   for (let i = start + 1; i < lines.length && !/^##\s/.test(lines[i]); i++) {
     const l = lines[i];
     const hm = l.match(/^###\s+`([a-z][a-z0-9_]*)`/);
-    if (hm) { entity = hm[1]; role = "master"; ownerNote = ""; header = null; continue; }
+    if (hm) { entity = hm[1]; heldAs = "master"; ownerNote = ""; header = null; continue; }
     const nm = l.match(/^_This scope holds `[^`]+` as \*\*([a-z_]+)\*\*; the canonical state machine is owned by (.+)\._$/);
-    if (nm) { role = nm[1]; ownerNote = nm[2]; continue; }
+    if (nm) { heldAs = nm[1]; ownerNote = nm[2]; continue; }
     if (!isRow(l)) { header = null; continue; }
     if (isSeparator(l)) continue;
     const cells = splitCells(l);
     if (!header) { header = cells.map(headerName); continue; }
     const at = (n: string) => bare(cells[header!.indexOf(n)] ?? "");
     if (!at("requires_permission?").includes("✓")) continue;
-    out.push({ entity, role, ownerNote, state: at("state_name"), gate: at("derived gate"), used: false });
+    out.push({ entity, held_as: heldAs, ownerNote, state: at("state_name"), gate: at("derived gate"), used: false });
   }
   return out;
 }
@@ -325,25 +325,25 @@ export function classifyIssue(issue: CheckerIssue, bp: BlueprintCase, ctx: Deriv
     row.used = true;
     const obj = ctx.index.dataObjects.find((o) => o.data_object_name === row.entity);
     const state = obj ? (ctx.all.lifecycleByDataObjectId.get(obj.id) ?? []).find((s: any) => s.state_name === row.state) : undefined;
-    const masters = obj ? (ctx.all.dmdoByDataObjectId.get(obj.id) ?? []).filter((r: any) => r.role === "master").map((r: any) => ctx.index.modulesById.get(r.domain_module_id)?.domain_module_code ?? `#${r.domain_module_id}`) : [];
+    const masters = obj ? (ctx.all.dmdoByDataObjectId.get(obj.id) ?? []).filter((r: any) => r.held_as === "master").map((r: any) => ctx.index.modulesById.get(r.domain_module_id)?.domain_module_code ?? `#${r.domain_module_id}`) : [];
     const realizer = state?.domain_module_id != null ? ctx.index.modulesById.get(state.domain_module_id)?.domain_module_code ?? `#${state.domain_module_id}` : null;
     const where = `\`${row.entity}.${row.state}\``;
-    if (row.role === "master" || row.role === "embedded_master") {
+    if (row.held_as === "master" || row.held_as === "embedded_master") {
       if (masters.length > 1) {
         return { category: "b", reason: `${where}: the entity has ${masters.length} masters (${masters.join(", ")}); the state is realized by ${realizer ?? "no module"}, so this unit does not mint \`${gate}\`` };
       }
       if (state && state.domain_module_id != null && !moduleIds.has(state.domain_module_id)) {
-        return { category: "b", reason: `${where} (${row.role} here): its realizer ${realizer} is out of scope, so 8.1 does not mint \`${gate}\`` };
+        return { category: "b", reason: `${where} (${row.held_as} here): its realizer ${realizer} is out of scope, so 8.1 does not mint \`${gate}\`` };
       }
-      return { category: "c", reason: `${where} (${row.role} here): the gate is not minted in 8.1` };
+      return { category: "c", reason: `${where} (${row.held_as} here): the gate is not minted in 8.1` };
     }
     if (gate === "-" && masters.length === 0) {
-      return { category: "b", reason: `${where} (${row.role} here): no module masters \`${row.entity}\`, so no gate resolves` };
+      return { category: "b", reason: `${where} (${row.held_as} here): no module masters \`${row.entity}\`, so no gate resolves` };
     }
     if (gate === "-" || !gate.startsWith(`${bp.slug}:`)) {
-      return { category: "consumer", reason: `${where} (${row.role} here, owned by ${row.ownerNote || "?"}) shows ${gate === "-" ? "no gate" : `\`${gate}\``}` };
+      return { category: "consumer", reason: `${where} (${row.held_as} here, owned by ${row.ownerNote || "?"}) shows ${gate === "-" ? "no gate" : `\`${gate}\``}` };
     }
-    return { category: "c", reason: `${where} (${row.role} here) shows this unit's \`${gate}\`, which 8.1 does not mint` };
+    return { category: "c", reason: `${where} (${row.held_as} here) shows this unit's \`${gate}\`, which 8.1 does not mint` };
   }
 
   m = issue.detail.match(/^RACI rule: process `([^`]*)` has (\d+) accountable rows/);

@@ -37,7 +37,7 @@ b1a:
       audit (B1-S14) flagged the target as wrong: a unit comes under management from a closed sale, so the
       intended target is real_estate_transactions(353), not customer_cases(103). Whether to PATCH
       related_data_object_id to 353 or DELETE the row is a judgment call (depends on whether RE-PROP-MGMT
-      intends to keep a property-handover edge at all). The 7 net-new intra-domain edges among the 6 masters
+      intends to keep a property-handover relationship at all). The 7 net-new intra-domain relationships among the 6 masters
       were loaded 2026-06-06; row 473 was left untouched pending this decision.
     action: >
       User decides: PATCH data_object_relationships.473 related_data_object_id=353 (keep as property
@@ -49,7 +49,7 @@ b1b:
   - id: B1B-REG-CODES-EMPTY
     summary: "regulations id=84 (FCRA) carries an empty regulation_code; PATCH gated on the regulations-master code-namespace Validate."
     finding: >
-      FCRA (regulations id=84) is linked to RE-PROP-MGMT via domain_regulations id=272 (applicability=mandatory,
+      FCRA (regulations id=84) is related to RE-PROP-MGMT via domain_regulations id=272 (applicability=mandatory,
       loaded 2026-05-31) but the regulation row itself has regulation_code="". Other regulations carry short
       codes (GDPR, CCPA, ADA). regulations is a catalog-wide shared master; a PATCH affects every consuming domain.
     action: >
@@ -144,9 +144,9 @@ b2:
       Chapter 92, FL Statutes Chapter 83) with distinct security-deposit holding periods, eviction notice timing,
       and required disclosures. Pick a modeling strategy.
     options:
-      - "(a) single umbrella regulation state_landlord_tenant_statutes linked to RE-PROP-MGMT"
+      - "(a) single umbrella regulation state_landlord_tenant_statutes related to RE-PROP-MGMT"
       - "(b) defer to per-jurisdiction modeling once a jurisdictions rollup is loaded"
-    why: "Shapes how the security_deposits / eviction_cases candidates connect to regulation rows once entity creation is in scope."
+    why: "Shapes how the security_deposits / eviction_cases candidates relate to regulation rows once entity creation is in scope."
 
   - id: B2-PATTERN-FLAGS
     summary: "Pattern-flag re-evaluation per Rule #12 on RE-PROP-MGMT masters."
@@ -174,7 +174,7 @@ b2:
   - id: B2-PAIRWISE-RERUN
     summary: "Re-run pairwise reconciliation (Pass 4) against RE-INVEST and RE-BROKERAGE now that RE-PROP-MGMT has modules."
     question: >
-      With the M-band resolved, re-run the per-neighbor 5-section diff against RE-INVEST (edge weight 2) and
+      With the M-band resolved, re-run the per-neighbor 5-section diff against RE-INVEST (relationship weight 2) and
       RE-BROKERAGE (only inbound source)?
     options:
       - "(a) yes, schedule for the next Validate pass"
@@ -248,7 +248,7 @@ b3:
     candidate: security_deposits
     rationale: >
       Holding-period accounting (15 to 60 days post move-out, state-dependent); distinct from rent_payments.
-      Missing master in RE-PROP-MGMT-FINANCIALS (287). Gated on B2-STATE-LANDLORD-TENANT for regulation linkage.
+      Missing master in RE-PROP-MGMT-FINANCIALS (287). Gated on B2-STATE-LANDLORD-TENANT for regulation relationship.
     vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Rent Manager, RealPage Property Management]
     proposed_module: RE-PROP-MGMT-FINANCIALS
 

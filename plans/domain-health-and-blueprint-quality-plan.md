@@ -7,7 +7,7 @@
 A review of the Hiring Starter blueprint ([catalog/blueprints/hiring-starter-semantic-blueprint.md](../catalog/blueprints/hiring-starter-semantic-blueprint.md)) surfaced about 20 problems. Most sit on shared ATS catalog rows; several are generator derivation bugs. The domain's audit record (`audits/ATS/state.yaml`) shows none of them. Root causes:
 
 - **Checks added after a domain passed were never re-run.** B6b, B9c and M9 part 2 were added on 2026-06-01/02. Of 184 audited domains, 5 record B6b, 9 record B9c and 28 record M9. 64% of all trigger_events have a blank `to_state`.
-- **Many checks are presence-only.** Examples: B7 "a user edge exists", M8 "description filled".
+- **Many checks are presence-only.** Examples: B7 "a relationship to `users` exists", M8 "description filled".
 - **Validate is run by hand.** It's an agent-run checklist of about 57 check IDs (the docs say "~28"). Nothing records which checks ran or against which checklist version.
 - **Sections 8 and 9 have no tests.** These blueprint sections are derived by code. Derivation bugs are invisible to a data audit: no admin role, a duplicated gate, gates routed to the Responsible persona, fixed "approval gate" and "notification" text, and RACI granting gates that 8.1 never mints.
 - **The output doesn't match its consumer.** The semantius-architect skill reads these blueprints, and its contract (`consistency-check.ts` `checkAccessScope`, `stage-10-workflow-perms.md`) differs from what we emit.
@@ -22,7 +22,7 @@ A review of the Hiring Starter blueprint ([catalog/blueprints/hiring-starter-sem
   - `basic`, `advanced` and `custom` don't change.
 - **High-risk gates** are flagged per gate in the catalog (`data_object_lifecycle_states.is_high_risk`), in blueprint §7 and in spec §8.1. The flag only has an effect under `raci`.
 - **Per-check results** go in a `checks:` block in `state.yaml`.
-- **Informed RACI rows** show their trigger events, and roles.md is updated to match.
+- **Informed RACI rows** show their trigger events, and personas.md is updated to match.
 - **The health script ports every mechanical check** in one delivery.
 - **In scope:** the minor cleanups, the loader pre-flight, and a two-roles rule inside B7b.
 - **The undeployed-handoff check is dropped.** Cross-domain handoffs normally target modules that aren't deployed.
@@ -63,19 +63,19 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
 2. **Check registry.** One array of `{id, band, kind, run(ctx) -> Finding[]}`, with ids matching the SKILL.md checklist.
    - **Every one of the 57 checklist IDs** gets exactly one entry. Result values: `pass | fail | warn | agent | delegated | skipped`.
      - **Mechanical, run by the script:** S1-S3, A1-A3, M1, M2, M4-M7, M9 (both layers), B1-B3, B5, B6b, B8, B9, B9b, B9c, B10, B10b, B12, B13, B15, B16, C1, E1-E4, F1-F5, H1. B10 is report-only, so its result is at most `warn`.
-     - **Mechanical part plus an `agent` part** (the script runs the presence check, and lists the judgment half as `agent`): A4 (copy present / buyer voice), M8 (copy present / buyer voice), B6 (edges present / isolated-master justification), B7 (user edge present / which actors need one), B11 (aliases present / which masters need them), B14 (conditional masters optional / which are conditional), F8 (fields present / no brands, wording).
+     - **Mechanical part plus an `agent` part** (the script runs the presence check, and lists the judgment half as `agent`): A4 (copy present / buyer voice), M8 (copy present / buyer voice), B6 (relationships present / isolated-master justification), B7 (relationship to `users` present / which actors need one), B11 (aliases present / which masters need them), B14 (conditional masters optional / which are conditional), F8 (fields present / no brands, wording).
      - **`agent` only:** A5, B4, C2, D1, F7, M10.
      - **`delegated`:** B9d (`b9d_resolver.ts`) and B9e (re-emit with `emit_domain_map.ts`).
      - **`skipped`:** E5 (retired) and F6 (reserved).
      - **E6** is extended to run the derived-result checks R1-R8 (Phase 3), on top of its existing reach and `entity_type` checks.
-   - Port existing logic into a shared module, then have the original scripts call it so the logic isn't duplicated. Sources: `audit_backlog.ts` (A1, A2, B1, C1, M1, F3), `phase_p_triage.ts` (M9 entity layer, B13, E1), `required_edge_presence_probe.ts`, `validate_cross_domain.ts` q1/q2/q3/q5, `be_spelling_sweep.ts`.
+   - Port existing logic into a shared module, then have the original scripts call it so the logic isn't duplicated. Sources: `audit_backlog.ts` (A1, A2, B1, C1, M1, F3), `phase_p_triage.ts` (M9 entity layer, B13, E1), `required_relationship_presence_probe.ts`, `validate_cross_domain.ts` q1/q2/q3/q5, `be_spelling_sweep.ts`.
 3. **New and extended data checks:**
 
    | id | check | severity | from the ATS case |
    |---|---|---|---|
-   | B6b (automate) | for `one_to_many`, `owner_side=source`; empty `inverse_verb`. 470 rows are flagged for review, never a blanket flip | warn (soft per SKILL.md) | edges 810, 812 |
-   | B7b | an edge to `users` that is `many_to_many` with kind `reference` | fail | rows 822-825, 1343, 1344 |
-   | B7b (verb) | a user-edge verb that combines two roles ("coordinator and panelists") | warn | row 823 |
+   | B6b (automate) | for `one_to_many`, `owner_side=source`; empty `inverse_verb`. 470 rows are flagged for review, never a blanket flip | warn (soft per SKILL.md) | relationships 810, 812 |
+   | B7b | a relationship to `users` that is `many_to_many` with kind `reference` | fail | rows 822-825, 1343, 1344 |
+   | B7b (verb) | a `users` relationship verb that combines two roles ("coordinator and panelists") | warn | row 823 |
    | B9c (extend) | a blank `to_state`, or one that matches no lifecycle state, on a lifecycle or state_change event | warn (soft per SKILL.md) | 10 of 13 starter-entity events blank, 1 (`signed`) invalid |
    | B9f | handoffs with the same trigger event, source module and target module (the payload may differ, so it's a review signal) | warn | 121 / 398 |
    | E4 (tighten) | every gated process has at least 1 Responsible and **exactly 1** Accountable (replaces "at least 1 A") | fail | catalog: 78 processes OK, 1 has two A, 2 have none |
@@ -94,7 +94,7 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
    - The existing pre-flight in [load_cluster_drafts.ts](../scripts/loaders/load_cluster_drafts.ts) (L264-276) and the loader idiom ([references/loader-idiom.md](../.claude/skills/domain-map-analyst/references/loader-idiom.md)) call it before any POST or PATCH.
    - **Scope: only the rows being written.** It checks the incoming batch, plus the existing rows each new row interacts with: for E4, the process's existing Accountable rows. It never checks the whole catalog, so existing data, such as the 64% blank `to_state`s, never blocks a load.
    - **Errors refuse the load:**
-     - B7b, a new `users` edge that is `many_to_many` with kind `reference`;
+     - B7b, a new relationship to `users` that is `many_to_many` with kind `reference`;
      - E4, a new Accountable row on a process that already has one.
    - **Everything else prints a warning and loads:** B6b and B9c (soft by SKILL.md policy, as `load_cluster_drafts.ts` does today), B7b verb, B9f, and E4 with zero Accountable (a batch may add the Responsible rows first).
    - This follows the skill's own policy that every new invariant lives in both the audit and the loader pre-flight.
@@ -108,7 +108,7 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
 2. **Add `deriveModuleModel(module, ctx) -> BlueprintModel`**, one typed object for everything sections 2-9 show. The renderers consume it; today sections 8 and 9 each derive separately (L962, L1012).
 3. **Offline fixtures and determinism.**
    - Export `buildCatalogIndex` and `buildRelationshipIndices` from catalog.ts.
-   - Sort dmdo, relationships, process_raci, role_modules and processes in the index builder. Their queries have no `order=`.
+   - Sort dmdo, relationships, process_raci, persona_modules and processes in the index builder. Their queries have no `order=`.
 4. **Fix the derivation to match the new contract** ([gate-permission-model-plan.md](gate-permission-model-plan.md) section 5):
    - **Gate holder:** the single Accountable persona of the gate's process gets `grant gates [...]`. Responsible gets the gated entities' write tier only.
    - **One permission set:** every gate keeps its `workflow-gate (lifecycle)` row.
@@ -146,7 +146,7 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
    | R5 | every Informed row resolves to at least one trigger_event | warn |
    | R6 | every handoff event in sections 6.2 / 6.3 resolves `to_state` on its entity's lifecycle | warn |
    | R7 | the module description doesn't contradict the derived counts (heuristic) | warn |
-   | R8 | every row-scope rule's entity has a single-person ownership edge to `users` | warn |
+   | R8 | every row-scope rule's entity has a single-person ownership relationship to `users` | warn |
 
 2. **Architect checker as an acceptance gate.** A harness copies each blueprint to the scratchpad and runs the current checker from the source, `bun C:/dev/semantius-agent/semantius-plugin/skills/semantius-architect/references/consistency-check.ts`. The harness never modifies the checker.
    - **Which level it injects:**
@@ -170,7 +170,7 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
   - one canonical check list replaces README:65 "~28", SKILL:1345 and `mass-audit-subagent-prompt.md` L141-142;
   - adding or changing a check bumps `CHECKLIST_VERSION` and is followed by `--all --stale`.
 - **[audits/README.md](../audits/README.md):** add the `checks:` block to the v2 schema, and adjust L87 ("`extra_` prefix only").
-- **[references/roles.md](../.claude/skills/domain-map-analyst/references/roles.md):** L82 says Informed rows show their notification events. L86 says the Accountable role holds the gates.
+- **[references/personas.md](../.claude/skills/domain-map-analyst/references/personas.md):** L82 says Informed rows show their notification events. L86 says the Accountable role holds the gates.
 - **owner_side means the parent:** fix [references/module-shape.md](../.claude/skills/domain-map-analyst/references/module-shape.md) L341 and the comment at [generate_blueprints.ts](../scripts/generate_blueprints.ts) L1197-1199.
 - **README.md b1 section:** fix the stale "read-only by construction" line and the `audits/<CODE>.md` path.
 
@@ -219,7 +219,7 @@ New `scripts/analytics/domain_health.ts --domain <CODE> | --all [--json] [--reco
 - **It checks against the written rules, not whether the rules are right.** A wrong rule passes.
 - **It finds problems but doesn't fix them.** Data fixes still need decisions and sign-off.
 - **Judgment stays with people:** market coverage, entity boundaries, naming and buyer-voice copy.
-- **The catalog can't express everything a blueprint might need.** Cross-entity transition rules ("hired requires an accepted offer"), notification recipients, which edge decides row ownership (including offer to hiring manager), and stages configurable per job stay absent until the catalog schema is extended.
+- **The catalog can't express everything a blueprint might need.** Cross-entity transition rules ("hired requires an accepted offer"), notification recipients, which relationship decides row ownership (including offer to hiring manager), and stages configurable per job stay absent until the catalog schema is extended.
 - **Heuristic checks give false positives.** That applies to R7 and E4d.
 - **Admin override isn't enforced by the platform itself.** In living RACI mode it lives in each skill-authored gate rule, so a hand-written rule could leave it out.
 - **The optimizer can't recover high-risk from a live `gated` module.** It isn't stored live at that level.

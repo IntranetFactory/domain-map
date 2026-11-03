@@ -34,7 +34,7 @@ Cross-functional task and project execution surface: work items with owners, due
 | Custom Fields | `work_custom_fields` | User-defined fields attached to a project or workspace, typed as text, number, date, select, and more, applying to all items in scope. |
 | Item Attachments | `work_item_attachments` | Files or external links attached to a work item. |
 | Item Comments | `work_item_comments` | Threaded comments on a work item, which may include personal or sensitive content. |
-| Item Tag Assignments | `work_item_tags` | Assignments linking work items to tags, where existence asserts the tag is applied. |
+| Item Tag Assignments | `work_item_tags` | Assignments relating work items to tags, where existence asserts the tag is applied. |
 | Milestones | `work_milestones` | Zero-duration gates within a project marking a meaningful transition, distinguished from regular items by passed or missed semantics. |
 | Project Templates | `work_project_templates` | Reusable project blueprints with seeded sections, items, custom fields, and automations. |
 | Proofing Annotations | `proofing_annotations` | Markup comments placed on a region of a proof during review, with the reviewer, location, and resolution state. |
@@ -44,7 +44,7 @@ Cross-functional task and project execution surface: work items with owners, due
 | Task Templates | `work_task_templates` | Reusable work-item blueprints with seeded assignee role, due-date offset, subtasks, and custom field defaults. |
 | Work Automations | `work_automations` | Trigger-action rules defined per board or project, with triggers like status change or assignment driving multi-step conditional actions. |
 | Work Dashboards | `work_dashboards` | Saved, shareable cross-project dashboards composed of widgets that summarize work progress, workload, and goal status. |
-| Work Dependencies | `work_dependencies` | Typed dependencies between two work items, linking predecessor and successor with finish-to-start, start-to-start, finish-to-finish, or start-to-finish type. |
+| Work Dependencies | `work_dependencies` | Typed dependencies between two work items, relating predecessor and successor with finish-to-start, start-to-start, finish-to-finish, or start-to-finish type. |
 | Work Items | `work_items` | Atomic tasks, items, or cards in a work-management tool, with owner, due date, status, priority, dependencies, subtasks, attachments, and comments. |
 | Work Portfolios | `work_portfolios` | Team-level groupings of related projects for cross-project status roll-up. |
 | Work Projects | `work_projects` | Containers of work items (project, board, sheet, or space), with timeline, status, owner, members, dashboards, and embedded views. |
@@ -231,7 +231,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `work_approval_chains` | `work_approval_chains` | Approval Chain | Approval Chains | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `work_approval_steps` | `work_approval_steps` | Approval Step | Approval Steps | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -275,7 +275,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -317,7 +317,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `work_statuses` | is_status_of | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
 | `work_status_updates` | records_change_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -353,7 +353,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | owns_portfolios | `work_portfolios` | one_to_many | optional | source | clear | reference | - |
 | `users` | made_status_updates | `work_status_updates` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -373,9 +373,9 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
 | `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
 | `marketing_plan_lines` | is delivered by | `work_projects` | one_to_many | optional | none | n/a | - |
-| `work_goal_links` | links | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
+| `work_goal_relationships` | relates | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -407,14 +407,14 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `demand_intake_requests` | becomes | `strategic_initiatives` | one_to_one | optional | none | n/a | - |
 | `strategic_initiatives` | delivered_through | `roadmap_items` | one_to_many | optional | none | n/a | - |
 | `strategic_initiatives` | staffed_by | `resource_allocations` | one_to_many | optional | none | n/a | - |
-| `dependency_chains` | links | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
+| `dependency_chains` | relates | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
 | `strategic_initiatives` | tracked_by | `benefits_tracking_records` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `work_automations` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
 | `work_automations` | WSC-CHANNELS-CONVERSATIONS (Channels and Conversations) - WSC | consumer | optional | - |
@@ -431,18 +431,18 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_automation.triggered` | _(signal)_ | `work_automations` | batch_sync | medium | Aggregated work-automation outcomes feed SPM portfolio rollup. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results relating down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
 | WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_project.completed` | `active` → `completed` _(lifecycle)_ | `work_projects` | api_call | medium | WM work_project completion feeds SPM portfolio rollup (project closure as a milestone in the strategic portfolio). target_domain_module_id NULL because SPM is not yet modularized. |
 | WORK-MGMT-TASK-EXEC | PSA | _(domain-level)_ | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | low | Automation-driven task transitions feed PSA for utilization and billable-hour tracking. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | low | When WM is the work tracker for a PSA-managed delivery, work_item completion closes the loop on PSA-side time / utilization accounting. Pairs with the existing PSA -> WM project_task.completed inbound for the bidirectional sync pattern. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_project.completed` | `active` → `completed` _(lifecycle)_ | `work_projects` | batch_sync | medium | Services orgs running delivery in WORK-MGMT close a project and need utilization, billable hours, and milestone-based revenue recognition to roll up into PSA. Nightly sync of project status + hours is the common pattern; richer real-time integration exists but is uncommon. |
 | WORK-MGMT-TASK-EXEC | WSC | WSC-CHANNELS-CONVERSATIONS | `work_automation.triggered` | _(signal)_ | `work_automations` | api_call | low | Automations post status updates and task notifications into workstream collaboration channels. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_automation.disabled` | `enabled` → `disabled` _(lifecycle)_ | `work_automations` | event_stream | low | A WORK-MGMT automation rule has been disabled. PROD-MGMT subscribers stop reacting to its downstream effects (e.g. auto-creation of feature_request linkages from incoming work_items). |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_automation.disabled` | `enabled` → `disabled` _(lifecycle)_ | `work_automations` | event_stream | low | A WORK-MGMT automation rule has been disabled. PROD-MGMT subscribers stop reacting to its downstream effects (e.g. auto-creation of feature_request relationships from incoming work_items). |
 | WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | medium | Engineering team automations mirror into product-management roadmap tracking. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are linked to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke - friction is the mapping between work_item id and roadmap_item id. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are related to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke: friction is the mapping between work_item id and roadmap_item id. |
 | WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | low | Automation rules can drive OKR check-in updates or auto-progress KRs based on work_item events. Eventful (out-of-process at runtime) because automation execution decouples from the caller. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal - drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
+| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal: it drives KR closure recalculation and triggers KR-fully-met evaluations on related objectives. |
+| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has related the item to a key result. In-process FK + state read; no message moves. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -451,7 +451,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | WORK-MGMT-TASK-EXEC | SPM | SPM-DEMAND-MGMT | `business_value_assessment.completed` | `approved` _(lifecycle)_ | `business_value_assessments` | event_stream | medium | Approved initiatives cascade into team-level work items in WORK-MGMT. |
 | WORK-MGMT-TASK-EXEC | SPM | SPM-DEMAND-MGMT | `demand_intake.approved` | `screened` → `approved` _(state_change)_ | `strategic_initiatives` | api_call | high | SPM creates work_projects + kickoff work_items for charter and resourcing. |
 | WORK-MGMT-TASK-EXEC | SPM | SPM-PORTFOLIO-PLANNING | `strategic_portfolio.rebalanced` | `active` → `active` _(state_change)_ | `strategic_portfolios` | batch_sync | high | Re-prioritization cascades to project priority updates; high-touch validation. |
-| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.completed` | _(state_change)_ | `action_plans` | api_call | medium | An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the linked work_items being closed in WORK-MGMT, leaving stale tasks. |
+| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.completed` | _(state_change)_ | `action_plans` | api_call | medium | An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the related work_items being closed in WORK-MGMT, leaving stale tasks. |
 | WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.created` | _(state_change)_ | `action_plans` | api_call | medium | Engagement action plans often tracked as work items in WORK-MGMT for execution visibility. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `project_task.completed` | _(lifecycle)_ | `project_tasks` | event_stream | low | PSA task completion mirrors into the WORK-MGMT board to keep team-level views current. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.confirmed` | _(state_change)_ | `project_assignments` | event_stream | low | PSA seeds the WORK-MGMT project board with the newly-assigned resource so day-to-day task tracking can begin. |
@@ -469,7 +469,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `action_plans` | consumer | optional | EMP-EXP-ACTION-PLANNING (EMP-EXP) | - |
 | `business_value_assessments` | consumer | optional | SPM-DEMAND-MGMT (SPM) | - |

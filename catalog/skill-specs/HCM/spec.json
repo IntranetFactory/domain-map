@@ -789,7 +789,7 @@
     },
     {
       "from": "employees",
-      "verb": "is_linked_to",
+      "verb": "is_related_to",
       "to": "users",
       "cardinality": "one_to_one",
       "required": false
@@ -1166,7 +1166,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "HIRING-MANAGER",
       "business_function": null,
@@ -1288,7 +1288,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

@@ -22,7 +22,7 @@ const BACKFILL: Array<{ id: number; name: string; entity_type: string }> = [
   { id: 893, name: "interview_questions", entity_type: "catalog" },
   { id: 1002, name: "candidate_tags", entity_type: "catalog" },
 
-  // junction — N:M link
+  // junction — N:M relationship
   { id: 905, name: "hiring_team_assignments", entity_type: "junction" },
   { id: 1003, name: "candidate_tag_assignments", entity_type: "junction" },
 
@@ -30,7 +30,7 @@ const BACKFILL: Array<{ id: number; name: string; entity_type: string }> = [
   { id: 898, name: "pre_adverse_action_notices", entity_type: "operational_workflow" },
   { id: 899, name: "applicant_flow_records", entity_type: "operational_workflow" },
   { id: 901, name: "data_subject_requests", entity_type: "operational_workflow" },
-  { id: 902, name: "fcra_summary_of_rights_acknowledgements", entity_type: "operational_workflow" },
+  { id: 902, name: "fcra_summary_of_rights_acknowledgments", entity_type: "operational_workflow" },
   { id: 903, name: "voluntary_self_identifications", entity_type: "operational_workflow" },
 ];
 

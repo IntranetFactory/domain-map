@@ -46,7 +46,7 @@ q4: Should the domain master its own customer/account records, or read them from
 - a) Master them locally as an embedded copy, deferring to CRM when a CRM is also deployed.
 - b) Read them from CRM only (no local master).
 
-Recommended: a. Every flagship (Towbook, TRAXERO/Autura, VTS, ProTow) ships its own customer/account book as a first-class record because tow operators rarely run a separate CRM. The dominant "customer" is the motor club (AAA, Agero, Allstate, Urgent.ly), a towing-specific dispatch and billing partner with no CRM analogue. An embedded master keeps the domain deployable on its own while still deferring to the canonical CRM record when both are installed.
+Recommended: a. Every flagship (Towbook, TRAXERO/Autura, VTS, ProTow) ships its own customer/account book as a first-class record because tow operators rarely run a separate CRM. The dominant "customer" is the motor club (AAA, Agero, Allstate, Urgent.ly), a towing-specific dispatch and billing partner with no CRM analog. An embedded master keeps the domain deployable on its own while still deferring to the canonical CRM record when both are installed.
 
 a4:
 
@@ -54,10 +54,10 @@ a4:
 
 q5: Should the domain master tow trucks itself, or reference the vehicle from Fleet Management? A towing company's trucks are a vehicle fleet, so Fleet Maintenance could plausibly own the asset.
 
-- a) Master tow trucks locally, with an optional link to Fleet Management for shops that run it.
+- a) Master tow trucks locally, with an optional relationship to Fleet Management for shops that run it.
 - b) Read the vehicle asset from Fleet Management.
 
-Recommended: a. Every towing flagship (Towbook, TRAXERO/Autura, VTS, ProTow) masters the tow truck in-product because it is operationally distinct: boom / wheel-lift / rotator / flatbed class, WreckMaster/NSD certification, and live GPS dispatch state that a generic fleet vehicle record does not carry. A towing operator that also runs Fleet Maintenance can keep a reference link for maintenance, but the operational dispatch record stays local.
+Recommended: a. Every towing flagship (Towbook, TRAXERO/Autura, VTS, ProTow) masters the tow truck in-product because it is operationally distinct: boom / wheel-lift / rotator / flatbed class, WreckMaster/NSD certification, and live GPS dispatch state that a generic fleet vehicle record does not carry. A towing operator that also runs Fleet Maintenance can keep a reference relationship for maintenance, but the operational dispatch record stays local.
 
 a5:
 

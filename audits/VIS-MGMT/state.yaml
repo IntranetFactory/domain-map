@@ -30,34 +30,34 @@ b1b:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
     affected_modules: []
     affected_masters:
-      - {data_object_id: 668, name: "visitor_registrations", target_module_id: null, workflow: "draft->submitted->approved->arrived->checked_out/no_show/cancelled"}
+      - {data_object_id: 668, name: "visitor_registrations", target_module_id: null, workflow: "draft->submitted->approved->arrived->checked_out/no_show/canceled"}
       - {data_object_id: 669, name: "visitor_check_ins", target_module_id: null, workflow: "pending->verified->badged/denied/escalated"}
       - {data_object_id: 670, name: "visitor_badges", target_module_id: null, workflow: "issued->active->returned/lost"}
       - {data_object_id: 671, name: "host_assignments", target_module_id: null, workflow: "assigned->confirmed->closed"}
       - {data_object_id: 672, name: "visitor_evacuation_lists", target_module_id: null, workflow: "open->closed_drill/closed_event"}
-      - {data_object_id: 673, name: "visitor_nda_acknowledgements", target_module_id: null, workflow: "sent->signed/declined"}
+      - {data_object_id: 673, name: "visitor_nda_acknowledgments", target_module_id: null, workflow: "sent->signed/declined"}
       - {data_object_id: 674, name: "visitor_watchlist_screenings", target_module_id: null, workflow: "queued->cleared/flagged/blocked"}
       - {data_object_id: 675, name: "visitor_audit_logs", target_module_id: null, workflow: "open->sealed"}
 
   - id: B1A-S2
     summary: "Author capability_domains + domain_module_capabilities (>=3 capabilities, mapped to modules from B1A-S1)."
     finding: "Zero capability_domains rows for domain 24 (confirmed live 2026-06-07). A2 fails. M4 + M6 cannot be evaluated until both capabilities and modules exist. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
-    action: "Author >=3 capabilities (recommended: VISITOR-PREREG, VISITOR-CHECKIN, VISITOR-COMPLIANCE, EMERGENCY-ROSTER, HOST-MANAGEMENT). Link via capability_domains, then domain_module_capabilities once module set is decided."
+    action: "Author >=3 capabilities (recommended: VISITOR-PREREG, VISITOR-CHECKIN, VISITOR-COMPLIANCE, EMERGENCY-ROSTER, HOST-MANAGEMENT). Relate via capability_domains, then domain_module_capabilities once module set is decided."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "domain_module_capabilities needs module ids"}
       - {type: user_decision, ref: B2-MODULE-SPLIT}
 
   - id: B1A-S4
     summary: "PATCH has_personal_content + has_submit_lock on PII-bearing and lock-bearing masters."
-    finding: "All 8 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false (confirmed live 2026-06-07). Six masters carry direct visitor PII (name, ID, photo, signature): visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675. visitor_audit_logs 675 has a one-way sealing transition (has_submit_lock candidate). host_assignments 671 + visitor_evacuation_lists 672 are surfaced to user (B2-PII-INDIRECT). Per Rule #12 pattern-flag note, flag reasoning is judgment, not a deterministic null backfill; the whole item is gated on a user decision, so the agent surfaces rather than writes."
+    finding: "All 8 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false (confirmed live 2026-06-07). Six masters carry direct visitor PII (name, ID, photo, signature): visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, visitor_nda_acknowledgments 673, visitor_watchlist_screenings 674, visitor_audit_logs 675. visitor_audit_logs 675 has a one-way sealing transition (has_submit_lock candidate). host_assignments 671 + visitor_evacuation_lists 672 are surfaced to user (B2-PII-INDIRECT). Per Rule #12 pattern-flag note, flag reasoning is judgment, not a deterministic null backfill; the whole item is gated on a user decision, so the agent surfaces rather than writes."
     action: "PATCH has_personal_content=true on 668, 669, 670, 673, 674, 675. PATCH has_submit_lock=true on 675. Defer 671 + 672 to user judgment per B2-PII-INDIRECT."
     blocked_by:
       - {type: user_decision, ref: B2-PII-INDIRECT}
-    affected_entities: ["visitor_registrations", "visitor_check_ins", "visitor_badges", "visitor_nda_acknowledgements", "visitor_watchlist_screenings", "visitor_audit_logs", "host_assignments", "visitor_evacuation_lists"]
+    affected_entities: ["visitor_registrations", "visitor_check_ins", "visitor_badges", "visitor_nda_acknowledgments", "visitor_watchlist_screenings", "visitor_audit_logs", "host_assignments", "visitor_evacuation_lists"]
 
   - id: B1A-S6
     summary: "Author data_object_lifecycle_states across the 6 operational_workflow masters with domain_module_id set."
-    finding: "Zero data_object_lifecycle_states rows on any VIS-MGMT master. With entity_type now classified (2026-06-07), B12 is a confirmed requirement on the 6 operational_workflow masters (668, 669, 670, 671, 672, 674); the 2 operational_record masters (673 visitor_nda_acknowledgements, 675 visitor_audit_logs) pass B12 regardless. M5 cannot be evaluated until modules exist. Workflows per master enumerated under B1A-S1. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
+    finding: "Zero data_object_lifecycle_states rows on any VIS-MGMT master. With entity_type now classified (2026-06-07), B12 is a confirmed requirement on the 6 operational_workflow masters (668, 669, 670, 671, 672, 674); the 2 operational_record masters (673 visitor_nda_acknowledgments, 675 visitor_audit_logs) pass B12 regardless. M5 cannot be evaluated until modules exist. Workflows per master enumerated under B1A-S1. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "lifecycle states need domain_module_id per Rule #12 + M5"}
       - {type: user_decision, ref: B2-MODULE-SPLIT}
@@ -90,7 +90,7 @@ b2:
     summary: "Decide 2-module vs 3-module split for VIS-MGMT."
     question: "How should the 8 VIS-MGMT masters be partitioned across domain_modules?"
     options:
-      - "2-module: VIS-MGMT-REGISTRATION (visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, host_assignments 671) + VIS-MGMT-COMPLIANCE (visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675, visitor_evacuation_lists 672)."
+      - "2-module: VIS-MGMT-REGISTRATION (visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, host_assignments 671) + VIS-MGMT-COMPLIANCE (visitor_nda_acknowledgments 673, visitor_watchlist_screenings 674, visitor_audit_logs 675, visitor_evacuation_lists 672)."
       - "3-module: VIS-MGMT-REGISTRATION (668, 669, 670, 671) + VIS-MGMT-COMPLIANCE (673, 674, 675) + VIS-MGMT-EMERGENCY (672). Matches the flagship vendors' product split and aligns with future EHS-MGMT landing."
     why: "Gates the entire UNBUILT build cascade (B1A-BUILD, B1A-S1, S2, S4, S6, B1A-B1). All flagship products separate the emergency-roster surface; 3-module split is more faithful to vendor practice. This is the single decision that unblocks the build."
 
@@ -103,23 +103,23 @@ b2:
       - "Flip only on visitor_evacuation_lists 672 (carries visitor names at print time) and leave host_assignments 671 false (employee-pointer only)."
 
   - id: B2-GDPR-CCPA
-    summary: "Load GDPR + CCPA into regulations and link to VIS-MGMT?"
-    question: "VIS-MGMT carries direct visitor PII. domain_regulations for domain 24 is empty. Decide regulation linkage scope."
+    summary: "Load GDPR + CCPA into regulations and relate to VIS-MGMT?"
+    question: "VIS-MGMT carries direct visitor PII. domain_regulations for domain 24 is empty. Decide regulation relationship scope."
     options:
-      - "Load GDPR + CCPA, link to VIS-MGMT (and propose broader linkage in a follow-up sweep)."
+      - "Load GDPR + CCPA, relate to VIS-MGMT (and propose broader relationship in a follow-up sweep)."
       - "Defer to a catalog-wide regulation backfill pass (not currently scheduled)."
       - "Load only GDPR (broader scope) and defer CCPA."
 
   - id: B2-OSHA
-    summary: "Add OSHA regulation and link to VIS-MGMT for evacuation list compliance?"
-    question: "visitor_evacuation_lists is mandated by OSHA 29 CFR 1910.38 (emergency action plans). Should OSHA be added as a regulations row and linked?"
+    summary: "Add OSHA regulation and relate to VIS-MGMT for evacuation list compliance?"
+    question: "visitor_evacuation_lists is mandated by OSHA 29 CFR 1910.38 (emergency action plans). Should OSHA be added as a regulations row and related?"
     options:
-      - "Load OSHA, link to VIS-MGMT (and propose broader linkage in a follow-up sweep)."
+      - "Load OSHA, relate to VIS-MGMT (and propose broader relationship in a follow-up sweep)."
       - "Defer to catalog-wide regulation backfill."
 
   - id: B2-NDA-OWNERSHIP
-    summary: "Keep visitor_nda_acknowledgements mastered in VIS-MGMT or promote to CLM?"
-    question: "Per-visit NDA acknowledgements vs corporate NDA artifacts (CLM domain). Catalog split is non-obvious."
+    summary: "Keep visitor_nda_acknowledgments mastered in VIS-MGMT or promote to CLM?"
+    question: "Per-visit NDA acknowledgments vs corporate NDA artifacts (CLM domain). Catalog split is non-obvious."
     options:
       - "Keep VIS-MGMT mastery (recommended; per-visit ack is operationally distinct)."
       - "Promote a slimmer entity to CLM and consume here."

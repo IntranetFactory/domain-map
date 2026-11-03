@@ -32,7 +32,7 @@
 //   AUD audits/<DOMAIN_CODE>/state.yaml does not exist
 //
 // Entity count = master data_objects + capabilities + modules + outbound handoffs
-//                + linked solutions. The "catalog footprint" of the domain.
+//                + related solutions. The "catalog footprint" of the domain.
 //
 // Pending questions = items waiting on the user in audits/<CODE>/state.yaml (schema v2, read
 // with js-yaml): every b2 decision plus every b1b blocked on a user decision. bucket2 / bucket3
@@ -84,9 +84,9 @@ const [domains, modules, capDomains, dmdoMasters, dmdoOverlay, bfd, dmTools, han
   // Masters come from the module junction (domain_data_objects retired 2026-06-02); rolled up
   // to domain via the module->domain map below. Un-modularized domains report zero masters (an
   // M1 failure, surfaced as no modules), which is the correct post-retirement signal.
-  get(`/domain_module_data_objects?role=eq.master&select=domain_module_id,data_object_id&limit=10000`),
+  get(`/domain_module_data_objects?held_as=eq.master&select=domain_module_id,data_object_id&limit=10000`),
   // B1's overlay substrate (checkMasterFloor): the consumer / derived / embedded_master rows.
-  get(`/domain_module_data_objects?role=in.(consumer,derived,embedded_master)&select=domain_module_id&limit=10000`),
+  get(`/domain_module_data_objects?held_as=in.(consumer,derived,embedded_master)&select=domain_module_id&limit=10000`),
   get(`/business_function_domains?select=domain_id,business_function_id,responsibility_type&limit=10000`),
   get(`/domain_module_tools?select=domain_module_id,tool_id&limit=30000`),
   get(`/handoffs?select=id,source_domain_id,target_domain_id&limit=20000`),
@@ -397,7 +397,7 @@ if (!STATUS_FILTER && (SECTION === "both" || SECTION === "unaudited")) {
 
 console.log(`\n* leadership-tier domain — B1 (zero masters) is by-design, not a gap.`);
 console.log(`\nColumns:`);
-console.log(`  ent    entity_count = masters + capabilities + modules + outbound_handoffs + linked_solutions`);
+console.log(`  ent    entity_count = masters + capabilities + modules + outbound_handoffs + related_solutions`);
 console.log(`  Q      open user questions in audits/<CODE>/state.yaml (b2 + b1b blocked on a user decision); "-" if no state.yaml`);
 console.log(`  ratio  ent / max(Q, 1) - higher = quicker to close out`);
 console.log(`  score  count of failing structural checks (A1/A2/B1/C1/M1/F2/H1/AUD)`);

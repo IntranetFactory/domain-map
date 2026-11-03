@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Load the Onboarding domain end-to-end:
-//   Phase 1: ONBOARDING domain + 3 new vendors + 6 new solutions + 14 solution_domains links
-//   Phase 2: 8 onboarding data_objects + 8 domain_data_objects (role: master)
+//   Phase 1: ONBOARDING domain + 3 new vendors + 6 new solutions + 14 solution_domains relationships
+//   Phase 2: 8 onboarding data_objects + 8 domain_data_objects (held_as: master)
 //   Phase 3: 8 cross_domain_handoffs around ONBOARDING (inbound from ATS/HCM,
 //            outbound to ITSM/IWMS/PAYROLL/LMS/HRSD/IGA)
 //
@@ -190,7 +190,7 @@ const newSolutions = [
 ];
 const solMap = await syncByKey("/solutions", newSolutions, "solution_name");
 
-// --- solution_domains links ---
+// --- solution_domains relationships ---
 // Build a map of solution_name -> id including existing solutions we need
 const refSolutions = await get(
   "/solutions?solution_name=in.(Enboarder,Sapling,Workday%20Journeys,Workday%20HCM,BambooHR,HiBob,Rippling,iCIMS%20Talent%20Cloud)&select=id,solution_name",
@@ -198,7 +198,7 @@ const refSolutions = await get(
 const solIdByName = new Map<string, number>(solMap);
 for (const r of refSolutions) solIdByName.set(String(r.solution_name), Number(r.id));
 
-const solutionDomainLinks: { solution_name: string; coverage_level: "primary" | "secondary" | "partial"; notes?: string }[] = [
+const solutionDomainRelationships: { solution_name: string; coverage_level: "primary" | "secondary" | "partial"; notes?: string }[] = [
   // Primary — products dedicated to onboarding
   { solution_name: "Enboarder", coverage_level: "primary", notes: "Flagship onboarding product; pure-play vendor." },
   { solution_name: "Sapling", coverage_level: "primary", notes: "Kallidus's onboarding-focused product (originally pure-play, acquired by Kallidus 2021)." },
@@ -223,7 +223,7 @@ const existingSD = await get(
 );
 const existingSDSet = new Set(existingSD.map(r => Number(r.solution_id)));
 
-const sdRows = solutionDomainLinks
+const sdRows = solutionDomainRelationships
   .filter(l => {
     const id = solIdByName.get(l.solution_name);
     if (!id) {
@@ -240,14 +240,14 @@ const sdRows = solutionDomainLinks
   }));
 
 if (sdRows.length > 0) {
-  console.log(`  /solution_domains: inserting ${sdRows.length} new ONBOARDING links`);
+  console.log(`  /solution_domains: inserting ${sdRows.length} new ONBOARDING relationships`);
   await insertChunked("/solution_domains", sdRows);
 } else {
-  console.log(`  /solution_domains: all ONBOARDING links already present`);
+  console.log(`  /solution_domains: all ONBOARDING relationships already present`);
 }
 
 // =============================================================================
-// PHASE 2 — data_objects + domain_data_objects (role: master)
+// PHASE 2 — data_objects + domain_data_objects (held_as: master)
 // =============================================================================
 console.log("\n=== Phase 2: Onboarding data_objects ===");
 
@@ -282,7 +282,7 @@ const onboardingDataObjects = [
     plural_label: "Onboarding Tasks",
     display_label: "Onboarding Task",
     description:
-      "Discrete to-do within a journey: sign I-9, attend orientation, complete compliance training, meet buddy, receive laptop. Carries assignee (new hire / manager / IT / facilities / HR), due date, completion state, evidence, and task type (form / training / meeting / provisioning / acknowledgement). Many tasks are local; a subset triggers cross-domain handoffs into ITSM, IWMS, Payroll, LMS, IGA, or HRSD.",
+      "Discrete to-do within a journey: sign I-9, attend orientation, complete compliance training, meet buddy, receive laptop. Carries assignee (new hire / manager / IT / facilities / HR), due date, completion state, evidence, and task type (form / training / meeting / provisioning / acknowledgment). Many tasks are local; a subset triggers cross-domain handoffs into ITSM, IWMS, Payroll, LMS, IGA, or HRSD.",
   },
   {
     data_object_name: "buddy_assignments",
@@ -314,12 +314,12 @@ const onboardingDataObjects = [
     plural_label: "Onboarding Document Collections",
     display_label: "Onboarding Document Collection",
     description:
-      "Record of paperwork collected from a new hire as part of the journey: I-9, NDA, handbook acknowledgement, direct-deposit form, country-specific tax forms, country-specific work-permit evidence. Captures signature state, provider-reference ids (DocuSign / Adobe Sign envelope ids), and audit metadata. Distinct from the canonical document templates, which would be mastered by a Document Management domain (not yet in catalog).",
+      "Record of paperwork collected from a new hire as part of the journey: I-9, NDA, handbook acknowledgment, direct-deposit form, country-specific tax forms, country-specific work-permit evidence. Captures signature state, provider-reference ids (DocuSign / Adobe Sign envelope ids), and audit metadata. Distinct from the canonical document templates, which would be mastered by a Document Management domain (not yet in catalog).",
   },
 ];
 const dataObjMap = await syncByKey("/data_objects", onboardingDataObjects, "data_object_name");
 
-// domain_data_objects (role: master)
+// domain_data_objects (held_as: master)
 const existingDDO = await get(
   `/domain_data_objects?domain_id=eq.${ONBOARDING_ID}&select=data_object_id&limit=10000`,
 );
@@ -331,15 +331,15 @@ const ddoRows = onboardingDataObjects
   .map(id => ({
     domain_id: ONBOARDING_ID,
     data_object_id: id,
-    role: "master",
+    held_as: "master",
     notes: "",
   }));
 
 if (ddoRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${ddoRows.length} new ONBOARDING-master links`);
+  console.log(`  /domain_data_objects: inserting ${ddoRows.length} new ONBOARDING-master relationships`);
   await insertChunked("/domain_data_objects", ddoRows);
 } else {
-  console.log(`  /domain_data_objects: all ONBOARDING links already present`);
+  console.log(`  /domain_data_objects: all ONBOARDING relationships already present`);
 }
 
 // =============================================================================

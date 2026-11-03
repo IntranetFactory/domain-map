@@ -21,8 +21,8 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per phase-P policy; not authored."
-    finding: "5 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona / RACI authoring is held under the phase-P deferral."
-    action: "When phase-P opens: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "5 domain_modules and 0 personas reach this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona / RACI authoring is held under the phase-P deferral."
+    action: "When phase-P opens: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas: ["SALES-AE (account executive)", "SALES-SDR (sales development rep)", "SALES-MGR (sales manager)", "SALES-OPS (sales operations / pipeline admin)"]
 
 b1b:
@@ -229,7 +229,7 @@ b3:
   # --- GROUP B: belongs to another domain (q3 / q4) ---
   - id: B3-CRM-FORECAST-CONSUMER
     candidate: "consumer/derived DMDO on revenue_forecasts (1010) for CRM-PIPELINE-MGT"
-    verdict: "REPLACES B3-CRM-SALES-FORECASTS. REV-INTEL masters the forecast cluster; the only CRM-side action is an optional read link so reps see forecast roll-ups in the pipeline view. CRM has no DMDO on revenue_forecasts today."
+    verdict: "REPLACES B3-CRM-SALES-FORECASTS. REV-INTEL masters the forecast cluster; the only CRM-side action is an optional read relationship so reps see forecast roll-ups in the pipeline view. CRM has no DMDO on revenue_forecasts today."
     vendor_evidence: [Salesforce Collaborative Forecasts, Microsoft Dynamics 365 Forecasting]
     proposed_module: CRM-PIPELINE-MGT
     q_ref: q3
@@ -247,7 +247,7 @@ b3:
     q_ref: q4
   - id: B3-CRM-PARTNER-REL
     candidate: partner_relationships
-    verdict: "NOT CRM (master). Belongs to PRM (96), an unbuilt stub. CRM may carry co-sell opportunity links as consumer rows, but partner records are PRM-mastered. Build PRM separately."
+    verdict: "NOT CRM (master). Belongs to PRM (96), an unbuilt stub. CRM may carry co-sell opportunity relationships as consumer rows, but partner records are PRM-mastered. Build PRM separately."
     vendor_evidence: [Salesforce PRM, Microsoft Partner Center, Impartner, ZINFI]
     proposed_module: PRM
     q_ref: q4

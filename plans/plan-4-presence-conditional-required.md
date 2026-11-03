@@ -1,7 +1,7 @@
 # Plan 4: presence-conditional `is_required` and relationship-layer self-containment (M9 part 2)
 
 Scope: redefine `data_object_relationships.is_required` as PRESENCE-CONDITIONAL (a required
-edge is a mandatory FK only when the target entity is installed; it never forces the target
+relationship is a mandatory FK only when the target entity is installed; it never forces the target
 to install), and extend Plan 3's M9 self-containment audit from the entity layer to the
 relationship layer. Together these make every module genuinely standalone-deployable, the
 guarantee Plan 3 declared but only enforced for entity membership. Starter kits fold in as a
@@ -29,7 +29,7 @@ Out of scope:
   "closure" concept.
 - **Plan 2 `deriveDeleteMode` - DONE (2026-06-01).** `deriveDeleteMode(relationship_kind,
   owner_side, is_required) -> {mode, fk_format}` (live at scripts/generate_blueprints.ts:1050)
-  already emits per-edge delete-mode / FK format in blueprint section 5. Plan 4 adds ONE input
+  already emits per-relationship delete-mode / FK format in blueprint section 5. Plan 4 adds ONE input
   (target-in-scope) and TWO new output branches: reference / association + required + absent =>
   no FK / no constraint, and composition + required + absent => emit FLAGGED as a step-B audit
   finding (never silently dropped). It extends the shipped function; it does not rebuild it.
@@ -44,14 +44,14 @@ deployment."** It NEVER forces the target to install. Entity presence is governe
 `domain_module_data_objects.necessity` (Rule #16) plus the deploying unit's entity selection.
 The genuine "this entity must always be present" case (a `job_application` cannot exist
 without a `candidate`) is expressed by the TARGET's own `necessity=required` wherever the
-source is installed, NOT by the edge.
+source is installed, NOT by the relationship.
 
 No new column. The third state ("required-if-present") is the new DEFAULT reading of the
 existing boolean; "required-always" is expressed by the target's `necessity`; the step-B
 audit reconciles the two.
 
 ## Live evidence (re-derive at run time; Policy 4)
-A scan on 2026-06-02 found **531** `is_required=true` edges. **143** point at an entity that
+A scan on 2026-06-02 found **531** `is_required=true` relationships. **143** point at an entity that
 is `necessity=optional` in at least one module; **19** at an entity that is `necessity=optional`
 in EVERY module it appears (unambiguous), including:
 
@@ -86,10 +86,10 @@ Confirm before step C emits.
 - PATCH the live `/fields` description for `data_object_relationships.is_required` from
   "Whether the relationship is mandatory in typical implementations..." to the
   presence-conditional meaning. (One live write; user-approved.)
-- Extend SKILL.md Rule #16 with the install-necessity / edge-requiredness bridge. This is a NEW
+- Extend SKILL.md Rule #16 with the install-necessity / relationship-requiredness bridge. This is a NEW
   framing (Rule #16 does not use "Axis-1 / Axis-2" today): Axis-1 = `necessity` install scope
-  (Rule #16), Axis-2 = `is_required` on the edge. The bridge: a required edge into an
-  install-optional target is required-only-when-present; no edge forces an install. Append a
+  (Rule #16), Axis-2 = `is_required` on the relationship. The bridge: a required relationship into an
+  install-optional target is required-only-when-present; no relationship forces an install. Append a
   skill-changelog Decisions entry.
 
 ### B. Extend the M9 audit to the relationship layer (the new band)
@@ -97,8 +97,8 @@ Confirm before step C emits.
   audited scope's in-scope entities, flag every `data_object_relationships` row with
   `is_required=true` whose other endpoint is NOT in scope, is NOT `kind='platform_builtin'` /
   master-data, and is NOT also `embedded_master` here.
-- Pass: no flagged rows. Under presence-conditional semantics those edges carry no constraint,
-  but a REQUIRED edge to an entity the workflow genuinely needs present is still surfaced so
+- Pass: no flagged rows. Under presence-conditional semantics those relationships carry no constraint,
+  but a REQUIRED relationship to an entity the workflow genuinely needs present is still surfaced so
   the author decides embed-vs-optional-vs-target-required.
 - Probe (catalog-wide, read-only): WRITE a committed `scripts/analytics/` probe that produces
   the 531 / 143 / 19 counts. It does NOT exist yet, the counts came from an inline `bun -e`
@@ -110,12 +110,12 @@ Confirm before step C emits.
 ### C. Make `deriveDeleteMode` presence-conditional (emitter code)
 - Add a target-in-scope input to `deriveDeleteMode` (generate_blueprints.ts:1050). The in-scope test
   is per-blueprint and already available: the emitter partitions intra-scope (section 5.1) vs
-  cross-scope (section 5.3) edges, so "target installed?" is decidable at emit time with no
+  cross-scope (section 5.3) relationships, so "target installed?" is decidable at emit time with no
   deploy-time knowledge.
 - Two out-of-scope-target branches, matching the table above:
   - reference / association + required: emit NO FK / NO constraint (today: a non-null restrict);
     render in section 5 as "required-if-present", not a hard restrict.
-  - composition + required: do NOT silently drop. Render the edge flagged as a step-B audit
+  - composition + required: do NOT silently drop. Render the relationship flagged as a step-B audit
     finding (a required composed child absent from scope is a self-containment violation to
     resolve by embedding or relaxing). Today these render as a silent `cascade` / `parent`
     (e.g. `candidates --discloses_via--> fcra_disclosures` in section 5.3b of hiring-starter).
@@ -176,12 +176,12 @@ Rule #19 as written; the rewrite must name the conflicting invariants, not gestu
   assume a fixed list - of the starters named in earlier drafts only `hiring-starter` and
   `real-estate-agent` have committed blueprints today, so confirm which others exist live before
   relying on them) and confirm the previously-incoherent sections (the empty 5.3a / 6.2 / 6.3,
-  the required-edge dangles in 5.3b, and the section-7 gates prefixed with absent modules like
+  the required-relationship dangles in 5.3b, and the section-7 gates prefixed with absent modules like
   `ats-offers:approve_offer`) render correctly under presence-conditional + re-prefix semantics.
 - `--check` zero drift on the committed corpus.
 
 ## Platform track (out of this repo; must be owned separately)
-- Deployer honors presence-conditional FKs: a required edge to a non-installed entity
+- Deployer honors presence-conditional FKs: a required relationship to a non-installed entity
   provisions a nullable / absent FK, never a broken restrict.
 - Deployer re-prefixes gated transitions to the installing unit for partial deployments.
 - Deployer learns `module_kind='starter'` (zero handling in `semantic-model-deployer` today).
@@ -206,9 +206,9 @@ EXECUTED 2026-06-02 (all four sign-offs given). Steps A-F landed:
 - A: module-shape.md `is_required` + delete-mode table, SKILL.md Rule #16 bridge, and one live
   `/fields` description PATCH (the only live write).
 - B: SKILL.md M9 split into Part 1 (entity) + Part 2 (relationship); probe
-  [scripts/analytics/required_edge_presence_probe.ts](../scripts/analytics/required_edge_presence_probe.ts)
+  [scripts/analytics/required_relationship_presence_probe.ts](../scripts/analytics/required_relationship_presence_probe.ts)
   written and confirms 531 / 143 / 19 (15 reference + 4 composition unambiguous).
-- C: `deriveDeleteMode` presence-conditional (cross-scope §5.3 edges render `none
+- C: `deriveDeleteMode` presence-conditional (cross-scope §5.3 relationships render `none
   (required-if-present)` / `none` / `⚠ audit`).
 - D: `deriveGate` re-prefix + `deriveWorkflowGatesAndRules` mint (+ `moduleLifecycleScope` helper,
   override-collision dedup); modules.md §4 + Rule #12 updated.

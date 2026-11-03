@@ -14,7 +14,7 @@ b1a:
     finding: |
       Vendor-confirmed across all 5 pure-plays (Lightcast Open Skills, TechWolf Skills Engine, SkyHive Quantum Labor Market, Reejig Workforce Intelligence, 365Talents Skills Platform). Today skill_assessments carries a numeric rating with no row table to anchor the scale or per-taxonomy override. Universal pure-play entity. Carried forward; no Phase 0 confirmation since.
     action: |
-      Phase-B insert: new data_objects row (singular_label=Skill Proficiency Level, plural_label=Skill Proficiency Levels, kind=domain_owned, entity_type=catalog), domain_module_data_objects row on module 173 (role=master, necessity=required). Config-shaped; lifecycle states only if a workflow exists. Apply Rule #9 naming check before insert.
+      Phase-B insert: new data_objects row (singular_label=Skill Proficiency Level, plural_label=Skill Proficiency Levels, kind=domain_owned, entity_type=catalog), domain_module_data_objects row on module 173 (held_as=master, necessity=required). Config-shaped; lifecycle states only if a workflow exists. Apply Rule #9 naming check before insert.
     blocked_by:
       - {type: user_decision, ref: B2-5}
     vendor_evidence:
@@ -26,11 +26,11 @@ b1a:
     affected_modules: [173]
 
   - id: B1A-M2
-    summary: Add skill_relationships master to SKILLS-MGMT-TAXONOMY (ontology edge table).
+    summary: Add skill_relationships master to SKILLS-MGMT-TAXONOMY (ontology relationship table).
     finding: |
-      Edge table on the skills ontology (parent / child / related / equivalent / merged-into). Today data_object_relationships carries intra-row schema-layer edges between skills / skill_assessments / skill_endorsements but no per-row taxonomy edges. Vendor-confirmed across all 5 pure-plays. Universal pure-play entity; the ontology cannot be navigated without it.
+      Relationship table on the skills ontology (parent / child / related / equivalent / merged-into). Today data_object_relationships carries intra-row schema-layer relationships between skills / skill_assessments / skill_endorsements but no per-row taxonomy relationships. Vendor-confirmed across all 5 pure-plays. Universal pure-play entity; the ontology cannot be navigated without it.
     action: |
-      Phase-B insert: new data_objects row (skill_relationships, kind=domain_owned, entity_type=junction), domain_module_data_objects row on module 173 (role=master, necessity=required). Config-shaped; consider exempting from lifecycle states.
+      Phase-B insert: new data_objects row (skill_relationships, kind=domain_owned, entity_type=junction), domain_module_data_objects row on module 173 (held_as=master, necessity=required). Config-shaped; consider exempting from lifecycle states.
     blocked_by:
       - {type: user_decision, ref: B2-5}
     vendor_evidence:
@@ -51,7 +51,7 @@ b1a:
       - {data_object_id: 852, name: "skill_taxonomies", target_module_id: 173, workflow: "draft -> active -> deprecated"}
       - {data_object_id: 857, name: "competency_models", target_module_id: 173, workflow: "draft -> published -> archived"}
       - {data_object_id: 172, name: "skill_profiles", target_module_id: 174, workflow: "initialized -> self_assessed -> validated -> inactive"}
-      - {data_object_id: 855, name: "skill_assessments", target_module_id: 174, workflow: "pending -> completed / cancelled"}
+      - {data_object_id: 855, name: "skill_assessments", target_module_id: 174, workflow: "pending -> completed / canceled"}
 
   - id: B1A-S4
     summary: Author lifecycle states + workflow-gate permissions for skill_endorsements + skill_inference_runs (B12).
@@ -70,7 +70,7 @@ b1a:
     finding: |
       Zero domain-specific catalog roles. The only role_permissions rows on the 12 SKILLS-MGMT permissions (ids 10201, 10202, 10626-10631, 10648-10651) are platform Administrator (role_id 2) bundles. Rule #14's >= 3-role threshold under E1 applies (2 modules + 8 capabilities).
     action: |
-      Author 3 function-scoped roles: TALENT-DEV-SKILL-ARCHITECT (touches 173 primary + 174 secondary, owns ontology), TALENT-DEV-SKILL-ANALYST (touches 174 primary, consumes inference + gap), MANAGER cross-functional extension (touches 174 secondary for validate gate). Each role: >= 2 role_modules entries with interaction_level set (E2 / E3); role_permissions bundle authored covering baseline tiers + targeted gates (E4); Path A == Path B (E5).
+      Author 3 function-scoped roles: TALENT-DEV-SKILL-ARCHITECT (touches 173 primary + 174 secondary, owns ontology), TALENT-DEV-SKILL-ANALYST (touches 174 primary, consumes inference + gap), MANAGER cross-functional extension (touches 174 secondary for validate gate). Each role: >= 2 persona_modules entries with interaction_level set (E2 / E3); role_permissions bundle authored covering baseline tiers + targeted gates (E4); Path A == Path B (E5).
     blocked_by:
       - {type: depends_on, ref: B1A-S4, reason: "role bundles reference workflow-gate permissions materialized from B1A-S4 lifecycle states"}
       - {type: user_decision, ref: B2-2, reason: "permission prefix rename cascades into role bundles"}
@@ -78,8 +78,8 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Rule #21 (personas/RACI are not agent-authored in a state-execute pass)."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Rule #21 (personas/RACI are not agent-authored in a state-execute pass)."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     extra_phase_p_triage: "2026-06-02"
     candidate_personas:
       - "TALENT-DEV-SKILL-ARCHITECT (ontology + competency-model authoring on 173)"

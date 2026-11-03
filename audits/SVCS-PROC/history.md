@@ -41,12 +41,12 @@ New emerging_market domain created and built in one pass. The user answered the 
 - M7: every new master pre-checked master-free catalog-wide before insert; post-build verified each has
   exactly one master row (SVCS-PROC) and the 3 consumed entities each still have exactly one master,
   none of which is a SVCS-PROC module. Zero unclassified masters.
-- 3 consumer DMDO rows (role=consumer, never master): suppliers (206, SRM-SUPPLIER-LIFECYCLE),
+- 3 consumer DMDO rows (held_as=consumer, never master): suppliers (206, SRM-SUPPLIER-LIFECYCLE),
   legal_contracts (66, CLM-REPOSITORY), rate_cards (189, CWM-WORKER-SOURCING).
 - 4 capabilities + capability_domains + domain_module_capabilities.
 - 1 domain skill (skill_type='domain', skill_name='svcs-proc', non-empty description + trigger_keywords)
   + 9 tools + 11 domain_module_tools (each module: >=1 query, >=1 mutate, >=1 workflow gate; notify
-  abstractions linked).
+  abstractions related).
 - 4 domain_aliases: "services procurement", "SOW management", "statement of work", "SOW".
 
 All rows at `record_status='new'` (Rule #1 untouched). No vendor names in catalog text (Rule #18).

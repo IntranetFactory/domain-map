@@ -49,7 +49,7 @@ const topLevel: FnSpec[] = [
   { name: "Sales",                            description: "Pipeline ownership, account management, quota-carrying revenue generation, and sales operations support across direct and channel motions." },
   { name: "Marketing",                        description: "Brand, demand generation, content production, internal and external communications, customer marketing, and martech operations." },
   { name: "Customer Success",                 description: "Post-sale account health, expansion, retention, customer education, and onboarding for accounts after the initial sale." },
-  { name: "Customer Service",                 description: "Reactive and proactive customer support: contact centre, case management, and customer-side field service." },
+  { name: "Customer Service",                 description: "Reactive and proactive customer support: contact center, case management, and customer-side field service." },
   { name: "Product Management",               description: "Product strategy, discovery, prioritization, roadmap ownership, and release coordination for software and physical products." },
   { name: "Software Engineering",             description: "Application development, platform engineering, site reliability, and quality engineering for the products and internal systems the company builds." },
   { name: "IT Operations",                    description: "Infrastructure, end-user computing, service desk, and corporate IT delivery for employee-facing technology." },
@@ -73,12 +73,12 @@ const subLevel: FnSpec[] = [
   { name: "Recruiting",                       description: "Talent acquisition, sourcing, candidate screening, interview coordination, offer management.",                                                       parent: "Human Resources" },
   { name: "Payroll",                          description: "Payroll calculation, gross-to-net, statutory filing, garnishments, pay distribution, payroll compliance.",                                          parent: "Human Resources" },
   { name: "Learning and Development",         description: "Employee learning programs, compliance training, leadership development, course authoring, learning analytics.",                                    parent: "Human Resources" },
-  { name: "Benefits Administration",          description: "Health, retirement, equity, voluntary benefits enrolment, life-event handling, carrier connectivity.",                                              parent: "Human Resources" },
-  { name: "Workforce Management",             description: "Shift scheduling, time and attendance, labour forecasting, frontline workforce planning.",                                                          parent: "Human Resources" },
+  { name: "Benefits Administration",          description: "Health, retirement, equity, voluntary benefits enrollment, life-event handling, carrier connectivity.",                                              parent: "Human Resources" },
+  { name: "Workforce Management",             description: "Shift scheduling, time and attendance, labor forecasting, frontline workforce planning.",                                                          parent: "Human Resources" },
   { name: "Employee Relations",               description: "Case management for employee concerns, investigations, performance management policy administration, employee engagement programs.",                parent: "Human Resources" },
   // Finance
   { name: "Accounting",                       description: "General ledger, period close, consolidation, statutory reporting, financial controls.",                                                              parent: "Finance" },
-  { name: "Financial Planning and Analysis",  description: "Budgeting, forecasting, scenario planning, driver-based modelling, management reporting.",                                                          parent: "Finance" },
+  { name: "Financial Planning and Analysis",  description: "Budgeting, forecasting, scenario planning, driver-based modeling, management reporting.",                                                          parent: "Finance" },
   { name: "Treasury",                         description: "Cash management, banking relationships, FX, debt, investments, liquidity planning.",                                                                parent: "Finance" },
   { name: "Tax",                              description: "Direct and indirect tax compliance, transfer pricing, tax provision, statutory tax filing.",                                                        parent: "Finance" },
   { name: "Accounts Payable",                 description: "Supplier invoice processing, three-way match, payment runs, AP automation, vendor master maintenance.",                                             parent: "Finance" },
@@ -99,7 +99,7 @@ const subLevel: FnSpec[] = [
   { name: "Marketing Communications",         description: "PR, analyst relations, customer marketing communications, and internal-facing corporate communications when housed under Marketing.",               parent: "Marketing" },
   // IT
   { name: "IT Service Desk",                  description: "Employee-facing IT support: incident, request, knowledge management, walk-up and virtual agent service.",                                           parent: "IT Operations" },
-  { name: "IT Infrastructure",                description: "Servers, network, cloud, data centre, integration platform, infrastructure-level platform engineering.",                                            parent: "IT Operations" },
+  { name: "IT Infrastructure",                description: "Servers, network, cloud, data center, integration platform, infrastructure-level platform engineering.",                                            parent: "IT Operations" },
   { name: "End-User Computing",               description: "Endpoint management, productivity tooling, unified endpoint management, mobile, identity provisioning at the device level.",                       parent: "IT Operations" },
   // Engineering
   { name: "Platform Engineering",             description: "Internal developer platform, CI/CD, golden paths, internal tooling, build and release engineering.",                                                parent: "Software Engineering" },
@@ -113,13 +113,13 @@ const subLevel: FnSpec[] = [
   { name: "Business Intelligence",            description: "BI tooling, dashboarding, self-service analytics, reporting standards, analytics delivery.",                                                        parent: "Data and Analytics" },
   { name: "AI and Machine Learning",          description: "ML platform, model lifecycle, AI use-case delivery, model governance, AI ethics review.",                                                            parent: "Data and Analytics" },
   // Procurement
-  { name: "Indirect Procurement",             description: "Services, software, SaaS, and indirect-spend categories. Owns SaaS-spend rationalisation, supplier qualification for non-production goods.",        parent: "Procurement" },
+  { name: "Indirect Procurement",             description: "Services, software, SaaS, and indirect-spend categories. Owns SaaS-spend rationalization, supplier qualification for non-production goods.",        parent: "Procurement" },
   { name: "Direct Procurement",               description: "Raw materials, components, production inputs, supplier quality for goods that enter the product.",                                                  parent: "Procurement" },
   // Customer Service
   { name: "Contact Center Operations",        description: "Inbound and outbound contact handling, agent workforce management, ACD/IVR operations, omnichannel routing.",                                       parent: "Customer Service" },
   { name: "Customer Field Service",           description: "Customer-side field service: on-site repair, install, maintenance dispatch, technician scheduling.",                                                parent: "Customer Service" },
   // GRC
-  { name: "Privacy Office",                   description: "Privacy program management, DSR fulfilment, privacy impact assessments, data subject rights operations, cross-border data flow governance.",       parent: "Governance, Risk and Compliance" },
+  { name: "Privacy Office",                   description: "Privacy program management, DSR fulfillment, privacy impact assessments, data subject rights operations, cross-border data flow governance.",       parent: "Governance, Risk and Compliance" },
   { name: "Compliance Operations",            description: "Regulatory compliance program execution, policy management, control testing, evidence collection, regulator reporting.",                            parent: "Governance, Risk and Compliance" },
   // Legal
   { name: "Contract Operations",              description: "Contract authoring, redlining, approval routing, signature, repository, obligation tracking. The operational side of legal contract management.", parent: "Legal" },
@@ -328,7 +328,7 @@ async function main() {
   const fnRowsTopLevel = topLevel.map(f => ({ business_function_name: f.name, description: f.description }));
   await syncByName("/business_functions", fnRowsTopLevel);
 
-  // Re-read to get top-level ids for parent linking
+  // Re-read to get top-level ids for parent relationships
   const allFnRows = await get("/business_functions?select=id,business_function_name&limit=10000");
   const fnIdByName = new Map<string, number>();
   for (const r of allFnRows) fnIdByName.set(String(r.business_function_name), Number(r.id));

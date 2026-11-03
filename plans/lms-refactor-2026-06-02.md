@@ -28,7 +28,7 @@ audit calls them a redundant pair; no flagship vendor splits "credits" from "rec
 - 936 `ceu_records`: master + required, lifecycle `recorded -> validated -> filed -> voided`, four
   tools (1356-1359), alias "CE credit ledger entry". Referenced by `users` `earns_credit`.
 
-**Verify before executing.** The 935 -> 936 `earned_in` edge hints at a possible definition/ledger
+**Verify before executing.** The 935 -> 936 `earned_in` relationship hints at a possible definition/ledger
 split rather than a pure duplicate. Confirm 935 is not a distinct credit-bank/total entity. If it is
 a genuine rollup, classify it `entity_type=computed` and keep both instead. The market audit's
 confidence here is "HIGH" but the relationship is the one signal against it.
@@ -38,7 +38,7 @@ record/validate/file workflow tools). Drop 935.
 
 **Impact.**
 - Masters: -1 (935).
-- Relationships: rewire `courses` (167) `yields_credits_via` from 935 to 936; drop the 935 -> 936 edge.
+- Relationships: rewire `courses` (167) `yields_credits_via` from 935 to 936; drop the 935 -> 936 relationship.
 - Skills/tools: drop tool 1355 from `lms_credentials_agent` (239). Net F-band unaffected (936 tools remain).
 - Aliases: none on 935 to migrate.
 - Lifecycle: none on 935.
@@ -58,7 +58,7 @@ tables.
 
 **Current state.** Six shells, each with `recorded/drafted -> validated -> archived` lifecycle, a
 query + record tool pair, aliases, and a `compliance_assignments (173) produces X` relationship plus
-a `users evidenced_by_record_for X` edge:
+a `users evidenced_by_record_for X` relationship:
 
 | id | master | necessity |
 | --- | --- | --- |
@@ -70,17 +70,17 @@ a `users evidenced_by_record_for X` edge:
 | 949 | bsa_aml_training_records | **required** |
 
 The generic evidence master `training_evidence_records` (940) already exists (lifecycle
-`drafted -> finalized -> submitted -> archived`; tools 1370-1372; edges `compliance_audit_records
+`drafted -> finalized -> submitted -> archived`; tools 1370-1372; relationships `compliance_audit_records
 consolidates 940`, `940 supplies regulator_filing_exports`).
 
 **Target.** Drop the six shells. Add a `regulation_type` dimension on `training_evidence_records`
 (940) (a field/enum, owned by the deployer at the field-metadata layer, not by domain-map). All
-`compliance_assignments produces X` edges collapse to `compliance_assignments produces
+`compliance_assignments produces X` relationships collapse to `compliance_assignments produces
 training_evidence_records`. Per-statute synonyms become `regulation_type` enum values (or aliases on
 940).
 
-**Keep separate (NOT part of C).** `harassment_training_acknowledgements` (941) is a signed
-acknowledgement with its own ack workflow, not generic evidence. `fda_part11_audit_trails` (948) is
+**Keep separate (NOT part of C).** `harassment_training_acknowledgments` (941) is a signed
+acknowledgment with its own ack workflow, not generic evidence. `fda_part11_audit_trails` (948) is
 borderline: "Part 11 audit trail" is an integrity-log shape, arguably distinct from a training
 evidence record. Decide per-entity whether 948 folds into 940 or stays as an audit-log master
 (`entity_type=operational_record`).
@@ -89,10 +89,10 @@ evidence record. Decide per-entity whether 948 folds into 940 or stays as an aud
 - Masters: -6 (or -5 if 948 stays).
 - Lifecycle: ~18 state rows removed (6 x 3).
 - Skills/tools: ~12 tools dropped from `lms_compliance_training_agent` (153); the starter agent
-  `training_records_starter_agent` (242) loses its per-reg query tools (it currently links
+  `training_records_starter_agent` (242) loses its per-reg query tools (it currently relates
   `query_hipaa/osha/sox/ferpa/fda/bsa`). Generic 940 tools cover the survivor.
-- Relationships: six `173 produces X` edges collapse to one `173 produces 940`; six
-  `users evidenced_by_record_for X` edges collapse to one on 940.
+- Relationships: six `173 produces X` relationships collapse to one `173 produces 940`; six
+  `users evidenced_by_record_for X` relationships collapse to one on 940.
 - Aliases: migrate the regulation synonyms (e.g. "164.530(b) workforce training record",
   "OSHA 1910 training record", "AML training record") onto 940 or fold into `regulation_type`.
 - Starter 182: currently embeds 944/945/946/947/948/949 as `embedded_master`. These collapse to
@@ -121,7 +121,7 @@ because the regulation is data, not schema; the per-shell split is over-modulari
 the master count, the tool count, and the starter embed set without buying real workflow divergence.
 
 **Recommendation.** Collapse, with `regulation_type` as a row attribute plus a tenant "active
-regulations" config to recover the install-gating behavior. Keep 941 (acknowledgement) and decide 948
+regulations" config to recover the install-gating behavior. Keep 941 (acknowledgment) and decide 948
 (audit-log) separately. **Blast radius: HIGH** (6 masters, ~12 tools, ~18 lifecycle rows, starter
 embeds, B14). Re-emit COMPLIANCE-TRAINING + TRAINING-RECORDS-STARTER blueprints.
 
@@ -158,7 +158,7 @@ LMS both demote to consumer/embedded_master." `subject_access_requests` (951) an
 `request_type` enum. That single-master move requires re-mastering 901 from ATS to PRIV-MGMT.
 
 **Target.** PRIV-MGMT becomes the canonical DSAR/consent master. LMS dissolves module 180 and becomes
-a consumer/derived: it receives erasure/SAR fulfilment events from PRIV-MGMT (cross-domain
+a consumer/derived: it receives erasure/SAR fulfillment events from PRIV-MGMT (cross-domain
 PRIV-MGMT -> LMS handoff to purge or export training records) and exposes training evidence. LMS may
 keep thin `embedded_master` shells if it must stay standalone-deployable, demoting to consumer when
 PRIV-MGMT installs.

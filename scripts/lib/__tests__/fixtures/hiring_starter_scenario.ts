@@ -36,7 +36,7 @@ export const IDS = {
   USERS: 100, CANDIDATES: 101, POSTINGS: 102, APPLICATIONS: 103, JOB_OFFERS: 104,
   // processes
   HIRE: 501, RECRUIT: 502, OFFER: 503,
-  // personas (domain_roles)
+  // personas (personas)
   RECRUITER: 7, HIRING_MANAGER: 8, RECRUITING_MANAGER: 9, LEGAL: 6,
 } as const;
 
@@ -98,11 +98,11 @@ export function hiringStarterScenario(): Fixture {
       processRow(I.RECRUIT, "recruit_source_candidates", { process_name: "Recruit/Source candidates", process_code: "7.2.2", external_id: "10440", hierarchy_level: 3 }),
       processRow(I.OFFER, "draw_up_make_offer", { process_name: "Draw up and make offer", process_code: "7.2.4.1", external_id: "10463", hierarchy_level: 4 }),
     ],
-    domainRoles: [
-      { id: I.RECRUITER, role_code: "RECRUITING-RECRUITER" },
-      { id: I.HIRING_MANAGER, role_code: "HIRING-MANAGER" },
-      { id: I.RECRUITING_MANAGER, role_code: "RECRUITING-MANAGER" },
-      { id: I.LEGAL, role_code: "LEGAL-COMPLIANCE-SPECIALIST" },
+    personas: [
+      { id: I.RECRUITER, persona_code: "RECRUITING-RECRUITER" },
+      { id: I.HIRING_MANAGER, persona_code: "HIRING-MANAGER" },
+      { id: I.RECRUITING_MANAGER, persona_code: "RECRUITING-MANAGER" },
+      { id: I.LEGAL, persona_code: "LEGAL-COMPLIANCE-SPECIALIST" },
     ],
     processRaci: [
       raciRow(1, I.HIRE, I.RECRUITER, "responsible"),

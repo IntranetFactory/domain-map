@@ -48,7 +48,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `smp_app_requests` | `smp_app_requests` | App Access Request | App Access Requests | master | - | - | required | yes | operational_workflow | `:manage` | - |
 | 2 | `smp_automation_workflows` | `smp_automation_workflows` | Automation Workflow | Automation Workflows | master | - | - | required | - | catalog | `:admin` | - |
@@ -60,20 +60,20 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `smp_automation_workflows` | runs_for | `smp_workflow_runs` | one_to_many | composition | required | source | cascade | parent | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | requested_by | `smp_app_requests` | one_to_many | required | target | restrict | reference | - |
 | `users` | authors | `smp_automation_workflows` | one_to_many | required | target | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -84,11 +84,11 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | none | n/a | - |
 | `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 

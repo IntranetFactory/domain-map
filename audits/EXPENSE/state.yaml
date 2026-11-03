@@ -179,9 +179,9 @@ b2:
   - id: B2-CONSUMER-DMDO
     summary: "Five EXPENSE handoffs carry a payload EXPENSE does not model; model each as a consumer DMDO row, or leave it as a domain-level signal with a NULL module FK?"
     question: |
-      Five cross-domain handoffs name a payload that no Expense Management module currently models, so the module-attribution FK is left empty: 38 (shadow IT apps, outbound to SaaS-management), 101 (pay slips, inbound from payroll), 468 (employees, inbound from HR), 559 (spend policies, inbound from spend-management), 600 (card authorizations, inbound from spend-management). Should Expense Management add a thin consumer record for each so the link is module-attributed, or keep them as domain-level signals with no module owner?
+      Five cross-domain handoffs name a payload that no Expense Management module currently models, so the module-attribution FK is left empty: 38 (shadow IT apps, outbound to SaaS-management), 101 (pay slips, inbound from payroll), 468 (employees, inbound from HR), 559 (spend policies, inbound from spend-management), 600 (card authorizations, inbound from spend-management). Should Expense Management add a thin consumer record for each so the relationship is module-attributed, or keep them as domain-level signals with no module owner?
     options:
-      - "a, add a consumer record on the receiving module for each (attributes the link, captures the dependency in the catalog)"
+      - "a, add a consumer record on the receiving module for each (attributes the relationship, captures the dependency in the catalog)"
       - "b, leave them as domain-level signals with a NULL module FK (the B10b 'accept as domain-level signal' path)"
       - "c, per-handoff mix (specify which to model and which to leave)"
     why: "Adding a consumer domain_module_data_objects row is net-new market structure (Rule #21 expansive addition), so it needs a go-ahead before the agent writes it. Non-blocking for the build."

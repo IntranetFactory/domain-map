@@ -113,7 +113,7 @@ b1b:
       B9 residual. The 2026-05-31 continuation cleared 6 of 7 NCDB trigger_events' event_category
       values. Event 727 was deferred between `signal` and `state_change`. Recommended pick is
       `state_change` (mirrors `record_definition.changed`, also `state_change`, on the same
-      substrate; the form submission materializes a new row in the linked record definition).
+      substrate; the form submission materializes a new row in the related record definition).
     blocked_by:
       - {type: user_decision, ref: event_727_category_pick}
     affected_events:
@@ -121,12 +121,12 @@ b1b:
   - id: B1B-S3-RES
     summary: "INSERT the 5th audit-proposed intra-domain `data_object_relationships` row (nocode_views source_of nocode_forms) or explicit defer."
     finding: >
-      B6 residual. 4 of 5 audit-proposed intra-domain edges loaded 2026-05-31. The 5th edge
+      B6 residual. 4 of 5 audit-proposed intra-domain relationships loaded 2026-05-31. The 5th relationship
       (`nocode_views` source_of `nocode_forms`, M:N, optional) was deferred as audit-hedged
       ("some platforms let forms inherit a view's filter context"). Catalog-neutrality argues
       for inserting at `is_required=false`.
     blocked_by:
-      - {type: depends_on, ref: B1B-S6, reason: "settle the intra-domain edge set alongside lifecycle / intra-handoff authoring"}
+      - {type: depends_on, ref: B1B-S6, reason: "settle the intra-domain relationship set alongside lifecycle / intra-handoff authoring"}
   - id: B1B-H1-RES
     summary: "Resolve PCF candidate ambiguity for handoff 700 and INSERT one `handoff_processes` row."
     finding: >
@@ -164,7 +164,7 @@ b2:
       - "b: GDPR + CCPA + HIPAA mandatory"
       - "c: none, leave compliance as cross-cutting via embedded master patterns"
       - "d: user proposes set"
-    why: "Regulation linkage is a market-scoping decision the user owns; the no-code-database market straddles many regulated industries without being itself a regulated category."
+    why: "Regulation relationship is a market-scoping decision the user owns; the no-code-database market straddles many regulated industries without being itself a regulated category."
   - id: B2-S4
     summary: "Cross-cutting capability scope for OPERATIONAL-DATA-APPS and SEMANTIC-MODELING."
     question: >

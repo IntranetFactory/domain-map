@@ -9,8 +9,8 @@
  * Signals (re-derived live every run, Policy 4):
  *   - module_count        domain_modules rows with domain_id = this domain
  *   - capability_count    capability_domains rows for this domain
- *   - persona_count       distinct domain_roles reaching this domain via
- *                         role_modules.domain_module_id -> domain_modules.domain_id
+ *   - persona_count       distinct personas reaching this domain via
+ *                         persona_modules.domain_module_id -> domain_modules.domain_id
  *   - unclassified_masters  data_objects this domain masters whose entity_type is
  *                         null or 'unclassified' (B13)
  *   - m9_shapes           contributor / required-consumer rows on this domain's modules
@@ -46,9 +46,9 @@ const PERSONA_PILOT = "ATS";
 type Domain = { id: number; domain_code: string; domain_name: string };
 type Module = { id: number; domain_module_code: string; domain_id: number | null };
 type CapDom = { domain_id: number };
-type DomainRole = { id: number; business_function_id: number | null; record_status: string | null };
-type RoleModule = { role_id: number; domain_module_id: number };
-type Dmdo = { domain_module_id: number; data_object_id: number; role: string; is_install_optional: boolean | null };
+type Persona = { id: number; business_function_id: number | null; record_status: string | null };
+type PersonaModule = { persona_id: number; domain_module_id: number };
+type Dmdo = { domain_module_id: number; data_object_id: number; held_as: string; is_install_optional: boolean | null };
 type DataObject = { id: number; data_object_name: string; kind: string; entity_type: string | null };
 
 // Fetch sequentially: each pg() spawns a fresh `semantius` CLI process with its own MCP
@@ -57,9 +57,9 @@ type DataObject = { id: number; data_object_name: string; kind: string; entity_t
 const domains = (await pg("GET", "/domains?select=id,domain_code,domain_name,domain_kind&order=domain_code.asc&limit=10000")) as Domain[];
 const modules = (await pg("GET", "/domain_modules?select=id,domain_module_code,domain_id&limit=10000")) as Module[];
 const capDoms = (await pg("GET", "/capability_domains?select=domain_id&limit=20000")) as CapDom[];
-const domainRoles = (await pg("GET", "/domain_roles?select=id,business_function_id,record_status&limit=20000")) as DomainRole[];
-const roleModules = (await pg("GET", "/role_modules?select=role_id,domain_module_id&limit=20000")) as RoleModule[];
-const dmdo = (await pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&limit=30000")) as Dmdo[];
+const personas = (await pg("GET", "/personas?select=id,business_function_id,record_status&limit=20000")) as Persona[];
+const personaModules = (await pg("GET", "/persona_modules?select=persona_id,domain_module_id&limit=20000")) as PersonaModule[];
+const dmdo = (await pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,held_as,is_install_optional&limit=30000")) as Dmdo[];
 const dataObjects = (await pg("GET", "/data_objects?select=id,data_object_name,kind,entity_type&limit=20000")) as DataObject[];
 
 // ---- indices ----
@@ -86,7 +86,7 @@ for (const c of capDoms) capCountByDomain.set(c.domain_id, (capCountByDomain.get
 // and each data_object's kind (platform built-ins are always present, never a dependency).
 const masterModulesByDO = new Map<number, number[]>();
 for (const r of dmdo) {
-  if (r.role !== "master") continue;
+  if (r.held_as !== "master") continue;
   let a = masterModulesByDO.get(r.data_object_id);
   if (!a) masterModulesByDO.set(r.data_object_id, (a = []));
   a.push(r.domain_module_id);
@@ -122,7 +122,7 @@ type Record = {
   unclassified_master_names: string[];
   m9_shapes: number;
   m9_shared_excluded: number;
-  m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[];
+  m9_details: { entity: string; module: string; held_as: string; is_install_optional: boolean | null; master_domains: string[] }[];
   verdict: Verdict;
   b1a_codes: string[];
 };
@@ -134,14 +134,14 @@ for (const d of domains) {
   const moduleIds = moduleIdsByDomain.get(d.id) ?? [];
   const module_count = moduleIds.length;
   const capability_count = capCountByDomain.get(d.id) ?? 0;
-  // persona reach (logic_cefh.ts domainPersonas): distinct live personas with a role_modules row
+  // persona reach (logic_cefh.ts domainPersonas): distinct live personas with a persona_modules row
   // on one of this domain's modules. No owning functions are passed: only the reach half counts.
-  const persona_count = domainPersonas({ moduleIds, ownerFunctionIds: [], personas: domainRoles, roleModules }).reach.length;
+  const persona_count = domainPersonas({ moduleIds, ownerFunctionIds: [], personas, personaModules }).reach.length;
   const rows = dmdoByDomain.get(d.id) ?? [];
 
   // B13: distinct masters this domain owns whose entity_type is unclassified/null (logic_b.ts)
   const masterDOIds = new Set<number>();
-  for (const r of rows) if (r.role === "master") masterDOIds.add(r.data_object_id);
+  for (const r of rows) if (r.held_as === "master") masterDOIds.add(r.data_object_id);
   const unclassified_master_names: string[] = [];
   for (const id of masterDOIds) {
     const obj = doById.get(id);
@@ -156,10 +156,10 @@ for (const d of domains) {
   // by >= 2 domains; counted in sharedExcluded for transparency).
   const m9 = entitySelfContainment(rows, selfContainmentCatalog, { embeddedScope: "domain", crossDomainOnly: true });
   const m9_shared_excluded = m9.sharedExcluded;
-  const m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[] = m9.violations.map((v) => ({
+  const m9_details: { entity: string; module: string; held_as: string; is_install_optional: boolean | null; master_domains: string[] }[] = m9.violations.map((v) => ({
     entity: doById.get(v.row.data_object_id)?.data_object_name ?? `#${v.row.data_object_id}`,
     module: moduleCodeById.get(v.row.domain_module_id) ?? `#${v.row.domain_module_id}`,
-    role: v.row.role,
+    held_as: v.row.held_as,
     is_install_optional: v.row.is_install_optional ?? null,
     // not a shared master, so the owning domain is the entity's only master domain
     master_domains: v.ownerDomainIds.map((md) => domainCodeById.get(md) ?? `#${md}`).sort(),

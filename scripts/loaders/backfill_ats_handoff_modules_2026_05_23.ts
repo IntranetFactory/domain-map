@@ -9,9 +9,9 @@
  * Derivation rule (matches new SKILL.md B9b):
  *   source_domain_module_id = module in source_domain that MASTERS the
  *     trigger_event's data_object (i.e., who publishes the event). Strongest
- *     role wins: master > embedded_master > contributor > consumer > derived.
+ *     held_as wins: master > embedded_master > contributor > consumer > derived.
  *   target_domain_module_id = module in target_domain that holds the handoff's
- *     PAYLOAD data_object with the strongest role.
+ *     PAYLOAD data_object with the strongest held_as.
  *   Ties or no candidates -> leave NULL + report.
  *
  * Scope: only rows where ATS is on the relevant side.
@@ -23,7 +23,7 @@
  */
 
 const ATS_DOMAIN_ID = 56;
-const ROLE_RANK: Record<string, number> = {
+const HELD_AS_RANK: Record<string, number> = {
   master: 0,
   embedded_master: 1,
   contributor: 2,
@@ -69,10 +69,10 @@ async function patch(path: string, body: any): Promise<any> {
   return r.data;
 }
 
-function strongest<T extends { role: string }>(rows: T[]): T[] {
+function strongest<T extends { held_as: string }>(rows: T[]): T[] {
   if (rows.length === 0) return [];
-  const minRank = Math.min(...rows.map((r) => ROLE_RANK[r.role] ?? 99));
-  return rows.filter((r) => (ROLE_RANK[r.role] ?? 99) === minRank);
+  const minRank = Math.min(...rows.map((r) => HELD_AS_RANK[r.held_as] ?? 99));
+  return rows.filter((r) => (HELD_AS_RANK[r.held_as] ?? 99) === minRank);
 }
 
 type Handoff = {
@@ -87,7 +87,7 @@ type Handoff = {
 };
 
 type ModuleRow = { id: number; domain_id: number | null; domain_module_code: string };
-type DMDORow = { domain_module_id: number; data_object_id: number; role: string };
+type DMDORow = { domain_module_id: number; data_object_id: number; held_as: string };
 
 async function main() {
   console.log("ATS handoff module-attribution backfill (2026-05-23)");
@@ -127,19 +127,19 @@ async function main() {
   console.log(`Step 3: pull domain_module_data_objects for ${dataObjectIds.size} payload data_objects`);
   const allModuleIds = modules.map((m) => m.id);
   const dmdoRows: DMDORow[] = await get(
-    `/domain_module_data_objects?data_object_id=in.(${[...dataObjectIds].join(",")})&domain_module_id=in.(${allModuleIds.join(",")})&select=domain_module_id,data_object_id,role`
+    `/domain_module_data_objects?data_object_id=in.(${[...dataObjectIds].join(",")})&domain_module_id=in.(${allModuleIds.join(",")})&select=domain_module_id,data_object_id,held_as`
   );
   console.log(`  ${dmdoRows.length} (module, data_object) pairs`);
 
-  // Index: (domain_id, data_object_id) -> [{module, role}, ...]
-  type Candidate = { module: ModuleRow; role: string };
+  // Index: (domain_id, data_object_id) -> [{module, held_as}, ...]
+  type Candidate = { module: ModuleRow; held_as: string };
   const candidatesIdx = new Map<string, Candidate[]>();
   for (const r of dmdoRows) {
     const m = modulesById.get(r.domain_module_id);
     if (!m || m.domain_id === null) continue;
     const key = `${m.domain_id}:${r.data_object_id}`;
     if (!candidatesIdx.has(key)) candidatesIdx.set(key, []);
-    candidatesIdx.get(key)!.push({ module: m, role: r.role });
+    candidatesIdx.get(key)!.push({ module: m, held_as: r.held_as });
   }
 
   function deriveModule(domainId: number, dataObjectId: number): { moduleId: number | null; reason: string } {
@@ -147,10 +147,10 @@ async function main() {
     const cands = candidatesIdx.get(key) ?? [];
     if (cands.length === 0) return { moduleId: null, reason: "no module in domain holds this data_object" };
     const top = strongest(cands);
-    if (top.length === 1) return { moduleId: top[0].module.id, reason: `${top[0].role} on data_object ${dataObjectId}` };
+    if (top.length === 1) return { moduleId: top[0].module.id, reason: `${top[0].held_as} on data_object ${dataObjectId}` };
     return {
       moduleId: null,
-      reason: `tie: ${top.length} modules with role ${top[0].role} (${top.map((c) => c.module.domain_module_code).join(", ")})`,
+      reason: `tie: ${top.length} modules with held_as ${top[0].held_as} (${top.map((c) => c.module.domain_module_code).join(", ")})`,
     };
   }
 

@@ -85,7 +85,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | catalog code | singular | plural | role | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `candidate_assessments` | `candidate_assessments` | Assessment | Assessments | master | - | - | - | - | operational_workflow | `:manage` | - |
 | 2 | `candidate_assessment_templates` | `candidate_assessment_templates` | Candidate Assessment Template | Candidate Assessment Templates | master | - | - | - | - | catalog | `:admin` | - |
@@ -106,7 +106,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 _`field_required` applies only when both entities are installed. It never makes an entity required._
 
-### 5.1 Links between entities in this blueprint
+### 5.1 Relationships between entities in this blueprint
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -121,11 +121,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `candidate_assessment_templates` | instantiates_as | `candidate_assessments` | one_to_many | reference | no | source | clear | reference | - |
 | `interviewer_availability_slots` | booked_for | `interviews` | one_to_one | reference | no | source | clear | reference | - |
 
-### 5.2 Links to platform built-ins (`users`)
+### 5.2 Relationships to platform built-ins (`users`)
 
 | from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns as recruiter | `job_applications` | one_to_many | yes | source | restrict | reference | - |
+| `users` | owns as recruiter | `job_applications` | one_to_many | no | source | clear | reference | - |
 | `users` | coordinates | `interviews` | one_to_many | yes | source | restrict | reference | - |
 | `users` | authors | `interview_scorecards` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
@@ -133,11 +133,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | owns | `interviewer_availability_slots` | one_to_many | yes | source | restrict | reference | - |
 | `users` | sits on | `interview_panels` | one_to_many | no | source | clear | reference | - |
 
-### 5.3 Links to entities outside this blueprint
+### 5.3 Relationships to entities outside this blueprint
 
-_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-#### 5.3a Outgoing links: this blueprint's entity points to the external entity
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -150,7 +150,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
-#### 5.3b Incoming links: the external entity points to this blueprint's entity
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -169,7 +169,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
@@ -184,9 +184,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._
+_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
 
-| data_object | other module / domain | role | install_optional | notes |
+| data_object | other module / domain | held_as | install_optional | notes |
 | --- | --- | --- | --- | --- |
 | `candidate_assessments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | yes | - |
 | `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | yes | - |
@@ -216,7 +216,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | install_optional | catalog owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | - | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | - | ATS-RECRUITMENT-PIPELINE (ATS) | - |
@@ -390,6 +390,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
-| contributor | Human Resources | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Finance | `read` | `:read` |
+| contributor | Human Resources | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Finance | `viewer` | `:read` |

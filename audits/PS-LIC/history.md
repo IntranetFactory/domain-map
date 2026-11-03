@@ -4,7 +4,7 @@
 
 ### Summary
 
-- **Current footprint:** 6 master `data_objects` (permit_applications, license_records, permit_inspections, license_renewals, code_violations, regulatory_fees); **0 `domain_modules`** (blocking M1); **0 `capability_domains` rows** (blocking A2); 5 solutions linked (Accela, OpenGov, Tyler ERP, ServiceNow PSDS primary, Salesforce PS secondary); 4 regulations (FedRAMP, CMMC, StateRAMP, Section 508); 1 `business_function_domains` owner (Business Operations); 8 trigger events on these masters; 6 outbound handoffs (CSM x2, GRC x2, FIN x2); 0 inbound handoffs; 22 `data_object_relationships` (intra-domain + users edges populated + 4 cross-domain edges); 11 aliases; 1 legacy domain-level system skill `ps-lic-system` (id 93, `domain_module_id=null`) with 8 `skill_tools` (7 platform-covered, 1 external `sign_document`); 0 lifecycle states on any of the 6 masters; pattern flags all false by default (never considered).
+- **Current footprint:** 6 master `data_objects` (permit_applications, license_records, permit_inspections, license_renewals, code_violations, regulatory_fees); **0 `domain_modules`** (blocking M1); **0 `capability_domains` rows** (blocking A2); 5 solutions related (Accela, OpenGov, Tyler ERP, ServiceNow PSDS primary, Salesforce PS secondary); 4 regulations (FedRAMP, CMMC, StateRAMP, Section 508); 1 `business_function_domains` owner (Business Operations); 8 trigger events on these masters; 6 outbound handoffs (CSM x2, GRC x2, FIN x2); 0 inbound handoffs; 22 `data_object_relationships` (intra-domain + relationships to `users` populated + 4 cross-domain relationships); 11 aliases; 1 legacy domain-level system skill `ps-lic-system` (id 93, `domain_module_id=null`) with 8 `skill_tools` (7 platform-covered, 1 external `sign_document`); 0 lifecycle states on any of the 6 masters; pattern flags all false by default (never considered).
 - **`domains` row metadata (A1):** `crud_percentage=95`, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `certification_required=true`, `usa_market_size_usd_m=1000`, `market_size_source_year=2025`, `business_logic=''` (acceptable at `crud_percentage>=95`), `catalog_tagline=''`, `catalog_description=''` (A4 fail), `notes=''`.
 - **Vendor surface basis (market audit pass):** Accela Civic Platform (pure-play permitting / licensing leader, Accela Citizen Access front-end), OpenGov Permitting and Licensing (mid-market civic-tech entrant), Tyler Technologies EnerGov / Enterprise ERP (long-tail government suite), ServiceNow Public Sector Digital Services (workflow-platform entrant), CitizenServe (SMB / county-tier specialist). Regulated market: FedRAMP / StateRAMP for hosting, Section 508 for accessibility, ADA Title II for digital service delivery, NIST SP 800-53 controls for federal contractors.
 - **Bucket 1 (in-scope, agent fixable):** 10 items.
@@ -17,15 +17,15 @@ Structural pass: **A partial fail** (A2 zero capabilities; A4 empty catalog UX f
 
 ### Pass 3, Neighbor discovery
 
-Edge weights derived from `handoffs` + cross-domain `data_object_relationships` on PS-LIC masters.
+Relationship weights derived from `handoffs` + cross-domain `data_object_relationships` on PS-LIC masters.
 
-| Neighbor | Outbound handoffs | Inbound handoffs | Cross-domain DOR edges | Edge weight | Pairwise pass? |
+| Neighbor | Outbound handoffs | Inbound handoffs | Cross-domain DOR relationships | Relationship weight | Pairwise pass? |
 |---|---|---|---|---|---|
 | CSM (30) | 2 (`permit_inspection.failed`, `license_renewal.due` to customer_cases) | 0 | 4 (permit_inspections, license_renewals, both directions via customer_cases) | 6 | yes |
 | FIN (65) | 2 (`license.issued`, `regulatory_fee.assessed` to journal_entries) | 0 | 2 (regulatory_fees, license_records via journal_entries) | 4 | yes |
 | GRC (15) | 2 (`code_violation.issued`, `permit_inspection.failed` to compliance_risks / obligations) | 0 | 2 (code_violations to compliance_risks; permit_inspections to compliance_obligations) | 4 | yes |
 
-No other neighbors have any edge. Pairwise deep dive runs against all three since all are at weight >= 3.
+No other neighbors have any relationship. Pairwise deep dive runs against all three since all are at weight >= 3.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -55,7 +55,7 @@ No other neighbors have any edge. Pairwise deep dive runs against all three sinc
 
 | ID | Finding | Fix |
 |---|---|---|
-| B1-B1 | Three trigger events with zero `handoffs` rows: `permit_application.submitted` (1052), `permit_application.approved` (1053), `permit_inspection.scheduled` (1056). All three are valid published verbs that should have at least one cross-domain subscriber (CSM constituent acknowledgement, FIN fee assessment intake, calendaring / dispatch via FSM or CCAAS). | Draft handoff rows per B9 procedure. Minimal set: `permit_application.submitted` to CSM (acknowledgement case) and FIN (fee intake); `permit_application.approved` to CSM (approval notification); `permit_inspection.scheduled` to FSM (inspector dispatch, if FSM modeled; otherwise CSM scheduling case). Defer until M-band cures so per-module FKs are populatable at write time. |
+| B1-B1 | Three trigger events with zero `handoffs` rows: `permit_application.submitted` (1052), `permit_application.approved` (1053), `permit_inspection.scheduled` (1056). All three are valid published verbs that should have at least one cross-domain subscriber (CSM constituent acknowledgment, FIN fee assessment intake, calendaring / dispatch via FSM or CCAAS). | Draft handoff rows per B9 procedure. Minimal set: `permit_application.submitted` to CSM (acknowledgment case) and FIN (fee intake); `permit_application.approved` to CSM (approval notification); `permit_inspection.scheduled` to FSM (inspector dispatch, if FSM modeled; otherwise CSM scheduling case). Defer until M-band cures so per-module FKs are populatable at write time. |
 | B1-B2 | Existing `handoff_processes` row on handoff 925 (`license.issued` to FIN, journal_entries posting) points at PCF id 1290 (`Plan and budget IT license usage volumes`, external_id 20893). The PCF activity is from the IT-software-license domain (an IT planning activity), not the regulatory licensing domain. Source: `discovery_substring` from a generic license-keyword substring match. `record_status='new'`. | DELETE the row, replace with `proposal_source='agent_curated'` row pointing at PCF id 303 (`Process accounts receivable (AR)`, L3, external_id 10744) or PCF id 1353 (`Post receivable entries`, L4, external_id 10797). The handoff is fundamentally an AR posting motion. See B1-H1 below for the full per-handoff classification table. |
 
 #### B9b. Intra-domain cross-module handoffs
@@ -79,7 +79,7 @@ Per-handoff classification:
 | 925 | PS-LIC → FIN | `license.issued` | license_records | Post receivable entries (revenue / AR posting for the issuance fee) | 1353 | 10797 | confident L4 (parent PCF 303 also acceptable) |
 | 926 | PS-LIC → GRC | `permit_inspection.failed` | permit_inspections | Manage regulatory compliance | 369 | 16463 | confident L3 |
 
-Deferred-to-Discover candidates (medium confidence flagged inline above): handoffs 923 and 924. PCF cross-industry framework lacks government-shaped "constituent case" or "renewal calendaring" activities; proposed PCF is the closest commercial-customer analogue. Discover Pass 3 may author a custom-process row instead.
+Deferred-to-Discover candidates (medium confidence flagged inline above): handoffs 923 and 924. PCF cross-industry framework lacks government-shaped "constituent case" or "renewal calendaring" activities; proposed PCF is the closest commercial-customer analog. Discover Pass 3 may author a custom-process row instead.
 
 Volume: 6 cross-domain handoffs; agent proposes 6 new `agent_curated` rows (4 confident, 2 medium) plus 1 DELETE on the wrong existing row. Falls within the 0.5N to 0.8N target expectation (N=6).
 
@@ -88,7 +88,7 @@ Volume: 6 cross-domain handoffs; agent proposes 6 new `agent_curated` rows (4 co
 1. **Modularization shape.** Zero modules today (B1-S1). The recommended baseline is a 4-module split aligned to the lifecycle phases: `PS-LIC-APPLICATION-INTAKE` (permit_applications), `PS-LIC-ISSUANCE-AND-RENEWAL` (license_records + license_renewals), `PS-LIC-INSPECTION-AND-ENFORCEMENT` (permit_inspections + code_violations), `PS-LIC-FEES` (regulatory_fees). Alternatives: (a) 2-module collapse (`PS-LIC-APPLICATIONS-AND-LICENSING` carrying applications + licenses + renewals, `PS-LIC-FIELD-OPS` carrying inspections + violations + fees), (b) 3-module split (`PS-LIC-INTAKE`, `PS-LIC-COMPLIANCE`, `PS-LIC-BILLING`), (c) single full module `PS-LIC-CORE` plus a `module_kind='starter'` lite variant for the SMB / county-tier deployment. Independent of Bucket 3 (the 4-module shape covers the current 6 masters cleanly even if Bucket 3 adds another 4 to 6 entities). Dependency: Bucket 1 entirely blocks on this answer.
 2. **Capability set.** Zero capabilities today (B1-S2). Recommended 8-capability shape: application intake, license issuance, inspection scheduling and dispatch, code-enforcement workflow, license renewal lifecycle, regulatory fee assessment, constituent-facing portal access, accessibility-and-OFCCP compliance reporting. The choice interacts with Bucket 2 #1 (which capability realizes in which module via `domain_module_capabilities`). Alternatives: 5-capability narrow shape (intake, issuance, inspection, renewal, fees) or 10-capability broad shape (add hearings / appeals, public-records access, GIS-parcel integration). Independent of Bucket 3.
 3. **Pattern flag judgment per master.** Recommended PATCHes after user approval: `permit_applications.has_personal_content=true` (applicant PII), `permit_applications.has_submit_lock=true` (post-submit immutability), `license_records.has_personal_content=true` (licensee PII), `license_renewals.has_personal_content=true` (renewing licensee), `code_violations.has_personal_content=true` (cited-party PII), `code_violations.has_single_approver` is debatable (single hearing officer vs panel; jurisdiction-dependent). All other defaults likely stay false. Independent of Bucket 3.
-4. **FedRAMP / CMMC / StateRAMP scoping.** Catalog has 4 mandatory regulations (FedRAMP, CMMC, StateRAMP, Section 508). FedRAMP applies only to cloud-hosted federal-facing systems; CMMC applies only to federal contractors handling CUI; StateRAMP is voluntary state-level adoption. **Is the mandatory-for-all-PS-LIC scoping intentional, or should each be `optional` with a per-deployment qualifier?** Options: (a) keep all four mandatory (most PS-LIC tenants are public-sector hosted cloud, so this is the realistic deployment shape), (b) demote FedRAMP and CMMC to `optional` (only federal contractor jurisdictions), (c) add ADA Title II as missing mandatory. Missing from list: NIST SP 800-53, IRS Pub 1075 (for state-revenue-touching license types), HIPAA (where regulated occupations involve PHI, e.g. ambulance permits or food-handler licenses linked to health departments). Independent of Bucket 3.
+4. **FedRAMP / CMMC / StateRAMP scoping.** Catalog has 4 mandatory regulations (FedRAMP, CMMC, StateRAMP, Section 508). FedRAMP applies only to cloud-hosted federal-facing systems; CMMC applies only to federal contractors handling CUI; StateRAMP is voluntary state-level adoption. **Is the mandatory-for-all-PS-LIC scoping intentional, or should each be `optional` with a per-deployment qualifier?** Options: (a) keep all four mandatory (most PS-LIC tenants are public-sector hosted cloud, so this is the realistic deployment shape), (b) demote FedRAMP and CMMC to `optional` (only federal contractor jurisdictions), (c) add ADA Title II as missing mandatory. Missing from list: NIST SP 800-53, IRS Pub 1075 (for state-revenue-touching license types), HIPAA (where regulated occupations involve PHI, e.g. ambulance permits or food-handler licenses related to health departments). Independent of Bucket 3.
 5. **Wrong existing APQC tag handling (handoff 925).** Existing row points at PCF 1290 (IT software licensing). Options: (a) DELETE then INSERT replacement per B1-B2 / B1-H1 (recommended), (b) PATCH `record_status='rejected'` so the audit trail keeps the bad row visible, (c) leave for the Discover Pass 3 reviewer to triage. The agent recommends (a) but flags this as a Rule #1 decision (any `record_status` other than `new` requires explicit user approval). Independent of Bucket 3.
 6. **Cost band, market size review.** `cost_band='$$$'` (annual TCO $100k to $500k for 500-user org) and `usa_market_size_usd_m=1000` ($1B TAM) anchored to 2025. Public-sector permitting TAM is volatile (post-ARPA federal funding inflated 2022 to 2024 spending; 2025 forecast is contraction). The $1B figure appears low if the right comparator is "all civic permitting + licensing software"; appears reasonable if scoped to "pure-play permitting platforms only". Confirm scope and refresh source.
 
@@ -173,7 +173,7 @@ No JWT errors. No `notes` writes (Rule #15: pre-checked PS-LIC handoffs and the 
 
 ### Summary
 
-- **Current footprint:** 6 master `data_objects` (permit_applications, license_records, permit_inspections, license_renewals, code_violations, regulatory_fees); **0 `domain_modules`** (still blocking M1); **0 `capability_domains` rows** (still blocking A2); 5 solutions linked (Accela, OpenGov, Tyler Enterprise ERP, ServiceNow PSDS primary, Salesforce PS secondary); 4 regulations all `mandatory` (FedRAMP, CMMC, StateRAMP, Section 508); 1 `business_function_domains` owner (Business Operations, id 34); 8 trigger events; 6 outbound handoffs (2 to CSM, 2 to FIN, 2 to GRC); 0 inbound handoffs; 8 intra-domain `data_object_relationships` edges + 7 `users` reverse-direction edges across all 6 masters; 11 aliases across 5 masters; 1 legacy domain-level system skill `ps-lic-system` (id 93, `domain_module_id=null`) with 8 `skill_tools` (7 platform-covered, 1 external `sign_document`); 0 lifecycle states on any master; pattern flags all false on every master; 6 of 6 outbound cross-domain handoffs are APQC-tagged (`agent_curated`, `record_status='new'`).
+- **Current footprint:** 6 master `data_objects` (permit_applications, license_records, permit_inspections, license_renewals, code_violations, regulatory_fees); **0 `domain_modules`** (still blocking M1); **0 `capability_domains` rows** (still blocking A2); 5 solutions related (Accela, OpenGov, Tyler Enterprise ERP, ServiceNow PSDS primary, Salesforce PS secondary); 4 regulations all `mandatory` (FedRAMP, CMMC, StateRAMP, Section 508); 1 `business_function_domains` owner (Business Operations, id 34); 8 trigger events; 6 outbound handoffs (2 to CSM, 2 to FIN, 2 to GRC); 0 inbound handoffs; 8 intra-domain `data_object_relationships` rows + 7 `users` reverse-direction relationships across all 6 masters; 11 aliases across 5 masters; 1 legacy domain-level system skill `ps-lic-system` (id 93, `domain_module_id=null`) with 8 `skill_tools` (7 platform-covered, 1 external `sign_document`); 0 lifecycle states on any master; pattern flags all false on every master; 6 of 6 outbound cross-domain handoffs are APQC-tagged (`agent_curated`, `record_status='new'`).
 - **`domains` row metadata (A1):** unchanged from prior audit. `crud_percentage=95`, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `certification_required=true`, `usa_market_size_usd_m=1000`, `market_size_source_year=2025`, `business_logic=''` (acceptable at `crud_percentage>=95`), `catalog_tagline=''`, `catalog_description=''` (A4 fail), `notes=''`.
 - **Bucket 1 (b1a, agent-solvable):** 0 items. Every technical fix the prior audit identified as agent-applicable has landed (per 2026-05-31 Continuation); residual technical surfaces all gate on M1 or A2.
 - **Bucket 1 blocked (b1b):** 5 items. PS-LIC M1 self-block, B12 lifecycle states (gate on M1), B10b residual handoff FKs (PS-LIC M1 + GRC M1 + FIN M1), B9 missing-handoff drafts (gate on M1), F2 module-level skills (gate on M1).
@@ -187,7 +187,7 @@ No JWT errors. No `notes` writes (Rule #15: pre-checked PS-LIC handoffs and the 
 |---|---|---|
 | A1 | pass | All 7 business-metadata fields populated; `business_logic` empty acceptable at `crud_percentage=95`. |
 | A2 | **BLOCKING fail** | Zero `capability_domains` rows. |
-| A3 | pass | 5 solutions linked; 4 `primary`, 1 `secondary`. |
+| A3 | pass | 5 solutions related; 4 `primary`, 1 `secondary`. |
 | A4 | fail | `catalog_tagline` and `catalog_description` both empty. |
 | M1 | **BLOCKING fail** | Zero `domain_modules` rows (primary + host-junction both empty). Cascades to M2/M4/M5/M6/M7/M8 (all vacuous fails). |
 | M2 | vacuous fail | Capability count = 0; cannot satisfy >=2 modules until A2 and M1 cure. |
@@ -197,7 +197,7 @@ No JWT errors. No `notes` writes (Rule #15: pre-checked PS-LIC handoffs and the 
 | M7 | n/a | No `master` row collisions detected (single canonical master per data_object across the catalog for the 6 PS-LIC masters). |
 | M8 | vacuous fail | No modules to host taglines or descriptions. |
 | B5 | vacuous pass | Zero `embedded_master` rows on PS-LIC. |
-| B7 | pass | 7 `users -> master` edges populated, covering all 6 masters (assigned applications, submitted applications, owns license, processes renewals, assigned inspections, issued violations, assessed fees). No forward `master -> users` edges, but the reverse-direction set is structurally complete. |
+| B7 | pass | 7 `users -> master` relationships populated, covering all 6 masters (assigned applications, submitted applications, owns license, processes renewals, assigned inspections, issued violations, assessed fees). No forward `master -> relationships to `users`, but the reverse-direction set is structurally complete. |
 | B9 | partial fail | 8 trigger events on PS-LIC masters; 5 have at least one `handoffs` row, 3 have zero (`permit_application.submitted` id 1052, `permit_application.approved` id 1053, `permit_inspection.scheduled` id 1056). |
 | B9b | skip | Pre-check: `domain_modules` count = 0, no cross-module surface to model. Re-runs when M1 cures. |
 | B10b | partial fail | All 6 outbound handoffs have `source_domain_module_id IS NULL` (PS-LIC M1 self-block). 4 of 6 also have `target_domain_module_id IS NULL` (handoffs 921, 925 to FIN; handoffs 922, 926 to GRC; both target domains have M1 self-blocks). Handoffs 923 and 924 now resolve `target_domain_module_id=112` (CSM-CASE-MGMT) per the 2026-05-31 Continuation. |
@@ -207,13 +207,13 @@ No JWT errors. No `notes` writes (Rule #15: pre-checked PS-LIC handoffs and the 
 | D | not run | UI spot-check is a post-fix step. |
 | E1 | vacuous fail | 0 PS-LIC-specific roles in catalog; 0 modules; the single-module vacuous-pass clause does not apply since the domain has zero modules (not exactly 1). Cannot author multi-module roles until M2 cures. |
 | E2 | n/a | No PS-LIC roles to audit. |
-| E3 | n/a | No `role_modules` rows touch PS-LIC modules. |
+| E3 | n/a | No `persona_modules` rows touch PS-LIC modules. |
 | E4 | n/a | No PS-LIC roles to bundle permissions for. |
 | E5 | n/a | No PS-LIC roles to path-check. |
 | F1 | transitional pass | Legacy `ps-lic-system` (id 93, `domain_module_id=null`) exists. Pass acceptable ONLY while zero module-level system skills exist for the domain; will flip to fail the moment M1 cures and the first module-level system skill is authored. |
 | F2 | vacuous fail | 0 modules so 0 module-level system skills can be authored. Rule #17 cannot land until M1 cures. |
 | F3 | pass (on legacy) | The legacy skill 93 has 8 `skill_tools` rows. |
-| F4 | pass | All 8 tools linked to skill 93 satisfy the `operation_kind` invariant: 6 `query` ops with `data_object_id` set (641-646), 2 `side_effect` ops (`send_email`, `sign_document`) with `data_object_id=null`. |
+| F4 | pass | All 8 tools related to skill 93 satisfy the `operation_kind` invariant: 6 `query` ops with `data_object_id` set (641-646), 2 `side_effect` ops (`send_email`, `sign_document`) with `data_object_id=null`. |
 | F5 | uncomputable | No module-level system skills exist so per-module Semantius scores cannot be derived. F5 cures automatically once F2 cures. |
 | H1 | coverage pass | All 6 outbound cross-domain handoffs carry a `handoff_processes` row; 0 inbound handoffs. Provenance: 6 of 6 `agent_curated`; coverage (catalog quality): 0 `approved` (no reviewer signed off yet). Process target met (~1.0N agent_curated against N=6, within the 0.5N to 0.8N+0.2N-deferred band, on the upper end since all 6 landed via the 2026-05-31 Continuation). |
 
@@ -349,8 +349,8 @@ Continuation). Classification output is in the audit transcript (B9d transcript 
 
 The resolver classified all 6 boundary tags as UNOWNED at the module grain, because PS-LIC has zero
 `domain_module_data_objects` rows (UNBUILT domain). At the legacy `domain_data_objects` grain all 6
-payloads ARE PS-LIC-mastered (role=master, domain 46), so the true owner is PS-LIC itself, not "no
-master anywhere". But PS-LIC is unbuilt: zero personas (`domain_roles`), zero realized processes (no
+payloads ARE PS-LIC-mastered (held_as=master, domain 46), so the true owner is PS-LIC itself, not "no
+master anywhere". But PS-LIC is unbuilt: zero personas (`personas`), zero realized processes (no
 `process_id`-wired lifecycle gates), so there is no R/A persona pool to draw from, and the realization
 rows (`process_raci` + gated lifecycle `process_id`) all gate on the M1 build (user decision B2-1 /
 B2-2). This is exactly the cold-start ORPHAN case the B9d band documents. The resolver therefore

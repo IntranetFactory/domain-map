@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 5 mastered `data_objects` (endpoint_experience_scores, synthetic_monitoring_results, real_user_sessions, digital_friction_events, endpoint_anomaly_findings), 0 consumer / contributor rows, 5 `trigger_events`, 4 outbound and 1 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 0 `data_object_relationships` involving any DEM master, 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 module-anchored system skills (1 legacy domain-level skill `dem-system` at `skills.id=47`), 0 roles in `role_modules` (cannot exist without modules), 0 `capabilities`, 0 `solutions`.
+- Current footprint: 5 mastered `data_objects` (endpoint_experience_scores, synthetic_monitoring_results, real_user_sessions, digital_friction_events, endpoint_anomaly_findings), 0 consumer / contributor rows, 5 `trigger_events`, 4 outbound and 1 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 0 `data_object_relationships` involving any DEM master, 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 module-anchored system skills (1 legacy domain-level skill `dem-system` at `skills.id=47`), 0 roles in `persona_modules` (cannot exist without modules), 0 `capabilities`, 0 `solutions`.
 - Vendor-surface basis (flagship vendors enumerated for the semantic pass): Catchpoint, ThousandEyes (Cisco), Splunk Synthetics, Dynatrace DEM (incl. RUM + Synthetic), New Relic Browser + Synthetic, Datadog RUM + Synthetic, Akamai mPulse, AppNeta (Broadcom), Riverbed Aternity. Boundary with the Digital Employee Experience (DEX) category (Nexthink, 1E, ControlUp Edge DX, Lakeside SysTrack, HappySignals) is a genuinely open scope question, see Bucket 2 #2.
 - **Bucket 1 (in-scope, agent fixable):** 16 items.
 - **Bucket 2 (surface-for-user, judgment):** 4 items.
@@ -50,7 +50,7 @@ Per-master sweep flags: zero states across the board (B12 fail), zero aliases (B
 
 - **A1 PASS** all 7 business-metadata fields populated (`crud_percentage=35`, `business_logic` set, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `certification_required=false`, `usa_market_size_usd_m=800`, `market_size_source_year=2025`). But the `business_logic` string contains a U+2014 em-dash, that is a CLAUDE.md violation and goes to Bucket 1 as a STRUCTURAL PATCH (B1-S1 below).
 - **A2 FAIL** zero `capability_domains` rows. Vendor surface implies 5 to 7 capabilities for the DEM market.
-- **A3 FAIL** zero `solution_domains` rows. Flagship vendors (Catchpoint, ThousandEyes, Dynatrace DEM, New Relic Browser + Synthetic, Datadog RUM + Synthetic, Splunk Synthetics, Akamai mPulse, AppNeta, Riverbed Aternity) are not linked.
+- **A3 FAIL** zero `solution_domains` rows. Flagship vendors (Catchpoint, ThousandEyes, Dynatrace DEM, New Relic Browser + Synthetic, Datadog RUM + Synthetic, Splunk Synthetics, Akamai mPulse, AppNeta, Riverbed Aternity) are not related.
 - **A4 FAIL** `catalog_tagline=""`, `catalog_description=""`. Both empty; draft is in Bucket 1 (B1-A4).
 - **M1 FAIL (BLOCKING)** zero `domain_modules`. Every M-band, every module-anchored B / E / F finding is blocked.
 - **M2 through M7** vacuous (M1 blocks), nothing to evaluate yet.
@@ -59,8 +59,8 @@ Per-master sweep flags: zero states across the board (B12 fail), zero aliases (B
 - **B3 PASS** every master is prefixed (no bare-word), `is_canonical_bare_word=false`, no rationale required.
 - **B4 FAIL** every master has all three pattern flags `false` by default; no positive audit re-evaluation has happened. Likely true flips: `has_personal_content=true` on `real_user_sessions` (captures end-user browser session data), `has_personal_content=true` on `digital_friction_events` (per-user friction telemetry), `has_personal_content=true` on `endpoint_experience_scores` (per-user / per-device score). `has_submit_lock` and `has_single_approver` are not expected to flip for any DEM master (machine-generated telemetry, no human author / approval workflow). Surface in Bucket 2 for the user to confirm per master.
 - **B5 PASS** zero `embedded_master` rows, nothing to validate.
-- **B6 FAIL** zero intra-domain `data_object_relationships`. Plausible edges: `digital_friction_events contributes_to endpoint_experience_scores`, `real_user_sessions contributes_to endpoint_experience_scores`, `synthetic_monitoring_results contributes_to endpoint_experience_scores`, `endpoint_anomaly_findings correlates_with digital_friction_events`. All missing.
-- **B7 FAIL** zero `users` edges. DEM masters are largely machine-generated telemetry, but `endpoint_experience_scores` and `real_user_sessions` are per-user-scoped, so the relationship `users observes endpoint_experience_scores` and `users generates real_user_sessions` belong in the catalog per Rule #10. `digital_friction_events` likewise is per-user.
+- **B6 FAIL** zero intra-domain `data_object_relationships`. Plausible relationships: `digital_friction_events contributes_to endpoint_experience_scores`, `real_user_sessions contributes_to endpoint_experience_scores`, `synthetic_monitoring_results contributes_to endpoint_experience_scores`, `endpoint_anomaly_findings correlates_with digital_friction_events`. All missing.
+- **B7 FAIL** zero relationships to `users`. DEM masters are largely machine-generated telemetry, but `endpoint_experience_scores` and `real_user_sessions` are per-user-scoped, so the relationship `users observes endpoint_experience_scores` and `users generates real_user_sessions` belong in the catalog per Rule #10. `digital_friction_events` likewise is per-user.
 - **B8 FAIL** for outbound, zero cross-domain `data_object_relationships`. The 4 outbound handoffs (664 to ITSM `service_incidents`, 665 to AIOPS `endpoint_anomaly_findings`, 666 to OBS `synthetic_monitoring_results`, 667 to AIOPS `real_user_sessions`) have no mirror relationships.
 - **B9 PARTIAL FAIL** every master carries one trigger event. Missing rows:
   - `digital_friction_event.recorded` (680) exists but has zero handoffs anywhere, ORPHAN. Either remove the trigger event or author the missing handoff (most likely DEM to ITSM proactive ticket per the description).
@@ -73,13 +73,13 @@ Per-master sweep flags: zero states across the board (B12 fail), zero aliases (B
 - **C1 PASS** 1 owner (`IT Infrastructure`) + 1 contributor (`Software Engineering`).
 - **C2 PASS** no overrides recorded, but with zero capabilities the check is vacuous.
 - **D1** UI spot-check, none of the data has been loaded with `record_status='approved'` (legacy seed data, all `new` by default).
-- **E1 through E6 FAIL** vacuously, no modules means no `role_modules` rows can exist. No persona is bundled against DEM today.
+- **E1 through E6 FAIL** vacuously, no modules means no `persona_modules` rows can exist. No persona is bundled against DEM today.
 - **F1 FAIL** legacy domain-level system skill `dem-system` (id 47, `domain_module_id=null`) exists. Once modules ship, this must retire in favor of per-module system skills.
 - **F2 FAIL** module count is 0, expected skills count is 0, current is 1 (legacy). Cannot satisfy F2 without M1.
 - **F3 PASS** the legacy skill has 5 `skill_tools` rows (one `query_*` primitive per master). Functionally adequate but anchored on the wrong skill (domain-level instead of module-level).
 - **F4 PASS** all 5 tools satisfy the `operation_kind` to `data_object_id` invariant (`query` + `data_object_id` set, `coverage_tier='platform'` across the board).
 - **F5** computable on the legacy skill: `strict_score = 5/5 = 1.0`, `operational_score = 5/5 = 1.0`. Will need to be recomputed per module once the M-band lands; tools transfer cleanly.
-- **F7 PASS** zero channel primitives linked (no `send_email`, `send_sms`, `post_chat_message`, etc.). Nothing to swap.
+- **F7 PASS** zero channel primitives related (no `send_email`, `send_sms`, `post_chat_message`, etc.). Nothing to swap.
 - **H1 FAIL** of 5 cross-domain handoffs (4 outbound + 1 inbound), zero have `handoff_processes` rows. Coverage 0 / 5 = 0%, approved count 0. Expected throughput from this audit: 3 to 4 new `agent_curated` tags, 1 deferral. See APQC TAGGING in Bucket 1 (B1-H1).
 
 ### Pass 2, Market audit (semantic)
@@ -111,16 +111,16 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 - **SCOPE-CREEP:** none; the 5 existing masters all sit cleanly inside the DEM market scope.
 - **MODULARIZATION-ISSUE (BLOCKING):** DEM has zero modules. The market shape implies at minimum 2 modules: DEM-ENDPOINT-EXPERIENCE (endpoint_experience_scores, endpoint_anomaly_findings, digital_friction_events, plus device_health_summaries if it loads) and DEM-WEB-EXPERIENCE (synthetic_monitoring_results, real_user_sessions, plus synthetic_monitors, monitoring_locations, page_load_events, web_vitals if they load). A third candidate DEM-SAAS-REACHABILITY (sla_compliance_records, application_response_traces) makes sense once the SaaS-monitoring entities materialize. Surfaced as Bucket 2 #1 (judgment call on the split).
 
-### Pass 3, Neighbor discovery (auto-derived edge weights)
+### Pass 3, Neighbor discovery (auto-derived relationship weights)
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO dependencies | Edge weight |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO dependencies | Relationship weight |
 | --- | --- | --- | --- | --- |
 | AIOPS | 2 | 0 | (none) | 2 |
 | OBS | 1 | 0 | (none) | 1 |
 | ITSM | 1 | 0 | (none, ITSM target module wired) | 1 |
 | NPMD | 0 | 1 | (none) | 1 |
 
-No neighbor reaches edge weight >= 3, so the full four-leg analysis is not triggered. A one-line summary per neighbor is sufficient at this audit's depth.
+No neighbor reaches relationship weight >= 3, so the full four-leg analysis is not triggered. A one-line summary per neighbor is sufficient at this audit's depth.
 
 - **AIOPS (weight 2):** DEM publishes `endpoint_anomaly_finding.published` (665, payload `endpoint_anomaly_findings`) and `real_user_session.poor_experience` (667, payload `real_user_sessions`). Both have `source_domain_module_id=null` (M1 blocks) and `target_domain_module_id=null` (AIOPS M1 blocks, separately audited). No symmetric AIOPS->DEM feedback path modeled (e.g. AIOPS suggesting a sensor / probe tweak); plausible but not flagship-vendor evidenced; not surfaced as a fix.
 - **OBS (weight 1):** DEM publishes `synthetic_monitoring_result.failed` (666, payload `synthetic_monitoring_results`) into OBS. Both module FKs are null. OBS aggregates uptime / availability series alongside DEM synthetic; relationship is one-way for now.
@@ -132,13 +132,13 @@ No neighbor reaches edge weight >= 3, so the full four-leg analysis is not trigg
 | Item | Type | Description |
 | --- | --- | --- |
 | B1-S1 | STRUCTURAL (CLAUDE.md violation) | PATCH `domains.business_logic` (id=83) to remove the U+2014 em-dash. Proposed: "Endpoint-agent runtime, synthetic transaction generation, and correlation across user / device / app / network signals: code-dominant data plane." |
-| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for DEM and link via `capability_domains`. Proposed codes: DEM-ENDPOINT-EXPERIENCE-SCORING, DEM-SYNTHETIC-MONITORING, DEM-REAL-USER-MONITORING, DEM-DIGITAL-FRICTION-DETECTION, DEM-ENDPOINT-ANOMALY-DETECTION, DEM-SAAS-REACHABILITY-MONITORING. |
-| B1-A3 | STRUCTURAL | Author the flagship `solutions` rows and `solution_domains` links with coverage_level: Catchpoint (primary), ThousandEyes (primary), Dynatrace DEM (primary), New Relic Browser + Synthetic (primary), Datadog RUM + Synthetic (primary), Splunk Synthetics (secondary), Akamai mPulse (secondary), AppNeta (secondary), Riverbed Aternity (secondary, overlaps DEX). Reuse existing `vendors` rows where the company is already in the catalog. |
+| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for DEM and relate via `capability_domains`. Proposed codes: DEM-ENDPOINT-EXPERIENCE-SCORING, DEM-SYNTHETIC-MONITORING, DEM-REAL-USER-MONITORING, DEM-DIGITAL-FRICTION-DETECTION, DEM-ENDPOINT-ANOMALY-DETECTION, DEM-SAAS-REACHABILITY-MONITORING. |
+| B1-A3 | STRUCTURAL | Author the flagship `solutions` rows and `solution_domains` relationships with coverage_level: Catchpoint (primary), ThousandEyes (primary), Dynatrace DEM (primary), New Relic Browser + Synthetic (primary), Datadog RUM + Synthetic (primary), Splunk Synthetics (secondary), Akamai mPulse (secondary), AppNeta (secondary), Riverbed Aternity (secondary, overlaps DEX). Reuse existing `vendors` rows where the company is already in the catalog. |
 | B1-A4 | STRUCTURAL | Draft `catalog_tagline` and `catalog_description` per Rule #20 (buyer voice). Surface drafts to user before writing. |
 | B1-M1 | STRUCTURAL (BLOCKING) | Author at least 2 `domain_modules` rows (the 2+ floor applies once capabilities >= 3): DEM-ENDPOINT-EXPERIENCE and DEM-WEB-EXPERIENCE as the minimal split. Optionally a 3rd DEM-SAAS-REACHABILITY. Every other M-band, B-band module-anchored, E-band, F2 fix depends on this. |
 | B1-B4 | STRUCTURAL | Re-evaluate pattern flags on all 5 masters per Rule #12 (per-row positive review). Proposed: set `has_personal_content=true` on `real_user_sessions`, `digital_friction_events`, `endpoint_experience_scores`. `has_submit_lock` and `has_single_approver` remain false across DEM (telemetry, no human authoring / approval workflow). |
-| B1-B6 | STRUCTURAL | Author intra-domain `data_object_relationships`: `digital_friction_events contributes_to endpoint_experience_scores`, `real_user_sessions contributes_to endpoint_experience_scores`, `synthetic_monitoring_results contributes_to endpoint_experience_scores`, `endpoint_anomaly_findings correlates_with digital_friction_events`. Approx 4 edges. |
-| B1-B7 | STRUCTURAL | Author `users` edges per Rule #10: `users observes endpoint_experience_scores`, `users generates real_user_sessions`, `users experiences digital_friction_events`. 3 rows. |
+| B1-B6 | STRUCTURAL | Author intra-domain `data_object_relationships`: `digital_friction_events contributes_to endpoint_experience_scores`, `real_user_sessions contributes_to endpoint_experience_scores`, `synthetic_monitoring_results contributes_to endpoint_experience_scores`, `endpoint_anomaly_findings correlates_with digital_friction_events`. Approx 4 relationships. |
+| B1-B7 | STRUCTURAL | Author relationships to `users` per Rule #10: `users observes endpoint_experience_scores`, `users generates real_user_sessions`, `users experiences digital_friction_events`. 3 rows. |
 | B1-B8 | STRUCTURAL | Author outbound cross-domain `data_object_relationships` (mirrors of the 4 outbound handoffs): `endpoint_experience_scores triggers service_incidents` (DEM to ITSM), `endpoint_anomaly_findings published_to endpoint_anomaly_findings` (DEM to AIOPS, same data_object, asymmetric consumer DMDO), `real_user_sessions flagged_to anomaly_detections` (DEM to AIOPS), `synthetic_monitoring_results published_to synthetic_monitoring_results` (DEM to OBS, same data_object). 4 rows. |
 | B1-B9 | STRUCTURAL | Resolve trigger event 680 `digital_friction_event.recorded` orphan: either DELETE if the event is not actually published, or author the missing `handoffs` row (most plausible: DEM to ITSM proactive ticket per the event description). Plus add plausible state-transition events: `endpoint_experience_score.recovered`, `synthetic_monitoring_result.recovered`, `endpoint_anomaly_finding.resolved`, `endpoint_anomaly_finding.suppressed`. Approx 4 to 5 new event rows. |
 | B1-B10b | STRUCTURAL | After M1 lands, run a B10b backfill to set `source_domain_module_id` on the 4 outbound handoffs and `target_domain_module_id` on the 1 inbound handoff (653 from NPMD). Deterministic derivation per the reference loader [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts). |
@@ -172,7 +172,7 @@ Deferred to Discover Pass 3: none of the above. Handoff 667 (RUM real-user sessi
 
 3. **Pattern flag confirmation.** B4 audit: confirm `has_personal_content=true` on `real_user_sessions`, `digital_friction_events`, `endpoint_experience_scores` (per-user / per-device telemetry containing identifiable usage patterns). `has_submit_lock` and `has_single_approver` stay false across all 5 masters (no human author / approval workflow). User to confirm; no notes column writes per Rule #15.
 
-4. **Lifecycle exemption.** 4 of 5 DEM masters (endpoint_experience_scores, synthetic_monitoring_results, real_user_sessions, digital_friction_events) are append-only telemetry with no per-row workflow lifecycle (the scores / results / sessions roll forward, not transitioning state). `endpoint_anomaly_findings` is the lone master with a real publication / acknowledgement / resolution workflow (B12 fix authors states there). Decision: confirm the 4 config-shape exemptions; record the exemption in the audit / gap report rather than auto-writing `data_objects.notes` (Rule #15). User can later choose to write per-row approved notes if useful.
+4. **Lifecycle exemption.** 4 of 5 DEM masters (endpoint_experience_scores, synthetic_monitoring_results, real_user_sessions, digital_friction_events) are append-only telemetry with no per-row workflow lifecycle (the scores / results / sessions roll forward, not transitioning state). `endpoint_anomaly_findings` is the lone master with a real publication / acknowledgment / resolution workflow (B12 fix authors states there). Decision: confirm the 4 config-shape exemptions; record the exemption in the audit / gap report rather than auto-writing `data_objects.notes` (Rule #15). User can later choose to write per-row approved notes if useful.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -212,7 +212,7 @@ Applied the in-scope, agent-fixable B1 items whose entire shape was pre-specifie
 Applied:
 
 - **B1-S1 (DONE).** PATCH `domains.id=83 business_logic` to strip the U+2014 em-dash. New text: `"Endpoint-agent runtime, synthetic transaction generation, and correlation across user / device / app / network signals: code-dominant data plane."` (em-dash replaced with colon).
-- **B1-B7 (DONE).** INSERT 3 user-edges in `data_object_relationships` per Rule #10 (users data_object_id=748 source side):
+- **B1-B7 (DONE).** INSERT 3 relationships to `users` in `data_object_relationships` per Rule #10 (users data_object_id=748 source side):
   - users observes endpoint_experience_scores (585), one_to_many, association, owner_side=target → id 1789
   - users generates real_user_sessions (587), one_to_many, association, owner_side=target → id 1790
   - users experiences digital_friction_events (588), one_to_many, association, owner_side=target → id 1791
@@ -226,7 +226,7 @@ Deferred (intentionally not touched in this pass; reasons listed):
 - **B1-A2, B1-A3, B1-A4.** New entities (capabilities, solutions / vendors) and Rule #20 catalog text. Out of scope for technical apply: requires new-entity authoring + buyer-voice drafting.
 - **B1-M1.** Module split is Bucket 2 #1 ((a) / (b) / (c) user picks); blocks B1-B10b, B1-B12, B1-F1, B1-F2 downstream.
 - **B1-B4.** Pattern flag flips left to user judgment per skill scope (no auto-flips of pattern flags).
-- **B1-B6, B1-B8.** Master-to-master and cross-domain `data_object_relationships`; technical scope per Rule #10 covers user-edges only.
+- **B1-B6, B1-B8.** Master-to-master and cross-domain `data_object_relationships`; technical scope per Rule #10 covers relationships to `users` only.
 - **B1-B9.** Event 680 orphan is "DELETE or author handoff" (user picks). New state-transition events are new entities.
 - **B1-B10b.** Gated on B1-M1.
 - **B1-B12.** Gated on B1-M1 (`domain_module_id` required on lifecycle states).
@@ -240,7 +240,7 @@ No JWT errors during the run. Bucket 2 / Bucket 3 items remain open as listed ab
 
 Re-validation pass against live state after the 2026-05-31 Continuation. The four pre-specified B1 technical fixes landed (B1-S1, B1-B7, B1-B11, B1-H1); all other Bucket 1 items from 2026-05-30 are still pending, with B1-M1 (modules) still the BLOCKING gate for B1-B10b, B1-B12, B1-F1, B1-F2. Bucket 2 (4 judgment items) and Bucket 3 (3 research items) carry forward unchanged.
 
-- Current footprint: 5 mastered `data_objects` (585 endpoint_experience_scores, 586 synthetic_monitoring_results, 587 real_user_sessions, 588 digital_friction_events, 589 endpoint_anomaly_findings); 0 `domain_modules`; 0 `domain_module_data_objects` for any DEM master; 0 `capability_domains`; 0 `solution_domains`; 0 `domain_regulations`; 0 `data_object_lifecycle_states`; 0 master-to-master `data_object_relationships`; 3 user-edge `data_object_relationships` (ids 1789-1791, B1-B7 from continuation); 12 `data_object_aliases` (ids 1017-1028, B1-B11 from continuation); 5 `trigger_events` (677-681, all five with `event_category=''`); 5 cross-domain handoffs (664, 665, 666, 667 outbound, 653 inbound from NPMD); 8 `handoff_processes` rows across the 5 handoffs (5 new from continuation: 587-591, plus 3 pre-existing: 508, 537, 538); 1 legacy domain-level `skill` (id 47 `dem-system`) with 5 `skill_tools` rows (ids 463-467); 0 `role_modules`; 2 `business_function_domains` rows (67 owner IT Infrastructure, 68 contributor Software Engineering); `catalog_tagline=""` and `catalog_description=""` both empty.
+- Current footprint: 5 mastered `data_objects` (585 endpoint_experience_scores, 586 synthetic_monitoring_results, 587 real_user_sessions, 588 digital_friction_events, 589 endpoint_anomaly_findings); 0 `domain_modules`; 0 `domain_module_data_objects` for any DEM master; 0 `capability_domains`; 0 `solution_domains`; 0 `domain_regulations`; 0 `data_object_lifecycle_states`; 0 master-to-master `data_object_relationships`; 3 relationship to `users` `data_object_relationships` (ids 1789-1791, B1-B7 from continuation); 12 `data_object_aliases` (ids 1017-1028, B1-B11 from continuation); 5 `trigger_events` (677-681, all five with `event_category=''`); 5 cross-domain handoffs (664, 665, 666, 667 outbound, 653 inbound from NPMD); 8 `handoff_processes` rows across the 5 handoffs (5 new from continuation: 587-591, plus 3 pre-existing: 508, 537, 538); 1 legacy domain-level `skill` (id 47 `dem-system`) with 5 `skill_tools` rows (ids 463-467); 0 `persona_modules`; 2 `business_function_domains` rows (67 owner IT Infrastructure, 68 contributor Software Engineering); `catalog_tagline=""` and `catalog_description=""` both empty.
 
 ### Pass 1, Structural re-check
 
@@ -252,7 +252,7 @@ Re-validation pass against live state after the 2026-05-31 Continuation. The fou
 | A4 | FAIL (carry) | Both catalog fields empty; B1-A4 still pending, needs user-approved drafts per Rule #20. |
 | M1 | FAIL BLOCKING (carry) | 0 modules. Blocks every M2-M7, blocks B10b, B12 domain_module_id, F2. |
 | B5 | PASS (vacuous) | 0 `embedded_master` rows; nothing to validate against Rule #11. |
-| B7 | PASS | 3 user-edges loaded (Rule #10); `endpoint_anomaly_findings` and `synthetic_monitoring_results` are machine-generated with no user-edge, consistent. |
+| B7 | PASS | 3 relationships to `users` loaded (Rule #10); `endpoint_anomaly_findings` and `synthetic_monitoring_results` are machine-generated with no relationship to `users`, consistent. |
 | B9 | FAIL (carry) | All 5 trigger events have `event_category=''`. Catalog-wide pattern (>200 rows in same shape across many domains), not DEM-specific; rolls to a discovery-wide finding. Event 680 orphan (no handoff anywhere) still unresolved. |
 | B9b | PASS (vacuous) | No modules to model intra-domain handoffs. |
 | B10b | FAIL (carry) | 4 of 5 handoffs (653, 665, 666, 667) have BOTH `source_domain_module_id` and `target_domain_module_id` null. Handoff 664 has `target_domain_module_id=38` (ITSM-INCIDENT-MGMT) but `source_domain_module_id=null`. Blocked by M1 on DEM side; partially blocked by AIOPS / OBS / NPMD M-bands on target side. |
@@ -260,7 +260,7 @@ Re-validation pass against live state after the 2026-05-31 Continuation. The fou
 | B11 | PASS | 12 aliases loaded across all 5 masters per B1-B11. |
 | B12 | FAIL (carry) | 0 lifecycle states across all 5 masters. `endpoint_anomaly_findings` should carry the publish / acknowledge / resolve workflow once B12 lands; 4 others are config-shape (Bucket 2 #4). Blocked by M1 on DEM side. |
 | C1 | PASS | 1 owner (IT Infrastructure), 1 contributor (Software Engineering); 2 `business_function_domains` rows present. |
-| E1-E6 | FAIL (vacuous, carry) | 0 `role_modules` (cannot exist without modules). |
+| E1-E6 | FAIL (vacuous, carry) | 0 `persona_modules` (cannot exist without modules). |
 | F1 | FAIL (carry) | Legacy `dem-system` skill (id 47, `domain_module_id=null`) still present. Retires once F2 lands. |
 | F2 | FAIL (carry) | 1 system skill vs expected 0 (no modules); need ≥1 module-anchored per Rule #17. |
 | F3 | PASS (on legacy) | Legacy skill has 5 tools. Transfers cleanly to per-module skills once M1 lands. |
@@ -280,8 +280,8 @@ Unchanged from 2026-05-30: AIOPS (weight 2), OBS (weight 1), ITSM (weight 1), NP
 
 | Item | Type | Status this pass |
 | --- | --- | --- |
-| B1-A2 | STRUCTURAL | Pending. Author 5 to 7 capabilities + `capability_domains` links. |
-| B1-A3 | STRUCTURAL | Pending. Author flagship solutions + `solution_domains` links per the 2026-05-30 list. |
+| B1-A2 | STRUCTURAL | Pending. Author 5 to 7 capabilities + `capability_domains` relationships. |
+| B1-A3 | STRUCTURAL | Pending. Author flagship solutions + `solution_domains` relationships per the 2026-05-30 list. |
 | B1-A4 | STRUCTURAL | Pending. Rule #20 catalog_tagline / catalog_description draft needs user approval before write. |
 | B1-M1 | STRUCTURAL BLOCKING | Pending. Module split (Bucket 2 #1 decides shape: (a) 2-module, (b) 3-module, (c) single-module). |
 | B1-B4 | STRUCTURAL | Pending. Per-master pattern flag re-evaluation; user judgment in Bucket 2 #3. |
@@ -397,8 +397,8 @@ rows default `record_status='new'` (Rule #1); no `notes`-column writes (Rule #15
 - **B2-PATTERN-FLAGS**: confirm has_personal_content=true on 585/587/588 (B1B-B4); no auto-flip.
 - **B1A-A2 / B1A-A3 / B1A-BUILD**: surfaced as the unbuilt-domain build; scope discipline forbids
   authoring capabilities/solutions/vendors/modules absent an explicit go.
-- **B1A-B8** cross-domain mirror relationships: the ITSM edge (585 triggers 47) is cleanly authorable
-  now; the three AIOPS/OBS edges are part of the neighbor cascade (targets in as-yet-unbuilt modules)
+- **B1A-B8** cross-domain mirror relationships: the ITSM relationship (585 triggers 47) is cleanly authorable
+  now; the three AIOPS/OBS relationships are part of the neighbor cascade (targets in as-yet-unbuilt modules)
   and were left.
 - **B1A-B9-ORPHAN** (event 680, zero handoffs): user picks DELETE (destructive) vs AUTHOR a
   DEM->ITSM proactive-ticket handoff (additive). Not applied.
@@ -418,7 +418,7 @@ rows default `record_status='new'` (Rule #1); no `notes`-column writes (Rule #15
 
 None.
 
-## 2026-06-13 - Audit (state-driven execute: B9d + clean B8 edge)
+## 2026-06-13 - Audit (state-driven execute: B9d + clean B8 relationship)
 
 ### Summary
 
@@ -449,11 +449,11 @@ additive/corrective work that stands independent of the module set was executed.
     is to surface on the sender and never silently drop; they resolve once those neighbor domains build
     their masters. Carried forward as B1A-B9D-UNOWNED (b1b, blocked on neighbor M1).
 
-- **B1A-B8 clean ITSM edge (DONE).** Authored the lone neighbor-built cross-domain mirror relationship
+- **B1A-B8 clean ITSM relationship (DONE).** Authored the lone neighbor-built cross-domain mirror relationship
   `endpoint_experience_scores (585) triggers service_incidents (47)` -> id 2354, mirroring handoff 664
   (target module 38 ITSM-INCIDENT-MGMT already wired). Conventions matched existing
   `<source> triggers service_incidents` rows (one_to_many, reference, is_required=false,
-  owner_side=target). record_status='new'. The 3 remaining B8 edges (665/666/667 into AIOPS/OBS) target
+  owner_side=target). record_status='new'. The 3 remaining B8 relationships (665/666/667 into AIOPS/OBS) target
   as-yet-unbuilt neighbor modules and stay gated.
 
 ### Surfaced (no write; user decision or neighbor-gated)

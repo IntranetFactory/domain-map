@@ -36,14 +36,14 @@ b1b:
       - {data_object_id: 113, name: audience_segments, target_module_id: 218, workflow: draft-active-paused-archived}
       - {data_object_id: 115, name: customer_journeys, target_module_id: 219, workflow: active-completed-abandoned}
   - id: B1B-S6
-    summary: "domain_regulations partial: 4 linked (GDPR, CCPA, EU-AI-ACT, COPPA); 4 candidate regulations need both a link decision and a master-row creation"
-    finding: "Currently linked: regulation_id 1 (GDPR), 3 (CCPA/CPRA), 33 (EU-AI-ACT), 55 (COPPA). Missing per vendor surface: LGPD (Brazil), IAB TCF v2 (ad-tech consent framework), Quebec Law 25, POPIA (South Africa). None of the 4 exist in the regulations master table yet, so each is both a link decision (B2-S4) and a master-row creation (net-new structure, Rule #21 expansive)."
+    summary: "domain_regulations partial: 4 related (GDPR, CCPA, EU-AI-ACT, COPPA); 4 candidate regulations need both a relationship decision and a master-row creation"
+    finding: "Currently related: regulation_id 1 (GDPR), 3 (CCPA/CPRA), 33 (EU-AI-ACT), 55 (COPPA). Missing per vendor surface: LGPD (Brazil), IAB TCF v2 (ad-tech consent framework), Quebec Law 25, POPIA (South Africa). None of the 4 exist in the regulations master table yet, so each is both a relationship decision (B2-S4) and a master-row creation (net-new structure, Rule #21 expansive)."
     blocked_by:
       - {type: user_decision, ref: B2-S4}
-      - {type: catalog_addition, scope: domains, trigger: "create regulations master rows for any of LGPD, IAB TCF v2, Quebec Law 25, POPIA the user elects to link"}
+      - {type: catalog_addition, scope: domains, trigger: "create regulations master rows for any of LGPD, IAB TCF v2, Quebec Law 25, POPIA the user elects to relate"}
   - id: B1B-S7
     summary: "customers lifecycle state_order collisions (engagement vs billing collapsed onto one master); blocked on the untangle decision (B2-S8)"
-    finding: "6 customers lifecycle states show duplicate state_order: state_order=3 on both inactive and past_due; state_order=4 on both churned and cancelled. Two parallel state machines (engagement: prospect/active/inactive/churned; billing: prospect/active/past_due/cancelled) collapsed onto one master. customers is embedded_master in CDP-UNIFIED-PROFILE (217); the canonical master and the fix grain depend on the B2-S5 ownership decision and the B2-S8 untangle decision. Re-ordering or deleting existing state rows is a destructive overwrite (Rule #21) and needs sign-off."
+    finding: "6 customers lifecycle states show duplicate state_order: state_order=3 on both inactive and past_due; state_order=4 on both churned and canceled. Two parallel state machines (engagement: prospect/active/inactive/churned; billing: prospect/active/past_due/canceled) collapsed onto one master. customers is embedded_master in CDP-UNIFIED-PROFILE (217); the canonical master and the fix grain depend on the B2-S5 ownership decision and the B2-S8 untangle decision. Re-ordering or deleting existing state rows is a destructive overwrite (Rule #21) and needs sign-off."
     blocked_by:
       - {type: user_decision, ref: B2-S8}
     affected_masters:
@@ -62,10 +62,10 @@ b2:
       - "Accept 2 author + 3 exempt as proposed"
       - "Different split (specify which masters get lifecycles)"
       - "All 5 get lifecycles (specify state lists)"
-    why: "Workflow-shape decision. entity_type is now classified (audience_segments + customer_journeys = operational_workflow; the other 3 = operational_record/computed), so the proposed split is consistent with the live classification; the user still owns the state lists and the exemption acknowledgement (Rule #12 / Rule #15)."
+    why: "Workflow-shape decision. entity_type is now classified (audience_segments + customer_journeys = operational_workflow; the other 3 = operational_record/computed), so the proposed split is consistent with the live classification; the user still owns the state lists and the exemption acknowledgment (Rule #12 / Rule #15)."
   - id: B2-S4
-    summary: "domain_regulations scope: which of LGPD, IAB TCF v2, Quebec Law 25, POPIA to link"
-    question: "For each of LGPD, IAB TCF v2, Quebec Law 25, POPIA: link to CDP or skip?"
+    summary: "domain_regulations scope: which of LGPD, IAB TCF v2, Quebec Law 25, POPIA to relate"
+    question: "For each of LGPD, IAB TCF v2, Quebec Law 25, POPIA: relate to CDP or skip?"
     options:
       - "Per-regulation yes/no"
     why: "Regulatory scope is jurisdictional + product-strategy specific. Creating the 4 missing regulations master rows is itself a judgment call (none currently exist in the regulations table)."
@@ -81,10 +81,10 @@ b2:
     summary: "Composable CDP / Reverse-ETL classification (capability vs module vs separate domain)"
     question: "Should CDP-COMPOSABLE-WH stay a CDP capability, become a separate CDP module, or split into a new REVERSE-ETL domain?"
     options:
-      - "Keep as CDP capability (currently linked into CDP-SEGMENTATION-ACTIVATION 218)"
+      - "Keep as CDP capability (currently related into CDP-SEGMENTATION-ACTIVATION 218)"
       - "Split into a REVERSE-ETL domain (Hightouch, Census, RudderStack, Polytomic, Grouparoo pass the 3-vendor test)"
       - "Treat as a CDP module (CDP-COMPOSABLE) but not a separate domain"
-    why: "Rule #2 (point-solution-market test) judgment. The 3-vendor test passes for Reverse-ETL specifically. 2026-06-02 modularization folded CDP-COMPOSABLE-WH into CDP-SEGMENTATION-ACTIVATION as a capability link; promotion to its own module/domain remains open."
+    why: "Rule #2 (point-solution-market test) judgment. The 3-vendor test passes for Reverse-ETL specifically. 2026-06-02 modularization folded CDP-COMPOSABLE-WH into CDP-SEGMENTATION-ACTIVATION as a capability relationship; promotion to its own module/domain remains open."
   - id: B2-S7
     summary: "trigger_event 473 customer_journey.exited event_category semantics"
     question: "Keep customer_journey.exited as lifecycle (current) or flip to state_change?"
@@ -98,7 +98,7 @@ b2:
     options:
       - "Re-order to a single linear sequence on customers"
       - "Split into two state machines on the same master (engagement axis vs billing axis)"
-      - "Move billing states (past_due, cancelled) to SUB-MGMT-mastered entity (subscriptions or customer_billing_status); leave engagement states on customers"
+      - "Move billing states (past_due, canceled) to SUB-MGMT-mastered entity (subscriptions or customer_billing_status); leave engagement states on customers"
     why: "Domain decomposition choice. Engagement and billing lifecycles are conceptually independent; collapsing them lost the disambiguation. Any re-order/move overwrites existing non-empty state rows (destructive, Rule #21) and needs sign-off."
   - id: B2-S10
     summary: "B10b residual: should CDP add consumer DMDOs for the payloads it currently receives but does not model (B1B-S3 dependency)?"
@@ -231,7 +231,7 @@ b3:
     proposed_module: CDP-INGEST-IDENTITY
   - id: B3-MISSING-MASTER-ACTIVATION
     candidate: "missing-master CDP-SEGMENTATION-ACTIVATION (218)"
-    rationale: "Module 218 owns audience_segments as its only master and links the CDP-ACTIVATION + CDP-COMPOSABLE-WH capabilities with no activation-specific master. event_sinks + activation_runs would give ACTIVATION a master and justify splitting it back out from SEGMENTATION."
+    rationale: "Module 218 owns audience_segments as its only master and relates the CDP-ACTIVATION + CDP-COMPOSABLE-WH capabilities with no activation-specific master. event_sinks + activation_runs would give ACTIVATION a master and justify splitting it back out from SEGMENTATION."
     vendor_evidence: [Hightouch, Census, Twilio Segment, mParticle]
     proposed_module: CDP-SEGMENTATION-ACTIVATION
   - id: B3-MISSING-MASTER-CONSENT

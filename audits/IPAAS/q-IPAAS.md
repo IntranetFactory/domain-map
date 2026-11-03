@@ -15,7 +15,7 @@ q1: (answer this first) How should Integration Platform as a Service be split in
 - d) A single module.
 - e) Other (specify).
 
-Recommended: a. Boomi, MuleSoft, and Workato all separate the design-time authoring surface (recipes, connectors, data mappings, triggers, and webhook subscriptions) from the run-time execution surface (recipe execution and run history), so a Recipe Design module plus a Runtime module map onto how those flagship vendors split their own products. This choice drives the build and every capability, lifecycle owner, handoff attribution, and per-module link below it, so it unlocks the rest of the build.
+Recommended: a. Boomi, MuleSoft, and Workato all separate the design-time authoring surface (recipes, connectors, data mappings, triggers, and webhook subscriptions) from the run-time execution surface (recipe execution and run history), so a Recipe Design module plus a Runtime module map onto how those flagship vendors split their own products. This choice drives the build and every capability, lifecycle owner, handoff attribution, and per-module relationship below it, so it unlocks the rest of the build.
 
 a1:
 
@@ -73,7 +73,7 @@ a6:
 
 q7: The connector library is the same surface as an existing capability that was first authored under the low-code domain. How should that shared capability be handled?
 
-- a) Rename it to a neutral INTEGRATION-CONNECTORS and link it to both domains.
+- a) Rename it to a neutral INTEGRATION-CONNECTORS and relate it to both domains.
 - b) Leave the existing one and author a parallel IPAAS-specific connector capability (this double-counts the concept).
 - c) Wait until a third domain (likely Data Integration) confirms the same shape before promoting it to cross-cutting.
 
@@ -85,10 +85,10 @@ a7:
 
 q8: The owning business function on IPAAS is currently "IT Infrastructure", but the canonical function spine uses "IT Operations". How should this be reconciled?
 
-- a) Keep "IT Infrastructure" as a legitimate sub-function and add a parent link to "IT Operations".
-- b) Re-link the IPAAS owner to "IT Operations" directly.
+- a) Keep "IT Infrastructure" as a legitimate sub-function and add a parent relationship to "IT Operations".
+- b) Re-relate the IPAAS owner to "IT Operations" directly.
 
-Recommended: a. If "IT Infrastructure" is a real sub-function, adding the parent link is the non-destructive fix. Choose (b) only if it was an accidental parallel-tier entry; re-linking overwrites the owner attribution, so it needs your call.
+Recommended: a. If "IT Infrastructure" is a real sub-function, adding the parent relationship is the non-destructive fix. Choose (b) only if it was an accidental parallel-tier entry; re-relating overwrites the owner attribution, so it needs your call.
 
 a8:
 

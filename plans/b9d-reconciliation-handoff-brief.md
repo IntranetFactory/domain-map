@@ -50,7 +50,7 @@ wire the resolver so it always runs." All four, or it is attempt eight again.
 
 ### Model this operates on
 
-- A **handoff** is a cross-domain edge (`handoffs`, `source_domain_id` != `target_domain_id`). Its
+- A **handoff** is a cross-domain relationship (`handoffs`, `source_domain_id` != `target_domain_id`). Its
   **payload** is the carried `data_object`, and the payload is tagged with an APQC process via
   `handoff_processes.process_id`.
 - A process is **realized** when its `id` appears as `data_object_lifecycle_states.process_id` on a
@@ -67,7 +67,7 @@ The reconciliation processes only the **outbound** half of a boundary and marks 
 "report-only." So when domain A is audited, A defers its inbound payloads to B; when B is audited, B
 defers its inbound payloads to A. A payload owned by the **receiver** is deferred by the sender and
 never picked up by the receiver. Symmetrically for sender-owned payloads reached only as someone
-else's inbound edge. The steady-state result, repeated across the catalog:
+else's inbound relationship. The steady-state result, repeated across the catalog:
 
 - the process stays unrealized (no gate, no RACI, empty `personas[]`), and
 - no question is written into any owner's `state.yaml` or `q-` file.
@@ -169,7 +169,7 @@ matching fix in §3:
 4. **Script-versus-prose seam was unowned.** "A deterministic script writes a plain-prose,
    sibling-grounded q" is impossible if read as free authoring. Fix: §3.7 makes the B9d q a
    *deterministic template filled from plain-language DB fields* (`data_objects` labels,
-   `processes.process_name`, `domain_roles.role_name`), so the script produces a valid, lingo-free,
+   `processes.process_name`, `personas.persona_name`), so the script produces a valid, lingo-free,
    option-bearing q by construction, with no separate LLM authoring step to skip.
 5. **Two owner q's were answer-negated.** COMP-MGMT's open `q5` already recommends classifying
    `salary_bands` and `compensation_benchmarks` as stateless config; a realization q demands a
@@ -255,11 +255,11 @@ carried-entity mastery, per the migration in §3.5c).
 ### 3.4 Latency rule and the owner obligation as a `b2` (replaces "latent = skip" and "write a `b1b` q")
 
 **Built is defined by REACH, not by role existence.** An owner is **built** iff at least one
-`domain_roles` row reaches one of the owner's `domain_modules` via `role_modules`. A domain that has
-`domain_roles` rows with zero `role_modules` reach is **unbuilt**. SWP is the canonical example: it
-has four `domain_roles` (Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner,
+`personas` row reaches one of the owner's `domain_modules` via `persona_modules`. A domain that has
+`personas` rows with zero `persona_modules` reach is **unbuilt**. SWP is the canonical example: it
+has four `personas` (Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner,
 Workforce Leadership Sponsor) but **zero** reach, so it is unbuilt. The resolver MUST compute this
-live; never infer built-ness from `COUNT(domain_roles) > 0`.
+live; never infer built-ness from `COUNT(personas) > 0`.
 
 For every ORPHAN, the durable obligation is a **`b2` decision** written into the owner's
 `state.yaml`, surfaced as a question in the owner's `q-` file. Modeling it as a `b2` (not a `b1b`)
@@ -270,14 +270,14 @@ Recommended line, exactly what the wording rules require. Item id is determinist
 - **Owner is built** (has reach): the q names a concrete candidate R and A drawn from the owner's
   reachable persona pool, by mirroring the owner's nearest already-realized sibling process. PSA
   mirrors its realized resourcing siblings: R = Resource Manager, A = Delivery Manager. The resolver
-  MUST assert the chosen R `role_id` actually appears in `role_modules` for the module where the
+  MUST assert the chosen R `persona_id` actually appears in `persona_modules` for the module where the
   process would be gated; if not, downgrade to the unbuilt wording.
 - **Owner is unbuilt** (zero reach): the q is **still written**, as a `b2` with options. It states
   the work and the two domains in plain terms, names the candidate persona *shape* (the job that
-  should own it), and is **reach-aware**: if `domain_roles` exist but do not reach the relevant
+  should own it), and is **reach-aware**: if `personas` exist but do not reach the relevant
   modules, say "this domain has roles but none yet reach the <area> modules, so no one can be named
-  as owner until that reach is authored," and link the owner's persona-build item (`B1A-PHASE-P`).
-  Never say "has not defined its roles yet" when `domain_roles` rows exist. The `b2` carries a
+  as owner until that reach is authored," and relate the owner's persona-build item (`B1A-PHASE-P`).
+  Never say "has not defined its roles yet" when `personas` rows exist. The `b2` carries a
   `blocked_by: {type: user_decision, ...}` plus a `blocked_by: {type: domain_audit, blocking_domain:
   <owner>, milestone: B1A-PHASE-P}` so it stays open until reach lands; postpone keeps it open per
   the state.yaml hygiene carve-out (a).
@@ -302,14 +302,14 @@ writing.
 **Inputs (read-only):** `handoffs`, `handoff_processes`, `data_object_lifecycle_states`,
 `process_raci`, `processes` (for `process_code` hierarchy + plain `process_name`),
 `domain_module_data_objects` (carried-entity mastery), `data_objects` (`entity_type` +
-`singular_label`/`data_object_name` for plain wording), `domain_roles` and `role_modules` (persona
+`singular_label`/`data_object_name` for plain wording), `personas` and `persona_modules` (persona
 reach and the candidate R/A, including the plain `role_name`).
 
 **Algorithm:**
 1. For the target domain D, collect every boundary handoff (D as source or target) and its payload
    tags, both directions.
 2. Compute the realized set (gated `process_id` with R and A) and each realizer's domain.
-3. **Dedupe by `process_id`**, not by edge: one finding per distinct unrealized process, with the
+3. **Dedupe by `process_id`**, not by relationship: one finding per distinct unrealized process, with the
    contributing handoffs as supporting evidence.
 4. Classify each distinct process per 3.2, in order, with the entity-family roll-up guard and the
    REFERENCE-READ check before ORPHAN.
@@ -330,7 +330,7 @@ never writes catalog rows and never touches `record_status` (Rule #1). The catal
 re-point, deleting a mis-tag) happen through a separate loader after the user answers, always at
 `record_status='new'`; a `handoff_processes` deletion is destructive and needs sign-off. An existing
 audit item whose **classification is wrong** (an inverted "owed to X" / "owed by X" record that the
-carried entity proves backwards) is overwritten only with user sign-off, because it is a destructive
+carried entity proves backward) is overwritten only with user sign-off, because it is a destructive
 edit of a non-empty item (§3.5c).
 
 #### 3.5a q-file edit contract (exact)
@@ -365,7 +365,7 @@ The resolver edits `audits/<OWNER>/state.yaml`:
 1. The durable item is a `b2` with `id: B2-B9D-OWN-<process_id>`, a plain-language `summary`, the
    `options` list, a `why`, the contributing `handoff` ids as evidence, the carried
    `data_object_id`, the chosen-or-pending R/A, and (for unbuilt owners) the `blocked_by`
-   `B1A-PHASE-P` link.
+   `B1A-PHASE-P` relationship.
 2. **Idempotency:** key on `id` (= the deterministic `(owner, process_id)` string). If present,
    no-op. If the process is now realized, delete the item and write a one-line dated note in
    `history.md` (state.yaml hygiene: open items only).
@@ -402,7 +402,7 @@ function are what remain. Make these edits and then grep to prove they took:
    source domain)" to "Inbound `handoffs` - ROW AUTHORSHIP ONLY (payload realization is B9d, never
    report-only)." In its body, scope every "report-only" / "owed by other domains" / "not a failure
    of this domain's audit" sentence strictly to **handoff-ROW authorship**, and add one line: "Payload
-   realization on inbound edges is B9d's job and is never report-only; see the B9d band."
+   realization on inbound relationships is B9d's job and is never report-only; see the B9d band."
 2. **Audit classify-step carve-out.** In the "classify each result" step, the "Report-only
    follow-up" bullet ("the symmetric side is owned by another domain (B8 inbound direction, all of
    B10)") gets an explicit exception: "EXCEPT B9d payload realization, which is ALWAYS authored into
@@ -436,7 +436,7 @@ skipped.
 **Slot sources (all plain English from the DB):** `<entity>` = `data_objects.singular_label` (fall
 back to a de-underscored `data_object_name`); `<work>` = a plain gloss of `processes.process_name`;
 `<owner>` / `<sender>` / `<receiver>` = domain display names; `<roleR>` / `<roleA>` =
-`domain_roles.role_name`; `<sibling>` = the plain `process_name` of the owner's nearest realized
+`personas.persona_name`; `<sibling>` = the plain `process_name` of the owner's nearest realized
 sibling.
 
 **Rules:**
@@ -522,7 +522,7 @@ against the repo and the live tenant without re-deriving.
 1. **Committed resolver exists** at `scripts/analytics/b9d_resolver.ts` (NOT `.tmp_deploy/`). It is
    bidirectional, dedupes by `process_id`, applies the entity-family roll-up guard, has the
    REFERENCE-READ check before ORPHAN, determines the owner from the carried entity, computes built
-   vs unbuilt by `role_modules` reach, and writes owner-side `b2` items + q's through the §3.5a/§3.5b
+   vs unbuilt by `persona_modules` reach, and writes owner-side `b2` items + q's through the §3.5a/§3.5b
    contracts. It writes no catalog rows and never changes `record_status`. `grep -R 'b9d_resolver'
    scripts/` returns the file; `grep -R 'b9d' .tmp_deploy/` is not relied on by any committed doc.
 2. **No surviving ownership contradiction in SKILL.md.** The B10 band is retitled to row-authorship

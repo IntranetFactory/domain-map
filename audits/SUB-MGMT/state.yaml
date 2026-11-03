@@ -40,11 +40,11 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "DEFERRED (surface-only): 2-module domain with 0 personas (E1 fail). Persona authoring is entangled with the open B2-S5 module-split decision."
-    finding: "Live: 2 domain_modules (167, 168) and 0 domain_roles reaching SUB-MGMT via role_modules. E1 fires. Authoring personas now risks rework: if B2-S5 splits the modules or spins out USAGE-METERING / REV-REC as domains, the role_modules reach and RACI shape change. Recommend authoring personas AFTER B2-S5 resolves."
+    finding: "Live: 2 domain_modules (167, 168) and 0 personas reaching SUB-MGMT via persona_modules. E1 fires. Authoring personas now risks rework: if B2-S5 splits the modules or spins out USAGE-METERING / REV-REC as domains, the persona_modules reach and RACI shape change. Recommend authoring personas AFTER B2-S5 resolves."
     candidate_personas: ["BILLING-OPS-MANAGER", "SUBSCRIPTION-OPERATOR", "REVENUE-RECOGNITION-ANALYST", "DUNNING-COLLECTIONS-SPECIALIST"]
     blocked_by:
       - {type: user_decision, ref: B2-S5}
-    action: "After B2-S5 resolves: author domain_roles function-anchored per references/roles.md section 7, wire role_modules reach across the resulting module shape, add process_raci rows, wire data_object_lifecycle_states.process_id. ATS pilot is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    action: "After B2-S5 resolves: author personas function-anchored per references/personas.md section 7, wire persona_modules reach across the resulting module shape, add process_raci rows, wire data_object_lifecycle_states.process_id. ATS pilot is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
 
 b1b:
   - id: B1B-S4

@@ -12,7 +12,7 @@
 - **Bucket 2 (surface-for-user, judgment):** 5 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 5 items.
 
-**Neighbor discovery** (ranked by edge weight: outbound + inbound + DMDO touch points + co-mastering signal):
+**Neighbor discovery** (ranked by relationship weight: outbound + inbound + DMDO touch points + co-mastering signal):
 
 | Neighbor | Out | In | DMDO touch | Notes | Weight | Pass shape |
 |---|---|---|---|---|---|---|
@@ -25,7 +25,7 @@
 | WFM | 0 | 1 (actuals.posted on `time_entries`, NULL source_module) | none | Single inbound | 2 | Lightweight |
 | PSA | 0 | 2 (project_assignment.released, resource_skill_inventory.gap_identified) | none | Inbound resource signals | 2 | Lightweight |
 | SPM | 0 | 2 (initiative.kickoff, resource_allocation.committed, both NULL source_module) | none | Inbound from SPM, strategic-initiatives input | 2 | Lightweight |
-| MDM | 0 | 0 | none | No edges. | 0 | n/a |
+| MDM | 0 | 0 | none | No relationships. | 0 | n/a |
 
 **Structural pass bands:**
 - **A1 pass** (`crud_percentage=55`, `business_logic` non-empty, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `usa_market_size_usd_m=800`, `market_size_source_year=2024`, `certification_required=false`).
@@ -37,8 +37,8 @@
 - **B3 pass** (every master name uses `<noun>_<plural>` shape, none claim canonical bare-word).
 - **B4 partial-fail** (pattern flags considered, see B2-S3 for re-evaluation of `workforce_scenarios.has_personal_content` and `org_designs.has_personal_content` which carry compensation / RIF detail).
 - **B5 pass** (no `embedded_master` rows in SWP).
-- **B6 pass** (intra-domain relationships rich: 13 intra-master edges including the SWP backbone `workforce_plans ↦ headcount_plans ↦ position_demand_forecasts ↦ skills_gap_analyses` and `workforce_scenarios ↦ org_designs ↦ workforce_cost_projections`).
-- **B7 pass** (every workflow-bearing master has a `users` actor edge: approves workforce_plans, sponsors headcount_plans, prepares forecasts / analyses, authors scenarios, designs org_designs, owns cost_projections. `labor_market_benchmarks` is config-shape so no human-actor edge expected).
+- **B6 pass** (intra-domain relationships rich: 13 intra-master relationships including the SWP backbone `workforce_plans ↦ headcount_plans ↦ position_demand_forecasts ↦ skills_gap_analyses` and `workforce_scenarios ↦ org_designs ↦ workforce_cost_projections`).
+- **B7 pass** (every workflow-bearing master has a `users` actor relationship: approves workforce_plans, sponsors headcount_plans, prepares forecasts / analyses, authors scenarios, designs org_designs, owns cost_projections. `labor_market_benchmarks` is config-shape so no human-actor relationship expected).
 - **B8 pass** (outbound cross-domain relationships present: `workforce_cost_projections feeds financial_plans` 1027, `workforce_scenarios drives hcm_positions` 1024, `org_designs proposes hcm_positions` 1025, `headcount_plans authorizes job_requisitions` 1022, `position_demand_forecasts triggers job_requisitions` 1023, `skills_gap_analyses prescribes learning_paths` 1026, `labor_market_benchmarks calibrates salary_bands` 1028).
 - **B9 partial-fail** (5 trigger_events with empty `event_category` per Rule #13 enum: 384 `position_demand_forecast.updated`, 385 `skills_gap_analysis.completed`, 386 `workforce_scenario.approved`, 387 `org_design.published`, 388 `labor_market_benchmark.refreshed`. The 3 older events 11 / 40 / 61 carry `state_change`.).
 - **B9b pass** (4 intra-domain `lifecycle_progression` handoffs loaded for the 4-module domain: 1146 demand-forecast to supply-planning, 1147 scenario-modeling to demand-forecast, 1148 scenario-modeling to cost-projections, 1149 demand-forecast to cost-projections via headcount.approved).
@@ -48,13 +48,13 @@
 - **C2 pass** (no business_function_capabilities overrides , capabilities align with the owner function).
 - **D1 not run** (UI spot-check is per-fix; deferred to user).
 - **E1 pass** (5 roles for a 4-module domain).
-- **E2 pass** (every role spans >= 2 modules per the role_modules query).
-- **E3 / E4 / E5 / E6 pass** (interaction_level set on every role_modules row; every role has a non-empty role_permissions bundle).
+- **E2 pass** (every role spans >= 2 modules per the persona_modules query).
+- **E3 / E4 / E5 / E6 pass** (interaction_level set on every persona_modules row; every role has a non-empty role_permissions bundle).
 - **F1 + F2 hard fail.** SWP has 1 legacy domain-level system skill (`swp-system`, id 7, `domain_module_id=NULL`) and ZERO module-level system skills (Rule #17). Per F1 the legacy must retire once module skills exist; per F2 every `domain_modules` row needs exactly one `skill_type='system'` skill. Both are violated. The 14 skill_tools rows on the legacy skill (8 query, 3 mutate, 1 compute external `web_scrape`, plus 2 query rows on PA-mastered `people_kpis` and a `create_candidate` mutate) need to be re-anchored onto 4 new module-level system skills.
 - **F3 pass via legacy only** (14 skill_tools on the legacy skill); F3 will need to pass per-module after F2 fix.
-- **F4 pass** (all linked tools satisfy `operation_kind` invariants).
+- **F4 pass** (all related tools satisfy `operation_kind` invariants).
 - **F5 uncomputable per-module** (F2 must be cured first).
-- **F7 partial-fail.** 4 `skill_tools` rows carry populated notes (15 "Co-master with ATS"; 33 "Fires on headcount.approved -> ATS handoff"; 142 "Consumer from PA - attrition / fill-rate inputs"; 57 "Labor-market data ingestion fallback when no external_connector exists"). Per Rule #15 these are off-limits without per-row user approval. None of the 4 link a channel primitive (send_email / send_sms / etc.) so F7's specific channel-substitution rule does not apply; the issue is Rule #15 alone. Same boundary call as in HCM B2-S3.
+- **F7 partial-fail.** 4 `skill_tools` rows carry populated notes (15 "Co-master with ATS"; 33 "Fires on headcount.approved -> ATS handoff"; 142 "Consumer from PA - attrition / fill-rate inputs"; 57 "Labor-market data ingestion fallback when no external_connector exists"). Per Rule #15 these are off-limits without per-row user approval. None of the 4 relate a channel primitive (send_email / send_sms / etc.) so F7's specific channel-substitution rule does not apply; the issue is Rule #15 alone. Same boundary call as in HCM B2-S3.
 - **H1 hard fail.** Of 28 cross-domain handoffs only 6 carry `handoff_processes` rows (12 `requisition.filled` -> 21698 substring; 400 same; 13 `attrition.forecast_updated` -> 10175 WRONG (Analyze customer attrition); 27 `financial_forecast.refreshed` -> 10773 substring; 241 `initiative.kickoff` -> 16 L2 too coarse; 242 `resource_allocation.committed` -> 10209 WRONG ("Determine sales resource allocation")). Catalog quality (headline): 0 approved. Process health side-bar: 0 `agent_curated`, layered-ownership process never fired on SWP. Volume expectation per H1: 0.5N to 0.8N for N=28 -> 14 to 22 agent_curated tags. Audit proposes 22 tags below in B1-S7. 2 of the existing 6 substring tags are flat-out wrong (13, 242) and queued for REPLACE.
 
 SWP Semantius score (strict, current shape): cannot be computed per-module today (F2 fail). The legacy skill's tool slate is 13 of 14 `platform` and 1 `external` (`web_scrape`), so the score *would* be ~93% once F2 cures and the slate is split sensibly across the 4 modules.
@@ -82,7 +82,7 @@ SWP Semantius score (strict, current shape): cannot be computed per-module today
 | B1-S5 | **Rule #15 pollution on 34 rows across 6 tables (massive surface)** | 11 `domain_data_objects.notes` + 2 `data_objects.notes` (25, 29 with "Config-shaped" annotations per the rescinded Rule #12 license) + 9 `solution_domains.notes` (every loaded solution) + 6 `data_object_aliases.notes` + 2 `handoffs.notes` (13, 452) + 4 `skill_tools.notes` (15, 33, 142, 57). Per Rule #15 the default on every `notes` column is empty unless the user explicitly approved the specific text at load time. The DDO 31 (job_requisitions, Signal-1 narration), DDO 53 (hcm_positions contributor reasoning), and DDO 57 (financial_plans contributor reasoning) read like user-authored editorial; the others read like loader auto-populated mechanical context. | Surface to user (B2-S1). Default on auto-populated: PATCH all 34 rows' `notes` to empty string and append a Rule #15 incident entry to `references/skill-changelog.md`. |
 | B1-S6 | **Cross-bucket dependency: B4 pattern-flag re-evaluation on `workforce_scenarios` and `org_designs`** | `workforce_scenarios.has_personal_content=false` and `org_designs.has_personal_content=false`. Both carry RIF / restructure detail that often includes named-position layoffs or named org leaders pre-announcement. `workforce_cost_projections.has_personal_content=false` is similar (compensation projections per role and band). The flag governs PII access controls. Per Rule #12 audit MUST positively re-evaluate, false-by-default is not the same as false-after-review. | Surface to user (B2-S3). Likely answer: flip `has_personal_content=true` on 27, 28, 30. PATCH only after user OK. |
 | B1-S7 | **H1, APQC TAGGING** | Of 28 cross-domain handoffs only 6 carry `handoff_processes` rows; 0 `agent_curated`; 0 `record_status='approved'`. Two existing tags are wrong (13, 242) and need REPLACE; 4 existing tags (12, 400, 27, 241) are roughly correct but warrant `agent_curated` REPLACE for confidence. The remaining 22 need INSERT. Volume target per H1: 14 to 22 agent_curated tags for N=28; this audit proposes 22 + 2 REPLACE corrections. | INSERT / REPLACE `handoff_processes` rows per the table below. Each new row: `(handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')`. PCF `process_id` resolved at fix time via `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`. |
-| B1-S8 | **Pairwise, ATS co-mastering posture (Section 5 follow-up)** | ATS DMDO on `job_requisitions` is `master + required` on ATS-RECRUITMENT-PIPELINE; SWP DMDO is `contributor + required` on SWP-DEMAND-FORECAST. The two co-master on the same `data_object_id` via the Signal-1 contract (SWP authorizes, ATS executes). Per Rule #7 M7 single-master integrity, the catalog-wide constraint is "exactly one `role='master'` row" , having SWP at `contributor` is the correct resolution today. **However**: the `headcount.approved` event 62 has `data_object_id=1` (job_requisitions) and `source_domain_module_id=94` (SWP-DEMAND-FORECAST). The event publisher is SWP but the master is ATS , per Rule B10b the source attribution should be the module that *masters* the payload. **Question:** is this an exception that Signal-1 co-mastering legitimately licenses (SWP fires the event ON behalf of the soon-to-be-created requisition), or should the trigger_event re-anchor to ATS-RECRUITMENT-PIPELINE? Inverse argument: handoff 14 (SWP -> ATS on headcount.approved) implies the event MUST fire in SWP because ATS is the receiver. | Surface to user (B2-S4). Recommended posture: keep as-is, document the Signal-1 exception by adding the `headcount.approved` event description to the audit conversation log (not to `notes` per Rule #15). |
+| B1-S8 | **Pairwise, ATS co-mastering posture (Section 5 follow-up)** | ATS DMDO on `job_requisitions` is `master + required` on ATS-RECRUITMENT-PIPELINE; SWP DMDO is `contributor + required` on SWP-DEMAND-FORECAST. The two co-master on the same `data_object_id` via the Signal-1 contract (SWP authorizes, ATS executes). Per Rule #7 M7 single-master integrity, the catalog-wide constraint is "exactly one `held_as='master'` row" , having SWP at `contributor` is the correct resolution today. **However**: the `headcount.approved` event 62 has `data_object_id=1` (job_requisitions) and `source_domain_module_id=94` (SWP-DEMAND-FORECAST). The event publisher is SWP but the master is ATS , per Rule B10b the source attribution should be the module that *masters* the payload. **Question:** is this an exception that Signal-1 co-mastering legitimately licenses (SWP fires the event ON behalf of the soon-to-be-created requisition), or should the trigger_event re-anchor to ATS-RECRUITMENT-PIPELINE? Inverse argument: handoff 14 (SWP -> ATS on headcount.approved) implies the event MUST fire in SWP because ATS is the receiver. | Surface to user (B2-S4). Recommended posture: keep as-is, document the Signal-1 exception by adding the `headcount.approved` event description to the audit conversation log (not to `notes` per Rule #15). |
 
 #### B1-S7 APQC TAGGING (proposed candidates)
 
@@ -95,14 +95,14 @@ H1 is a single Bucket 1 item even though it proposes ~24 row writes. Counts as o
 | handoff_id | source -> target (module -> domain) | trigger_event | Proposed PCF row | Confidence |
 |---|---|---|---|---|
 | 14 | SWP-DEMAND-FORECAST -> ATS | `headcount.approved` | Recruit employees / Manage employee requisitions (10539 L3) | confident L3 |
-| 15 | SWP-SCENARIO-MODELING -> HCM | `hcm_position.approved_for_creation` | Manage organisational changes (10519 L4) | confident L4 |
+| 15 | SWP-SCENARIO-MODELING -> HCM | `hcm_position.approved_for_creation` | Manage organizational changes (10519 L4) | confident L4 |
 | 16 | SWP-COST-PROJECTIONS -> EPM | `cost_projection.approved` | Manage workforce planning (10532 L3) or Perform planning/management accounting (10742 L3) | medium |
 | 454 | SWP-DEMAND-FORECAST -> HCM | `position_demand_forecast.updated` | Manage workforce planning (10532 L3) | confident L3 |
 | 455 | SWP-DEMAND-FORECAST -> ATS | `position_demand_forecast.updated` | Recruit employees (10539 L3) | confident L3 |
 | 456 | SWP-DEMAND-FORECAST -> SKILLS-MGMT | `skills_gap_analysis.completed` | Develop and manage skills and capabilities (10545 L3) | confident L3 |
 | 457 | SWP-SCENARIO-MODELING -> HCM | `workforce_scenario.approved` | Manage workforce planning (10532 L3) | confident L3 |
 | 458 | SWP-SCENARIO-MODELING -> EPM | `workforce_scenario.approved` | Manage workforce planning (10532 L3) | confident L3 |
-| 459 | SWP-SCENARIO-MODELING -> HCM | `org_design.published` | Manage organisational changes (10519 L4) | confident L4 |
+| 459 | SWP-SCENARIO-MODELING -> HCM | `org_design.published` | Manage organizational changes (10519 L4) | confident L4 |
 | 460 | SWP-SCENARIO-MODELING -> COMP-MGMT | `labor_market_benchmark.refreshed` | Develop and manage rewards, recognition, and motivation programs (10511 L3) | confident L3 |
 
 **Inbound (SWP-received, source = upstream domain):**
@@ -186,7 +186,7 @@ The subagent recipe was not spawned (single-pass audit per orchestrator instruct
 |---|---|---|
 | `workforce_segments` | Workday Adaptive Workforce, Visier Plan, eQ8 all model workforce segments (job family / location / tenure / persona) as first-class records that scenarios pivot against. PA partially carries it (handoff 1112 implies a PA-side `workforce_segments` master 44 exists). SWP likely needs a consumer DMDO if PA is the master, or its own consumer (B2-S5 covers part of this). | SWP-SUPPLY-PLANNING (consumer on PA-mastered 44) OR own master if PA segments are PA-analytics-specific |
 | `attrition_drivers` | Visier Plan and eQ8 model attrition-driver scenarios separately from `attrition_forecasts` (the forecast itself), to support what-if modeling (e.g., "if we raise comp 5%, attrition forecast shifts X%"). Currently only `attrition_forecasts` exists in PA. | SWP-SCENARIO-MODELING (master, if SWP owns scenario-side driver modeling) |
-| `succession_plans` (consumer or contributor) | Workday Talent Management and SAP SuccessFactors Succession & Development hold succession plans; SWP scenario modeling reads them as supply-side talent-pipeline signals (B-grade headcount + ready-now successor counts feed scenario assumptions). Today SWP has no edge to TALENT-MGMT. | SWP-SUPPLY-PLANNING (consumer on TALENT-MGMT-mastered `succession_plans`) |
+| `succession_plans` (consumer or contributor) | Workday Talent Management and SAP SuccessFactors Succession & Development hold succession plans; SWP scenario modeling reads them as supply-side talent-pipeline signals (B-grade headcount + ready-now successor counts feed scenario assumptions). Today SWP has no relationship to TALENT-MGMT. | SWP-SUPPLY-PLANNING (consumer on TALENT-MGMT-mastered `succession_plans`) |
 | `internal_mobility_intents` | Eightfold AI, Workday Skills Cloud surface employee internal-mobility intent (employee-flagged interest in role X) as a planning input , supply side beyond current-role headcount. Currently no such entity in any SWP-adjacent domain. | SWP-SUPPLY-PLANNING (consumer if mastered elsewhere) OR new candidate market entity |
 | `location_strategy_plans` (cost / geography) | OrgVue, eQ8 model location strategy (which cities, what mix of remote / onshore / nearshore / offshore) as a separate planning artifact distinct from `org_designs`. SWP carries `workforce_scenarios` and `org_designs` but no explicit location-strategy entity. | SWP-SCENARIO-MODELING (master), or surface in the `workforce_scenarios` shape itself |
 
@@ -197,8 +197,8 @@ The subagent recipe was not spawned (single-pass audit per orchestrator instruct
 
 #### Compliance regulation candidates (no entity proposed)
 
-- **EU Pay Transparency Directive (2026 enforcement).** SWP-COST-PROJECTIONS produces compensation projections by job and band; the directive requires structured pay-equity analyses linked to planning artifacts. Currently SWP has zero regulations linked; the directive plausibly fits SWP via the projections layer (and is already linked to HCM in the HCM audit).
-- **WARN Act (US).** Mass-layoff scenarios in `workforce_scenarios` (reduction-mode) trigger WARN-Act notification obligations at 100+ headcount cuts in a site. WARN is HCM-adjacent today but SWP scenarios are where the reduction is *modeled*; possibly a regulation linkage on SWP itself.
+- **EU Pay Transparency Directive (2026 enforcement).** SWP-COST-PROJECTIONS produces compensation projections by job and band; the directive requires structured pay-equity analyses related to planning artifacts. Currently SWP has zero regulations related; the directive plausibly fits SWP via the projections layer (and is already related to HCM in the HCM audit).
+- **WARN Act (US).** Mass-layoff scenarios in `workforce_scenarios` (reduction-mode) trigger WARN-Act notification obligations at 100+ headcount cuts in a site. WARN is HCM-adjacent today but SWP scenarios are where the reduction is *modeled*; possibly a regulation relationship on SWP itself.
 - **State workforce-disclosure requirements (CA SB 1162, NYC AI bias audits).** Pay-band publication and AI-decision bias audits touch SWP-COST-PROJECTIONS and SWP-SUPPLY-PLANNING (skills-gap analyses that drive hiring decisions). Speculative; verify in Phase 0.
 
 #### Candidate-domain queue
@@ -271,7 +271,7 @@ Loader: `.tmp_deploy/fix_swp_b1_technical_2026_05_31.ts` (run from project root)
   - `handoffs` 13, 452 (2 rows).
   - `solution_domains` 515, 516, 517, 518, 519, 520, 521, 522, 523 (9 rows).
   - Live verification reduced the audit's 34-row target to 30: `skill_tools` id 15 not present in the catalog; ids 33, 57, 142 had already-empty notes. F7 surface is therefore clean today; the audit pollution count for skill_tools should be recorded as 0, not 4.
-- **B1-S7 (partial):** PATCHed `proposal_source='agent_curated'` on 3 existing `handoff_processes` rows where the live PCF link already matches the audit's recommendation:
+- **B1-S7 (partial):** PATCHed `proposal_source='agent_curated'` on 3 existing `handoff_processes` rows where the live PCF relationship already matches the audit's recommendation:
   - id 48: handoff 12, process 219 (Manage employee requisitions).
   - id 49: handoff 400, process 219 (same).
   - id 115: handoff 27, process 1324 (Prepare periodic financial forecasts).
@@ -288,7 +288,7 @@ Loader: `.tmp_deploy/fix_swp_b1_technical_2026_05_31.ts` (run from project root)
   - 10742 -> "Process customer credit" (NOT a workforce / management-accounting PCF).
   - 10511 -> "Review compensation plan" L4 (NOT L3 "Develop and manage rewards").
   - 10018 -> "Survey market and determine customer needs and wants" (NOT "Develop and review business strategy").
-  - 10773 -> L4 "Prepare periodic financial forecasts" (already linked to handoff 27, used in the S-7 confirmation).
+  - 10773 -> L4 "Prepare periodic financial forecasts" (already related to handoff 27, used in the S-7 confirmation).
   Per the technical-fix rule "INSERT/PATCH handoff_processes only when audit pre-specifies handoff_id + resolvable PCF (verify before insert)", all 21 are deferred. Re-tagging requires either a fresh PCF lookup pass per handoff or user re-specification with correct external_ids.
 - **B1-S8 Signal-1 attribution** on event 62 (gated on B2-S4).
 
@@ -319,9 +319,9 @@ UI spot-check entry points:
 - **A1 pass.** Domain row populated: `crud_percentage=55`, `business_logic` non-empty, `min_org_size='30 m <2500'`, `cost_band='$$$'`, `usa_market_size_usd_m=800`, `market_size_source_year=2024`, `certification_required=false`. Description carries no vendor names (Rule #18 clean).
 - **A2 pass.** 8 capabilities, all SWP-prefixed.
 - **A3 pass.** 9 solutions; 3 `primary`; `coverage_level` set on every row; 0 polluted `solution_domains.notes` (cleared in 2026-05-31 continuation).
-- **M1-M7 pass.** 4 full modules; every capability has a realizing `domain_module_capabilities` row (per prior audit, not re-queried); every workflow-gate lifecycle state has `domain_module_id` set. **M7 catalog-wide single-master integrity FAILS** at the domain-rollup layer: DDO 1 (ATS, master) and DDO 31 (SWP, master) both claim `role='master'` on `data_object_id=1` job_requisitions. Module-level DMDO 422 is `contributor` on SWP-DEMAND-FORECAST, which is correct; the rollup row is the defect.
+- **M1-M7 pass.** 4 full modules; every capability has a realizing `domain_module_capabilities` row (per prior audit, not re-queried); every workflow-gate lifecycle state has `domain_module_id` set. **M7 catalog-wide single-master integrity FAILS** at the domain-rollup layer: DDO 1 (ATS, master) and DDO 31 (SWP, master) both claim `held_as='master'` on `data_object_id=1` job_requisitions. Module-level DMDO 422 is `contributor` on SWP-DEMAND-FORECAST, which is correct; the rollup row is the defect.
 - **B5 pass.** 0 `embedded_master` rows in SWP modules.
-- **B7 pass.** 7 `users` actor edges in `data_object_relationships` (1015-1021) covering workforce_plans, headcount_plans, position_demand_forecasts, skills_gap_analyses, workforce_scenarios, org_designs, workforce_cost_projections. `labor_market_benchmarks` correctly has no human-actor edge (config-shape).
+- **B7 pass.** 7 `users` actor relationships in `data_object_relationships` (1015-1021) covering workforce_plans, headcount_plans, position_demand_forecasts, skills_gap_analyses, workforce_scenarios, org_designs, workforce_cost_projections. `labor_market_benchmarks` correctly has no human-actor relationship (config-shape).
 - **B9 partial-fail (carryover).** trigger_event 388 `labor_market_benchmark.refreshed` still has empty `event_category`; deferred from prior continuation pending B2-S1 convention decision. The other 5 SWP-published events (384-387 + 40 + 62 + 11 + 61 + 106) all carry `state_change`.
 - **B9b pass.** 4 intra-domain `lifecycle_progression` handoffs loaded (1146-1149).
 - **B10b in-scope pass.** 0 inbound SWP rows carry NULL `target_domain_module_id`.
@@ -331,7 +331,7 @@ UI spot-check entry points:
 - **C1 hard fail.** `/business_function_capabilities?capability_id=in.(554..561)` returns 0 rows. SWP capabilities are not anchored to any business function. The prior audit logged C1 / C2 as pass; the rows have either been removed or never existed in live state.
 - **D1 not run** (UI spot-check is per-fix).
 - **E1 partial-fail.** 4 roles for a 4-module domain (>=2 satisfied) but prior audit referenced 5; `ORG-DESIGN-PRACTITIONER` is absent today. Either an intentional consolidation or drift, surface as B2-S4.
-- **E2-E5 pass.** Every role spans >=2 modules (10040: 4; 10041: 4; 10042: 3; 10044: 3). `interaction_level` populated on all 14 `role_modules` rows (mix of `primary` / `secondary`). 21 `role_permissions` rows distributed across the 4 roles (10040: 7; 10041: 4; 10042: 5; 10044: 5).
+- **E2-E5 pass.** Every role spans >=2 modules (10040: 4; 10041: 4; 10042: 3; 10044: 3). `interaction_level` populated on all 14 `persona_modules` rows (mix of `primary` / `secondary`). 21 `role_permissions` rows distributed across the 4 roles (10040: 7; 10041: 4; 10042: 5; 10044: 5).
 - **F1 + F2 hard fail (carryover).** Legacy `swp-system` skill 7 still at `domain_module_id=NULL`; 0 module-level system skills. Same blocker as 2026-05-30; deferred from technical-fix pass.
 - **F3 pass via legacy only** (14 skill_tools on skill 7).
 - **F4 pass.** All 14 `skill_tools.tools` rows satisfy `operation_kind` invariants (8 `query` + 3 `mutate` carry `data_object_id`; 1 `compute` `web_scrape` has NULL `data_object_id`).
@@ -346,7 +346,7 @@ Live state shows 4 `skill_tools` rows still carry populated `notes` (different I
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S1 | M7 catalog-wide single-master integrity violation | DDO 1 (ATS, master + required) and DDO 31 (SWP, master + required) both claim `role='master'` on `data_object_id=1` job_requisitions at the domain-rollup layer. Module-level DMDO 422 correctly carries SWP as `contributor`, ATS DMDO 9 carries master. The rollup DDO 31 is inconsistent with the module-level reality and with the Signal-1 co-master contract (SWP authorizes, ATS executes, ATS owns the master). | PATCH DDO 31: `role='contributor'` (keep `necessity='required'`). One row, surgical CLI. |
+| B1-S1 | M7 catalog-wide single-master integrity violation | DDO 1 (ATS, master + required) and DDO 31 (SWP, master + required) both claim `held_as='master'` on `data_object_id=1` job_requisitions at the domain-rollup layer. Module-level DMDO 422 correctly carries SWP as `contributor`, ATS DMDO 9 carries master. The rollup DDO 31 is inconsistent with the module-level reality and with the Signal-1 co-master contract (SWP authorizes, ATS executes, ATS owns the master). | PATCH DDO 31: `held_as='contributor'` (keep `necessity='required'`). One row, surgical CLI. |
 | B1-S2 | B9 carryover, trigger_event 388 `labor_market_benchmark.refreshed` | `event_category` still empty (deferred 2026-05-31). Gated on B2-S1 convention question (state_change vs threshold). | PATCH 388.event_category once user picks. |
 | B1-S3 | F1 + F2 hard fail (carryover from 2026-05-30) | Legacy `swp-system` skill 7 at `domain_module_id=NULL` with 14 `skill_tools`. 0 module-level system skills. Per Rule #17 every `domain_modules` row needs exactly one `skill_type='system'` skill. | Author 4 new module-level system skills (`swp_demand_forecast_agent` on 94, `swp_supply_planning_agent` on 95, `swp_scenario_modeling_agent` on 96, `swp_cost_projections_agent` on 97). Re-anchor the 14 existing `skill_tools` rows by master each tool reads / writes. DELETE legacy skill 7. Loader: 4 inserts + 14 relocates + 1 DELETE. Gated on user (introduces new entities). |
 | B1-S4 | C1 hard fail, capability -> business function anchoring missing | `/business_function_capabilities?capability_id=in.(554,555,556,557,558,559,560,561)` returns 0 rows. SWP's 8 capabilities are not anchored to any business function. | INSERT BFC rows: capability 554-561 -> Workforce Planning (owner); plus FP&A / Finance / HR-Org-Design contributor rows per the prior audit's intent. Surface specific business_function_ids in fix-time loader. Gated on user (selects which BFs to anchor). |
@@ -385,7 +385,7 @@ Subagent not spawned this run (structural-only). Candidates carried forward from
 | B3-S1 | `workforce_segments` consumer | eQ8, Visier Plan, Workday Adaptive Workforce model segments as scenario-pivot records. PA already masters at id=44 (handoff 1112). | SWP-SUPPLY-PLANNING consumer |
 | B3-S2 | `succession_plans` consumer | Workday Talent / SAP SuccessFactors Succession. SWP-SUPPLY-PLANNING reads ready-now successor counts as supply input. | SWP-SUPPLY-PLANNING consumer (on TALENT-MGMT master) |
 | B3-S3 | `internal_mobility_intents` consumer | Eightfold AI, Workday Skills Cloud surface employee-flagged mobility intent. No SWP-adjacent master today. | SWP-SUPPLY-PLANNING consumer or new candidate market entity |
-| B3-S4 | Regulation linkage candidates | EU Pay Transparency Directive (2026 enforcement) ties to SWP-COST-PROJECTIONS; WARN Act ties to RIF-mode workforce_scenarios; CA SB 1162 / NYC AI bias audit ties to skills-gap and cost projections. SWP has 0 regulations linked today. | `domain_regulations` rows pending Phase 0 vetting. |
+| B3-S4 | Regulation relationship candidates | EU Pay Transparency Directive (2026 enforcement) ties to SWP-COST-PROJECTIONS; WARN Act ties to RIF-mode workforce_scenarios; CA SB 1162 / NYC AI bias audit ties to skills-gap and cost projections. SWP has 0 regulations related today. | `domain_regulations` rows pending Phase 0 vetting. |
 
 ### Cross-bucket dependencies
 
@@ -462,13 +462,13 @@ State-driven Validate pass (SKILL.md Rule #21) against `audits/SWP/state.yaml`. 
 ### Left (untouched)
 
 - **b1b owed-by-others:** B1B-B9-EVENT388 (gated B2-S1), B1B-C1-BFC-ANCHORING (gated B2-S5), B1B-OTHER-DOMAIN-NULLS (7 NULL FKs owed by EPM/WFM/SPM modularizations).
-- **b3 backlog:** workforce_segments, succession_plans, internal_mobility_intents, domain_regulations linkages.
+- **b3 backlog:** workforce_segments, succession_plans, internal_mobility_intents, domain_regulations relationships.
 - **RETIRED / superseded (2026-06-06):** B1A-RULE15-SKILL-TOOLS-NOTES and B1B-F1-F2-MODULE-SKILLS. `skill_tools` is dropped and per-module system skills are canceled under the per-domain-skill restoration supersession; reframed as a note only, no action. Per-module tool re-authoring tracked in `audits/_modularization-backlog.md`.
 
 ### Verification (post-run)
 
 - `data_objects?id=in.(23..30)`: all 8 entity_type values match the table above; 0 `unclassified`.
-- `domain_data_objects?id=eq.31`: role=contributor, necessity=required.
+- `domain_data_objects?id=eq.31`: held_as=contributor, necessity=required.
 - `handoff_processes?handoff_id=in.(11,16)`: 2 rows, proposal_source=agent_curated, record_status=new.
 - `domains?id=eq.100` and all 4 modules: catalog_tagline/catalog_description non-empty.
 - Loader re-run: 0 patched / 0 inserted across every step (idempotent).
@@ -532,8 +532,8 @@ Read-only structural + B-band pass over SWP (domain id 100), live PostgREST. Zer
 - B13 (unclassified masters): none. All 8 masters carry an entity_type.
 - B9/B9c (events/handoffs/drift): 8 trigger_events (one per master). Only event 40 (cost_projection.approved, do 30) carries a non-empty to_state (`approved`), which matches lifecycle state 644. No drift. 7 events carry empty from_state/to_state (notification-style), consistent with non-gated emit points.
 - B11 (aliases): PASS. Every master has >= 1 alias.
-- B6 (intra-domain relationships): PASS. Internal edges connect all 8 masters (23->24, 23->27, 24->25, 24->30, 27->28, 27->29, 27->32, 28->30, 25->26, 26->168...).
-- B7 (users edges): users (748) edges to 23,24,25,26,27,28,30. Object 29 labor_market_benchmarks has NO users edge; it is `catalog` (externally sourced reference data), so a users edge is optional. Low-priority note only.
+- B6 (intra-domain relationships): PASS. Internal relationships relate all 8 masters (23->24, 23->27, 24->25, 24->30, 27->28, 27->29, 27->32, 28->30, 25->26, 26->168...).
+- B7 (relationships to `users`): users (748) relationships to 23,24,25,26,27,28,30. Object 29 labor_market_benchmarks has NO relationship to `users`; it is `catalog` (externally sourced reference data), so a relationship to `users` is optional. Low-priority note only.
 - A1 (header, user-judgment): catalog_release is null; crud_percentage=55 with non-empty business_logic (OK since <95 floor met by business_logic presence); min_org_size, cost_band ($$$), usa_market_size_usd_m (800), market_size_source_year (2024) all populated. Only catalog_release null is a possible gap, but that is a release-tagging decision, not agent-fixable structurally.
 - M-band: M1 pass (4 modules). M2 pass (>= 3 caps, all 4 modules full). M6 pass (each module realizes >= 1 capability). M7: domain is multi-master (8 masters across 4 modules), expected for established_market; not a defect.
 

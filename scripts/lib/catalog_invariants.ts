@@ -13,8 +13,8 @@
 // Checklist IDs (SKILL.md "Per-domain completeness checklist"):
 //   B6b  relationship shape: empty inverse_verb; one_to_many / many_to_one owner_side names the
 //        "one" (parent) side; composition child mastered in the parent's domain           warn
-//   B7b  users edge that is many_to_many + reference                                       fail
-//        users edge verb combining two roles ("has coordinator and panelists")            warn
+//   B7b  relationship to users that is many_to_many + reference                                       fail
+//        relationship-to-users verb combining two kinds of person ("has coordinator and panelists")   warn
 //   B9c  lifecycle / state_change event with blank to_state; any non-blank to_state that
 //        matches no lifecycle state of the event's entity                                 warn
 //   B9f  handoffs sharing trigger event + source module + target module                   warn
@@ -22,9 +22,12 @@
 //   E4b  gated lifecycle state with no process_id ("RACI readiness")                      warn
 //   E4c  the Accountable persona is also Responsible on the same process                  warn
 //   E4d  gate verb that reads as the author's own action (submit_*)                       warn
+//   B16  a British spelling in the authored text of a row being written (loader pre-flight)  fail
+
+import { scanBritishSpelling } from "./british_spelling.ts";
 
 export type RowId = number | string;
-export type InvariantId = "B6b" | "B7b" | "B9c" | "B9f" | "E4" | "E4b" | "E4c" | "E4d";
+export type InvariantId = "B6b" | "B7b" | "B9c" | "B9f" | "E4" | "E4b" | "E4c" | "E4d" | "B16";
 export type Severity = "fail" | "warn";
 
 export type InvariantFinding = {
@@ -81,8 +84,8 @@ export type ProcessRaciRow = {
   id?: RowId;
   process_id: number;
   raci: string; // responsible | accountable | consulted | informed (single letters accepted)
-  actor_role_id?: number | null;
-  actor_skill_id?: number | null;
+  persona_id?: number | null;
+  skill_id?: number | null;
 };
 
 export type NameOf = (dataObjectId: number) => string;
@@ -103,7 +106,7 @@ export type RelationshipShapeOptions = {
   allRelationships?: RelationshipRow[];
 };
 
-function edgeText(r: RelationshipRow, nameOf: NameOf): string {
+function relationshipText(r: RelationshipRow, nameOf: NameOf): string {
   return `${nameOf(r.data_object_id)} ${r.relationship_verb} ${nameOf(r.related_data_object_id)}`;
 }
 
@@ -133,7 +136,7 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
   rels.forEach((r, i) => {
     const id = rowId(r, i);
     if (blank(r.inverse_verb)) {
-      out.push({ id: "B6b", severity: "warn", rule: "inverse_verb_empty", rows: [id], detail: `empty inverse_verb on '${edgeText(r, nameOf)}' (m4b)` });
+      out.push({ id: "B6b", severity: "warn", rule: "inverse_verb_empty", rows: [id], detail: `empty inverse_verb on '${relationshipText(r, nameOf)}' (m4b)` });
     }
     const parentSide = oneSide(r.relationship_type);
     if (parentSide && r.owner_side !== parentSide) {
@@ -143,7 +146,7 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
         severity: "warn",
         rule: "owner_side_not_parent",
         rows: [id],
-        detail: `${tag} '${edgeText(r, nameOf)}' has owner_side=${r.owner_side}; the "one" (parent) side is ${parentSide}. Review, never a blanket flip: if the verb reads child-to-parent, swap the verbs instead`,
+        detail: `${tag} '${relationshipText(r, nameOf)}' has owner_side=${r.owner_side}; the "one" (parent) side is ${parentSide}. Review, never a blanket flip: if the verb reads child-to-parent, swap the verbs instead`,
       });
     }
     if (r.relationship_kind === "composition" && r.is_required === false && compositionsByChild.get(compositionChild(r)) === 1) {
@@ -152,7 +155,7 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
         severity: "warn",
         rule: "optional_composition_single_parent",
         rows: [id],
-        detail: `composition '${edgeText(r, nameOf)}' is optional, but ${nameOf(compositionChild(r))} has no other parent. A composed child cannot exist without its parent, and a \`parent\` field cannot be empty, so is_required should be true`,
+        detail: `composition '${relationshipText(r, nameOf)}' is optional, but ${nameOf(compositionChild(r))} has no other parent. A composed child cannot exist without its parent, and a \`parent\` field cannot be empty, so is_required should be true`,
       });
     }
     if (r.relationship_kind === "composition" && opts.masterDomainsByDataObject) {
@@ -169,7 +172,7 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
           severity: "warn",
           rule: "composition_child_mastered_elsewhere",
           rows: [id],
-          detail: `composition '${edgeText(r, nameOf)}': composed child ${nameOf(child)} is mastered in domain(s) ${[...cd].join(",")}, not in the parent's domain(s) ${[...pd].join(",")} (M7)`,
+          detail: `composition '${relationshipText(r, nameOf)}': composed child ${nameOf(child)} is mastered in domain(s) ${[...cd].join(",")}, not in the parent's domain(s) ${[...pd].join(",")} (M7)`,
         });
       }
     }
@@ -177,23 +180,23 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
   return out;
 }
 
-// ---------- B7b: users edges ----------
+// ---------- B7b: relationships to users ----------
 
-// A verb naming two actors ("has coordinator and panelists", "has recruiter or hiring manager").
-// Each actor needs its own edge (its own FK), so one edge cannot carry both.
-export const TWO_ROLE_VERB_RE = /\b(and|or)\b|&|\//i;
+// A verb naming two kinds of person ("has coordinator and panelists", "has recruiter or hiring manager").
+// Each kind of person needs its own relationship (its own FK), so one relationship cannot carry both.
+export const TWO_PERSON_VERB_RE = /\b(and|or)\b|&|\//i;
 
-export function isUserEdge(r: RelationshipRow, usersId: number): boolean {
+export function isUserRelationship(r: RelationshipRow, usersId: number): boolean {
   const a = r.data_object_id === usersId;
   const b = r.related_data_object_id === usersId;
   return a !== b;
 }
 
-export function checkUserEdges(rels: RelationshipRow[], usersId: number, opts: { nameOf?: NameOf } = {}): InvariantFinding[] {
+export function checkUserRelationships(rels: RelationshipRow[], usersId: number, opts: { nameOf?: NameOf } = {}): InvariantFinding[] {
   const nameOf = opts.nameOf ?? defaultName;
   const out: InvariantFinding[] = [];
   rels.forEach((r, i) => {
-    if (!isUserEdge(r, usersId)) return;
+    if (!isUserRelationship(r, usersId)) return;
     const id = rowId(r, i);
     if (r.relationship_type === "many_to_many" && r.relationship_kind === "reference") {
       out.push({
@@ -201,17 +204,17 @@ export function checkUserEdges(rels: RelationshipRow[], usersId: number, opts: {
         severity: "fail",
         rule: "many_to_many_reference",
         rows: [id],
-        detail: `'${edgeText(r, nameOf)}' is many_to_many with kind reference: a reference to users is one person per FK. Model one one_to_many edge per actor, or a real junction`,
+        detail: `'${relationshipText(r, nameOf)}' is many_to_many with kind reference: a reference to users is one person per FK. Model one one_to_many relationship per kind of person, or a real junction`,
       });
     }
     for (const [col, verb] of [["relationship_verb", r.relationship_verb], ["inverse_verb", r.inverse_verb]] as const) {
-      if (!blank(verb) && TWO_ROLE_VERB_RE.test(String(verb))) {
+      if (!blank(verb) && TWO_PERSON_VERB_RE.test(String(verb))) {
         out.push({
           id: "B7b",
           severity: "warn",
-          rule: "two_role_verb",
+          rule: "two_person_verb",
           rows: [id],
-          detail: `${col} '${verb}' on '${edgeText(r, nameOf)}' names two roles; split into one users edge per actor`,
+          detail: `${col} '${verb}' on '${relationshipText(r, nameOf)}' names two kinds of person; split into one relationship to users per kind of person`,
         });
         break; // one finding per row is enough
       }
@@ -297,7 +300,7 @@ export function raciLetter(raci: string): "R" | "A" | "C" | "I" | "?" {
 }
 
 const actorKey = (r: ProcessRaciRow): string =>
-  r.actor_role_id != null ? `role:${r.actor_role_id}` : r.actor_skill_id != null ? `skill:${r.actor_skill_id}` : "none";
+  r.persona_id != null ? `persona:${r.persona_id}` : r.skill_id != null ? `skill:${r.skill_id}` : "none";
 
 export function checkProcessRaci(
   processIds: number[],
@@ -403,7 +406,8 @@ export function checkAuthorActionGates(states: LifecycleStateRow[], opts: { name
 //
 // Scope is ONLY the rows being written: the incoming batch plus the existing rows each new row
 // interacts with. Never the whole catalog, so existing drift never blocks a load.
-// `errors` refuse the load; `warnings` print and the load proceeds.
+// `errors` refuse the load; `warnings` print and the load proceeds. Every helper here also refuses British spellings in
+// its incoming rows (preflightAuthoredText).
 
 export type PreflightResult = { errors: string[]; warnings: string[]; findings: InvariantFinding[] };
 
@@ -417,20 +421,45 @@ function split(findings: InvariantFinding[], isError: (f: InvariantFinding) => b
   };
 }
 
-// data_object_relationships batch. Error: B7b many_to_many reference users edge.
-// Warn: B6b (soft by SKILL.md policy), B7b two-role verb.
+// Any batch of any table. Error: a British spelling in a string value of a row being written, in prose or in a name,
+// code or identifier token. Column names decide what is what (no metadata at load time), so it works on any row shape.
+// The other preflight helpers call it on their incoming rows; a loader for any other table calls it directly.
+// It sees only what it is handed: a script that calls no preflight is caught later by B16 and be_spelling_sweep.ts --check.
+export function preflightAuthoredText(rows: readonly object[], opts: { table?: string } = {}): PreflightResult {
+  const hits = scanBritishSpelling(opts.table ?? "(batch)", rows as Record<string, unknown>[]);
+  const findings: InvariantFinding[] = hits.map((h) => ({
+    id: "B16",
+    severity: "fail",
+    rule: h.autofix ? "british_prose" : "british_identifier",
+    rows: [h.id],
+    detail: `${h.table}.${h.column}: ${h.hits.join(", ")}`,
+  }));
+  return split(findings, () => true);
+}
+
+const withAuthoredText = (result: PreflightResult, rows: readonly object[], table: string): PreflightResult => {
+  const text = preflightAuthoredText(rows, { table });
+  return {
+    errors: [...result.errors, ...text.errors],
+    warnings: [...result.warnings, ...text.warnings],
+    findings: [...result.findings, ...text.findings],
+  };
+};
+
+// data_object_relationships batch. Error: B7b many_to_many reference relationship to users.
+// Warn: B6b (soft by SKILL.md policy), B7b two-person verb.
 export function preflightRelationships(
   incoming: RelationshipRow[],
   opts: { usersId: number } & RelationshipShapeOptions,
 ): PreflightResult {
-  const findings = [...checkRelationshipShape(incoming, opts), ...checkUserEdges(incoming, opts.usersId, opts)];
-  return split(findings, (f) => f.id === "B7b" && f.rule === "many_to_many_reference");
+  const findings = [...checkRelationshipShape(incoming, opts), ...checkUserRelationships(incoming, opts.usersId, opts)];
+  return withAuthoredText(split(findings, (f) => f.id === "B7b" && f.rule === "many_to_many_reference"), incoming, "data_object_relationships");
 }
 
 // trigger_events batch. `lifecycleStates` = the existing states of the incoming events' entities
 // plus any states loaded in the same batch. Warn only (B9c is soft by SKILL.md policy).
 export function preflightTriggerEvents(incoming: TriggerEventRow[], lifecycleStates: LifecycleStateRow[], opts: { nameOf?: NameOf } = {}): PreflightResult {
-  return split(checkEventStates(incoming, lifecycleStates, opts), () => false);
+  return withAuthoredText(split(checkEventStates(incoming, lifecycleStates, opts), () => false), incoming, "trigger_events");
 }
 
 // handoffs batch. `existing` = catalog handoffs sharing a trigger_event_id with the batch.
@@ -439,7 +468,7 @@ export function preflightHandoffs(incoming: HandoffRow[], existing: HandoffRow[]
   const tagged = [...incoming.map((h, i) => ({ ...h, id: h.id ?? `incoming${i}` })), ...existing];
   const incomingIds = new Set(tagged.slice(0, incoming.length).map((h) => h.id));
   const findings = checkDuplicateHandoffs(tagged).filter((f) => f.rows.some((r) => incomingIds.has(r)));
-  return split(findings, () => false);
+  return withAuthoredText(split(findings, () => false), incoming, "handoffs");
 }
 
 // process_raci batch. `existing` = the catalog process_raci rows of the processes in the batch
@@ -472,10 +501,10 @@ export function preflightProcessRaci(incoming: ProcessRaciRow[], existing: Proce
     findings.push({ ...f, severity: "warn", detail: `${f.detail} after this batch` });
   }
   findings.push(...checkAccountableAlsoResponsible(procs, after));
-  return split(findings, (f) => f.id === "E4" && f.severity === "fail");
+  return withAuthoredText(split(findings, (f) => f.id === "E4" && f.severity === "fail"), incoming, "process_raci");
 }
 
 // data_object_lifecycle_states batch. Warn only: E4b (unwired gate), E4d (author-action gate).
 export function preflightLifecycleStates(incoming: LifecycleStateRow[], opts: { nameOf?: NameOf } = {}): PreflightResult {
-  return split([...checkGatedStatesWired(incoming, opts), ...checkAuthorActionGates(incoming, opts)], () => false);
+  return withAuthoredText(split([...checkGatedStatesWired(incoming, opts), ...checkAuthorActionGates(incoming, opts)], () => false), incoming, "data_object_lifecycle_states");
 }

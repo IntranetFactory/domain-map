@@ -27,7 +27,7 @@ a1:
 
 ---
 
-q2: Banking cases (id 606) overlap with the customer cases your CSM domain already owns, and the two existing links use the vague verb "opens". How should that be resolved?
+q2: Banking cases (id 606) overlap with the customer cases your CSM domain already owns, and the two existing relationships use the vague verb "opens". How should that be resolved?
 
 - a) Keep banking cases as their own master and rewrite the verb to "triggers" or "spawns".
 - b) Demote banking cases to an embedded master of the CSM customer-cases master (CSM becomes the owner).

@@ -27,7 +27,7 @@ EveryoneSocial is now owned by Seismic but still sold as a standalone advocacy p
 Oktopost and Sociabble alongside. Gartner even lists a dedicated "Employee Advocacy Tools" market.
 Social Media Management is about your brand's own channels and external influencers (it already has
 a separate influencer module), and it does not model any of what advocacy needs: advocate profiles,
-their linked personal accounts, employee shares, leaderboards, or share-to-pipeline attribution. It
+their related personal accounts, employee shares, leaderboards, or share-to-pipeline attribution. It
 also has a different buyer, marketing and communications run it, with HR helping on the
 employer-brand side. Choice (b) would lose all of that structure.
 
@@ -39,7 +39,7 @@ q2: Approve the workflow behaviors I set on a few records?
 
 I set three things during the build. (1) Published advocacy content is frozen and goes through one
 approver, so a share always points at an approved version. (2) An advocate's profile and (3) their
-linked personal social accounts are treated as personal data (GDPR), so retention and erasure rules
+related personal social accounts are treated as personal data (GDPR), so retention and erasure rules
 apply.
 
 - Approve all

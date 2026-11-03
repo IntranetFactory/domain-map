@@ -9,7 +9,7 @@ The crux of this phase: WORKPLACE-EXP's headline capabilities (desk booking, roo
 
 ## What IWMS / CAFM already master (from live query)
 
-Queried `domain_modules` for `domain_id in (23,142)` and pulled `role=master` rows, then resolved the masters of the contested space/visitor entities.
+Queried `domain_modules` for `domain_id in (23,142)` and pulled `held_as=master` rows, then resolved the masters of the contested space/visitor entities.
 
 **IWMS (domain 23) modules and their masters:**
 
@@ -30,7 +30,7 @@ Queried `domain_modules` for `domain_id in (23,142)` and pulled `role=master` ro
 
 **CAFM (domain 142):** has **no modules wired yet** (empty result). Not a source of contention today.
 
-**Visitor entities** (`visitor_registrations` 668, `visitor_check_ins` 669, `visitor_badges` 670, `visitor_evacuation_lists` 672, `visitor_nda_acknowledgements` 673, `visitor_watchlist_screenings` 674, `visitor_audit_logs` 675): these exist as data_objects but **no module currently holds a `master` role over them**. `visitor_registrations` appears only as a `consumer` under IGA-AUTO-PROVISIONING (module 148, domain 35). **VIS-MGMT (domain 24) also has no modules wired yet.** So visitor mastering is pending the VIS-MGMT build; WORKPLACE-EXP must **consume**, never re-master, visitor flow.
+**Visitor entities** (`visitor_registrations` 668, `visitor_check_ins` 669, `visitor_badges` 670, `visitor_evacuation_lists` 672, `visitor_nda_acknowledgments` 673, `visitor_watchlist_screenings` 674, `visitor_audit_logs` 675): these exist as data_objects but **no module currently holds a `master` role over them**. `visitor_registrations` appears only as a `consumer` under IGA-AUTO-PROVISIONING (module 148, domain 35). **VIS-MGMT (domain 24) also has no modules wired yet.** So visitor mastering is pending the VIS-MGMT build; WORKPLACE-EXP must **consume**, never re-master, visitor flow.
 
 **Net finding — the booking/space entities IWMS/REAL-EST already master, which WORKPLACE-EXP must NOT re-master:**
 `desk_bookings`, `room_reservations`, `space_utilization_reports` (IWMS); `floor_plans`, `property_spaces`, `occupancy_records` (REAL-EST); `locations` (IWMS). Also note `workplace_experience_feedback` is already mastered by IWMS-DESK-RESERVATION.
@@ -72,7 +72,7 @@ Entities are `snake_case_plural`, **no vendor names** (Rule #18). Grouped: Maste
 | `office_attendance_days` (actual presence) | x | x | . | x | x | Core | **A** — WEX masters (net-new) |
 | `coworking_intents` (team coordination signals) | . | x | x | . | . | Common | **A** — WEX masters (net-new) |
 | `wayfinding_routes` | . | . | . | . | x | Specialist | **A** — WEX masters (net-new) |
-| `workspace_resources` (bookable resource catalog) | x | x | x | x | x | Core | **A** — WEX masters its bookable-resource catalog (desks/parking/lockers/equipment as WEX-facing assets); links to IWMS/REAL-EST spaces |
+| `workspace_resources` (bookable resource catalog) | x | x | x | x | x | Core | **A** — WEX masters its bookable-resource catalog (desks/parking/lockers/equipment as WEX-facing assets); relates to IWMS/REAL-EST spaces |
 
 ### Junctions / transitions
 

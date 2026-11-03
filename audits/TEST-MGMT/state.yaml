@@ -35,9 +35,9 @@ b1a:
   - id: B1A-S1-CAPABILITIES
     summary: Author 5 to 7 TEST-MGMT capabilities and capability_domains rows; zero exist today.
     finding: A2 fails with zero capability_domains rows on TEST-MGMT (id 8). Market surface reads as 5 to 7 capabilities (test case authoring, test execution orchestration, defect lifecycle, automation script management, test environment management, traceability and coverage analytics, release-readiness gating). Cross-cutting convention check needed on TRACEABILITY and RELEASE-READINESS (>=3 domains => domain-neutral code).
-    action: Draft 5 to 7 capability rows + capability_domains rows in a single Phase A extension load; pair with B1B-M1 module split (B2-1 decision) so realization links land together via domain_module_capabilities.
+    action: Draft 5 to 7 capability rows + capability_domains rows in a single Phase A extension load; pair with B1B-M1 module split (B2-1 decision) so realization relationships land together via domain_module_capabilities.
     blocked_by:
-      - {type: user_decision, ref: B2-1, reason: module split shape determines domain_module_capabilities realization links}
+      - {type: user_decision, ref: B2-1, reason: module split shape determines domain_module_capabilities realization relationships}
     affected_entities:
       - capabilities
       - capability_domains
@@ -46,7 +46,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-07: this domain still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI (Phase P) work applies."
-    action: "After B2-1 / B2-2 decisions, run Phase A then M then B then S to author the module set, capabilities, masters DMDO migration, and the ONE domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "After B2-1 / B2-2 decisions, run Phase A then M then B then S to author the module set, capabilities, masters DMDO migration, and the ONE domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     blocked_by:
       - {type: user_decision, ref: B2-1, reason: module split shape (1 / 2 / 4 modules) is the user choice}
       - {type: user_decision, ref: B2-2, reason: automation_scripts mastery (rename which side) shapes the DMDO migration}
@@ -87,14 +87,14 @@ b1b:
       - {handoff_id: 780, direction: outbound, source_domain: TEST-MGMT, target_domain: WORK-MGMT, trigger_event: test_defect.created, payload: test_defects, null_field: source}
       - {handoff_id: 802, direction: outbound, source_domain: TEST-MGMT, target_domain: GRC, trigger_event: test_run.completed, payload: test_runs, null_field: both}
       - {handoff_id: 779, direction: outbound, source_domain: TEST-MGMT, target_domain: ITSM, trigger_event: test_defect.created, payload: service_incidents, null_field: source}
-      - {handoff_id: 781, direction: outbound, source_domain: TEST-MGMT, target_domain: PROD-MGMT, trigger_event: requirements_to_test_traceability.linked, payload: requirements_to_test_traceability, null_field: source}
+      - {handoff_id: 781, direction: outbound, source_domain: TEST-MGMT, target_domain: PROD-MGMT, trigger_event: requirements_to_test_traceability.related, payload: requirements_to_test_traceability, null_field: source}
       - {handoff_id: 752, direction: inbound, source_domain: APIM, target_domain: TEST-MGMT, trigger_event: api_specification.updated, payload: api_specifications, null_field: both}
       - {handoff_id: 768, direction: inbound, source_domain: IPAAS, target_domain: TEST-MGMT, trigger_event: integration_data_mapping.updated, payload: integration_data_mappings, null_field: both}
       - {handoff_id: 771, direction: inbound, source_domain: VSDP, target_domain: TEST-MGMT, trigger_event: ci_pipeline_run.failed, payload: ci_pipeline_runs, null_field: both}
 
   - id: B1B-M3-DMDO-MIGRATION
     summary: Migrate 8 legacy domain_data_objects master rows to domain_module_data_objects on the right module.
-    finding: TEST-MGMT pre-dates the modularization layer; the 8 role='master' rows in domain_data_objects (test_cases, test_suites, test_plans, test_runs, test_defects, test_environments, requirements_to_test_traceability, automation_scripts) need re-issuing on the right module via domain_module_data_objects. After migration the legacy domain_data_objects becomes a derived rollup.
+    finding: TEST-MGMT pre-dates the modularization layer; the 8 held_as='master' rows in domain_data_objects (test_cases, test_suites, test_plans, test_runs, test_defects, test_environments, requirements_to_test_traceability, automation_scripts) need re-issuing on the right module via domain_module_data_objects. After migration the legacy domain_data_objects becomes a derived rollup.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: target modules must exist before DMDO rows can reference them}
       - {type: user_decision, ref: B2-1, reason: split shape determines which master belongs in which module}

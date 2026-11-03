@@ -25,17 +25,17 @@ Every loader follows the same order; each phase reads existing state before writ
 
 Define each row with `data_object_name` (snake_case_plural natural key), `display_label`, `description`, and a script-internal `master_domain` field that names the target master domain. Use `syncByKey` against `/data_objects` keyed on `data_object_name`.
 
-### Phase 2 — master links into `domain_module_data_objects` (NOT `domain_data_objects`)
+### Phase 2 — master relationships into `domain_module_data_objects` (NOT `domain_data_objects`)
 
-> **`domain_data_objects` is a deprecated, derived rollup being retired as modularization completes. Do NOT hand-write it for a modularized domain.** Masters for a modularized domain go into `domain_module_data_objects` (module-grain) with `role: "master"`, keyed on the realizing module. The domain-grain rollup is derived from that junction (group by `data_object_id`, strongest role wins) and is no longer maintained by hand. The nine historical loaders that still POST `domain_data_objects` (and the pre-modular shape described below) predate this and must not be copied for new work. See SKILL.md `<masters>` definition and [skill-changelog.md](skill-changelog.md).
+> **`domain_data_objects` is a deprecated, derived rollup being retired as modularization completes. Do NOT hand-write it for a modularized domain.** Masters for a modularized domain go into `domain_module_data_objects` (module-grain) with `held_as: "master"`, keyed on the realizing module. The domain-grain rollup is derived from that junction (group by `data_object_id`, strongest `held_as` wins) and is no longer maintained by hand. The nine historical loaders that still POST `domain_data_objects` (and the pre-modular shape described below) predate this and must not be copied for new work. See SKILL.md `<masters>` definition and [skill-changelog.md](skill-changelog.md).
 
-For a domain with **no** modules yet (un-modularized), the legacy pre-modular shape below still applies as transitional input: insert a `(domain_id, data_object_id, role: "master", notes: "")` row keyed on the `master_domain` from Phase 1, idempotent against `(domain_id, data_object_id)`. These rows are migration scaffolding: once the domain is modularized, its masters move to `domain_module_data_objects` and its `domain_data_objects` rows are deleted.
+For a domain with **no** modules yet (un-modularized), the legacy pre-modular shape below still applies as transitional input: insert a `(domain_id, data_object_id, held_as: "master", notes: "")` row keyed on the `master_domain` from Phase 1, idempotent against `(domain_id, data_object_id)`. These rows are migration scaffolding: once the domain is modularized, its masters move to `domain_module_data_objects` and its `domain_data_objects` rows are deleted.
 
 ### Phase 3 — multi-master / contributor / consumer rows
 
-A separate list of `(data_object, domain, role, notes)` tuples for the Signal-1 rows. Each row needs a *populated* `notes` field explaining the slice — empty `notes` on a multi-master row defeats the purpose (the catalog records WHAT each domain masters, not just THAT it masters).
+A separate list of `(data_object, domain, held_as, notes)` tuples for the Signal-1 rows. Each row needs a *populated* `notes` field explaining the slice — empty `notes` on a multi-master row defeats the purpose (the catalog records WHAT each domain masters, not just THAT it masters).
 
-Roles: `master` / `contributor` / `consumer` / `derived`. Use `master` only for true co-mastership; default to `contributor` when in doubt.
+`held_as` values: `master` / `contributor` / `consumer` / `derived`. Use `master` only for true co-mastership; default to `contributor` when in doubt.
 
 ### Phase 4: `handoffs`
 
@@ -45,7 +45,7 @@ Roles: `master` / `contributor` / `consumer` / `derived`. Use `master` only for 
 
 Every loader closes with three leaderboards printed to stdout. This is the artifact the user sees:
 
-1. **Multi-master leaderboard** — `data_objects` with `count(role='master') > 1`, sorted by master count
+1. **Multi-master leaderboard** — `data_objects` with `count(held_as='master') > 1`, sorted by master count
 2. **Total-degree leaderboard** — `data_objects` with the most `domain_data_objects` rows (masters + contributors + consumers combined). Often the most analytically interesting view
 3. **Handoff-hotspot leaderboard** — domains by total handoff degree (source + target combined)
 
@@ -173,7 +173,7 @@ function validateStarterModule(m: ModuleSpec): void {
 type JunctionSpec = {
   domain_module_code: string;
   data_object_name: string;
-  role: "master" | "embedded_master" | "consumer" | "contributor" | "derived";
+  held_as: "master" | "embedded_master" | "consumer" | "contributor" | "derived";
 };
 
 async function validateStarterDataObjectJunction(
@@ -181,10 +181,10 @@ async function validateStarterDataObjectJunction(
   parentKind: "full" | "starter",
 ): Promise<void> {
   if (parentKind !== "starter") return;
-  if (j.role === "master" || j.role === "derived" || j.role === "contributor") {
+  if (j.held_as === "master" || j.held_as === "derived" || j.held_as === "contributor") {
     throw new Error(
       `Starter ${j.domain_module_code} junction on ${j.data_object_name}: ` +
-        `role '${j.role}' forbidden. Allowed shapes: ` +
+        `held_as '${j.held_as}' forbidden. Allowed shapes: ` +
         `embedded_master on a domain-owned data_object, or consumer on a platform_builtin data_object.`,
     );
   }
@@ -193,7 +193,7 @@ async function validateStarterDataObjectJunction(
       `&select=id,kind`,
   );
   if (!dobj) throw new Error(`Unknown data_object ${j.data_object_name}`);
-  if (j.role === "consumer") {
+  if (j.held_as === "consumer") {
     if (dobj.kind !== "platform_builtin") {
       throw new Error(
         `Starter ${j.domain_module_code} consumer on ${j.data_object_name}: ` +
@@ -203,11 +203,11 @@ async function validateStarterDataObjectJunction(
     }
     return;
   }
-  // j.role === "embedded_master"
+  // j.held_as === "embedded_master"
   if (dobj.kind === "platform_builtin") return;
   const masters = await get(
     `/domain_module_data_objects?data_object_id=eq.${dobj.id}` +
-      `&role=eq.master&select=id&limit=1`,
+      `&held_as=eq.master&select=id&limit=1`,
   );
   if (masters.length === 0) {
     throw new Error(
@@ -236,11 +236,12 @@ Scope is **only the rows being written**: pass the incoming batch, plus the exis
 
 | helper | refuses the load (`errors`) | warns and loads (`warnings`) |
 |---|---|---|
-| `preflightRelationships(rows, {usersId, masterDomainsByDataObject})` | B7b: a `users` edge that is `many_to_many` with kind `reference` | B6b (soft by policy), B7b verb naming two roles |
+| `preflightRelationships(rows, {usersId, masterDomainsByDataObject})` | B7b: a relationship to `users` that is `many_to_many` with kind `reference` | B6b (soft by policy), B7b verb naming two kinds of person |
 | `preflightProcessRaci(incoming, existing)` | E4: a new Accountable on a process that already has one | E4 zero Accountable / Responsible after the batch (a batch may add R first), E4c |
 | `preflightTriggerEvents(incoming, lifecycleStates)` | none | B9c blank or unresolved `to_state` |
 | `preflightHandoffs(incoming, existing)` | none | B9f same event + source module + target module |
 | `preflightLifecycleStates(incoming)` | none | E4b gate with no `process_id`, E4d author-action gate (`submit_*`) |
+| `preflightAuthoredText(rows, {table})` | B16: a British spelling in a string value of a row being written, in prose or in a name, code or identifier token. Every helper above already calls it on its incoming rows | none |
 
 ```typescript
 import { preflightRelationships } from "../lib/catalog_invariants.ts";
@@ -252,6 +253,8 @@ if (pre.errors.length > 0) {
   process.exit(1); // before any write
 }
 ```
+
+**American English at load time.** A loader for a table with no helper above (`solutions`, `vendors`, `capabilities`, `data_objects`, `domains`, and so on) calls `preflightAuthoredText(rows, { table })` itself and refuses the load on `errors`, before any write. It reads the rows it is handed, classifying each column by name, so pass the whole row, not a subset of its columns. What it cannot stop: a one-off script that calls no preflight. That write is caught afterward by check B16 and by `be_spelling_sweep.ts --check` in the lint stage of `build_catalog.ts`, not prevented.
 
 [scripts/loaders/load_cluster_drafts.ts](../../../../scripts/loaders/load_cluster_drafts.ts) is the reference wiring (relationships batch, with the endpoints' master rows fetched for the B6b composition-coherence rule).
 

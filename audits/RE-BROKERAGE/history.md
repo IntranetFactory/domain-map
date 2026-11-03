@@ -24,7 +24,7 @@ Domain 143 (`RE-BROKERAGE`, "Real Estate Brokerage and Agent Operations"). Modul
 | G4 / B11 | 0 aliases on all 5 masters | 12 aliases loaded (ids 929-940). Industry context (Real Estate, id 15) bound to every `industry_term` row. |
 | G5 | 6 of 7 trigger_events had empty `event_category` | All 6 set to `lifecycle` per Rule #13. |
 | G6 / H1 | 0/6 cross-domain handoffs had APQC mapping | 6 `handoff_processes` rows loaded with `proposal_source=agent_curated`, `record_status=new`. PCF mappings: 296 / 297 / 861 / 862 → PCF 10192 "Close the sale"; 308 → PCF 18115 "Validate and qualify leads/opportunities"; 311 → PCF 20114 "Submit regulatory reports". User to review. |
-| G7 / E2+E5 | All 4 roles had Path A/B divergence; SALES-LISTING-AGENT and SALES-BUYER-AGENT violated 2-module floor | 6 `role_modules` rows added at `interaction_level=secondary` aligning each role's declared module set with its permission bundle. Same patch cures the 2-module floor for the IC roles. |
+| G7 / E2+E5 | All 4 roles had Path A/B divergence; SALES-LISTING-AGENT and SALES-BUYER-AGENT violated 2-module floor | 6 `persona_modules` rows added at `interaction_level=secondary` aligning each role's declared module set with its permission bundle. Same patch cures the 2-module floor for the IC roles. |
 | G8 / Rule #15 | 7 of 7 `domain_data_objects.notes` populated with restated-schema prose; 3 outbound handoffs (296 / 297 / 308) also had notes (one with an em-dash, CLAUDE.md violation) | All 10 notes wiped to `""`. Tour-appointment "Showing schedule" content captured properly via the new alias row. |
 
 ### Pass 1 — Report-only follow-ups (owed by other domains)
@@ -56,9 +56,9 @@ Subagent ran a vendor-surface audit against the 6 flagship solutions (Lone Wolf 
 
 ### Pass 3 / Pass 4 — Neighbor discovery + pairwise reconciliation
 
-Not yet run. Auto-discovered neighbors by edge weight:
+Not yet run. Auto-discovered neighbors by relationship weight:
 
-| Neighbor | Weight | Edges |
+| Neighbor | Weight | Relationships |
 |---|---|---|
 | CRM (69) | high | 1 outbound + 3 owed-inbound + contributor on 2 masters |
 | RE-CRE (145) | medium | 2 outbound (`transaction.closed`, `listing.sold`) |
@@ -96,7 +96,7 @@ Validate b1 structural re-audit of domain 143 (RE-BROKERAGE). All structural ban
 | Band | Status | Note |
 |---|---|---|
 | S1 | pass | All non-zero expected FKs to domains populated. |
-| S2 | pass | Each of 151 / 152 / 153 has DMDOs + capability links. |
+| S2 | pass | Each of 151 / 152 / 153 has DMDOs + capability relationships. |
 | S3 | pass | Per-master: states + events + aliases all populated. |
 | A1 | pass | All 7 business-metadata fields populated; `crud_percentage=80`, market 1200 USD M (2024). |
 | A2 | pass | 6 capabilities (lead capture, transaction mgmt, MLS syndication, commission splits, tour scheduling, agent CRM). |
@@ -116,7 +116,7 @@ Validate b1 structural re-audit of domain 143 (RE-BROKERAGE). All structural ban
 | B4 | pass | Pattern flags considered on all 5 (4 of 5 carry at least one true flag). |
 | B5 | pass | Embedded masters resolve: `crm_contacts` and `crm_leads` master in CRM (69); `legal_contracts` master in CLM (66); `users` is platform_builtin; intra-domain embedded_masters resolve to siblings 151 / 152. |
 | B6 | pass | 4 intra-domain relationship rows cover the main workflow chain. |
-| B7 | pass | 7 `users` edges spanning all 5 masters. |
+| B7 | pass | 7 relationships to `users` spanning all 5 masters. |
 | B8 | pass | Outbound cross-domain relationship rows present where payload mapping is clean (no MISSING-RELATIONSHIP findings). |
 | B9 | pass | 21 trigger_events on RE-BROKERAGE masters; every published state has at least one handoff or is a Phase D candidate carried forward. |
 | B9b | pass | 3 intra-domain lifecycle_progression rows (1328 / 1329 / 1330) cover 151 to 152 (contingencies_cleared) and 152 to 151 (cleared_to_close, commission_split.paid). |
@@ -127,7 +127,7 @@ Validate b1 structural re-audit of domain 143 (RE-BROKERAGE). All structural ban
 | C1 | pass | Sales owner, Marketing contributor, Accounting consumer. |
 | C2 | n/a | No capability-level RACI divergence flagged. |
 | E1 | pass | 4 roles touching the domain's modules (Listing Agent, Buyer Agent, Transaction Coordinator, Designated Broker). |
-| E2 | pass | Every role has at least 2 `role_modules` rows. |
+| E2 | pass | Every role has at least 2 `persona_modules` rows. |
 | E3 | pass | `interaction_level` set on every row (mix of primary and secondary). |
 | E4 | pass | Every role has 3 permission bundle rows. |
 | E5 | pass | Path A and Path B agree on every role's reachable domain set. |
@@ -214,7 +214,7 @@ b1b and b3 left as-is.
 ### Surfaced (returned to user; not applied)
 
 - **B1A-SELF-CONTAIN (M9) -> reclassified to b2 (DESTRUCTIVE).** DMDO 777 (crm_contacts) and
-  DMDO 776 (crm_leads) on module 151 are role=contributor / necessity=required against
+  DMDO 776 (crm_leads) on module 151 are held_as=contributor / necessity=required against
   CRM-mastered entities. Fixing either by converting to embedded_master or relaxing necessity
   overwrites the role/necessity on an existing row, which is a destructive edit the agent does
   not apply unapproved. Surfaced as a per-row decision.
@@ -261,7 +261,7 @@ directions this pass.
 ### a1 -> B1A-SELF-CONTAIN (q1=a): EXECUTED (DESTRUCTIVE, a-file approved)
 
 Converted the two M9 self-containment violations on module 151 (RE-BROK-AGENT-OPS) from
-`role=contributor` to `role=embedded_master`: DMDO 776 (crm_leads, data_object 99) and DMDO 777
+`held_as=contributor` to `held_as=embedded_master`: DMDO 776 (crm_leads, data_object 99) and DMDO 777
 (crm_contacts, data_object 98). Necessity left `required` (matches the other embedded_master rows
 780/781). Module 151 now carries the two CRM-mastered entities as local embedded shells, so it is
 self-contained (M9 satisfied) without loosening the data requirement. CRM (domain 69) still
@@ -295,7 +295,7 @@ The user accepted RE-BROKERAGE ownership of two B9d ORPHAN processes:
   real_estate_listings (352) via handoffs 296/297/861/862.
 Both answers were "a" = record it now as owned, assign a named owner once RE-BROKERAGE sets up who
 does this work. RE-BROKERAGE has 0 personas reaching modules 151/152
-(role_modules?domain_module_id=in.(151,152) returns zero rows; Phase-P deferred), so the
+(persona_modules?domain_module_id=in.(151,152) returns zero rows; Phase-P deferred), so the
 realization (a process_id-wired gated lifecycle state plus process_raci R/A) cannot be authored
 now: it needs a persona pool that does not yet exist. Per the AIOPS / ACCT-PRACT-MGMT precedent,
 the realizing write is gated on the same persona work as Phase-P. The two b2 decision items are

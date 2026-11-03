@@ -9,7 +9,7 @@ b1b:
     summary: RACI layer (process_raci + lifecycle process_id wiring) deferred on the initial build; personas and reach are authored, responsibility is not.
     finding: >-
       The 5 personas (Harbormaster, Dockmaster, Office Manager, Service Yard
-      Manager, Bookkeeper) and their 18 role_modules reach rows are loaded, but
+      Manager, Bookkeeper) and their 18 persona_modules reach rows are loaded, but
       no process_raci rows were authored and no data_object_lifecycle_states
       carry a process_id. This matches the recent sibling STR-MGMT build, which
       also deferred RACI to a later pass. E4/E6 are therefore not yet
@@ -152,7 +152,7 @@ b3:
     proposed_module: MARINA-MGMT-SERVICE
   - id: B3-ESIGNATURE
     candidate: esignature_records
-    rationale: First-class e-signature records on contracts; Dockwa, Molo, DockMaster, MarinaOffice support it (the build links a sign_document tool but masters no record). Add if signature evidence must be retained as data.
+    rationale: First-class e-signature records on contracts; Dockwa, Molo, DockMaster, MarinaOffice support it (the build relates a sign_document tool but masters no record). Add if signature evidence must be retained as data.
     vendor_evidence: [Dockwa, Molo, DockMaster, MarinaOffice]
     proposed_module: MARINA-MGMT-BILLING
   - id: B3-DOCK-WALK-MOVEMENTS

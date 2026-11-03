@@ -24,56 +24,56 @@
       "name": "asset_contracts",
       "singular_label": "Asset Contract",
       "plural_label": "Asset Contracts",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "ITAM"
     },
     {
       "name": "hardware_assets",
       "singular_label": "Hardware Asset",
       "plural_label": "Hardware Assets",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "HAM"
     },
     {
       "name": "saas_applications",
       "singular_label": "SaaS Application",
       "plural_label": "SaaS Applications",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "SMP"
     },
     {
       "name": "saas_subscriptions",
       "singular_label": "SaaS Subscription",
       "plural_label": "SaaS Subscriptions",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "SMP"
     },
     {
       "name": "service_incidents",
       "singular_label": "Incident",
       "plural_label": "Incidents",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "ITSM"
     },
     {
       "name": "service_requests",
       "singular_label": "Service Request",
       "plural_label": "Service Requests",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "ITSM"
     },
     {
       "name": "software_licenses",
       "singular_label": "Software License",
       "plural_label": "Software Licenses",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "SAM"
     },
     {
       "name": "users",
       "singular_label": "User",
       "plural_label": "Users",
-      "role": "consumer",
+      "held_as": "consumer",
       "owning_domain": null
     }
   ],
@@ -131,7 +131,7 @@
       }
     ]
   },
-  "roles": [],
+  "personas": [],
   "enums": {
     "trigger_event_category": [
       "lifecycle",
@@ -152,7 +152,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

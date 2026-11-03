@@ -41,7 +41,7 @@ a3:
 q4: Confirm the **Waivers and Liability** module copy? (yes/no)
 
 - Tagline: "Send, collect, and store signed liability waivers tied to every booking and participant."
-- Description: "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgements your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it."
+- Description: "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgments your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it."
 
 Recommended: yes. Clean compliance boundary; matches the e-waiver expectation in this market.
 

@@ -51,7 +51,7 @@ last_audit: "2026-06-13"
 
 b1a:
   - id: B1A-CAPS
-    summary: "Author 5-7 capabilities for DISCOVERY and link via capability_domains (A2 fail; 0 rows today). Part of the build; runs with the Phase A/M load once B2-MOD-SHAPE is chosen."
+    summary: "Author 5-7 capabilities for DISCOVERY and relate via capability_domains (A2 fail; 0 rows today). Part of the build; runs with the Phase A/M load once B2-MOD-SHAPE is chosen."
     finding: "A2 hard fail. capability_domains for domain_id=5 returns 0 rows. Domain has no defined capabilities, so M4/M6 cannot be evaluated. Capability count drives the Rule #14 M2 module threshold, so this is part of the unbuilt-domain build, not a standalone additive fix."
     action: "Author capability set (network-asset-discovery, agentless-credentialed-scan, cloud-api-discovery, service-dependency-mapping, reconciliation-and-normalization, discovery-source-management, passive-network-discovery) into capabilities + capability_domains as part of the Phase A/M build. Cross-cutting capability convention applies for anything shared with CMDB / CAASM."
     blocked_by:
@@ -86,18 +86,18 @@ b1b:
   - id: B1B-DMDO-MIGRATE
     summary: "Migrate legacy domain_data_objects to module-anchored DMDO for the 3 DISCOVERY masters + drop the now-orphan legacy rows."
     finding: "B1 footprint sits in legacy domain_data_objects only (3 masters + 5 contributors). domain_module_data_objects for any domain_id=5 module is empty (no modules yet)."
-    action: "Re-anchor discovery_scans (81), discovered_devices (82), discovery_sources (83) as role=master, necessity=required in domain_module_data_objects against the realizing modules from B1B-MODULES. Re-anchor 5 contributors (hardware_assets 56, software_installations 59, configuration_items 76, ci_relationships 77, monitoring_policies 86) with role=contributor (or consumer per canonical owner). DELETE the legacy domain_data_objects rows once DMDO is the source of truth (destructive: surface the delete)."
+    action: "Re-anchor discovery_scans (81), discovered_devices (82), discovery_sources (83) as held_as=master, necessity=required in domain_module_data_objects against the realizing modules from B1B-MODULES. Re-anchor 5 contributors (hardware_assets 56, software_installations 59, configuration_items 76, ci_relationships 77, monitoring_policies 86) with held_as=contributor (or consumer per canonical owner). DELETE the legacy domain_data_objects rows once DMDO is the source of truth (destructive: surface the delete)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
     extra_band: B1
 
   - id: B1B-INTRA-RELATIONSHIPS
     summary: "Author intra-domain data_object_relationships between the 3 DISCOVERY masters and to cross-domain consumers (configuration_items, hardware_assets)."
-    finding: "B6 fail. data_object_relationships touching ids 81/82/83 today: only the 3 Rule #10 user edges to data_object 748 (users). No edges between the 3 masters."
-    action: "Author edges: discovery_sources -> discovery_scans (drives, one_to_many, composition); discovery_scans -> discovered_devices (emits, one_to_many, composition); discovered_devices -> configuration_items (promotes_to, one_to_one, reference, owner_side=source, is_required=false); discovered_devices -> hardware_assets (links_to, many_to_many, reference). The discovered_devices -> service_maps edge depends on B2-SVC-MAPS."
+    finding: "B6 fail. data_object_relationships touching ids 81/82/83 today: only the 3 Rule #10 users relationships to data_object 748 (users). No relationships between the 3 masters."
+    action: "Author relationships: discovery_sources -> discovery_scans (drives, one_to_many, composition); discovery_scans -> discovered_devices (emits, one_to_many, composition); discovered_devices -> configuration_items (promotes_to, one_to_one, reference, owner_side=source, is_required=false); discovered_devices -> hardware_assets (links_to, many_to_many, reference). The discovered_devices -> service_maps relationship depends on B2-SVC-MAPS."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
-      - {type: depends_on, ref: B2-SVC-MAPS, reason: "service_maps direction informs whether discovered_devices -> service_maps edge belongs here"}
+      - {type: depends_on, ref: B2-SVC-MAPS, reason: "service_maps direction informs whether discovered_devices -> service_maps relationship belongs here"}
     extra_band: B6
 
   - id: B1B-LIFECYCLE-STATES
@@ -118,16 +118,16 @@ b1b:
     extra_band: B10b
 
   - id: B1B-ROLES
-    summary: "Author DISCOVERY-scoped roles + role_modules + role_permissions once modules exist."
-    finding: "E1-E5 cascade fail. business_function_id=58 (IT Infrastructure) carries 5 roles (10050-10054), none pointing at any DISCOVERY module via role_modules (all 11 role_modules rows point at APM/CMDB modules). On a multi-module DISCOVERY domain, >=3 distinct roles are expected; on a single-module shape, E1 vacuously passes."
-    action: "After B1B-MODULES selects shape: if multi-module, author function-scoped roles under business_function_id=58 with role_modules on >=2 DISCOVERY modules each (E2) and interaction_level set (E3). Bundle role_permissions per Rule #14."
+    summary: "Author DISCOVERY-scoped roles + persona_modules + role_permissions once modules exist."
+    finding: "E1-E5 cascade fail. business_function_id=58 (IT Infrastructure) carries 5 roles (10050-10054), none pointing at any DISCOVERY module via persona_modules (all 11 persona_modules rows point at APM/CMDB modules). On a multi-module DISCOVERY domain, >=3 distinct roles are expected; on a single-module shape, E1 vacuously passes."
+    action: "After B1B-MODULES selects shape: if multi-module, author function-scoped roles under business_function_id=58 with persona_modules on >=2 DISCOVERY modules each (E2) and interaction_level set (E3). Bundle role_permissions per Rule #14."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
       - {type: prerequisite_entity, ref: B1B-LIFECYCLE-STATES}
     extra_band: E1
 
   - id: B1B-DMC
-    summary: "Author domain_module_capabilities linking each capability to >=1 realizing module and vice versa."
+    summary: "Author domain_module_capabilities relating each capability to >=1 realizing module and vice versa."
     finding: "M4 and M6 cascade fail. With 0 capabilities and 0 modules, the bipartite coverage loop is undefined. Once A2 + M1 cure, every capability needs >=1 realizing module and every module needs >=1 realized capability."
     action: "After B1A-CAPS + B1B-MODULES: INSERT domain_module_capabilities for every (capability, realizing module) pair per the shape chosen in B2-MOD-SHAPE."
     blocked_by:
@@ -175,7 +175,7 @@ b2:
     options:
       - "(a) Move master to a DISCOVERY-SERVICE-MAPPING module (requires B2-MOD-SHAPE option c or d); CMDB demotes to embedded_master or consumer"
       - "(b) Keep CMDB-SERVICE-MAPPING as canonical master (recommended); DISCOVERY publishes discovery_scan.completed already. No further action."
-    why: "Confirm before authoring B1B-INTRA-RELATIONSHIPS edges around discovered_devices -> service_maps."
+    why: "Confirm before authoring B1B-INTRA-RELATIONSHIPS relationships around discovered_devices -> service_maps."
 
   - id: B2-SHADOW-IT
     summary: "shadow_it_apps handoff 47: re-source from SMP, keep as-is, or rebind to a scan-native trigger?"

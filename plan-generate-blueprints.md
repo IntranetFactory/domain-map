@@ -12,7 +12,7 @@
 
 A **per-domain fact sheet** is a single markdown file emitted by a new generator. It is the contract between the holistic catalog (this skill) and the implementation layer (`semantius-architect`).
 
-**Consumed by:** `semantius-architect` gains a new **Stage 0 — Load fact sheet if available**. When a fact sheet exists for the requested domain, architect loads it before asking the user anything and uses it to pre-populate entity list (Stage 3), intra-domain relationships (Stage 4), vendor template suggestion (Stage 2), aliases, permissions table, business rules, and cross-model links (§6).
+**Consumed by:** `semantius-architect` gains a new **Stage 0 — Load fact sheet if available**. When a fact sheet exists for the requested domain, architect loads it before asking the user anything and uses it to pre-populate entity list (Stage 3), intra-domain relationships (Stage 4), vendor template suggestion (Stage 2), aliases, permissions table, business rules, and cross-model relationships (§6).
 
 **Emitted by:** a new `.tmp_deploy/generate_blueprints.ts <domain_code>` script that queries the catalog and renders markdown.
 
@@ -25,10 +25,10 @@ The body is 13 numbered sections:
 | § | Title | Contents | Source |
 |---|---|---|---|
 | 1 | Overview | Multi-paragraph composed narrative: description + capabilities surface, logic beyond CRUD, market positioning (cost band + min org size + US TAM + flagship vendors), organizational fit (RACI), footprint and pattern (master count + pattern-flag prose) | `domains`, `capabilities`, `solution_domains`, `business_function_domains`, master pattern flags |
-| 2 | Entity summary | Single quick-overview table (Name = `plural_label`, Description) **plus** a single colored mermaid graph with one classDef per role (master / embedded_master / contributor / consumer / derived / platform_builtin) and intra-domain + `users` edges | `domain_data_objects`, `data_objects`, `data_object_relationships` |
-| 3 | Data object inventory | **One** unified table with columns: # · Name (plural) · Role · Necessity · Canonical? · Pattern flags · Notes/slice. Sorted by role rank, then alphabetical | `domain_data_objects`, `data_objects` |
+| 2 | Entity summary | Single quick-overview table (Name = `plural_label`, Description) **plus** a single colored mermaid graph with one classDef per held_as (master / embedded_master / contributor / consumer / derived / platform_builtin) and intra-domain + relationships to `users` | `domain_data_objects`, `data_objects`, `data_object_relationships` |
+| 3 | Data object inventory | **One** unified table with columns: # · Name (plural) · Held as · Necessity · Canonical? · Pattern flags · Notes/slice. Sorted by held_as rank, then alphabetical | `domain_data_objects`, `data_objects` |
 | 4 | Aliases and industry synonyms | Aliases for any data_object in scope | `data_object_aliases` |
-| 5 | Relationships | 5.1 intra-domain, 5.2 built-in edges (`users` and future `kind='platform_builtin'` rows), 5.3 cross-domain `data_object_relationships` | `data_object_relationships` |
+| 5 | Relationships | 5.1 intra-domain, 5.2 built-in relationships (`users` and future `kind='platform_builtin'` rows), 5.3 cross-domain `data_object_relationships` | `data_object_relationships` |
 | 6 | Cross-domain context | 6.1 co-masters, 6.2 outbound handoffs, 6.3 inbound handoffs, 6.4 embedded/contributing/consuming dependencies with canonical owner domains | `handoffs`, `domain_data_objects` |
 | 7 | Lifecycle states | Per master data_object: state table with `requires_permission` and `permission_verb_override` derivation visible | `data_object_lifecycle_states` |
 | 8 | Permissions and business rules (derived) | 8.1 permissions table (baseline tier + lifecycle gates + pattern-flag gates, with `:admin` inclusion column); 8.2 business rules from pattern flags | derived from `data_objects` flags + `data_object_lifecycle_states` |
@@ -49,7 +49,7 @@ Six concrete gaps. Each maps to schema or generator deliverables in §3–§5.
 | 1 | Naming authority is informal — bare words like `applications`, `offers`, `assessments`, `referrals` sit in ATS while adjacent domains had to take prefixed forms. No rule at insert time. | Schema: `is_canonical_bare_word` + rationale; Process: arbitration step in Phase B |
 | 2 | Intra-domain relationships are sparse. `data_object_relationships` has no verb, no required-flag, no owner-side; mostly empty. | Schema: 3 new columns; Process: Phase B sub-step + mermaid preview in drafts |
 | 3 | Platform built-ins (currently only `users`) cannot participate in relationship graphs. Not represented as `data_objects`. | Schema: `data_objects.kind` enum; seed the `users` row |
-| 4 | Intra-domain lifecycle states are not captured. `trigger_events` only handles cross-domain edges. | Schema: new `data_object_lifecycle_states` table |
+| 4 | Intra-domain lifecycle states are not captured. `trigger_events` only handles cross-domain relationships. | Schema: new `data_object_lifecycle_states` table |
 | 5 | Domain-pattern truths (workflow gates like `<slug>:approve_offer`, business rules like `feedback_edit_scope`, plural labels, embedded-master cluster routing) are not captured. Two architect runs produce different versions. | Schema: 5 boolean/text flags on `data_objects` + `requires_permission` on lifecycle states + `plural_label`; derivation rules in the fact sheet generator. **No new tables for these.** |
 | 6 | `data_object_aliases` is under-used. No process rule requires populating it. | Process: Phase B sub-step requires ≥1 alias for non-self-explanatory masters |
 
@@ -79,7 +79,7 @@ All additive; no migrations needed. Apply via `semantius` field-creation tooling
 | Column | Type | Purpose |
 |---|---|---|
 | `relationship_label` | text | Semantic verb (`schedules`, `extends`, `groups`, `owns`, `manages`). The verb that drives §4 of the fact sheet and the architect's relationship narrative. |
-| `necessity` | enum (`required` / `optional`) | Required edges exist in every deployment of the domain; optional are deployment-shape-dependent. Delete-mode / FK is now derived canonically from `relationship_kind` + `is_required` (see the Delete-mode derivation (B4) table in `.claude/skills/domain-map-analyst/references/module-shape.md`); the older `kind`+`necessity` formula here is superseded. |
+| `necessity` | enum (`required` / `optional`) | Required relationships exist in every deployment of the domain; optional are deployment-shape-dependent. Delete-mode / FK is now derived canonically from `relationship_kind` + `is_required` (see the Delete-mode derivation (B4) table in `.claude/skills/domain-map-analyst/references/module-shape.md`); the older `kind`+`necessity` formula here is superseded. |
 | `owner_side` | enum (`source` / `target`) | Which side is the lifecycle owner. Matters for delete-cascade semantics architect derives. |
 
 ### 3.3 NEW table `data_object_lifecycle_states`
@@ -105,13 +105,13 @@ Insert into `data_objects` with `kind='platform_builtin'`:
 |---|---|---|---|
 | `users` | User | Users | The only true Semantius platform-owned entity in scope today. Referenced by every domain's `data_object_relationships` (assignees, authors, approvers). |
 
-**Not seeded as platform built-ins:** `departments`, `roles`, `permissions`, `tenants`, `tags`, `attachments`, `audit_logs`, `notifications`. These are NOT universal platform tables in this catalog's tenant. When a domain needs `departments` (or any other shared concept), it gets modeled as a regular `data_objects` row with `kind='domain_owned'`, mastered by the owning domain (e.g. HCM masters `departments`), and other domains link via `embedded_master` or `consumer` rows. The deployer routing in §3.5 handles the rest.
+**Not seeded as platform built-ins:** `departments`, `roles`, `permissions`, `tenants`, `tags`, `attachments`, `audit_logs`, `notifications`. These are NOT universal platform tables in this catalog's tenant. When a domain needs `departments` (or any other shared concept), it gets modeled as a regular `data_objects` row with `kind='domain_owned'`, mastered by the owning domain (e.g. HCM masters `departments`), and other domains relate via `embedded_master` or `consumer` rows. The deployer routing in §3.5 handles the rest.
 
 The absence of a `master` row anywhere in `domain_data_objects` for a `kind='platform_builtin'` row tells the deployer "use Semantius's built-in table directly." This is currently only meaningful for `users`.
 
 ### 3.5 NOT adding (initially proposed, retracted after review)
 
-- ~~`data_objects.master_cluster` text column~~ — redundant. The `master` role on `domain_data_objects` already supplies the cluster routing. Deployer query: for any `embedded_master` row, look up the data_object's `master` row to find the canonical owner domain. `cost_centers` → mastered by FIN; deployer routes there.
+- ~~`data_objects.master_cluster` text column~~ — redundant. The `master` `held_as` on `domain_data_objects` already supplies the cluster routing. Deployer query: for any `embedded_master` row, look up the data_object's `master` row to find the canonical owner domain. `cost_centers` → mastered by FIN; deployer routes there.
 - ~~`domain_workflow_gates` table~~ — derivable from `data_object_lifecycle_states.requires_permission` + the pattern flags on `data_objects`. See §6 derivation rules.
 - ~~`domain_business_rules` table~~ — same. Derivable from the pattern flags.
 - ~~`data_object_state_transitions` table~~ — defer. State ordering via `state_order` is sufficient for first cut; explicit transition graph is a v2 add if needed.
@@ -189,13 +189,13 @@ Every proposed `data_object_name` triggers a substring search against existing `
 
 No silent inserts of collision-prone names.
 
-### 5.2 NEW Rule #10 — Built-in edges are first-class
+### 5.2 NEW Rule #10 — Built-in relationships are first-class
 
 When a domain's data_objects reference platform built-ins (currently only `users` — as assignee, creator, approver, author, etc.), the relationship MUST be recorded in `data_object_relationships` against the seeded `users` row. Architect cannot guess these from naming. The same rule applies if additional `kind='platform_builtin'` rows are seeded in the future.
 
 ### 5.3 NEW Rule #11 — Embedded master integrity
 
-Every `domain_data_objects` row with `role='embedded_master'` requires that the same `data_object_id` has a `master` row somewhere in `domain_data_objects` (or the data_object has `kind='platform_builtin'`). The deployer relies on this to find the canonical master at deploy time. Loaders MUST validate before inserting an `embedded_master` row.
+Every `domain_data_objects` row with `held_as='embedded_master'` requires that the same `data_object_id` has a `master` row somewhere in `domain_data_objects` (or the data_object has `kind='platform_builtin'`). The deployer relies on this to find the canonical master at deploy time. Loaders MUST validate before inserting an `embedded_master` row.
 
 ### 5.4 MODIFIED Phase B contract
 
@@ -204,7 +204,7 @@ Phase B expands from `{data_objects, domain_data_objects, handoffs}` to:
 1. `data_objects` (existing)
 2. `domain_data_objects` (existing)
 3. `handoffs` (existing)
-4. **NEW** `data_object_relationships` — intra-domain edges + built-in edges + cross-domain edges where a payload-to-target mapping is clear (every `handoffs` row with a clean payload should also have a corresponding `data_object_relationships` row for architect §6)
+4. **NEW** `data_object_relationships` — intra-domain relationships + built-in relationships + cross-domain relationships where a payload-to-target mapping is clear (every `handoffs` row with a clean payload should also have a corresponding `data_object_relationships` row for architect §6)
 5. **NEW** `data_object_aliases` — ≥1 alias for any non-self-explanatory master
 6. **NEW** `data_object_lifecycle_states` + pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) — for `master + required` data_objects. **Required on every new domain load going forward.** Loading a market without these is permitted only when explicitly noted in `plan-master-tasks.md` as a deferred backfill, with the domain code added to a tracked lifecycle-states-pending list. See Rule #12.
 
@@ -251,7 +251,7 @@ Audit query in the loader catches additional cases. **Run the audit, surface the
 ### 6.2 Phase B2 — Built-in seed + relationship-graph population
 
 1. Seed the single `users` `data_objects` row with `kind='platform_builtin'`.
-2. For each domain that has Phase-B masters loaded, draft the intra-domain relationship graph + `users` edges in mermaid; surface for user review; load into `data_object_relationships` (with verb + cardinality + necessity + owner_side).
+2. For each domain that has Phase-B masters loaded, draft the intra-domain relationship graph + relationships to `users` in mermaid; surface for user review; load into `data_object_relationships` (with verb + cardinality + necessity + owner_side).
 3. Also load cross-domain `data_object_relationships` for every `handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`, `job_offers →spawns→ onboarding_journeys`).
 4. Order: start with the 23 domains that already have system skills (most reviewed), then the ~25 with thick Phase-B masters, then the rest as Phase-B Lite catches up.
 
@@ -295,7 +295,7 @@ This repo ships the **fact sheet contract** (§1 sections + the generator's outp
 6. Aliases shape per `data_object_aliases` schema
 7. Cross-domain context per Appendix A worked sample
 
-**What architect adoption looks like (out of scope for this plan, listed for context):** a new Stage 0 in `semantius-architect/SKILL.md` that detects a fact sheet, parses it, and pre-populates Stages 2/3/4. That work is owned by the `semantius-agent` repo and ships independently. As long as both sides honour the contract above, divergence stays bounded.
+**What architect adoption looks like (out of scope for this plan, listed for context):** a new Stage 0 in `semantius-architect/SKILL.md` that detects a fact sheet, parses it, and pre-populates Stages 2/3/4. That work is owned by the `semantius-agent` repo and ships independently. As long as both sides honor the contract above, divergence stays bounded.
 
 **Contract direction:** architect consumes the fact sheet, never writes back to the catalog. Any drift from architect work returns to the analyst skill via the user, not via direct catalog writes.
 
@@ -309,7 +309,7 @@ This repo ships the **fact sheet contract** (§1 sections + the generator's outp
 | 2. Schema changes (8 new columns + 1 new table + 1 seed row + `display_label` → `singular_label` rename cascade) | — | small (additive) + medium (loader cascade) |
 | 3. Build rename-cascade utility + test against one low-stakes rename | 2 | small |
 | 4. Phase B1 — full-catalog bare-word audit & rename | 2, 3 | medium (cascade across 4-5 tables) |
-| 5. Phase B2 — relationship-graph backfill for top 23 domains (intra-domain + `users` edges + cross-domain payload-clean edges) | 1, 2, 4 | medium-large (~25 mermaid graphs to author + review) |
+| 5. Phase B2 — relationship-graph backfill for top 23 domains (intra-domain + relationships to `users` + cross-domain payload-clean relationships) | 1, 2, 4 | medium-large (~25 mermaid graphs to author + review) |
 | 6. Fact sheet generator script + CI drift-check | 2, 5 (partial) | small |
 | 7. First fact sheet emission for ATS (proof-of-concept; commit to `domain-fact-sheets/ATS.md`) | 2, 4, 5, 6 | small |
 | 8. Phase B3 — lifecycle states + pattern flags for top 20 implementation-relevant domains | 5 | large; one-time backfill |
@@ -325,7 +325,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 **Step 1 — SKILL.md updates** (small) ✓ 2026-05-22
 
 - [x] Add Rule #9 (naming arbitration at insert time) to `.claude/skills/domain-map-analyst/SKILL.md`
-- [x] Add Rule #10 (built-in edges are first-class)
+- [x] Add Rule #10 (built-in relationships are first-class)
 - [x] Add Rule #11 (embedded-master integrity — every `embedded_master` row needs a matching `master` row somewhere or `kind='platform_builtin'`)
 - [x] Add Rule #12 (lifecycle states + pattern flags are part of Phase B; deferral requires a tracked entry)
 - [x] Update Phase B contract section to reflect the 6-deliverable shape
@@ -347,7 +347,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 - [x] Create `data_object_lifecycle_states` table (10 columns total — 8 from §3.3 + `notes` + `record_status` for module consistency)
 - [x] Seed the `users` row with `kind='platform_builtin'` (id=748, `is_canonical_bare_word=true`)
 - [x] → Update every `.tmp_deploy/load_*.ts` loader that writes `display_label` to also write `singular_label` + `plural_label` (additive — display_label retained transitionally). Script: [.tmp_deploy/update_loaders_for_singular_label.ts](.tmp_deploy/update_loaders_for_singular_label.ts) + cleanup pass [.tmp_deploy/cleanup_duplicate_label_annotations.ts](.tmp_deploy/cleanup_duplicate_label_annotations.ts) + type-decl pass [.tmp_deploy/update_type_decls_for_labels.ts](.tmp_deploy/update_type_decls_for_labels.ts). 31 files / 505 annotated sites. Variable-driven sites (`display_label: o.label`) intentionally NOT patched (would require source-data shape changes; rows are already backfilled, so re-run risk is bounded). See Note C.
-- [x] → Verify no loader regresses against a dry run (spot-checked `load_phase_b_full.ts`, `load_smm_data_objects.ts`, `load_p15e_customer_handoffs.ts` — all parse and re-run idempotently; pre-existing `load_ats_data_objects.ts` breakage on the renamed `mastery_role → role` column is unrelated to this work)
+- [x] → Verify no loader regresses against a dry run (spot-checked `load_phase_b_full.ts`, `load_smm_data_objects.ts`, `load_p15e_customer_handoffs.ts` — all parse and re-run idempotently; pre-existing `load_ats_data_objects.ts` breakage on the renamed `mastery_role → held_as` column is unrelated to this work)
 - [ ] *(Dropping `display_label` is deferred — see Step 10. Keep both columns populated through Steps 3–9 as a recovery safety net.)*
 
 **Notes from execution:**
@@ -359,7 +359,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 **Step 3 — Rename-cascade utility** (small) ✓ 2026-05-22
 
 - [x] Build the utility script — [.tmp_deploy/rename_data_object.ts](.tmp_deploy/rename_data_object.ts). Default mode is dry-run; pass `--execute` to apply. Pre-flight checks the new name is free and rewritten event_names don't collide. The cascade is genuinely small: every downstream junction (`domain_data_objects`, `solution_data_objects`, `handoffs`, `data_object_relationships`, `data_object_aliases`, `data_object_lifecycle_states`) references the data_object by `id`, so the only string-side cascade is `trigger_events.event_name` (singular-prefix rewrite).
-- [x] Pick one low-stakes rename and run the utility end-to-end as the dry run — chose `referrals` → `candidate_referrals` (ATS, id=6; one of the Phase B1 targets in §6.1). Dry-run output: 1 data_objects rename + 2 trigger_events (`referral.submitted` → `candidate_referral.submitted`, `referral.bonus_earned` → `candidate_referral.bonus_earned`); no FK changes needed; no collisions; 1 `domain_data_objects` row and 2 `handoffs` rows already FK-linked by id.
+- [x] Pick one low-stakes rename and run the utility end-to-end as the dry run — chose `referrals` → `candidate_referrals` (ATS, id=6; one of the Phase B1 targets in §6.1). Dry-run output: 1 data_objects rename + 2 trigger_events (`referral.submitted` → `candidate_referral.submitted`, `referral.bonus_earned` → `candidate_referral.bonus_earned`); no FK changes needed; no collisions; 1 `domain_data_objects` row and 2 `handoffs` rows already FK-related by id.
 - [x] Verify no orphan rows; commit utility to `.tmp_deploy/` — dry-run cleanly enumerates every cascade target with zero orphans flagged. The utility prints `✗ COLLISION` lines when a target event_name would collide and exits non-zero before any write, so a live run is safe.
 
 **Step 4 — Phase B1 bare-word audit & rename** (medium) ✓ 2026-05-22
@@ -375,9 +375,9 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 
 **Step 5 — Phase B2 relationship-graph backfill (top 23 system-skill domains → expanded to 29 ≥90% CRUD domains)** (medium-large) ✓ 2026-05-22
 
-- [x] Draft intra-domain + cross-domain + `users` edges (with verb + cardinality + necessity + owner_side) for each of the 29 in-scope domains; mermaid block per domain — drafted in parallel by 6 sub-agents (one per cluster), each consuming a context brief generated by [.tmp_deploy/build_cluster_briefs.ts](.tmp_deploy/build_cluster_briefs.ts) and writing to `.tmp_deploy/cluster_<letter>_draft.md`.
-- [x] Surface for user review, one cluster at a time (HR cluster, IT cluster, Sales cluster, etc.) — bundled into a single batched review (per the agreed strategy: parallel sub-agents per cluster, batched review). All 6 cluster drafts surfaced together with per-cluster edge/alias counts; user spot-checked and approved.
-- [x] Load `data_object_relationships` rows with `record_status='new'` — loader [.tmp_deploy/load_cluster_drafts.ts](.tmp_deploy/load_cluster_drafts.ts) parses the 6 markdown drafts, auto-flips `many_to_one` cardinalities to `one_to_many` (312 rows), drops cross-cluster duplicate edges (5 rows, keeping first occurrence alphabetically), folds `industry_term` aliases to `synonym` with provenance noted in the alias's notes column, and inserts everything with `record_status='new'`. Final tally: **752 edges + 325 aliases** across the 29 domains.
+- [x] Draft intra-domain + cross-domain + relationships to `users` (with verb + cardinality + necessity + owner_side) for each of the 29 in-scope domains; mermaid block per domain — drafted in parallel by 6 sub-agents (one per cluster), each consuming a context brief generated by [.tmp_deploy/build_cluster_briefs.ts](.tmp_deploy/build_cluster_briefs.ts) and writing to `.tmp_deploy/cluster_<letter>_draft.md`.
+- [x] Surface for user review, one cluster at a time (HR cluster, IT cluster, Sales cluster, etc.) — bundled into a single batched review (per the agreed strategy: parallel sub-agents per cluster, batched review). All 6 cluster drafts surfaced together with per-cluster relationship/alias counts; user spot-checked and approved.
+- [x] Load `data_object_relationships` rows with `record_status='new'` — loader [.tmp_deploy/load_cluster_drafts.ts](.tmp_deploy/load_cluster_drafts.ts) parses the 6 markdown drafts, auto-flips `many_to_one` cardinalities to `one_to_many` (312 rows), drops cross-cluster duplicate relationships (5 rows, keeping first occurrence alphabetically), folds `industry_term` aliases to `synonym` with provenance noted in the alias's notes column, and inserts everything with `record_status='new'`. Final tally: **752 relationships + 325 aliases** across the 29 domains.
 - [x] Backfill `data_object_aliases` (≥1 alias per non-self-explanatory master) for the same 29 domains — bundled into the same loader. 325 aliases total; self-explanatory masters (e.g. `hcm_employees` for "employee") deliberately got no aliases; non-self-explanatory ones got 1-3 (e.g. `itsm_incidents`→"ticket", `cmdb_configuration_items`→"CI", `crm_opportunities`→"deal").
 
 **Scope expansion vs original plan:** the plan called for "top 23 system-skill domains"; the actual scope was 29 domains with `crud_percentage ≥ 90` (excluding 5 zero-row stubs: BCM, CAFM, OP-RES, PRM, TPRM). The expansion was user-requested ("step 5 for all >90% semantius domains").
@@ -394,7 +394,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 **Notes from execution:**
 
 - **Note E — Loader speed mistake.** The loader was written with per-row `Bun.spawn` calls (~300ms each), so executing 752 + 325 = 1,077 inserts took ~6 minutes. The canonical idiom in [.claude/skills/domain-map-analyst/references/loader-idiom.md:87](.claude/skills/domain-map-analyst/references/loader-idiom.md#L87) covers chunked bulk-insert via PostgREST array body (~6 calls instead of 1,077). I copied the per-row pattern from `rename_data_object.ts` (which has a legitimate reason to be per-row — each rename has its own pre-flight) without checking the loader-idiom doc first. **Lesson for Steps 8 and 9**: always start from the `insert()` helper in `loader-idiom.md` for greenfield inserts; reserve per-row patterns for operations with per-row pre-flight.
-- **Note F — Sub-agent format precision held up.** Six independent agents drafted markdown that all parsed cleanly with the same loader. Three small format quirks surfaced and were fixed in the loader (not the drafts): (a) auto-flip `many_to_one` to `one_to_many` because agents reach for that cardinality naturally even though the enum doesn't accept it; (b) empty-section marker rows use ` | _ | _ | … | (none — explanation here) | ` rather than literal `(none)`, so the filter must match `_` on placeholder columns regardless of free-form notes content; (c) cross-cluster authoring overlap is real (~5 edges in our run) and best handled by loader-side dedup with a kept/dropped audit log, not by asking agents to coordinate.
+- **Note F — Sub-agent format precision held up.** Six independent agents drafted markdown that all parsed cleanly with the same loader. Three small format quirks surfaced and were fixed in the loader (not the drafts): (a) auto-flip `many_to_one` to `one_to_many` because agents reach for that cardinality naturally even though the enum doesn't accept it; (b) empty-section marker rows use ` | _ | _ | … | (none — explanation here) | ` rather than literal `(none)`, so the filter must match `_` on placeholder columns regardless of free-form notes content; (c) cross-cluster authoring overlap is real (~5 relationships in our run) and best handled by loader-side dedup with a kept/dropped audit log, not by asking agents to coordinate.
 - **Note G — Bundled aliases worked.** Bundling Phase B contract deliverable 5 (aliases) into the same draft-and-load pass saved one round-trip. Sub-agents naturally include alias decisions when authoring the entity tables. Industry-term aliases that need an `industry_id` context are folded to `synonym` at load time with provenance in `notes` — those can be promoted to true `industry_term` once an industries-taxonomy backfill happens.
 - **Note H — Decision artifacts are gitignored by design.** Per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277), `.tmp_deploy/` is the canonical scratch space; loaders capture write-time intent and immediately drift from live state. The cluster drafts + bare-word proposal are not committed. The durable record is (a) this plan file with checklist + Notes, and (b) the committed `domain-fact-sheets/<DOMAIN>.md` files produced by Step 7. Step 7 is the load-bearing PR-reviewable artifact; the drafts are scaffolding that exists only to populate the catalog for the generator to render from.
 
@@ -414,7 +414,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 **Notes from execution:**
 
 - **Note I — Generator location: `scripts/`, not `.tmp_deploy/`.** Plan §7 originally proposed `.tmp_deploy/generate_blueprints.ts`, but `.tmp_deploy/` is gitignored scratch (per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277) and Note H) — loaders that capture write-time intent and immediately drift. The fact sheet generator is the opposite: contract code that anyone regenerating sheets needs, and that a CI drift check has to invoke. A first attempt tried to keep the literal `.tmp_deploy/` path via a `!.tmp_deploy/generate_blueprints.ts` gitignore exception; user pushback (rightly) flagged that as the wrong layout — "scripts to a folder where any reasonable person would expect them". Resolution: the generator lives at [`scripts/generate_blueprints.ts`](scripts/generate_blueprints.ts), tracked by default, no `.gitignore` gymnastics. The §7 path reference in this plan has been updated to match. Loaders stay in `.tmp_deploy/`.
-- **Note J — Output shape was iterated.** The first emitted ATS sheet was structurally correct (all 13 sections present, derivation rules firing) but visually weak: §2 was just an inventory table, no quick-overview, no mermaid; §3 was four separate role-grouped tables; no YAML frontmatter; §1 was a single sentence from `domains.description`. Comparing against `_DRAFT_ats-domain-fact-sheet.md` (the architect-output gold standard kept locally during this design pass) drove a redesign: YAML frontmatter (`artifact`, `domain_code`/`slug`, `entities`, `related_domains`, counts), §1 Overview composed from description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master inventory + pattern-flag prose, §2 single quick-overview table (Name=plural_label, Description) + one colored mermaid graph with classDef per role, §3 single unified inventory table with a Role column instead of four sub-tables. Lesson: emitting an artifact and reading it cold is faster feedback than reasoning about the rendering rules in the abstract — do that pass on the first domain before declaring a generator done.
+- **Note J — Output shape was iterated.** The first emitted ATS sheet was structurally correct (all 13 sections present, derivation rules firing) but visually weak: §2 was just an inventory table, no quick-overview, no mermaid; §3 was four separate held_as-grouped tables; no YAML frontmatter; §1 was a single sentence from `domains.description`. Comparing against `_DRAFT_ats-domain-fact-sheet.md` (the architect-output gold standard kept locally during this design pass) drove a redesign: YAML frontmatter (`artifact`, `domain_code`/`slug`, `entities`, `related_domains`, counts), §1 Overview composed from description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master inventory + pattern-flag prose, §2 single quick-overview table (Name=plural_label, Description) + one colored mermaid graph with classDef per held_as, §3 single unified inventory table with a Held as column instead of four sub-tables. Lesson: emitting an artifact and reading it cold is faster feedback than reasoning about the rendering rules in the abstract — do that pass on the first domain before declaring a generator done.
 
 **Step 8 — Phase B3 (lifecycle states + pattern flags) for top 20 domains** (large; one-time backfill) ✓ 2026-05-22
 

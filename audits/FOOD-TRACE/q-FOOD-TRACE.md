@@ -5,7 +5,7 @@ Track every lot from farm to shelf so you can answer a trace request fast and ru
 
 ---
 
-q1: (answer this first) Which regulations should be linked to Food Traceability, and how deep should the set go?
+q1: (answer this first) Which regulations should be related to Food Traceability, and how deep should the set go?
 
 - a) Minimum set: FSMA 204 (Food Traceability Final Rule), FSMA Preventive Controls Rule, EU 1169/2011, Canada SFCR, USDA FSIS Country of Origin Labeling, FDA Bioterrorism Act recordkeeping.
 - b) Extended set: the minimum set plus GS1 EPCIS 2.0 (industry standard, not statute), Codex Alimentarius (international guideline), California Prop 65, and state-level origin labeling.
@@ -14,18 +14,6 @@ q1: (answer this first) Which regulations should be linked to Food Traceability,
 Recommended: a. These are the statutory anchors that actually drive demand in this market, and most of them still need their underlying regulation records created first. This is the largest remaining structural gap for a regulation-driven domain, so settling scope here unblocks the rest of the regulatory work.
 
 a1:
-
----
-
-q2: When the supplier-lifecycle domain (SUP-LIFE) later builds its own modules, which side should keep catalog mastership of supplier certifications?
-
-- a) Food Traceability keeps master; SUP-LIFE consumes or embeds the certification when it modularizes.
-- b) SUP-LIFE takes master on modularization; Food Traceability demotes its copy to an embedded master.
-- c) Split into two records: a procurement-shaped certification (SUP-LIFE master) and a food-safety-shaped variant (Food Traceability master).
-
-Recommended: a. Food Traceability is the only current master, so keeping it avoids a re-home; the SUP-LIFE audit just has to honor this so a second master never appears. Vendor evidence is genuinely split, which is why this is your call.
-
-a2:
 
 ---
 
@@ -191,4 +179,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-3 q2=B2-2 q3=B2-4 q4=B2-5 q5=B2-pattern-flag-review.recall_lock q6=B2-pattern-flag-review.recall_approver q7=B2-pattern-flag-review.lot_lock q8=B2-pattern-flag-review.cert_lock q9=B2-alias-tuple-binding q10=B3-M1-TRACEABILITY-QUERIES+B3-M2-CHAIN-OF-CUSTODY+B3-M3-PROVENANCE-ATTESTATIONS+B3-M4-RECALL-COMMUNICATIONS+B3-M5-REGULATORY-FILINGS+B3-M6-TRACEBACK-EXERCISES q11=B3-gs1-identifiers+B3-ftl-classifications+B3-provenance-certificates+B3-coa-records q12=B2-B9D-OWN-37 q13=B2-B9D-OWN-204 q14=B2-B9D-OWN-556 q15=B2-B9D-OWN-805 q16=B2-B9D-OWN-815 q17=B2-B9D-OWN-818 q18=B2-B9D-OWN-1570 q19=B2-B9D-OWN-1830 | domain_id=155 -->
+<!-- agent map, ignore: q1=B2-3 q3=B2-4 q4=B2-5 q5=B2-pattern-flag-review.recall_lock q6=B2-pattern-flag-review.recall_approver q7=B2-pattern-flag-review.lot_lock q8=B2-pattern-flag-review.cert_lock q9=B2-alias-tuple-binding q10=B3-M1-TRACEABILITY-QUERIES+B3-M2-CHAIN-OF-CUSTODY+B3-M3-PROVENANCE-ATTESTATIONS+B3-M4-RECALL-COMMUNICATIONS+B3-M5-REGULATORY-FILINGS+B3-M6-TRACEBACK-EXERCISES q11=B3-gs1-identifiers+B3-ftl-classifications+B3-provenance-certificates+B3-coa-records q12=B2-B9D-OWN-37 q13=B2-B9D-OWN-204 q14=B2-B9D-OWN-556 q15=B2-B9D-OWN-805 q16=B2-B9D-OWN-815 q17=B2-B9D-OWN-818 q18=B2-B9D-OWN-1570 q19=B2-B9D-OWN-1830 | domain_id=155 -->

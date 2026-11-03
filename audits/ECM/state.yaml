@@ -58,7 +58,7 @@ b1b:
   - id: B1B-B5
     summary: "Author 2 remaining intra-domain ECM retention handoffs (need net-new trigger_events first)."
     finding: >-
-      Of the 3 surviving cross-module retention edges (records 243 -> repository 242), the
+      Of the 3 surviving cross-module retention relationships (records 243 -> repository 242), the
       retention-expiry -> content_documents handoff was authored 2026-06-13 (handoff 1439, on
       existing event 899 `document.retention_expired`). The other two have NO trigger event yet:
       `document_folder.retention_expired` (folders) and `retention_policy.applied_to_classification`
@@ -72,7 +72,7 @@ b1b:
       because authoring net-new trigger-event vocabulary is a market-shape judgment surfaced as
       B2-INTRA-RETENTION-EVENTS, not a mechanical backfill.
     blocked_by:
-      - {type: user_decision, ref: B2-INTRA-RETENTION-EVENTS, reason: "the two missing edges need net-new trigger_events (new event vocabulary = market-shape decision); surfaced for the user before authoring"}
+      - {type: user_decision, ref: B2-INTRA-RETENTION-EVENTS, reason: "the two missing relationships need net-new trigger_events (new event vocabulary = market-shape decision); surfaced for the user before authoring"}
     affected_handoffs:
       - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document_folder.retention_expired", payload: document_folders, null_field: null, scope_note: "records module 243 -> repo module 242 (folders); needs new trigger_event on 431"}
       - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "retention_policy.applied_to_classification", payload: document_classifications, null_field: null, scope_note: "records module 243 -> repo module 242; needs new trigger_event on 432"}
@@ -83,7 +83,7 @@ b1b:
       `/solution_domains?domain_id=eq.91` returns only 2 rows, both Microsoft, both at
       `coverage_level='secondary'`. Per A3 the floor is >=3 solutions and >=1 `primary`.
       Flagship ECM vendors OpenText Documentum, Hyland OnBase, M-Files, Box Content Cloud,
-      Laserfiche, IBM FileNet, and Microsoft SharePoint Online are not yet linked.
+      Laserfiche, IBM FileNet, and Microsoft SharePoint Online are not yet related.
     action: >-
       INSERT `vendors` (if missing) + `solutions` + `solution_domains` rows:
       OpenText Documentum (primary), Hyland OnBase (primary), M-Files (primary),
@@ -128,7 +128,7 @@ b1b:
     finding: >-
       Rows 300 (`chat_message_attachments captured_in content_documents`, owner_side=target)
       and 301 (`chat_channels archives_to content_documents`, owner_side=target) describe
-      the same edges as rows 587 (`content_documents captures chat_message_attachments`,
+      the same relationships as rows 587 (`content_documents captures chat_message_attachments`,
       owner_side=target) and 588 (`document_folders archives chat_channels`,
       owner_side=target).
     action: >-
@@ -142,7 +142,7 @@ b2:
     summary: "Approve 2 net-new trigger_events for the remaining intra-domain retention handoffs (folders, classifications)."
     question: >-
       The retention-expiry -> content_documents intra-domain handoff was authored this pass
-      (handoff 1439 on existing event 899). The two remaining cross-module retention edges
+      (handoff 1439 on existing event 899). The two remaining cross-module retention relationships
       (records 243 -> repository 242) need net-new `trigger_events` first:
       `document_folder.retention_expired` on data_object 431, and
       `retention_policy.applied_to_classification` on 432. Authoring new event vocabulary is a
@@ -174,9 +174,9 @@ b2:
     options:
       - "DELETE 300 + 301 (recommended)"
       - "DELETE 587 + 588 instead"
-      - "Keep all four (treat as separate edges)"
+      - "Keep all four (treat as separate relationships)"
       - "Defer"
-    why: "Both pairs describe the same two edges with verbs flipped; the WSC pair (300/301) labels the source as target which is structurally wrong."
+    why: "Both pairs describe the same two relationships with verbs flipped; the WSC pair (300/301) labels the source as target which is structurally wrong."
 
   - id: B2-LSD-RETAG
     summary: "Decide LSD->ECM H1 retag (5 handoffs)."
@@ -215,7 +215,7 @@ b2:
       Content Cloud, Microsoft SharePoint Online, Laserfiche, IBM FileNet. Per Rule
       #18 vendor and product names are only allowed in `vendors`, `solutions`,
       `data_object_aliases`, `tool_solutions`. Descriptions on solutions must
-      characterise the product, not narrate the vendor landscape.
+      characterize the product, not narrate the vendor landscape.
     options:
       - "Approve loader to draft descriptions and surface each one for per-row approval"
       - "User supplies all 7 descriptions"
@@ -323,7 +323,7 @@ b3:
   - id: B3-DOC-AUDIT-TRAIL
     candidate: document_audit_trail_entries
     rationale: >-
-      Universal compliance-driven entity; supports the regulatory load already linked
+      Universal compliance-driven entity; supports the regulatory load already related
       (SOX, GDPR, HIPAA, GLBA, FDA 21 CFR Part 11, eIDAS). Would master in ECM-RECORDS-GOV
       (which hosts the ECM-AUDIT capability) and back its audit-trail capability with a real entity.
     vendor_evidence: [OpenText Documentum, Hyland OnBase, M-Files, Box Content Cloud, IBM FileNet, Microsoft SharePoint Online]

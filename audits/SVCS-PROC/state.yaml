@@ -61,13 +61,13 @@ b1b:
       record_status='new'.
 
   - id: B1B-PERSONAS-RACI
-    summary: "Personas + RACI owed for SVCS-PROC (domain_roles, business_function_domains, process_raci). Author on the personas pass."
+    summary: "Personas + RACI owed for SVCS-PROC (personas, business_function_domains, process_raci). Author on the personas pass."
     finding: |
-      No CWM-style personas (domain_roles) or process_raci owners exist for SVCS-PROC yet. A services-
+      No CWM-style personas (personas) or process_raci owners exist for SVCS-PROC yet. A services-
       procurement domain typically has a services procurement manager / engagement owner and a delivery /
       acceptance approver split.
     action: |
-      Author domain_roles + business_function_domains + process_raci R/A owners on the personas pass. Additive.
+      Author personas + business_function_domains + process_raci R/A owners on the personas pass. Additive.
 
   - id: B1B-HANDOFFS
     summary: "Cross-domain handoffs to/from S2P + CWM + CLM + SRM owed, plus the CWM and S2P embed rows pending those domains' builds."

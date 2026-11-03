@@ -59,22 +59,22 @@ The DQ market has bifurcated. Legacy DQ specialists (Informatica IDQ, Ataccama O
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-S1 | M1 | DQ has zero `domain_modules` rows. The domain is pre-modular. This blocks M2/M4/M5/M6/M7 at the module layer, F2/F3/F4/F5/F7 at the skill layer, and B9b entirely. | Author 2-3 modules per the vendor cohort split: `DQ-RULES` (masters quality_rules + profile_results), `DQ-INCIDENT-MGMT` (masters quality_incidents + dq_sla_definitions), `DQ-MONITORING` (masters dq_dimensions + dq_scorecards + anomaly_detections). Migrate the 7 `domain_data_objects` masters to `domain_module_data_objects` under those modules. |
-| B1-S2 | M7 | `anomaly_detections` (data_object_id=94) has `role='master'` in both DQ (90) and AIOPS (6) on the legacy `domain_data_objects` layer. Catalog-wide single-master violation. | Decide canonical owner. AIOPS markets `event_anomaly` directly (Splunk ITSI, Dynatrace Davis, Moogsoft); DQ markets `quality_anomaly`. Two paths: (a) split into `data_anomalies` (DQ) and `event_anomalies` (AIOPS), or (b) keep `anomaly_detections` canonical in one domain and demote the other to `consumer`. Bucket 2 #1 surfaces the decision. |
-| B1-S3 | A2 / capabilities | Zero `capability_domains` rows for DQ. The market has at least 5-7 capabilities (profiling, rule authoring, matching/dedup, monitoring, incident triage, SLA mgmt, anomaly detection) but none are loaded. | Author 5-7 capabilities aligned to the 3-module split, link via `capability_domains`. Apply Cross-cutting capability convention: `DATA-OBSERVABILITY-MONITORING` may be domain-neutral if it also lives in DCG / DATA-AI-PLAT / OBS. |
-| B1-S4 | A3 / coverage | All 10 linked `solutions` carry `coverage_level` in {secondary, partial}; zero `primary`. Coverage layer says no platform covers DQ as its flagship market. | Add primary-coverage pure-plays. Informatica IDQ, Ataccama ONE, Collibra DQ, Monte Carlo, Bigeye, Soda are flagship DQ tools and should be `primary`. Audit each of the existing 10 partials: Microsoft Fabric / SAP Business Data Cloud / Cloudera are platforms with embedded DQ, partial is correct; Dataiku and Databricks may warrant secondary. |
+| B1-S2 | M7 | `anomaly_detections` (data_object_id=94) has `held_as='master'` in both DQ (90) and AIOPS (6) on the legacy `domain_data_objects` layer. Catalog-wide single-master violation. | Decide canonical owner. AIOPS markets `event_anomaly` directly (Splunk ITSI, Dynatrace Davis, Moogsoft); DQ markets `quality_anomaly`. Two paths: (a) split into `data_anomalies` (DQ) and `event_anomalies` (AIOPS), or (b) keep `anomaly_detections` canonical in one domain and demote the other to `consumer`. Bucket 2 #1 surfaces the decision. |
+| B1-S3 | A2 / capabilities | Zero `capability_domains` rows for DQ. The market has at least 5-7 capabilities (profiling, rule authoring, matching/dedup, monitoring, incident triage, SLA mgmt, anomaly detection) but none are loaded. | Author 5-7 capabilities aligned to the 3-module split, relate via `capability_domains`. Apply Cross-cutting capability convention: `DATA-OBSERVABILITY-MONITORING` may be domain-neutral if it also lives in DCG / DATA-AI-PLAT / OBS. |
+| B1-S4 | A3 / coverage | All 10 related `solutions` carry `coverage_level` in {secondary, partial}; zero `primary`. Coverage layer says no platform covers DQ as its flagship market. | Add primary-coverage pure-plays. Informatica IDQ, Ataccama ONE, Collibra DQ, Monte Carlo, Bigeye, Soda are flagship DQ tools and should be `primary`. Audit each of the existing 10 partials: Microsoft Fabric / SAP Business Data Cloud / Cloudera are platforms with embedded DQ, partial is correct; Dataiku and Databricks may warrant secondary. |
 | B1-S5 | A1 / business_logic | `domains.business_logic` contains a U+2014 em-dash. Forbidden per project rule. Also `description` uses British spelling "standardisation". | PATCH `business_logic` to remove the em-dash (replace with comma). PATCH `description` to "standardization" (American English per project rule). |
 | B1-S6 | A4 | `domains.catalog_tagline` and `catalog_description` are both empty. | Draft both per Rule #20 (buyer voice, workflow + value). Surface drafts to user for review before writing. |
-| B1-S7 | F1 | Legacy domain-level system skill `dq-system` (id 11) is anchored at `domain_id=90, domain_module_id=null`. Once modules ship (B1-S1) the legacy row is obsolete. | Retire legacy `dq-system` after authoring per-module system skills under Phase S. The 11 tools currently linked to it migrate to the 2-3 new module-level skills following the module split. |
+| B1-S7 | F1 | Legacy domain-level system skill `dq-system` (id 11) is anchored at `domain_id=90, domain_module_id=null`. Once modules ship (B1-S1) the legacy row is obsolete. | Retire legacy `dq-system` after authoring per-module system skills under Phase S. The 11 tools currently related to it migrate to the 2-3 new module-level skills following the module split. |
 
 #### STRUCTURAL band failures (data-object footprint)
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S8 | B6 | Zero intra-domain `data_object_relationships` between DQ's 7 masters. Expected at minimum: `quality_rules → quality_incidents` (a rule breach spawns an incident), `quality_rules → profile_results` (a rule generates results), `profile_results → dq_dimensions` (results feed dimension scoring), `dq_dimensions → dq_scorecards` (dimensions roll up to a scorecard), `dq_scorecards → dq_sla_definitions` (a scorecard is measured against an SLA), `anomaly_detections → quality_incidents` (an anomaly spawns an incident). | Author 6 edges with verbs, inverse_verbs, cardinalities, owner_side. Load via the cluster-drafts pattern. |
-| B1-S9 | B7 | Zero `users` edges on any DQ master. Every master has user-typed actors: `quality_rules` (rule_author), `quality_incidents` (assignee, raiser), `profile_results` (profiler_owner), `dq_sla_definitions` (sla_owner), `dq_scorecards` (scorecard_owner), `anomaly_detections` (acknowledger). | Author 6 edges per Rule #10 against the `users` platform-builtin (id 748). |
+| B1-S8 | B6 | Zero intra-domain `data_object_relationships` between DQ's 7 masters. Expected at minimum: `quality_rules → quality_incidents` (a rule breach spawns an incident), `quality_rules → profile_results` (a rule generates results), `profile_results → dq_dimensions` (results feed dimension scoring), `dq_dimensions → dq_scorecards` (dimensions roll up to a scorecard), `dq_scorecards → dq_sla_definitions` (a scorecard is measured against an SLA), `anomaly_detections → quality_incidents` (an anomaly spawns an incident). | Author 6 relationships with verbs, inverse_verbs, cardinalities, owner_side. Load via the cluster-drafts pattern. |
+| B1-S9 | B7 | Zero relationships to `users` on any DQ master. Every master has user-typed actors: `quality_rules` (rule_author), `quality_incidents` (assignee, raiser), `profile_results` (profiler_owner), `dq_sla_definitions` (sla_owner), `dq_scorecards` (scorecard_owner), `anomaly_detections` (acknowledger). | Author 6 relationships per Rule #10 against the `users` platform-builtin (id 748). |
 | B1-S10 | B11 | Zero `data_object_aliases` on any DQ master. Several have well-known vendor synonyms: `quality_rules` (Great Expectations: "expectation"; Soda: "check"; Monte Carlo: "monitor"), `profile_results` (Ataccama: "profiling output"; Informatica: "profile"), `quality_incidents` (Monte Carlo: "incident"; Bigeye: "issue"), `dq_dimensions` (DAMA-DMBOK term), `anomaly_detections` (data-observability: "anomaly"). | Author ~8-10 alias rows. |
 | B1-S11 | B12 | Zero `data_object_lifecycle_states` on any DQ master. `quality_incidents` clearly has a workflow (raised, acknowledged, investigating, remediating, resolved, closed); `quality_rules` has a workflow (draft, published, deprecated); `dq_sla_definitions` has a workflow (draft, published, breached, suspended, archived); `dq_scorecards` and `dq_dimensions` may be config-shaped (continuous score, no workflow). | Author lifecycle states for `quality_incidents`, `quality_rules`, `dq_sla_definitions` (+ `anomaly_detections` triage states). Config-shape exemption for `dq_scorecards` / `dq_dimensions` / `profile_results` should be surfaced to user, not annotated in notes (Rule #15). |
-| B1-S12 | B8 | Zero cross-domain `data_object_relationships` (payload to target) corresponding to the 6 outbound handoffs. Specifically missing: `quality_incidents → service_incidents` (DQ to ITSM, mirroring handoffs 266/267/714), `profile_results → data_assets` (DQ to DCG, mirroring handoff 268), `dq_dimensions → data_assets` (DQ to DCG, mirroring handoff 713), `dq_dimensions → lakehouse_tables` (DQ to DATA-AI-PLAT, mirroring handoff 715). | Author 4 cross-domain edges (verb, inverse_verb, cardinality, owner_side=source). |
+| B1-S12 | B8 | Zero cross-domain `data_object_relationships` (payload to target) corresponding to the 6 outbound handoffs. Specifically missing: `quality_incidents → service_incidents` (DQ to ITSM, mirroring handoffs 266/267/714), `profile_results → data_assets` (DQ to DCG, mirroring handoff 268), `dq_dimensions → data_assets` (DQ to DCG, mirroring handoff 713), `dq_dimensions → lakehouse_tables` (DQ to DATA-AI-PLAT, mirroring handoff 715). | Author 4 cross-domain relationships (verb, inverse_verb, cardinality, owner_side=source). |
 | B1-S13 | B10b | All 6 outbound DQ handoffs have `source_domain_module_id=NULL`. Once B1-S1 lands (modules exist), the deterministic derivation routes the source side to the module that masters the trigger_event's `data_object_id`. | Run B10b backfill loader after modules and DMDOs land. Pure mechanical PATCH. |
 
 #### APQC TAGGING (H1 - zero of 11 cross-domain handoffs tagged)
@@ -129,9 +129,9 @@ Proposed agent_curated tags: 5 (one per outbound handoff with a confident PCF ma
 
 ### Pass 3 - Neighbor discovery
 
-DQ has the following cross-edges (handoffs only; DMDO consumer/contributor cross-references add minor weight):
+DQ has the following cross-domain relationships (handoffs only; DMDO consumer/contributor cross-references add minor weight):
 
-| Neighbor | Outbound | Inbound | Edge weight | Pass 4 scope |
+| Neighbor | Outbound | Inbound | Relationship weight | Pass 4 scope |
 |---|---|---|---|---|
 | DCG | 2 | 2 | 4 | Full pairwise reconciliation (data_assets is the shared substrate). |
 | ITSM | 3 | 0 | 3 | Full pairwise reconciliation (service_incidents is the shared substrate; 3 DQ outbound events all land in ITSM-INCIDENT-MGMT). |
@@ -150,7 +150,7 @@ DQ has the following cross-edges (handoffs only; DMDO consumer/contributor cross
 
 **Section 4 - Boundary integrity gaps.** None. `service_incidents` is mastered by ITSM (id 1) and consumed by DQ-INCIDENT-MGMT (once it ships, via `contributor` role per current `domain_data_objects` row at data_object_id=47).
 
-**Section 5 - Cross-domain `data_object_relationships`.** MISSING. No `quality_incidents -> service_incidents` edge exists despite 3 handoffs implying the relationship. Goes to B1-S12.
+**Section 5 - Cross-domain `data_object_relationships`.** MISSING. No `quality_incidents -> service_incidents` relationship exists despite 3 handoffs implying the relationship. Goes to B1-S12.
 
 #### DQ <-> DCG (weight 4)
 
@@ -162,7 +162,7 @@ DQ has the following cross-edges (handoffs only; DMDO consumer/contributor cross
 
 **Section 4.** None. `data_assets` mastered in DCG (88), consumed by DQ via legacy `domain_data_objects` row.
 
-**Section 5.** MISSING `profile_results -> data_assets` edge and `dq_dimensions -> data_assets` edge. Goes to B1-S12.
+**Section 5.** MISSING `profile_results -> data_assets` relationship and `dq_dimensions -> data_assets` relationship. Goes to B1-S12.
 
 #### DQ <-> DATA-AI-PLAT (weight 3)
 
@@ -172,9 +172,9 @@ DQ has the following cross-edges (handoffs only; DMDO consumer/contributor cross
 
 **Section 3.** Possible missing: DAP probably publishes `lakehouse_table.profile_requested` to DQ (the platform asks DQ to run a profile when a table lands). Surface as B2 candidate.
 
-**Section 4.** `feature_sets` (data_object_id=229) and `lakehouse_tables` (226) are DAP-mastered; DQ consumes via the existing `domain_data_objects` row on lakehouse_tables (role=consumer). `feature_sets` has no DQ-side `domain_data_objects` row despite handoff 684 referencing it as payload (B5 integrity gap - DQ receives feature_set.staleness_breached but doesn't declare a role on feature_sets).
+**Section 4.** `feature_sets` (data_object_id=229) and `lakehouse_tables` (226) are DAP-mastered; DQ consumes via the existing `domain_data_objects` row on lakehouse_tables (held_as=consumer). `feature_sets` has no DQ-side `domain_data_objects` row despite handoff 684 referencing it as payload (B5 integrity gap - DQ receives feature_set.staleness_breached but doesn't declare a role on feature_sets).
 
-**Section 5.** MISSING `dq_dimensions -> lakehouse_tables` edge (handoff 715 implies it). Goes to B1-S12.
+**Section 5.** MISSING `dq_dimensions -> lakehouse_tables` relationship (handoff 715 implies it). Goes to B1-S12.
 
 #### DQ <-> DI (weight 1)
 
@@ -191,7 +191,7 @@ One-line summary: 1 inbound (DI:pipeline_run.sla_breached on pipeline_runs). DQ 
 ### Per-bucket prompts
 
 **Bucket 1 prompt:**
-"DQ is pre-modular (zero `domain_modules` rows). 16 in-scope gaps fall out of that core M1 failure plus several B-band misses. Approve the bundle? A defensible default is: (1) decide module split (Bucket 2 #2) first, (2) load modules + capabilities + DMDOs, (3) backfill B6/B7/B8/B11/B12 cluster edges, (4) PATCH em-dash + spelling in `domains.business_logic` and `description`, (5) draft `catalog_tagline` + `catalog_description` for review, (6) author the 5 confident APQC tags, (7) retire legacy `dq-system` skill and author per-module ones. Which subset do you want to load first?"
+"DQ is pre-modular (zero `domain_modules` rows). 16 in-scope gaps fall out of that core M1 failure plus several B-band misses. Approve the bundle? A defensible default is: (1) decide module split (Bucket 2 #2) first, (2) load modules + capabilities + DMDOs, (3) backfill B6/B7/B8/B11/B12 cluster relationships, (4) PATCH em-dash + spelling in `domains.business_logic` and `description`, (5) draft `catalog_tagline` + `catalog_description` for review, (6) author the 5 confident APQC tags, (7) retire legacy `dq-system` skill and author per-module ones. Which subset do you want to load first?"
 
 **Bucket 2 prompt:**
 "5 judgment calls. Most load-bearing is #2 (module split shape) - it gates the M-band fix and the F-band cure. Recommend (a) three modules: DQ-RULES, DQ-INCIDENT-MGMT, DQ-MONITORING. #1 (anomaly_detections ownership) and #4 (solution coverage) are cleanup that can run in parallel. #3 (cross-cutting capability) and #5 (pairwise reconciliation depth) can wait. What's your call on each?"
@@ -222,16 +222,16 @@ Truly-technical B1 fixes applied via loader `.tmp_deploy/fix_dq_b1_technical_202
 ### Applied
 
 - **B1-S5 (A1):** PATCHed `domains` row 90. Replaced U+2014 em-dash in `business_logic` with comma+space; replaced British "standardisation" with American "standardization" in `description`. Verified post-patch.
-- **B1-S9 (B7):** INSERTed 7 user-edges per Rule #10 against `users` (id 748), one per actor the audit pre-specifies. Verbs / inverses authored per existing `users` edge pattern: `users authored rules quality_rules` (309, `is_created_by`), `users assigned incidents quality_incidents` (310, `is_assigned_to`), `users raised incidents quality_incidents` (310, `is_created_by`), `users owned profile results profile_results` (311, `is_owned_by`), `users owned SLA definitions dq_sla_definitions` (314, `is_owned_by`), `users owned scorecards dq_scorecards` (313, `is_owned_by`), `users acknowledged anomalies anomaly_detections` (94, `is_acknowledged_by`). All rows `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. The audit lists 6 edges but pre-specifies 2 actors for `quality_incidents` (assignee + raiser), so 7 rows authored.
+- **B1-S9 (B7):** INSERTed 7 relationships to `users` per Rule #10 against `users` (id 748), one per actor the audit pre-specifies. Verbs / inverses authored per existing relationship to `users` pattern: `users authored rules quality_rules` (309, `is_created_by`), `users assigned incidents quality_incidents` (310, `is_assigned_to`), `users raised incidents quality_incidents` (310, `is_created_by`), `users owned profile results profile_results` (311, `is_owned_by`), `users owned SLA definitions dq_sla_definitions` (314, `is_owned_by`), `users owned scorecards dq_scorecards` (313, `is_owned_by`), `users acknowledged anomalies anomaly_detections` (94, `is_acknowledged_by`). All rows `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. The audit lists 6 relationships but pre-specifies 2 actors for `quality_incidents` (assignee + raiser), so 7 rows authored.
 - **B1-S10 (B11):** INSERTed 1 of the 8 alias tuples the audit pre-specifies, the only one with `alias_type='synonym'` (`anomaly` on `anomaly_detections`). The other 7 are vendor-specific (`expectation` / `check` / `monitor` / `profiling output` / `profile` / `incident` / `issue`), which the platform requires under `alias_type='solution_term'` with `solution_id` set; the corresponding vendor solutions (Great Expectations, Soda, Monte Carlo, Ataccama ONE, Informatica IDQ, Bigeye) are not loaded yet (gated on B1-S4 / Bucket 2 #4). Loader attempted to insert as `solution_term` with NULL `solution_id` and hit the platform check-constraint `(23514) Solution context must be set when alias type is 'solution_term' and null otherwise.` Removed those 7 from this run; they re-queue under B1-S4.
 - **H1 APQC tagging:** INSERTed 5 `handoff_processes` rows for the 5 outbound handoffs the audit pre-specifies with confidence high or medium and a verified PCF row. All `proposal_source='agent_curated'`, `record_status` default `new`. Process IDs were resolved at runtime by `external_id` on `processes` (all 4 PCF rows verified pre-insert): handoff 266 to PCF 20903 (Triage IT service delivery incidents, process_id 1299); handoff 267 to PCF 20927 (Resolve IT issues/requests, 1319); handoff 268 to PCF 10252 (Maintain master data, 771); handoff 713 to PCF 10252 (771); handoff 714 to PCF 20650 (Triage SLA compliance issues, 1103). H1 coverage moves from 0 of 11 to 5 of 11 tagged; the remaining 6 are inbound (5) or no clean PCF home (1), all defer-to-Discover per the original audit.
 
 ### Deferred (12 of 16)
 
 - **B1-S1 (M1) modules**, **B1-S2 (M7) anomaly_detections canonical owner**, **B1-S3 (A2) capabilities**, **B1-S4 (A3) primary-coverage solutions**, **B1-S6 (A4) catalog UX**, **B1-S7 (F1) legacy skill retire**: each either requires user judgment (module split shape, canonical owner, solution coverage, catalog tagline wording per Rule #20) or is gated downstream on the module-split decision. Bucket-2 prompt #2 still owns the split.
-- **B1-S8 (B6) intra-domain master edges**: 6 edges named in the audit prose, but the verbs and cardinalities are not pre-specified row-by-row; cluster-draft authoring needed first.
+- **B1-S8 (B6) intra-domain master relationships**: 6 relationships named in the audit prose, but the verbs and cardinalities are not pre-specified row-by-row; cluster-draft authoring needed first.
 - **B1-S11 (B12) lifecycle states**: state machines described in prose but no per-state rows (state_order, is_initial, is_terminal, requires_permission, permission_verb_override) pre-specified; also gated on B1-S1 modules for the `domain_module_id` anchor.
-- **B1-S12 (B8) cross-domain edges**: 4 edges named but verbs / cardinalities / owner_side not pre-specified per row.
+- **B1-S12 (B8) cross-domain relationships**: 4 relationships named but verbs / cardinalities / owner_side not pre-specified per row.
 - **B1-S13 (B10b) per-module attribution**: deterministic but blocked on B1-S1 modules existing.
 - **B1-M1 / B1-M2 / B1-M3**: new data_objects (`data_quality_checks`, `data_quality_remediation_actions`, `column_profiles`), explicit Phase 0 / B2 decisions.
 - **The 7 vendor-specific aliases** rolled into B1-S4 (need solution rows first).
@@ -242,7 +242,7 @@ None.
 
 ### Verification queries (post-load)
 
-- `GET /domains?id=eq.90&select=description,business_logic`: description now `Profiling, cleansing, standardization, matching, and ongoing monitoring of data fitness for purpose.`; business_logic now `Profiling, matching, anomaly detection, and data observability, the algorithmic plane the workflow sits on top of.`. No em-dash, no "standardisation".
+- `GET /domains?id=eq.90&select=description,business_logic`: description now `Profiling, cleansing, standardization, matching, and ongoing monitoring of data fitness for purpose.`; business_logic now `Profiling, matching, anomaly detection, and data observability, the algorithmic plane the workflow sits on top of.`. No em-dash, no "standardization".
 - `GET /data_object_relationships?data_object_id=eq.748&related_data_object_id=in.(94,309,310,311,313,314)`: 7 rows.
 - `GET /data_object_aliases?data_object_id=in.(94,309,310,311,312,313,314)`: 1 row (`anomaly`).
 - `GET /handoff_processes?handoff_id=in.(266,267,268,713,714)`: 5 rows, all `agent_curated`, all `new`.
@@ -255,11 +255,11 @@ None.
 
 ### Summary
 
-- Current footprint: domain id 90; **0 `domain_modules` rows** (still pre-modular); 7 masters + 1 consumer + 1 contributor = 9 data-object rows; 0 capabilities; 0 regulations; 10 solutions (0 primary, 2 secondary, 8 partial); 7 trigger_events on DQ masters (4 with empty `event_category`) + 3 standalone; 6 outbound + 5 inbound cross-domain handoffs (11 total); 0 intra-domain handoffs; 1 legacy domain-level system skill `dq-system` (id 11) with 11 `skill_tools`, all `coverage_tier=platform`; 1 owner business function (Data Engineering); catalog UX fields empty (A4); 7 reverse-direction `users` edges (`users authored/assigned/raised/owned/acknowledged ...`) loaded by the 2026-05-31 continuation, but 0 forward-direction master to users edges.
+- Current footprint: domain id 90; **0 `domain_modules` rows** (still pre-modular); 7 masters + 1 consumer + 1 contributor = 9 data-object rows; 0 capabilities; 0 regulations; 10 solutions (0 primary, 2 secondary, 8 partial); 7 trigger_events on DQ masters (4 with empty `event_category`) + 3 standalone; 6 outbound + 5 inbound cross-domain handoffs (11 total); 0 intra-domain handoffs; 1 legacy domain-level system skill `dq-system` (id 11) with 11 `skill_tools`, all `coverage_tier=platform`; 1 owner business function (Data Engineering); catalog UX fields empty (A4); 7 reverse-direction relationships to `users` (`users authored/assigned/raised/owned/acknowledged ...`) loaded by the 2026-05-31 continuation, but 0 forward-direction master to relationships to `users`.
 - Bucket 1 (in-scope, agent fixable): 5 items.
 - Bucket 2 (surface-for-user, judgment): 5 items (carried from 2026-05-30, all still open).
 - Bucket 3 (Phase 0 pending, speculative): 3 items (carried from 2026-05-30, all still open).
-- Structural pass headline unchanged from 2026-05-30: M1 still fails (zero `domain_modules`), which cascades into M2/M4/M5/M6/M8 at the module layer and F2/F3/F5 at the skill layer. M7 hard fail persists (catalog-wide single-master conflict on `anomaly_detections` between DQ and AIOPS at the legacy `domain_data_objects` layer). The 2026-05-31 continuation closed B1-S5 (em-dash + spelling), part of B7 (reverse-direction users edges), part of B11 (3 anomaly aliases), and 5 of 11 H1 tags. Subsequent broader catalog passes added 3 additional handoff_processes rows on inbound handoffs (262 to PCF 20768, 708 to PCF 20774, 728 to PCF 20779). H1 coverage is now 8 of 11 handoffs tagged (still 0 `record_status=approved`).
+- Structural pass headline unchanged from 2026-05-30: M1 still fails (zero `domain_modules`), which cascades into M2/M4/M5/M6/M8 at the module layer and F2/F3/F5 at the skill layer. M7 hard fail persists (catalog-wide single-master conflict on `anomaly_detections` between DQ and AIOPS at the legacy `domain_data_objects` layer). The 2026-05-31 continuation closed B1-S5 (em-dash + spelling), part of B7 (reverse-direction relationships to `users`), part of B11 (3 anomaly aliases), and 5 of 11 H1 tags. Subsequent broader catalog passes added 3 additional handoff_processes rows on inbound handoffs (262 to PCF 20768, 708 to PCF 20774, 728 to PCF 20779). H1 coverage is now 8 of 11 handoffs tagged (still 0 `record_status=approved`).
 
 ### Bands evaluated this audit
 
@@ -271,7 +271,7 @@ None.
 - **M7** hard fail. `anomaly_detections` mastered in DQ and AIOPS on the legacy `domain_data_objects` layer (DMDO layer has zero rows here since neither domain is modularized; rolling forward to DMDO will reproduce the conflict). Decision required (carried, Bucket 2 #1 and B1-S2).
 - **B5** pass. Zero `embedded_master` rows; no integrity exposure.
 - **B6** fail. 0 intra-domain `data_object_relationships` between DQ's 7 masters (carried, B1-S8).
-- **B7** partial. 7 reverse-direction edges from `users` (748) to DQ masters were loaded 2026-05-31. The forward-direction `master to users` edges are absent. The 2026-05-30 audit specified 6 directed edges; the load wrote them on the `users` side only. Pass criterion in SKILL Rule #10 / B7 is "≥1 edge to users from every master with a user-typed actor" - the symmetric-direction shape satisfies the discoverability intent but the explicit forward edges are still absent. Reclassify as resolved at the load discipline level; if the user wants the forward direction populated as well, it queues as a follow-up.
+- **B7** partial. 7 reverse-direction relationships from `users` (748) to DQ masters were loaded 2026-05-31. The forward-direction `master to relationships to `users` are absent. The 2026-05-30 audit specified 6 directed relationships; the load wrote them on the `users` side only. Pass criterion in SKILL Rule #10 / B7 is "≥1 relationship to users from every master with a user-typed actor" - the symmetric-direction shape satisfies the discoverability intent but the explicit forward relationships are still absent. Reclassify as resolved at the load discipline level; if the user wants the forward direction populated as well, it queues as a follow-up.
 - **B8** fail. 0 outbound cross-domain `data_object_relationships`; 4 expected per 2026-05-30 audit (carried, B1-S12).
 - **B9** partial. 10 trigger_events on DQ masters; 4 of them (745, 746, 747, 748) have empty `event_category`. Per Rule #13 the valid enum is `lifecycle | state_change | threshold | signal`; threshold events should be `threshold`, recovery events `state_change`, lifecycle publication events `lifecycle`. New B-band finding this audit (B1-NEW1).
 - **B9b** vacuous. Single domain module count (0); no intra-domain surface to model.
@@ -298,9 +298,9 @@ This audit produces 1 new B-band finding and inherits the structural-gate items 
 | B1-S4 | A3 | 0 `primary` solutions (carried). | Add primary-coverage rows for pure-play DQ flagships per Bucket 2 #4. Unblocks the 6 vendor-specific aliases queued under B1-S10 continuation deferral. |
 | B1-S6 | A4 | catalog_tagline + catalog_description empty (carried). | Draft per Rule #20, surface to user for review before writing. |
 | B1-S7 | F1 | Legacy `dq-system` (id 11) anchored at domain-only (carried). | Retire after authoring per-module system skills (blocked on B1-S1). |
-| B1-S8 | B6 | 0 intra-domain master edges (carried). | Author 6 edges via cluster-drafts. |
+| B1-S8 | B6 | 0 intra-domain master relationships (carried). | Author 6 relationships via cluster-drafts. |
 | B1-S11 | B12 | 0 lifecycle states (carried). | Author state machines for quality_incidents / quality_rules / dq_sla_definitions / anomaly_detections; surface config-shape exemption for dq_scorecards / dq_dimensions / profile_results (blocked on B1-S1 for `domain_module_id` anchor). |
-| B1-S12 | B8 | 0 cross-domain outbound edges (carried). 4 expected: `quality_incidents -> service_incidents`, `profile_results -> data_assets`, `dq_dimensions -> data_assets`, `dq_dimensions -> lakehouse_tables`. | Author 4 edges. |
+| B1-S12 | B8 | 0 cross-domain outbound relationships (carried). 4 expected: `quality_incidents -> service_incidents`, `profile_results -> data_assets`, `dq_dimensions -> data_assets`, `dq_dimensions -> lakehouse_tables`. | Author 4 relationships. |
 | B1-S13 | B10b | All 6 outbound handoffs have NULL `source_domain_module_id` (carried). | Deterministic backfill after B1-S1. |
 
 H1 deferred-to-Discover items (not new fixes; reaffirmed): handoffs 156, 684, 715 (all DATA-AI-PLAT counterparty, no clean PCF match).

@@ -16,7 +16,7 @@
 //       rule, catalog_invariants.ts checkEventStates, applied to the handoffs section 6 shows) warn
 //   R7  the module description does not contradict the derived counts (heuristic): gates,
 //       baseline permissions, system / domain skills                                          warn
-//   R8  every row-scope rule's entity has a single-person ownership edge to `users`             warn
+//   R8  every row-scope rule's entity has a single-person ownership relationship to `users`             warn
 //
 // Pure: no catalog fetch, no file IO, no console output. Callers: generate_blueprints.ts (stderr on
 // every emit, and `--lint`), the health check E6 (scripts/lib/health/checks_e.ts), the architect
@@ -31,7 +31,7 @@ import {
   checkEventStates,
   oneSide,
   raciLetter,
-  TWO_ROLE_VERB_RE,
+  TWO_PERSON_VERB_RE,
   type LifecycleStateRow,
   type TriggerEventRow,
 } from "./catalog_invariants.ts";
@@ -48,7 +48,7 @@ export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }>
   R5: { severity: "warn", title: "every Informed row resolves to a trigger_event" },
   R6: { severity: "warn", title: "every 6.2 / 6.3 handoff event resolves to_state on its entity's lifecycle" },
   R7: { severity: "warn", title: "the module description agrees with the derived counts (heuristic)" },
-  R8: { severity: "warn", title: "every row-scope rule's entity has a single-person users edge" },
+  R8: { severity: "warn", title: "every row-scope rule's entity has a single-person relationship to users" },
 };
 
 export const RULE_IDS = Object.keys(RULES) as RuleId[];
@@ -111,18 +111,16 @@ export function checkModel(model: BlueprintModel, opts: CheckModelOptions = {}):
 
 // ---------- R1: functional-ownership roles exist in the baseline roles ----------
 
-// §9.(n+1) `default role` -> the §9.k baseline role suffix (`<slug>_viewer` / `_manager` / `_admin`).
-// The generator writes admin / manage / read; the architect template writes viewer / manager / admin.
-const BASELINE_SUFFIX: Record<string, string> = { admin: "admin", manage: "manager", manager: "manager", read: "viewer", viewer: "viewer" };
+// §9.(n+1) `default role` names the §9.k baseline role suffix (`<slug>_viewer` / `_manager` / `_admin`).
+const BASELINE_SUFFIXES = new Set(["admin", "manager", "viewer"]);
 
 function checkFunctionalRoles(model: BlueprintModel, pm: ModuleAccessModel, report: (rows: string[], detail: string) => void): void {
   for (const fo of model.functionalOwnership) {
-    const suffix = BASELINE_SUFFIX[fo.defaultRole];
-    if (!suffix) {
+    if (!BASELINE_SUFFIXES.has(fo.defaultRole)) {
       report([fo.func], `functional ownership row "${fo.responsibility} ${fo.func}" names default role \`${fo.defaultRole}\`, which maps to no baseline role (responsibility_type must be owner, contributor or consumer)`);
       continue;
     }
-    const want = `${pm.slug}_${suffix}`;
+    const want = `${pm.slug}_${fo.defaultRole}`;
     const role = pm.baselineRoles.find((r) => r.code === want);
     if (!role) {
       report([want, fo.func], `functional ownership gives ${fo.func} (${fo.responsibility}) the \`${fo.defaultRole}\` role, but the baseline roles have no \`${want}\` (they are ${pm.baselineRoles.map((r) => `\`${r.code}\``).join(", ") || "empty"})`);
@@ -325,7 +323,7 @@ function checkDescriptionCounts(
   }
 }
 
-// ---------- R8: row-scope rules have a single-person users edge ----------
+// ---------- R8: row-scope rules have a single-person relationship to users ----------
 
 const ROW_SCOPE_FLAGS = new Set(["has_personal_content", "owner_edit"]);
 
@@ -338,25 +336,25 @@ function checkRowScopeOwners(model: BlueprintModel, pm: ModuleAccessModel, repor
       continue;
     }
     const did = entity.data_object_id;
-    // userRels holds only `users` edges whose other endpoint is in scope, so the endpoint that is
+    // userRels holds only `users` relationships whose other endpoint is in scope, so the endpoint that is
     // not this entity is `users`.
-    const edges = model.relationships.userRels.map((r) => r.edge).filter((e) => e.data_object_id === did || e.related_data_object_id === did);
-    const why = edges.map((e) => ({ e, problem: singlePersonProblem(e, did) }));
+    const userRelationships = model.relationships.userRels.map((r) => r.relationship).filter((e) => e.data_object_id === did || e.related_data_object_id === did);
+    const why = userRelationships.map((e) => ({ e, problem: singlePersonProblem(e, did) }));
     if (why.some((w) => w.problem === null)) continue;
     const seen = why.length
-      ? `its users edges are not single-person: ${why.map((w) => `"${w.e.relationship_verb || "?"}" (${w.e.relationship_type}${w.problem ? `, ${w.problem}` : ""})`).join("; ")}`
-      : "it has no users edge";
+      ? `its relationships to users are not single-person: ${why.map((w) => `"${w.e.relationship_verb || "?"}" (${w.e.relationship_type}${w.problem ? `, ${w.problem}` : ""})`).join("; ")}`
+      : "it has no relationship to users";
     report([rule.dataObject, rule.name], `row-scope rule \`${rule.name}\` scopes \`${rule.dataObject}\` rows to a person, but ${seen}`);
   }
 }
 
-// null when the edge names one user per row of the entity: `users` on the "one" side of a
-// one_to_many / many_to_one (or a one_to_one), with a verb that names one role.
+// null when the relationship names one user per row of the entity: `users` on the "one" side of a
+// one_to_many / many_to_one (or a one_to_one), with a verb that names one kind of person.
 function singlePersonProblem(e: any, entityId: number): string | null {
   const usersSide = e.data_object_id === entityId ? "target" : "source";
   const one = oneSide(String(e.relationship_type));
   const single = e.relationship_type === "one_to_one" || one === usersSide;
   if (!single) return e.relationship_type === "many_to_many" ? "many users per row" : "users is not the one side";
-  if (TWO_ROLE_VERB_RE.test(String(e.relationship_verb ?? ""))) return "the verb names two roles";
+  if (TWO_PERSON_VERB_RE.test(String(e.relationship_verb ?? ""))) return "the verb names two kinds of person";
   return null;
 }

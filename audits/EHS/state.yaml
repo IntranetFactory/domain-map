@@ -11,7 +11,7 @@ last_audit: "2026-06-14"
 # 16 aliases, 28 lifecycle states (5 gated, wired to PCF processes), 5 regulations
 # (OSHA, ISO-45001, ISO-14001, REACH, EPA-EPCRA), 5 handoffs (3 cross-domain, 2 intra-domain),
 # 2 handoff_processes, 5 business_function_domains, 1 system skill (ehs-system, 461), 22 module tools,
-# 4 personas, 11 role_modules, 11 process_raci. Phase 0 verdict promote-as-domain confirmed.
+# 4 personas, 11 persona_modules, 11 process_raci. Phase 0 verdict promote-as-domain confirmed.
 # All bands A/M/B/C/S/E pass at record_status='new'. Agent-finished; the open items below are
 # market-shape forks (b2) and discretionary additive ideas (b3), none of which gated the build.
 
@@ -48,17 +48,17 @@ b2:
       kept as a contributor to cover the process-industry case.
     why: "Owner-function RACI decision; informs the persona business_function_id anchoring."
   - id: B2-S3
-    summary: "Confirm the EHS -> ESG upstream disclosure edge."
+    summary: "Confirm the EHS -> ESG upstream disclosure relationship."
     question: "Should EHS publish its incident and emissions data upstream to ESG disclosure as built (two cross-domain handoffs), or is that boundary owned elsewhere (e.g. REAL-EST emissions sources)?"
     options:
       - "(a) Keep both EHS -> ESG handoffs (safety_incident.reported, emissions_record.recorded)"
-      - "(b) Keep only the safety_incident -> ESG edge; route emissions through REAL-EST"
+      - "(b) Keep only the safety_incident -> ESG relationship; route emissions through REAL-EST"
       - "(c) Drop both; ESG sources this data directly from establishments"
     evidence: >-
       Sphera and Enablon sell both EHS and ESG and explicitly feed operational EHS incident and
-      environmental data into corporate sustainability disclosure, so the upstream edge is real
+      environmental data into corporate sustainability disclosure, so the upstream relationship is real
       (option a). The nuance is emissions: REAL-EST already owns utility / Scope 1+2 emission SOURCE
-      data in this catalog (emissions_records is ESG-owned, id 321), so the emissions edge could be
+      data in this catalog (emissions_records is ESG-owned, id 321), so the emissions relationship could be
       argued to belong to REAL-EST rather than EHS (option b). EHS was built as a consumer of
       emissions_records and publishes the establishment-level recorded event upstream, which keeps the
       operational capture in EHS and the disclosure aggregation in ESG.

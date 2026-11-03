@@ -19,7 +19,7 @@ last_audit: "2026-06-13"
 # cascade (B1B-S7 source_domain_module_id backfill, B1B-S9 lifecycle states) is left blocked
 # behind it. The 2026-06-07 state-driven pass executed every additive item that does NOT need
 # the module layer: entity_type classification (7 masters), catalog UX (domain row),
-# intra-domain data_object_relationships (7 edges), data_object_aliases (17 clean synonyms).
+# intra-domain data_object_relationships (7 relationships), data_object_aliases (17 clean synonyms).
 
 b1a:
   - id: B1A-S1
@@ -96,7 +96,7 @@ b1b:
       Phase A (B1A-S1). The 2 masters classified entity_type='operational_record' (rpa_activities 526,
       rpa_activity_logs 527) are Rule #12-exempt; no lifecycle states required.
         - rpa_bots (523): draft -> in_review -> approved -> deployed -> active -> disabled -> retired
-        - rpa_executions (524): queued -> running -> completed | failed | cancelled | timed_out
+        - rpa_executions (524): queued -> running -> completed | failed | canceled | timed_out
         - rpa_schedules (525): inactive -> active -> paused -> ended
         - rpa_bot_credentials (528): issued -> active -> rotating -> expired -> revoked
         - rpa_deployment_packages (529): built -> in_test -> released -> promoted -> archived
@@ -104,7 +104,7 @@ b1b:
       - {type: depends_on, ref: B1A-S1, reason: "M5 requires domain_module_id to point at the realizing module"}
     affected_masters:
       - {data_object_id: 523, name: rpa_bots, workflow: "draft -> in_review -> approved -> deployed -> active -> disabled -> retired"}
-      - {data_object_id: 524, name: rpa_executions, workflow: "queued -> running -> completed | failed | cancelled | timed_out"}
+      - {data_object_id: 524, name: rpa_executions, workflow: "queued -> running -> completed | failed | canceled | timed_out"}
       - {data_object_id: 525, name: rpa_schedules, workflow: "inactive -> active -> paused -> ended"}
       - {data_object_id: 528, name: rpa_bot_credentials, workflow: "issued -> active -> rotating -> expired -> revoked"}
       - {data_object_id: 529, name: rpa_deployment_packages, workflow: "built -> in_test -> released -> promoted -> archived"}
@@ -200,10 +200,10 @@ b3:
     rationale: |
       Four sibling automation markets absent from the catalog, queued in `audits/_missing-domains.md`.
       Each would carry handoffs into/out of RPA:
-        - IPA (Intelligent Process Automation; AI-augmented RPA). Edge: RPA -> IPA.
-        - TASK-MIN (Task Mining). Edge: TASK-MIN -> RPA (automation-candidate handoff).
-        - PROCESS-ORCH (Process Orchestration / BPMN engine). Edge: bidirectional with RPA.
-        - SECRETS-MGMT (Secrets Management). Edge: SECRETS-MGMT -> RPA (credential issuance /
+        - IPA (Intelligent Process Automation; AI-augmented RPA). Relationship: RPA -> IPA.
+        - TASK-MIN (Task Mining). Relationship: TASK-MIN -> RPA (automation-candidate handoff).
+        - PROCESS-ORCH (Process Orchestration / BPMN engine). Relationship: bidirectional with RPA.
+        - SECRETS-MGMT (Secrets Management). Relationship: SECRETS-MGMT -> RPA (credential issuance /
           rotation; may replace or wrap embedded rpa_bot_credentials master).
     vendor_evidence:
       - UiPath AI Center

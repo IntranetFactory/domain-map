@@ -44,8 +44,8 @@ spare_parts_inventory (698) — all necessity='required'. The 13th is a `consume
 `consumer` on a domain_owned object. Invariant holds.
 
 ### Audit 3 — Rule #19 invariant 2 (canonical master exists): PASS
-For each of the 12 `embedded_master` data_objects, a `role='master'` row exists in some module
-catalog-wide (GET /domain_module_data_objects?data_object_id=in.(...)&role=eq.master):
+For each of the 12 `embedded_master` data_objects, a `held_as='master'` row exists in some module
+catalog-wide (GET /domain_module_data_objects?data_object_id=in.(...)&held_as=eq.master):
 customers (97) → module 46; crm_contacts (98) → module 46; customer_sites (821) → module 162;
 installed_equipment (819) → module 162; service_pm_schedules (820) → module 162;
 service_work_orders (740) → module 161; field_visits (261) → module 398; dispatch_records (262) →

@@ -43,7 +43,7 @@ last_audit: "2026-06-13"
 # 2026-06-13 B9d ran (B1A-B9D-VERIFY, now resolved -> history.md). scripts/analytics/b9d_resolver.ts
 # BCM, both directions: BCM has exactly ONE boundary handoff (253, GRC 15 -> BCM 17), one payload
 # (compliance_risks, id 282). Verdict: UNOWNED dependency. compliance_risks is legacy-mastered by
-# GRC (domain_data_objects role=master) but has NO module-grain master anywhere because GRC is
+# GRC (domain_data_objects held_as=master) but has NO module-grain master anywhere because GRC is
 # unbuilt (0 modules), so the resolver finds no buildable owner to route a realization b2/persona to.
 # --write produced ZERO additive owner-file edits (correct: "surface on the sender, do not drop";
 # the sender/owner GRC is itself unbuilt). This is the same root defect already tracked in B1B-S5 and
@@ -68,7 +68,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build. SURFACED, not scaffolded (UNBUILT rule). Gated on B2-1."
     finding: "Live triage 2026-06-07: 0 domain_modules (M1 fail) and 0 capability_domains, so BCM is not deployable today. It must be built before any persona / RACI (Phase P) work applies. Per the UNBUILT rule the build is surfaced, not auto-scaffolded, because module count and naming differ per B2-1 scenario."
-    action: "After B2-1 resolves, run Phase A then M then B then S to author the agreed module set, capabilities, masters, and the domain-grain system skill. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. DEFER personas until then; candidate personas: BCM Manager / Business Continuity Coordinator, Crisis/Incident Commander, BIA / Service Owner, Recovery Lead, Resilience Auditor."
+    action: "After B2-1 resolves, run Phase A then M then B then S to author the agreed module set, capabilities, masters, and the domain-grain system skill. If multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. DEFER personas until then; candidate personas: BCM Manager / Business Continuity Coordinator, Crisis/Incident Commander, BIA / Service Owner, Recovery Lead, Resilience Auditor."
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
@@ -93,10 +93,10 @@ b1b:
     extra_cascades_to: [B1B-S4, B1B-S6]
 
   - id: B1B-S2
-    summary: Author 3-5 capabilities for BCM and link via capability_domains. UNBUILT build step.
+    summary: Author 3-5 capabilities for BCM and relate via capability_domains. UNBUILT build step.
     finding: |
       Zero capability_domains rows on domain_id=17. Even leadership-tier domains usually carry 2-4
-      capability links describing what the market does at the capability level. Candidate list
+      capability relationships describing what the market does at the capability level. Candidate list
       (business-impact-analysis, continuity-planning, exercise-execution, crisis-management,
       dependency-mapping); wording, count, and capability_code formatting need user vetting before write.
     action: |
@@ -157,7 +157,7 @@ b1b:
       masters from GRC, IT Operations, and possibly TPRM that the BCM workflow reads.
     action: |
       After B1B-S1 lands BCM-LANDING (or equivalent), insert at least one domain_module_data_objects
-      row (domain_module_id=<new module>, data_object_id=282, role='consumer', necessity per Rule #16).
+      row (domain_module_id=<new module>, data_object_id=282, held_as='consumer', necessity per Rule #16).
       Re-evaluate the broader consumer set once B2-1 resolves.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}

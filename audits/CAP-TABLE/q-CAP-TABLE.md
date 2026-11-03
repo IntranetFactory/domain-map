@@ -7,30 +7,6 @@ This covers the shareholder ledger, option-pool management, 409A valuations, RSU
 
 ---
 
-q1: (answer this first) The grant record (equity_grants) is currently mastered by two modules at once (CAP-TABLE-GRANTS and the compensation module COMP-INCENTIVES), and only the compensation side actually runs the grant lifecycle. How should this be resolved?
-
-- a) Move the 7 grant lifecycle states to CAP-TABLE-GRANTS so the cap-table side owns the workflow, and demote the compensation module to contributor (the demotion overwrites a live master row, so it needs your sign-off).
-- b) Duplicate the lifecycle so both modules run the same states with module-prefixed permissions (still leaves the question of which row is the canonical master).
-- c) Keep it as-is: the compensation side owns the lifecycle and CAP-TABLE-GRANTS stays view-and-reconcile only.
-
-Recommended: a. Flagship vendors (Carta, Pulley, Shareworks) treat the cap-table side as the source of truth for the grant lifecycle. This decision shapes which module realizes the workflow-gate permissions and unblocks the role and permission build (Phase E), so it gates the rest of the work.
-
-a1:
-
----
-
-q2: Which event should publish a grant proposal from the compensation slice into CAP-TABLE-GRANTS for the cross-domain handoff?
-
-- a) Reuse the existing offer.accepted event (if it is loaded under HCM offer-management).
-- b) Author a new event compensation_policy.equity_award_assigned under the compensation module.
-- c) Treat the dual-master link as sufficient and wire no handoff.
-
-Recommended: a, if offer.accepted already exists. The event source depends on how the compensation domain is modularized and which event you consider canonical for the proposal trigger, so this is your call.
-
-a2:
-
----
-
 q3: All 12 cap-table domain_data_objects rows carry populated notes text, which Rule #15 forbids when auto-populated. Were these notes approved by you at load time, or auto-populated by the loader?
 
 - a) Approved at load time: leave them in place.
@@ -166,4 +142,4 @@ a17:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4.captables_pii q5=B2-S4.optionpools_lock q6=B2-S4.equitygrants_lock q7=B2-S4.valuations_nopii q8=B2-S4.secondary_pii q9=B2-S4.asc718_lock q10=B2-S5 q11=B2-S6 q12=B2-S7 q13=B2-B9D-RETAG-1044 q14=B3-CAND-01,B3-CAND-02,B3-CAND-03,B3-CAND-04,B3-CAND-05,B3-CAND-06,B3-CAND-07,B3-CAND-10,B3-CAND-11,B3-CAND-12,B3-MOD-01,B3-MOD-02,B3-MOD-03,B3-MOD-04,B3-MOD-05 q15=B3-CAND-08,B3-CAND-09 q16=B3-REG-01,B3-REG-02,B3-REG-03,B3-REG-04,B3-REG-05,B3-REG-06 q17=B3-DOM-01,B3-DOM-02 | domain_id=162 -->
+<!-- agent map, ignore: q3=B2-S3 q4=B2-S4.captables_pii q5=B2-S4.optionpools_lock q6=B2-S4.equitygrants_lock q7=B2-S4.valuations_nopii q8=B2-S4.secondary_pii q9=B2-S4.asc718_lock q10=B2-S5 q11=B2-S6 q12=B2-S7 q13=B2-B9D-RETAG-1044 q14=B3-CAND-01,B3-CAND-02,B3-CAND-03,B3-CAND-04,B3-CAND-05,B3-CAND-06,B3-CAND-07,B3-CAND-10,B3-CAND-11,B3-CAND-12,B3-MOD-01,B3-MOD-02,B3-MOD-03,B3-MOD-04,B3-MOD-05 q15=B3-CAND-08,B3-CAND-09 q16=B3-REG-01,B3-REG-02,B3-REG-03,B3-REG-04,B3-REG-05,B3-REG-06 q17=B3-DOM-01,B3-DOM-02 | domain_id=162 -->

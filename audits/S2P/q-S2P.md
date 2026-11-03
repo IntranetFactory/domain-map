@@ -79,7 +79,7 @@ q6: The duplicate JAGGAER ONE vendor rows (one older mixed-case, one newer all-c
 - b) Keep the all-caps "JAGGAER ONE" row; delete the mixed-case row.
 - c) Merge under a different hand-picked form (specify), and delete the loser.
 
-Recommended: b. The all-caps "JAGGAER ONE" matches the vendor's current marketing form. This deletes a row and re-points its market-coverage link, so it needs your sign-off before it runs.
+Recommended: b. The all-caps "JAGGAER ONE" matches the vendor's current marketing form. This deletes a row and re-points its market-coverage relationship, so it needs your sign-off before it runs.
 
 a6:
 
@@ -102,7 +102,7 @@ q8: For the supplier-facing email tooling, should email stay as a workflow-speci
 
 - a) Keep email on Requisition-to-PO (PO dispatch is the supplier-facing order) and on Invoice Capture (receipt confirmations); use notify-person everywhere else.
 - b) Keep email on Requisition-to-PO only; use notify-person on all other modules.
-- c) Use notify-person across all S2P modules; no channel-specific email links.
+- c) Use notify-person across all S2P modules; no channel-specific email relationships.
 
 Recommended: a. In many B2B flows the PO dispatch email is the order to the supplier, so email is workflow-specific there; other notifications should use the abstraction so the channel can change without rewiring. This binds only after the modules from q1 exist.
 

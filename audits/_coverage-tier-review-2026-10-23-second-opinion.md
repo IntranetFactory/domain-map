@@ -65,7 +65,7 @@ The fix for these is to split each one into a Semantius state change plus a sepa
 - `receive_webhook` (high)
 - `receive_scanner_callback` (high)
 - `receive_crawler_completion` (high)
-- `receive_cdp_segment_update` (medium: re-evaluating journeys afterwards is a separate step)
+- `receive_cdp_segment_update` (medium: re-evaluating journeys afterward is a separate step)
 - `ingest_external_completion` (medium: the receiver lands the payload, but the description says it lands in two tables, which needs a `business_logic` follow-up)
 - `notify_person` (see the verdict below)
 
@@ -76,9 +76,9 @@ The fix for these is to split each one into a Semantius state change plus a sepa
   - `store_blob`: no file store is documented.
   - `receive_email`, `receive_sms`: no inbound mail or SMS is documented.
 
-**`notify_person` verdict: `semantius_platform`, medium confidence.** The tool's contract is "one recipient, any channel". Email is enough to meet it. Looking up the recipient's address is a plain read, and `sendEmail` is shipped on both surfaces. The catalog's own description says it waits for a "dispatcher (recipient lookup + channel routing)". That condition is stricter than the contract needs: channel routing is only required when a particular channel is required, and then the skill should link `send_sms` / `post_chat_message` directly.
+**`notify_person` verdict: `semantius_platform`, medium confidence.** The tool's contract is "one recipient, any channel". Email is enough to meet it. Looking up the recipient's address is a plain read, and `sendEmail` is shipped on both surfaces. The catalog's own description says it waits for a "dispatcher (recipient lookup + channel routing)". That condition is stricter than the contract needs: channel routing is only required when a particular channel is required, and then the skill should relate `send_sms` / `post_chat_message` directly.
 
-Caveat: `send_email` is linked from MA, which needs bulk marketing sends (suppression lists, unsubscribe, volume). `sendEmail` is transactional. MA needs its own bulk-send tool, which would be `agent_first`.
+Caveat: `send_email` is related from MA, which needs bulk marketing sends (suppression lists, unsubscribe, volume). `sendEmail` is transactional. MA needs its own bulk-send tool, which would be `agent_first`.
 
 **Gaps in the definitions:**
 1. **The catalog will reject the new tiers today.** Validation rule 99009 (`semantius_coverage_when_query_or_mutate`) still requires `coverage_tier = 'semantius'` for every `query`/`mutate` tool, and the enum has none of the new values. Every `business_logic` move on a `mutate` tool will be refused until the rule and enum are rewritten.
@@ -130,7 +130,7 @@ Caveat: `send_email` is linked from MA, which needs bulk marketing sends (suppre
 | receive_webhook | semantius_crud | semantius_platform | high | `webhook_receivers` built-in with auth and JSONata transform, one target table |
 | receive_scanner_callback | semantius_crud | semantius_platform | high | Single-table landing via a receiver (JSONata reshapes the scanner payload) |
 | receive_crawler_completion | semantius_crud | semantius_platform | high | Same as above |
-| receive_cdp_segment_update | semantius_crud | semantius_platform | medium | Landing is a receiver; re-evaluating journeys afterwards is separate logic |
+| receive_cdp_segment_update | semantius_crud | semantius_platform | medium | Landing is a receiver; re-evaluating journeys afterward is separate logic |
 | ingest_external_completion | semantius_crud | semantius_platform | medium | Receiver lands it; the stated two-table landing (assignments + evidence) needs a business_logic follow-up |
 | notify_person | semantius_crud | semantius_platform | medium | Any-channel contract is met by email (address lookup is a read, `sendEmail` shipped); see summary |
 | grant_entitlement | semantius_workflow | external | medium | "Writes to the target application via SCIM/API": per-app provisioning connectors; split into transition + side effect |
@@ -205,14 +205,14 @@ Caveat: `send_email` is linked from MA, which needs bulk marketing sends (suppre
 
 These are the proposed tiers joined to the live `domain_module_tools` (primary modules only).
 
-**Structural:** 339 CSV tools have no primary domain link, so they enter no domain score at all. They include the whole payroll set (`create_pay_run`, `generate_pay_slips`, `file_tax_return`, `query_payroll_journal_entries`), procurement (`create_purchase_order`, `create_goods_receipt`), GRC/audit, ESG, MDM (`merge_records`), e-signature (`send_envelope`) and people analytics. The domain sanity check cannot see them.
+**Structural:** 339 CSV tools have no primary domain relationship, so they enter no domain score at all. They include the whole payroll set (`create_pay_run`, `generate_pay_slips`, `file_tax_return`, `query_payroll_journal_entries`), procurement (`create_purchase_order`, `create_goods_receipt`), GRC/audit, ESG, MDM (`merge_records`), e-signature (`send_envelope`) and people analytics. The domain sanity check cannot see them.
 
 - **UEM** (16 crud / 9 workflow, nothing else but `notify_team`): every device action (enroll, deploy app, wipe, compliance evaluation, retire) is device-bound, yet all of them are labeled Semantius. This is the clearest mislabel in the catalog.
 - **IGA** (13 / 18, nothing else): SCIM/connector provisioning is labeled workflow, and SoD detection and certification-campaign generation have no tool.
 - **PROCESS-ORCHESTRATION**: the process engine runtime (start, signal, deploy, resume) is labeled crud/workflow; only the decision table was pulled out.
 - **LCAP** (16 / 7, nothing else): the low-code runtime that executes apps and workflows is the product, and every tool is a record write.
 - **SMP** (29 / 52, only `sign_document` outside): SaaS discovery from SSO/expense/browser feeds, usage-based optimization and benchmarks are the product. All are Semantius; discovery ingest is missing and `refresh_app_benchmark` is mislabeled.
-- **CCAAS** (10 crud): ACD routing, IVR and live transfer have no engine tool; `transfer_support_session` and `set_agent_state` are mislabeled, and `receive_voice_call` (external) is not linked.
+- **CCAAS** (10 crud): ACD routing, IVR and live transfer have no engine tool; `transfer_support_session` and `set_agent_state` are mislabeled, and `receive_voice_call` (external) is not related.
 - **B2C-COMM** (21 crud / 1 workflow): `create_order` is mislabeled, and tax calculation, the promotion/pricing engine and inventory reservation have no tools at all (the catalog has no tax-calculation tool anywhere).
 - **LOYALTY** (5 crud, reads only): points accrual, tier qualification, redemption and expiry are ledger business_logic with no tool.
 - **EPM** (8 crud): no consolidation, allocation or driver-based forecast calculation; `update_forecast` only writes a number someone else computed.
@@ -222,7 +222,7 @@ These are the proposed tiers joined to the live `domain_module_tools` (primary m
 - **ABM-PLATFORM** (7 crud): intent data (external), engagement scoring (vendor_platform) and ad orchestration (agent_first) are missing; `query_account_engagement_scores` reads output of nothing.
 - **MA** (9 crud): no journey execution over many contacts, no bulk marketing send (`sendEmail` is transactional) and no scoring model; `score_lead` only writes a score.
 - **VSM** (12 crud): DORA, flow metrics and bottleneck detection are "computed" per the query descriptions, but no compute tool exists.
-- **HCM** (18 crud): `query_absence_balances` reads balances nothing accrues (no accrual run), and payroll is unlinked (see Structural).
+- **HCM** (18 crud): `query_absence_balances` reads balances nothing accrues (no accrual run), and payroll is unrelated (see Structural).
 - **TALENT-MGMT** (9 crud): merit/comp planning against budgets is business_logic with no tool; `query_merit_recommendations` has no producer.
 - **EXPENSE** (7 crud): receipt OCR (agent_native), policy audit, mileage/per diem and the reimbursement batch are missing.
 - **SPEND-MGMT** (8 crud): card issuing and real-time authorization controls (external) and card reconciliation are missing.
@@ -233,7 +233,7 @@ These are the proposed tiers joined to the live `domain_module_tools` (primary m
 - **FMIS** (24 crud): machinery telemetry ingest (external) and variable-rate prescription generation (agronomic model, vendor_platform) are missing.
 - **TELEMATICS** (8 crud): device telemetry ingest (external) and driver safety scoring (vendor_platform) are missing.
 - **CMDB** (7 crud): discovery and identification/reconciliation are missing (`reconcile_asset_identity` exists only under ITAM).
-- **ITOM** (9 / 3): discovery and event correlation are missing; `ingest_event_stream` is not linked.
+- **ITOM** (9 / 3): discovery and event correlation are missing; `ingest_event_stream` is not related.
 - **DLP** (11 / 2): the content-inspection engine and endpoint/network enforcement are missing; `release_dlp_quarantine_item` is mislabeled.
 - **ITSM / CSM**: SLA clocks (business-hour calendars, pause/resume, breach timers) have no tool, and Semantius documents no scheduler.
 - **LMS** (98 / 50, 1 business_logic): cohort assignment, auto-enrollment rule runs and campaign launches are batch runs labeled crud/workflow; `ingest_xapi_statement` needs an LRS.

@@ -27,7 +27,7 @@ encode the wrong target. It migrates to one coherent model and brings every off-
      `domain_module_id`, derives from the starter module's own tools. Starters are independently
      deployable bundles of entities, sometimes within one domain (e.g. Hiring), sometimes across
      domains (e.g. Real Estate Agent, HVAC).
-   FULL modules are NOT deployable units and get NO skill. A `process` skill is cross-domain, linked
+   FULL modules are NOT deployable units and get NO skill. A `process` skill is cross-domain, related
    to its process via `skills.process_id`, and derives from that process's `process_tools`.
 4. No skill stores tools. A skill DERIVES its toolset from the unit it represents, materialized only
    when the deployed skill TEMPLATE is generated (the template is the snapshot/cache).
@@ -57,7 +57,7 @@ encode the wrong target. It migrates to one coherent model and brings every off-
   (LMS 57).
 - `domain_module_tools` and `process_tools` do NOT exist (clean create). `skill_tools.skill_id` and
   `.tool_id` are both `parent`/cascade. Only two tables reference `skills`: `skill_tools.skill_id` and
-  `process_raci.actor_skill_id` (both cascade; 0 non-null actor_skill_id today).
+  `process_raci.skill_id` (both cascade; 0 non-null skill_id today).
 - 2 of the 67 per-domain target names collide with existing full-module skills: domain 62 ->
   `emp-exp-system` (skill id 55, on module 64), domain 67 -> `expense-system` (skill id 57, on module
   191). `skill_name` is not unique. No other of the 67 targets collides.
@@ -77,7 +77,7 @@ encode the wrong target. It migrates to one coherent model and brings every off-
   reach modules is the per-module tool authoring a domain audit performs, so re-authoring is standing
   audit-backlog work, NOT a review gate. Keep all 61 per-domain skills (toolless; they derive from
   their modules). Add domains lacking per-module tool authoring to the modularization/audit backlog.
-- D. 3 process skills: create `process_tools`, create one value-stream `processes` row per skill, link
+- D. 3 process skills: create `process_tools`, create one value-stream `processes` row per skill, relate
   `skills.process_id`, migrate the 226 rows to `process_tools`, delete their `skill_tools`. Process
   skill derives.
 - E. 67 domains lacking a per-domain skill: create one. For domains 62/67 REUSE existing skills 55/57
@@ -139,7 +139,7 @@ Step 5 (process agents -> process_tools): create exactly 3 `processes` rows for 
   (107/67/52 = 226) into `process_tools` keyed on the process, then delete those 226 `skill_tools`.
   Verify `process_tools` count == 226 and the 3 skills retain process_id.
 
-Step 6 (delete the remaining full-module skills): re-assert `process_raci.actor_skill_id` is still 0
+Step 6 (delete the remaining full-module skills): re-assert `process_raci.skill_id` is still 0
   non-null, then, AFTER Steps 3 and 5, delete every `system` skill whose `domain_module_id` is not null
   and whose module is NOT a starter. This is 244 (= 246 minus 55/57 reused). Delete BY PREDICATE, not a
   pre-captured id list. `skill_tools` cascade. Descriptions preserved in the Step-0 snapshot. Verify:
@@ -161,7 +161,7 @@ Step 7 (repoint docs and scripts; live-grep, do not edit from memory):
   - `audits/_modularization-backlog.md` L102 and the ~150 audit files (109 `state.yaml`, ~326
     occurrences, + ~150 history/other `.md`) carrying OPEN per-module-skill action items ("author one
     `<module_code>_agent` per module, then DELETE the domain-level skill"; e.g. EMP-EXP B2-S6): a
-    scriptable pass that ENUMERATES and SUPERSEDES every one, cancelling the per-module instruction, or
+    scriptable pass that ENUMERATES and SUPERSEDES every one, canceling the per-module instruction, or
     a future audit pass undoes this migration. Correct the history of domains that already executed it
     (BPA, DAIRY-MGMT).
   - Rewrite `scripts/analytics/coverage_rollup.ts` (read `domain_module_tools` rolled to domain incl.
@@ -172,13 +172,13 @@ Step 7 (repoint docs and scripts; live-grep, do not edit from memory):
 
 Step 8 (verify + commit): 0 per-module full skills; one per-domain `system` skill per full-module
   domain; the 5 starter skills intact; `domain_module_tools` == 2013; `process_tools` == 226;
-  `skill_tools` == 0 (dropped); the 3 process skills linked to their process; both scripts green; no
+  `skill_tools` == 0 (dropped); the 3 process skills related to their process; both scripts green; no
   em-dashes; American English. Commit on the branch.
 
 ## 5. Out of scope (tracked elsewhere, not orphaned)
 - Re-authoring the purged 528 domain-grain tools at module grain happens as normal domain-audit work
   via the modularization/audit backlog (Step 4 enrolls the domains). Of the 528, exactly 5 are
-  per-domain-only generic side_effect links with NO module counterpart that module re-authoring will
+  per-domain-only generic side_effect relationships with NO module counterpart that module re-authoring will
   not auto-restore: domain 72 (send_email), 130 (send_email, post_chat_message), 149 (send_email,
   sign_document); domain 91 has none. The backlog entry for those 3 domains MUST list these explicitly
   (the Step-0 snapshot retains all 5).

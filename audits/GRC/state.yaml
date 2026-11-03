@@ -14,7 +14,7 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
 
-# UNBUILT: GRC has 0 domain_modules (M1 hard fail), 1 capability_domains link. The entire
+# UNBUILT: GRC has 0 domain_modules (M1 hard fail), 1 capability_domains relationship. The entire
 # build cascade (modules, lifecycle states, module skills/tools, persona roles, B10b backfill,
 # outbound relationships) is blocked behind modularization (B1B-S1), which is itself blocked on
 # the user decisions B2-5 (COMPLIANCE-TRAIN ownership) and B3-2 (split shape). The build is
@@ -78,7 +78,7 @@ b1b:
 
   - id: B1B-S2
     summary: "M4 capability-realization for COMPLIANCE-TRAIN (21) blocked on B2-5."
-    finding: "capability_domains row (domain_id=15, capability_id=21) has no realizing module on GRC side (zero domain_modules); M4 cannot pass until either a module realizes the capability or the link is removed (B2-5)."
+    finding: "capability_domains row (domain_id=15, capability_id=21) has no realizing module on GRC side (zero domain_modules); M4 cannot pass until either a module realizes the capability or the relationship is removed (B2-5)."
     blocked_by:
       - {type: user_decision, ref: B2-5}
       - {type: prerequisite_entity, ref: B1B-S1}
@@ -133,7 +133,7 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S13
-    summary: "Author GRC-module persona roles + role_modules + role_permissions (E1-E6). Blocked on B1B-S1."
+    summary: "Author GRC-module persona roles + persona_modules + role_permissions (E1-E6). Blocked on B1B-S1."
     finding: "The 2 business_function_id=31 roles (10035 GRC-REGULATORY-AFFAIRS on PLM-Compliance, 10038 GRC-COMPLIANCE-TRAINING-MANAGER on LMS-Compliance-Training) do not touch any GRC module since no GRC modules exist. E2's 2-module floor is unmet, E1-E6 fail until module persona roles are authored. Candidate personas: RISK-MANAGER, COMPLIANCE-OFFICER, POLICY-OWNER, CONTROL-OWNER, ATTESTATION-CAMPAIGN-MGR. Persona/RACI authoring is Phase-P, DEFERRED."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
@@ -163,9 +163,9 @@ b2:
 
   - id: B2-5
     summary: "COMPLIANCE-TRAIN capability ownership on GRC. GATES the build (B1B-S1, B1B-S2)."
-    question: "Should GRC retain the capability_domains link to COMPLIANCE-TRAIN (21), or should it be removed in favor of LMS as exclusive owner?"
+    question: "Should GRC retain the capability_domains relationship to COMPLIANCE-TRAIN (21), or should it be removed in favor of LMS as exclusive owner?"
     options:
-      - "(a) Keep, link to GRC-POLICY-ATTESTATION as the realizing module."
+      - "(a) Keep, relate to GRC-POLICY-ATTESTATION as the realizing module."
       - "(b) DELETE the capability_domains row (15, 21); GRC ends up with the capabilities it actually masters. Default recommendation."
 
   - id: B2-6
@@ -196,8 +196,8 @@ b3:
 
   - id: B3-3
     candidate: "audit_issues mastery: GRC vs AUDIT"
-    rationale: "Some flagship stacks merge findings + issues; others split AUDIT.findings from GRC.issues. Resolution may yield a slice-split where AUDIT masters audit_findings and GRC masters audit_issues with an edge between them. Dependent on AUDIT's audit."
-    proposed_module: "If split: AUDIT masters audit_findings; GRC-COMPLIANCE-MGMT masters audit_issues. Cross-domain edge via data_object_relationships."
+    rationale: "Some flagship stacks merge findings + issues; others split AUDIT.findings from GRC.issues. Resolution may yield a slice-split where AUDIT masters audit_findings and GRC masters audit_issues with a relationship between them. Dependent on AUDIT's audit."
+    proposed_module: "If split: AUDIT masters audit_findings; GRC-COMPLIANCE-MGMT masters audit_issues. Cross-domain relationship via data_object_relationships."
 
   - id: B3-4
     candidate: "4 domain candidates queued in _missing-domains.md: CRQ, ETHICS-HOTLINE, POLICY-MGMT, REG-CHANGE-MGMT."

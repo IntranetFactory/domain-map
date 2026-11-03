@@ -25,8 +25,8 @@ last_audit: "2026-06-19"
 #     48 lifecycle states (11 operational_workflow masters), 35 aliases.
 #
 # Still open below (the deferred build wave; agent-doable, parked to keep each load a reviewable unit):
-#   B1B-B12 (lifecycle for the 6 EXISTING masters), B1B-B10b (handoff module-FK backfill),
-#   B1B-NEW-MASTER-WIRING (trigger_events/handoffs/relationships/users-edges for the 19 new masters),
+#   B1B-B12 (lifecycle for the 5 EXISTING masters that have none), B1B-B10b (handoff module-FK backfill),
+#   B1B-NEW-MASTER-WIRING (trigger_events/handoffs/relationships/relationships to users for the 19 new masters),
 #   B1B-E (personas; blocked on B1B-B12). Run on the next build pass.
 
 b1a: []
@@ -35,33 +35,32 @@ b1b:
   # --- Follow-up build wave, UNBLOCKED (modules + masters exist). Agent-doable additive work; not yet
   #     run to keep each load a reviewable unit. Runs on the next build pass.
   - id: B1B-B12
-    summary: "Author data_object_lifecycle_states for the 6 EXISTING SRM masters, anchored to the new modules."
-    finding: "The 6 original masters are entity_type='operational_workflow' (Rule #12 requires lifecycle) but carry 0 lifecycle states. (The 19 NEW masters loaded 2026-06-19 already have their lifecycle states; this item is now only the 6 headline masters.) Unblocked: SLM/SPM/SRC exist, so domain_module_id is resolvable (M5)."
-    action: "Author state machines: suppliers (prospect, qualified, approved, suspended, blocked, archived) [SLM]; supplier_onboardings (initiated, in_review, approved, rejected, abandoned) [SLM]; supplier_qualifications (draft, submitted, approved, rejected, expired, revoked) [SLM]; supplier_scorecards (draft, in_period, finalized, disputed) [SPM]; supplier_certifications (valid, expiring_soon, expired, revoked) [SRC]; supplier_risk_assessments (scheduled, in_progress, completed, elevated, mitigated, accepted) [SRC]. requires_permission on the gate transitions; domain_module_id = realizing module."
+    summary: "Author data_object_lifecycle_states for the 5 EXISTING SRM masters that have none, anchored to the new modules."
+    finding: "These 5 original masters are entity_type='operational_workflow' (Rule #12 requires lifecycle) but carry 0 lifecycle states. (The 19 NEW masters loaded 2026-06-19 already have their lifecycle states, and supplier_certifications took its 7 states from FOOD-TRACE on 2026-11-03.) Unblocked: SLM/SPM/SRC exist, so domain_module_id is resolvable (M5)."
+    action: "Author state machines: suppliers (prospect, qualified, approved, suspended, blocked, archived) [SLM]; supplier_onboardings (initiated, in_review, approved, rejected, abandoned) [SLM]; supplier_qualifications (draft, submitted, approved, rejected, expired, revoked) [SLM]; supplier_scorecards (draft, in_period, finalized, disputed) [SPM]; supplier_risk_assessments (scheduled, in_progress, completed, elevated, mitigated, accepted) [SRC]. requires_permission on the gate transitions; domain_module_id = realizing module."
     affected_masters:
       - {data_object_id: 206, name: suppliers, module: SRM-SUPPLIER-LIFECYCLE}
       - {data_object_id: 207, name: supplier_onboardings, module: SRM-SUPPLIER-LIFECYCLE}
       - {data_object_id: 208, name: supplier_qualifications, module: SRM-SUPPLIER-LIFECYCLE}
       - {data_object_id: 209, name: supplier_scorecards, module: SRM-PERFORMANCE-MGMT}
-      - {data_object_id: 498, name: supplier_certifications, module: SRM-RISK-COMPLIANCE}
       - {data_object_id: 730, name: supplier_risk_assessments, module: SRM-RISK-COMPLIANCE}
 
   - id: B1B-B10b
-    summary: "Backfill source/target_domain_module_id on the 18 cross-domain handoffs touching SRM (now derivable)."
-    finding: "All 18 cross-domain handoffs had NULL on both module FKs because the domain had no modules. The SRM side is now derivable from the master-role DMDO rows."
+    summary: "Backfill source/target_domain_module_id on the 17 cross-domain handoffs touching SRM (now derivable)."
+    finding: "These 17 cross-domain handoffs have NULL on both module FKs because the domain had no modules. The SRM side is now derivable from the master-role DMDO rows."
     action: "Run a backfill analogous to scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts; PATCH the SRM-side module FK on each row (source the event's data_object to its strongest-role module)."
     affected_handoffs_outbound: [127, 128, 213, 214, 546, 547, 548, 549, 550, 596]
-    affected_handoffs_inbound: [273, 277, 336, 362, 543, 565, 586, 591]
+    affected_handoffs_inbound: [273, 277, 336, 543, 565, 586, 591]
 
   - id: B1B-NEW-MASTER-WIRING
-    summary: "Author the remaining Phase-B substrate for the 19 new SRM masters (events, handoffs, relationships, users-edges)."
-    finding: "The 2026-06-19 q2 load shipped the approved scope (data_objects + DMDO + lifecycle states + aliases) for the 19 new masters but NOT their wiring. The new masters currently have no trigger_events, no handoffs (intra- or cross-domain), no data_object_relationships, and no users-edges, so B6/B7/B8/B9/B9b are open for them."
-    action: "Phase-B wiring pass: intra-domain data_object_relationships (suppliers -> contacts/locations/bank_accounts/documents/registrations; performance_reviews -> corrective_actions -> issues; screening/attestations/certs under the supplier master), users-edges per Rule #10 (assignee/approver/owner), trigger_events on the workflow masters' gate transitions, and intra-domain (lifecycle_progression) + any cross-domain handoffs. Anchor each to the realizing module."
+    summary: "Author the remaining Phase-B substrate for the 19 new SRM masters (events, handoffs, relationships, relationships to users)."
+    finding: "The 2026-06-19 q2 load shipped the approved scope (data_objects + DMDO + lifecycle states + aliases) for the 19 new masters but NOT their wiring. The new masters currently have no trigger_events, no handoffs (intra- or cross-domain), no data_object_relationships, and no relationships to users, so B6/B7/B8/B9/B9b are open for them."
+    action: "Phase-B wiring pass: intra-domain data_object_relationships (suppliers -> contacts/locations/bank_accounts/documents/registrations; performance_reviews -> corrective_actions -> issues; screening/attestations/certs under the supplier master), relationships to users per Rule #10 (assignee/approver/owner), trigger_events on the workflow masters' gate transitions, and intra-domain (lifecycle_progression) + any cross-domain handoffs. Anchor each to the realizing module."
     affected_entities: [supplier_contacts, supplier_locations, supplier_bank_accounts, supplier_documents, supplier_relationships, supplier_registrations, supplier_segmentation_tiers, supplier_information_requests, supplier_tasks, supplier_questionnaires, supplier_kpis, supplier_performance_reviews, supplier_corrective_actions, supplier_issues, supplier_screening_records, supplier_beneficial_owners, supplier_diversity_classifications, supplier_insurance_certificates, supplier_attestations]
 
   - id: B1B-E
-    summary: "Phase E personas + role_modules + process_raci for SRM (now unblocked, 3 modules)."
-    finding: "No SRM personas authored. With 3 modules the 2-module floor is satisfiable. Candidate personas: PROCUREMENT-SUPPLIER-RM, PROCUREMENT-SUPPLIER-ONBOARDING-SPEC, GRC-SUPPLIER-RISK-ANALYST, COMPLIANCE-SUPPLIER-DUE-DILIGENCE; plus role_modules tying existing PROCUREMENT-PIM-SUPPLIER-LIAISON (10092) to SRM-SUPPLIER-LIFECYCLE."
+    summary: "Phase E personas + persona_modules + process_raci for SRM (now unblocked, 3 modules)."
+    finding: "No SRM personas authored. With 3 modules the 2-module floor is satisfiable. Candidate personas: PROCUREMENT-SUPPLIER-RM, PROCUREMENT-SUPPLIER-ONBOARDING-SPEC, GRC-SUPPLIER-RISK-ANALYST, COMPLIANCE-SUPPLIER-DUE-DILIGENCE; plus persona_modules tying existing PROCUREMENT-PIM-SUPPLIER-LIAISON (10092) to SRM-SUPPLIER-LIFECYCLE."
     action: "Author personas + reach + RACI in the follow-up pass; the permission bundle derives at emit time."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-B12, reason: "gate permissions derive from lifecycle states"}
@@ -69,3 +68,72 @@ b1b:
 b2: []
 
 b3: []
+
+checks:
+  # generated by scripts/analytics/domain_health.ts --record; do not hand-edit
+  checklist_version: 3
+  run_at: "2026-11-03T15:36:45.919Z"
+  results:
+    - {id: S1, result: pass, rows: []}
+    - {id: S2, result: pass, rows: []}
+    - {id: S3, result: warn, rows: [206, 207, 208, 209, 730, 1356, 1359, 1361]}
+    - {id: A1, result: pass, rows: []}
+    - {id: A2, result: pass, rows: []}
+    - {id: A3, result: pass, rows: []}
+    - {id: A4, result: agent, rows: []}
+    - {id: A5, result: agent, rows: []}
+    - {id: M1, result: pass, rows: []}
+    - {id: M2, result: pass, rows: []}
+    - {id: M4, result: pass, rows: []}
+    - {id: M5, result: pass, rows: []}
+    - {id: M6, result: pass, rows: []}
+    - {id: M7, result: fail, rows: [1363]}
+    - {id: M8, result: agent, rows: []}
+    - {id: M9, result: warn, rows: ["rel:545", "rel:546", "rel:547", "rel:569"]}
+    - {id: M10, result: agent, rows: []}
+    - {id: B1, result: pass, rows: []}
+    - {id: B2, result: pass, rows: []}
+    - {id: B3, result: pass, rows: []}
+    - {id: B4, result: agent, rows: []}
+    - {id: B5, result: fail, rows: [327]}
+    - {id: B6, result: warn, rows: [1354, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372]}
+    - {id: B6b, result: pass, rows: []}
+    - {id: B7, result: warn, rows: [1354, 1355, 1356, 1357, 1359, 1361, 1362, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372]}
+    - {id: B7b, result: pass, rows: []}
+    - {id: B7c, result: warn, rows: [206, 1354, 1369]}
+    - {id: B8, result: pass, rows: []}
+    - {id: B9, result: fail, rows: ["do:1356", "do:1359", "do:1361", "do:1362", "do:1365", "do:1366", "do:1367", "do:1368", "do:1370", "do:1371", "do:1372", "event:1518", "event:1519", "event:1520", "event:562", "event:564", "state:1772", "state:2790", "state:2796", "state:2801", "state:2802", "state:2806", "state:2809", "state:2814", "state:2815", "state:2820", "state:2824", "state:2834"]}
+    - {id: B9b, result: fail, rows: ["event:1518", "event:1519", "event:1520", "event:562", "event:564", "rel:547", "rel:550"]}
+    - {id: B9c, result: warn, rows: [131, 132, 145, 173, 562, 563, 564, 566]}
+    - {id: B9d, result: delegated, rows: []}
+    - {id: B9e, result: delegated, rows: []}
+    - {id: B9f, result: pass, rows: []}
+    - {id: B10, result: pass, rows: []}
+    - {id: B10b, result: fail, rows: [127, 128, 213, 214, 273, 277, 336, 543, 546, 547, 548, 549, 550, 565, 586, 591, 596]}
+    - {id: B11, result: warn, rows: [1362]}
+    - {id: B12, result: fail, rows: [206, 207, 208, 209, 730]}
+    - {id: B13, result: pass, rows: []}
+    - {id: B14, result: agent, rows: []}
+    - {id: B15, result: pass, rows: []}
+    - {id: B16, result: pass, rows: []}
+    - {id: C1, result: pass, rows: []}
+    - {id: C2, result: agent, rows: []}
+    - {id: D1, result: agent, rows: []}
+    - {id: E1, result: fail, rows: []}
+    - {id: E2, result: pass, rows: []}
+    - {id: E3, result: pass, rows: []}
+    - {id: E4, result: pass, rows: []}
+    - {id: E4b, result: warn, rows: [1772, 1777, 2790, 2796, 2801, 2809, 2814, 2824, 2834]}
+    - {id: E4c, result: pass, rows: []}
+    - {id: E4d, result: pass, rows: []}
+    - {id: E5, result: skipped, rows: []}
+    - {id: E6, result: warn, rows: ["R6:127", "R6:128", "R6:213", "R6:277", "R6:546", "R6:547", "R6:550", "R8:supplier_beneficial_owner_edit_scope", "R8:supplier_beneficial_owners", "R8:supplier_contact_edit_scope", "R8:supplier_contacts"]}
+    - {id: F1, result: pass, rows: []}
+    - {id: F2, result: pass, rows: []}
+    - {id: F3, result: pass, rows: []}
+    - {id: F4, result: pass, rows: []}
+    - {id: F5, result: pass, rows: []}
+    - {id: F6, result: skipped, rows: []}
+    - {id: F7, result: agent, rows: []}
+    - {id: F8, result: agent, rows: []}
+    - {id: H1, result: pass, rows: []}

@@ -17,14 +17,14 @@ last_audit: "2026-06-13"
 # DEM is UNBUILT: 0 domain_modules (M1 fail, blocking), 0 capability_domains, 0 solution_domains.
 # Per Rule #21 the agent does NOT scaffold an unbuilt domain; the build is surfaced (b1a-A2/A3/BUILD)
 # and the M1-gated cascade is left. No agent-executable work remains: B9d ran 2026-06-13 (ORPHAN routed
-# to ITSM as B2-B9D-OWN-1299; 4 UNOWNED -> B1A-B9D-UNOWNED, neighbor-gated) and the clean ITSM B8 edge
+# to ITSM as B2-B9D-OWN-1299; 4 UNOWNED -> B1A-B9D-UNOWNED, neighbor-gated) and the clean ITSM B8 relationship
 # was authored (id 2354). Everything still open is a user decision (B2-MODULE-SPLIT / B2-DEX-BOUNDARY /
 # B2-PATTERN-FLAGS / B1A-B9-ORPHAN) or M1/neighbor-gated b1b. Prior passes executed entity_type
 # classification, Rule #20 catalog text, event_category backfill, and intra-domain relationships.
 
 b1a:
   - id: B1A-A2
-    summary: Author 5-7 DEM capabilities and link via capability_domains.
+    summary: Author 5-7 DEM capabilities and relate via capability_domains.
     finding: >-
       DEM has 0 capability_domains rows (verified live 2026-06-07). Vendor surface implies 5-7
       capabilities. SURFACED, not executed: this is part of the unbuilt-domain BUILD (see B1A-BUILD),
@@ -38,7 +38,7 @@ b1a:
       - DEM-SAAS-REACHABILITY-MONITORING
 
   - id: B1A-A3
-    summary: Author flagship solutions and solution_domains links for DEM.
+    summary: Author flagship solutions and solution_domains relationships for DEM.
     finding: >-
       DEM has 0 solution_domains rows (verified live 2026-06-07). SURFACED, not executed: creating
       solutions/vendors is Phase-A market-shape work that scope discipline forbids absent an explicit
@@ -56,17 +56,17 @@ b1a:
       - {vendor: Riverbed Aternity, evidence: secondary}
 
   - id: B1A-B8
-    summary: Author the 3 remaining cross-domain mirror data_object_relationships for outbound handoffs (AIOPS/OBS edges).
+    summary: Author the 3 remaining cross-domain mirror data_object_relationships for outbound handoffs (AIOPS/OBS relationships).
     finding: >-
-      The clean ITSM edge was AUTHORED 2026-06-13 (id 2354: 585 endpoint_experience_scores triggers
+      The clean ITSM relationship was AUTHORED 2026-06-13 (id 2354: 585 endpoint_experience_scores triggers
       47 service_incidents, mirroring handoff 664 into the already-built ITSM, target module 38).
       The 3 remaining outbound mirrors (665 DEM->AIOPS endpoint_anomaly_findings, 666 DEM->OBS
       synthetic_monitoring_results, 667 DEM->AIOPS real_user_sessions) target the neighbor's own
       as-yet-unbuilt module surface and stay gated on AIOPS/OBS building masters for those payloads.
     affected_handoffs:
-      - {handoff_id: 665, source_domain: DEM, target_domain: AIOPS, payload: endpoint_anomaly_findings, edge: "589 published_to AIOPS-side", neighbor_built: false}
-      - {handoff_id: 666, source_domain: DEM, target_domain: OBS, payload: synthetic_monitoring_results, edge: "586 published_to OBS-side", neighbor_built: false}
-      - {handoff_id: 667, source_domain: DEM, target_domain: AIOPS, payload: real_user_sessions, edge: "587 flagged_to AIOPS-side", neighbor_built: false}
+      - {handoff_id: 665, source_domain: DEM, target_domain: AIOPS, payload: endpoint_anomaly_findings, relationship: "589 published_to AIOPS-side", neighbor_built: false}
+      - {handoff_id: 666, source_domain: DEM, target_domain: OBS, payload: synthetic_monitoring_results, relationship: "586 published_to OBS-side", neighbor_built: false}
+      - {handoff_id: 667, source_domain: DEM, target_domain: AIOPS, payload: real_user_sessions, relationship: "587 flagged_to AIOPS-side", neighbor_built: false}
 
   - id: B1A-B9-ORPHAN
     summary: Resolve trigger event 680 (digital_friction_event.recorded) orphan.
@@ -105,7 +105,7 @@ b1a:
       On a user go: run Phase A (capabilities, solutions/solution_domains) then M (modules per the
       chosen split) then B (masters into domain_module_data_objects, lifecycle, cross-domain rels)
       then the ONE domain-grain system skill (Rule #17, post-supersession). If multi-module, run
-      Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward.
+      Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward.
 
 b1b:
   - id: B1A-B9D-UNOWNED

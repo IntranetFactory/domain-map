@@ -8,7 +8,7 @@ last_audit: "2026-06-16"
 # Phase 0 vendor surface: audits/DAP/DAP-phase0-2026-06-16.md
 # Backlog entry: audits/_missing-domains.md (## Pending review, "DAP — Digital Adoption Platform").
 # Coupled to the sibling candidate SOP-MGMT: the capture/in-app seam is the same decision
-# from both sides (DAP B2-DAP-SCOPE consumer-edge <-> SOP-MGMT B2-SOP-DAP-SCOPE). The
+# from both sides (DAP B2-DAP-SCOPE consumer-relationship <-> SOP-MGMT B2-SOP-DAP-SCOPE). The
 # adoption-analytics module (B2-DAP-ANALYTICS-SPLIT) is coupled to a future, not-yet-existing
 # Product-Analytics domain (Amplitude/Mixpanel).
 
@@ -59,7 +59,7 @@ b2:
       remote-support-owned). The domain has >=4 capabilities, so >=2 full modules (Rule #14); the
       hypothesis is four. Re-mastering would duplicate KMS / SOP-MGMT / ONBOARDING masters and break the
       single-master rule (M7). The DAP<->SOP-MGMT capture seam (Scribe/Tango capture once, publish as a
-      document OR push as an overlay) is modeled as a consumer edge here and resolves together with
+      document OR push as an overlay) is modeled as a consumer relationship here and resolves together with
       SOP-MGMT B2-SOP-DAP-SCOPE.
     why: |
       Market-shape (master-vs-consume + module count + the SOP-MGMT capture seam). Conditional on

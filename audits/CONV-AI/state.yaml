@@ -54,7 +54,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-07: domain 34 still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows (A2 fail), so it is not deployable today. It must be built before any persona / RACI work applies. The build cannot start until the B2-MOD modularization shape is chosen (user decision)."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-MOD + B2-CAP."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-MOD + B2-CAP."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -75,14 +75,14 @@ b1b:
   - id: B1B-S2
     summary: "Author capabilities for CONV-AI; zero capability_domains rows exist."
     finding: "Live query /capability_domains?domain_id=eq.34 returns 0 rows (re-confirmed 2026-06-07). A2 fails."
-    action: "Load 6 capabilities per the recommended floor (bot_authoring, nlu_training, dialog_management, channel_orchestration, conversation_analytics, human_handoff_orchestration), each with a capability_domains link plus a domain_module_capabilities link per Bucket 2 #1 modularization."
+    action: "Load 6 capabilities per the recommended floor (bot_authoring, nlu_training, dialog_management, channel_orchestration, conversation_analytics, human_handoff_orchestration), each with a capability_domains relationship plus a domain_module_capabilities relationship per Bucket 2 #1 modularization."
     blocked_by:
       - {type: user_decision, ref: B2-CAP}
       - {type: depends_on, ref: B1B-S1, reason: "modules must exist before domain_module_capabilities can be loaded"}
 
   - id: B1B-S4
     summary: "Legacy domain-level system skill conv-ai-system (skill id 39) RETIRED-MODEL note."
-    finding: "RETIRED per the 2026-06-06 supersession header. The original action (author per-module system skills conv_ai_bot_design_agent / conv_ai_runtime_agent, re-link 7 skill_tools, then DELETE skill 39) is CANCELED: per-module skill grain and skill_tools are dropped. Live 2026-06-07: skill 39 is skill_type=system, domain_id=34, domain_module_id IS NULL, which already matches the retained one-domain-grain-skill model; its toolset will DERIVE from domain_module_tools once modules land. Two residual non-blocking items: (a) the kebab name conv-ai-system vs the snake convention (renaming a non-empty value is a destructive overwrite, surface only); (b) re-authoring tool requirements onto modules under domain_module_tools, tracked in audits/_modularization-backlog.md."
+    finding: "RETIRED per the 2026-06-06 supersession header. The original action (author per-module system skills conv_ai_bot_design_agent / conv_ai_runtime_agent, re-relate 7 skill_tools, then DELETE skill 39) is CANCELED: per-module skill grain and skill_tools are dropped. Live 2026-06-07: skill 39 is skill_type=system, domain_id=34, domain_module_id IS NULL, which already matches the retained one-domain-grain-skill model; its toolset will DERIVE from domain_module_tools once modules land. Two residual non-blocking items: (a) the kebab name conv-ai-system vs the snake convention (renaming a non-empty value is a destructive overwrite, surface only); (b) re-authoring tool requirements onto modules under domain_module_tools, tracked in audits/_modularization-backlog.md."
     action: "Do NOT author per-module skills. After B1B-S1 modules land, re-author tool requirements via domain_module_tools (backlog). Skill-39 kebab->snake rename is a surfaced destructive overwrite, not auto-applied."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
@@ -144,8 +144,8 @@ b1b:
 
   - id: B1B-S14
     summary: "Author CONV-AI cross-module roles (E1 floor 3 distinct roles)."
-    finding: "Zero roles for business_function_id=70 (Contact Center Operations) anchored on CONV-AI modules. Zero cross-functional role_modules touching CONV-AI."
-    action: "After B1B-S1 + B1B-S2 land, author at minimum CONV-AI-BOT-DESIGNER, CONV-AI-ANALYTICS-VIEWER, CONV-AI-AGENT-OPS, each with role_modules spanning >=2 CONV-AI modules and a role_permissions bundle."
+    finding: "Zero roles for business_function_id=70 (Contact Center Operations) anchored on CONV-AI modules. Zero cross-functional persona_modules touching CONV-AI."
+    action: "After B1B-S1 + B1B-S2 land, author at minimum CONV-AI-BOT-DESIGNER, CONV-AI-ANALYTICS-VIEWER, CONV-AI-AGENT-OPS, each with persona_modules spanning >=2 CONV-AI modules and a role_permissions bundle."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: prerequisite_entity, ref: B1B-S2}

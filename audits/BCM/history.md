@@ -62,9 +62,9 @@ Modularization hypothesis (if BCM is promoted to non-leadership): two full modul
 
 ### Pass 3, Neighbor discovery
 
-Edge weight derived from handoffs and DMDO cross-references:
+Relationship weight derived from handoffs and DMDO cross-references:
 
-| Neighbor | Outbound | Inbound | DMDO cross | Edge weight | Pass-4 treatment |
+| Neighbor | Outbound | Inbound | DMDO cross | Relationship weight | Pass-4 treatment |
 | --- | --- | --- | --- | --- | --- |
 | GRC | 0 | 1 (handoff 253) | 0 (no DMDOs at all) | 1 | one-line summary |
 
@@ -72,7 +72,7 @@ No neighbor at weight >= 3 exists. BCM has no DMDO rows of any kind, no outbound
 
 ### Pass 4, Pairwise reconciliation (none at weight >= 3)
 
-GRC, BCM (weight 1, one-line summary): inbound handoff 253 publishes `assessment.completed` (trigger 227, defective per SKILL.md, points at `risk_assessments` not the payload `compliance_risks`) from GRC to BCM. Both module FK columns NULL on both sides. BCM has no DMDO row declaring any role on `compliance_risks`. The cross-domain relationship mirror is absent. Section 1 (fully wired): 0 rows. Section 2 (NULL module FK): 1 row (handoff 253). Section 3 (missing handoffs): cannot evaluate (BCM has no DMDOs at all). Section 4 (boundary integrity): the payload `compliance_risks` is mastered by GRC (id 282, role=master) so B5 holds, but BCM declares no role on it. Section 5 (relationship mirror): no `data_object_relationships` row exists from a GRC master into a BCM master (there are none on BCM to mirror into). The entire boundary is owed by report-only follow-ups on both sides; nothing in this pass produces in-scope BCM fixes beyond what Bucket 1 already lists (B1-S5).
+GRC, BCM (weight 1, one-line summary): inbound handoff 253 publishes `assessment.completed` (trigger 227, defective per SKILL.md, points at `risk_assessments` not the payload `compliance_risks`) from GRC to BCM. Both module FK columns NULL on both sides. BCM has no DMDO row declaring any role on `compliance_risks`. The cross-domain relationship mirror is absent. Section 1 (fully wired): 0 rows. Section 2 (NULL module FK): 1 row (handoff 253). Section 3 (missing handoffs): cannot evaluate (BCM has no DMDOs at all). Section 4 (boundary integrity): the payload `compliance_risks` is mastered by GRC (id 282, held_as=master) so B5 holds, but BCM declares no role on it. Section 5 (relationship mirror): no `data_object_relationships` row exists from a GRC master into a BCM master (there are none on BCM to mirror into). The entire boundary is owed by report-only follow-ups on both sides; nothing in this pass produces in-scope BCM fixes beyond what Bucket 1 already lists (B1-S5).
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -81,7 +81,7 @@ GRC, BCM (weight 1, one-line summary): inbound handoff 253 publishes `assessment
 | ID | Band | Finding | Fix |
 | --- | --- | --- | --- |
 | B1-S1 | M1 | Zero `domain_modules` rows. Even leadership-tier domains require >=1 `module_kind='full'` row per Rule #14 (a "derived-signals" or "landing" module preserving the deploy-target contract). | Author 1 landing module, code `BCM-LANDING` (or similar), `domain_id=17`, `module_kind='full'`, empty `domain_module_data_objects` set is acceptable for a leadership-tier landing surface. Cascades into F2 (one system skill on the new module). |
-| B1-S2 | A2 | Zero `capability_domains` rows. Even leadership-tier domains usually carry 2-4 capability links describing what the market does at the capability level. | Draft 3-5 capabilities aligned to the BCM vendor surface (e.g. `business-impact-analysis`, `continuity-planning`, `exercise-execution`, `crisis-management`, `dependency-mapping`) and link via `capability_domains`. |
+| B1-S2 | A2 | Zero `capability_domains` rows. Even leadership-tier domains usually carry 2-4 capability relationships describing what the market does at the capability level. | Draft 3-5 capabilities aligned to the BCM vendor surface (e.g. `business-impact-analysis`, `continuity-planning`, `exercise-execution`, `crisis-management`, `dependency-mapping`) and relate via `capability_domains`. |
 | B1-S3 | A4 | `catalog_tagline` and `catalog_description` are empty strings on the BCM row (Rule #20). | Draft buyer-voice tagline and description per Rule #20, surface for user review BEFORE writing. Voice rule: workflow + value, not analyst voice. |
 | B1-S4 | F2 | Zero `skills` rows on BCM at any level (`domain_id=17` returns nothing, no `domain_module_id`-anchored rows). After B1-S1 lands, the landing module needs exactly one `skill_type='system'` skill per Rule #17. | Author 1 system skill on the new landing module, with the minimal tool set the leadership-tier surface needs (typically `query_*` over consumed masters once the module declares its consumer DMDOs). Defer this until B2-1 resolves, since the answer to B2-1 changes whether the skill is on `BCM-LANDING` alone or on `BCM-PLANNING` + `BCM-EXERCISE-AND-CRISIS`. |
 
@@ -90,7 +90,7 @@ GRC, BCM (weight 1, one-line summary): inbound handoff 253 publishes `assessment
 | ID | Finding | Fix |
 | --- | --- | --- |
 | B1-S5 | Handoff 253 (GRC to BCM) carries the defective `trigger_event` 227 (`assessment.completed`, points at `risk_assessments` not the payload `compliance_risks` per the same defect noted in SKILL.md against ATS-related rows 1180 / 1181). Both `source_domain_module_id` and `target_domain_module_id` are NULL. BCM has no DMDO row declaring any role on `compliance_risks`, so target-side attribution cannot resolve without B1-S6 too. | Two-step: (a) repoint handoff 253's `trigger_event_id` to a non-defective trigger keyed against `compliance_risks` (existence of such a trigger needs verification; if absent, this becomes a GRC B9 fix, surface in report-only). (b) After B1-S1 lands, set `source_domain_module_id` to the GRC module that holds `compliance_risks` (currently no GRC modules exist, so this side is GRC B10b report-only) and `target_domain_module_id` to the new BCM landing module after B1-S6 adds a consumer DMDO. |
-| B1-S6 | BCM declares no role on `compliance_risks` (the payload it receives), and no role on any other data_object the BCM market would consume to compute derived signals. A leadership-tier landing module should still declare consumer DMDOs for the masters it reads from. | After B1-S1 lands, add `domain_module_data_objects` rows on `BCM-LANDING` with `role='consumer'` for at least `compliance_risks` (id 282) so handoff 253 has a resolvable target module. Likely additional consumer rows on related GRC and IT Operations masters once B2-1 is resolved. |
+| B1-S6 | BCM declares no role on `compliance_risks` (the payload it receives), and no role on any other data_object the BCM market would consume to compute derived signals. A leadership-tier landing module should still declare consumer DMDOs for the masters it reads from. | After B1-S1 lands, add `domain_module_data_objects` rows on `BCM-LANDING` with `held_as='consumer'` for at least `compliance_risks` (id 282) so handoff 253 has a resolvable target module. Likely additional consumer rows on related GRC and IT Operations masters once B2-1 is resolved. |
 
 #### APQC TAGGING (per-handoff PCF activity classification)
 
@@ -156,7 +156,7 @@ These are candidate masters surfaced by the vendor-surface enumeration above. Th
 - **GRC B10b owes** `source_domain_module_id` resolution on handoff 253. GRC currently has zero modules (same M1 fail as BCM), so this is blocked on GRC's M-band audit. Surface to user as a candidate next audit (GRC).
 - **GRC B10b owes** `source_domain_module_id` resolution on handoff 252 (GRC to OP-RES, also trigger 227). Same root cause as 253.
 - **TPRM B-band check** (if B2-3 resolves to "ICT register lives in TPRM"), TPRM owes a master DMDO on `dora_third_party_register_entries`. Surface as a candidate next audit (TPRM).
-- **OP-RES boundary** (if B2-3 resolves to "shared DORA module"), OP-RES owes a `domain_module_host_domains` row linking the cross-cutting module. Surface as a candidate next audit (OP-RES).
+- **OP-RES boundary** (if B2-3 resolves to "shared DORA module"), OP-RES owes a `domain_module_host_domains` row relating the cross-cutting module. Surface as a candidate next audit (OP-RES).
 
 ### Candidates queued
 
@@ -177,7 +177,7 @@ None. Every Bucket 1 item is gated on judgment calls (chiefly B2-1 leadership-ti
 | B1 ID | Reason |
 |---|---|
 | B1-S1 | Creating a new `domain_modules` row (`BCM-LANDING`) is in the prompt's DEFER list. Requires user sign-off on the code, description, and `module_kind='full'` posture for a leadership-tier landing surface. Also gated on B2-1 (if BCM promotes, the modules become `BCM-PLANNING` + `BCM-EXERCISE-AND-CRISIS` instead). |
-| B1-S2 | Authoring 3-5 new capabilities plus `capability_domains` links is a judgment task: capability code / name / description drafting, and the candidate list (`business-impact-analysis`, `continuity-planning`, `exercise-execution`, `crisis-management`, `dependency-mapping`) needs user vetting. Not in the prompt's technical-fix set. |
+| B1-S2 | Authoring 3-5 new capabilities plus `capability_domains` relationships is a judgment task: capability code / name / description drafting, and the candidate list (`business-impact-analysis`, `continuity-planning`, `exercise-execution`, `crisis-management`, `dependency-mapping`) needs user vetting. Not in the prompt's technical-fix set. |
 | B1-S3 | `catalog_tagline` and `catalog_description` drafts are explicitly in the prompt DEFER list (Rule #20 requires per-string user approval before write). |
 | B1-S4 | Audit text itself defers this until B2-1 resolves (the host module differs between leadership-tier and promote scenarios). Also gated on B1-S1 landing first. System-skill authoring (Rule #17) is not in the technical-fix set. |
 | B1-S5 | Two-part fix is not technical: (a) repointing `trigger_event_id` requires either an existing non-defective trigger keyed against `compliance_risks` (audit notes none is known to exist, becomes a GRC B9 follow-up) or authoring a new trigger event with judgment on naming / category. (b) Setting `source_domain_module_id` and `target_domain_module_id` is blocked because GRC has zero modules (GRC B10b) and BCM-LANDING does not yet exist (B1-S1). Audit derives no concrete FK IDs to backfill. |
@@ -211,7 +211,7 @@ Each band re-evaluated against fresh live reads. Results identical to 2026-05-30
 - **A5 SKIPPED.** No vendor-ownership refresh requested.
 - **M1 FAIL.** Zero `domain_modules`. Rule #14 violation, even for a leadership-tier domain. Carried as B1-S1. M2 through M7 vacuous given M1 fail.
 - **B1 PASS by leadership-tier exception.** BCM is on the SKILL.md B1 exception list. The exception itself is the Bucket 2 question (B2-1).
-- **B5, B7, B9, B9b, B10b, B11, B12 vacuous.** No masters on BCM, so embedded-master integrity, users-edges, outbound trigger/handoffs, intra-domain handoffs, per-module attribution, aliases, and lifecycle-states checks have no rows to evaluate.
+- **B5, B7, B9, B9b, B10b, B11, B12 vacuous.** No masters on BCM, so embedded-master integrity, relationships to `users`, outbound trigger/handoffs, intra-domain handoffs, per-module attribution, aliases, and lifecycle-states checks have no rows to evaluate.
   - B10b is also a target-side concern on the single inbound handoff 253: `target_domain_module_id` is NULL because BCM has zero modules. Carried as B1-S5 (composite with the source-side NULL).
 - **C1 PASS.** Owner Governance Risk and Compliance, contributor IT Operations.
 - **D1 NOT RUN.** Nothing renders yet (no masters, no modules).
@@ -264,7 +264,7 @@ Twelve candidates carried forward, all gated on B2-1: `business_continuity_plans
 - GRC B9: non-defective trigger keyed on `compliance_risks` (defective trigger 227 also appears on ATS rows 1180/1181, suggests wider GRC trigger-event audit).
 - GRC B10b: `source_domain_module_id` resolution on handoffs 253 and 252, blocked on GRC M-band (GRC has zero modules).
 - TPRM, conditional on B2-3 resolving to "ICT register in TPRM": master DMDO on `dora_third_party_register_entries`.
-- OP-RES, conditional on B2-3 resolving to "shared DORA module": `domain_module_host_domains` row linking the cross-cutting module.
+- OP-RES, conditional on B2-3 resolving to "shared DORA module": `domain_module_host_domains` row relating the cross-cutting module.
 
 ### JWT errors
 
@@ -317,7 +317,7 @@ The prompt's EXECUTE rule overrode the stale Rule #20 "surface-before-write" gat
 - GRC B9: non-defective `trigger_event` keyed on `compliance_risks` (defective trigger 227 also surfaced on ATS rows 1180/1181 per SKILL.md).
 - GRC B10b: `source_domain_module_id` on handoffs 253 and 252 (blocked on GRC M-band; GRC has 0 modules).
 - TPRM (conditional on B2-3 = register in TPRM): master DMDO on `dora_third_party_register_entries`.
-- OP-RES (conditional on B2-3 = shared DORA module): `domain_module_host_domains` row linking the cross-cutting module.
+- OP-RES (conditional on B2-3 = shared DORA module): `domain_module_host_domains` row relating the cross-cutting module.
 
 ### JWT errors
 
@@ -396,7 +396,7 @@ UI spot-checks:
 - BCM (domain 17) still UNBUILT: 0 `domain_modules`, 0 `capability_domains`, 0 `skills`, 0 DMDOs, masters zero data_objects.
 - Exactly ONE boundary handoff: id 253, GRC (15) -> BCM (17), `trigger_event_id=227` (`assessment.completed`, keyed on `risk_assessments` id 291, the known defect), payload `data_object_id=282` (`compliance_risks`), both module FK columns NULL.
 - One `handoff_processes` row on 253: id 118, process 271 (`8.3.6` "Conduct and analyze IT compliance assessments", L3), `proposal_source=discovery_substring`, `record_status=new`.
-- `compliance_risks` (id 282): legacy-mastered by GRC (`domain_data_objects` role=master), but ZERO `domain_module_data_objects` master rows (GRC has 0 modules). `entity_type=operational_workflow`.
+- `compliance_risks` (id 282): legacy-mastered by GRC (`domain_data_objects` held_as=master), but ZERO `domain_module_data_objects` master rows (GRC has 0 modules). `entity_type=operational_workflow`.
 - GRC (domain 15) confirmed unbuilt: 0 `domain_modules`.
 
 ### B9d run (scripts/analytics/b9d_resolver.ts BCM, both directions)

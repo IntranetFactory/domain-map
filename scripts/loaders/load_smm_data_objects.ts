@@ -102,56 +102,56 @@ const newDataObjects = [
 ];
 
 // ============================================================
-// DOMAIN_DATA_OBJECTS (master / contributor / consumer roles)
+// DOMAIN_DATA_OBJECTS (master / contributor / consumer held_as values)
 // ============================================================
 // SMM domain_code is referenced; existing data_objects referenced by name; existing domain ids resolved at runtime.
 type DdoSpec = {
   domain_code: string;
   data_object_name: string;
-  role: "master" | "contributor" | "consumer" | "derived";
+  held_as: "master" | "contributor" | "consumer" | "derived";
   notes?: string;
 };
 
 const ddoRows: DdoSpec[] = [
   // SMM as master of the 6 new objects
-  { domain_code: "SMM", data_object_name: "social_posts", role: "master", notes: "" },
-  { domain_code: "SMM", data_object_name: "social_accounts", role: "master", notes: "" },
+  { domain_code: "SMM", data_object_name: "social_posts", held_as: "master", notes: "" },
+  { domain_code: "SMM", data_object_name: "social_accounts", held_as: "master", notes: "" },
   {
     domain_code: "SMM",
     data_object_name: "social_messages",
-    role: "master",
+    held_as: "master",
     notes:
       "Owns inbound on-channel conversations (comments, DMs, mention-replies, reviews). CSM is a consumer that creates cases from messages — cases remain a CSM-mastered separate data_object.",
   },
   {
     domain_code: "SMM",
     data_object_name: "social_mentions",
-    role: "master",
+    held_as: "master",
     notes:
       "Owns off-channel brand/keyword mentions surfaced by listening. CDP is a consumer (engagement signals for unified profile); CSM is a consumer (negative-sentiment-triggered proactive outreach).",
   },
-  { domain_code: "SMM", data_object_name: "social_listening_topics", role: "master", notes: "" },
-  { domain_code: "SMM", data_object_name: "influencers", role: "master", notes: "" },
+  { domain_code: "SMM", data_object_name: "social_listening_topics", held_as: "master", notes: "" },
+  { domain_code: "SMM", data_object_name: "influencers", held_as: "master", notes: "" },
 
   // SMM as contributor to existing cluster-owned objects
   {
     domain_code: "SMM",
     data_object_name: "customers",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Contributes social-channel engagement signals (likes, shares, replies, video views), sentiment, and channel preferences. Identity-resolved by CDP into the unified profile alongside CRM/CSM/SUB-MGMT operational records.",
   },
   {
     domain_code: "SMM",
     data_object_name: "contacts",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Contributes social handles per network, public profile data, social engagement state, and engagement-derived lifecycle attributes that enrich the CRM-mastered contact record.",
   },
   {
     domain_code: "SMM",
     data_object_name: "campaigns",
-    role: "contributor",
+    held_as: "contributor",
     notes:
       "Contributes the social-channel and influencer-marketing slice of multi-channel campaigns. MA masters the umbrella campaign; SMM owns per-channel social assets, schedules, and performance.",
   },
@@ -160,14 +160,14 @@ const ddoRows: DdoSpec[] = [
   {
     domain_code: "SMM",
     data_object_name: "audience_segments",
-    role: "consumer",
+    held_as: "consumer",
     notes:
       "Reads CDP-mastered segments for targeted organic posts and paid amplification (custom audiences, lookalikes).",
   },
   {
     domain_code: "SMM",
     data_object_name: "leads",
-    role: "consumer",
+    held_as: "consumer",
     notes:
       "Reads CRM-mastered leads to match social interactions back to known leads (handle → contact → lead resolution).",
   },
@@ -280,8 +280,8 @@ async function main() {
   for (const d of allDomainsRaw) domainMap.set(String(d.domain_code), Number(d.id));
 
   console.log("\n=== domain_data_objects (Signal 1) ===");
-  const existingDdoRaw = await get("/domain_data_objects?select=domain_id,data_object_id,role&limit=10000");
-  const existingDdoSet = new Set(existingDdoRaw.map(r => `${r.domain_id}:${r.data_object_id}:${r.role}`));
+  const existingDdoRaw = await get("/domain_data_objects?select=domain_id,data_object_id,held_as&limit=10000");
+  const existingDdoSet = new Set(existingDdoRaw.map(r => `${r.domain_id}:${r.data_object_id}:${r.held_as}`));
   const newDdoRows: Row[] = [];
   let skippedDdo = 0;
   for (const d of ddoRows) {
@@ -289,13 +289,13 @@ async function main() {
     const oid = doMap.get(d.data_object_name);
     if (!did) throw new Error(`Domain not found: ${d.domain_code}`);
     if (!oid) throw new Error(`Data object not found: ${d.data_object_name}`);
-    const key = `${did}:${oid}:${d.role}`;
+    const key = `${did}:${oid}:${d.held_as}`;
     if (existingDdoSet.has(key)) { skippedDdo++; continue; }
     existingDdoSet.add(key);
     newDdoRows.push({
       domain_id: did,
       data_object_id: oid,
-      role: d.role,
+      held_as: d.held_as,
       notes: d.notes ?? "",
     });
   }
@@ -353,13 +353,13 @@ async function main() {
     domain_data_objects_total: (await get("/domain_data_objects?select=domain_id&limit=10000")).length,
     cross_domain_handoffs_total: (await get("/cross_domain_handoffs?select=id&limit=10000")).length,
     smm_mastered_data_objects: (
-      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&role=eq.master&select=data_object_id&limit=10000`)
+      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&held_as=eq.master&select=data_object_id&limit=10000`)
     ).length,
     smm_contributor_data_objects: (
-      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&role=eq.contributor&select=data_object_id&limit=10000`)
+      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&held_as=eq.contributor&select=data_object_id&limit=10000`)
     ).length,
     smm_consumer_data_objects: (
-      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&role=eq.consumer&select=data_object_id&limit=10000`)
+      await get(`/domain_data_objects?domain_id=eq.${smmDomainId}&held_as=eq.consumer&select=data_object_id&limit=10000`)
     ).length,
     smm_outbound_handoffs: (
       await get(`/cross_domain_handoffs?source_domain_id=eq.${smmDomainId}&select=id&limit=10000`)

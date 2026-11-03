@@ -74,7 +74,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `supplier_attestations` | `supplier_attestations` | Supplier Attestation | Supplier Attestations | master | - | - | optional | - | operational_workflow | `:manage` | - |
 | 2 | `supplier_beneficial_owners` | `supplier_beneficial_owners` | Supplier Beneficial Owner | Supplier Beneficial Owners | master | - | - | optional | yes | operational_record | `:manage` | - |
@@ -92,11 +92,11 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 _(none: no relationships with both endpoints inside the scope)_
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -104,7 +104,7 @@ _(none: no relationships with both endpoints inside the scope)_
 | `users` | approves | `supplier_risk_assessments` | one_to_many | optional | source | clear | reference | - |
 | `users` | uploads | `supplier_certifications` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -122,7 +122,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `supplier_risk_assessments` | sampled_by | `audit_engagements` | one_to_many | optional | none | n/a | - |
 | `supplier_certifications` | updates | `supplier_qualifications` | one_to_many | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -134,7 +134,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `supplier_certifications` | FOOD-TRACE-SUPPLIER-PROVENANCE (Supplier Documents and Provenance) - FOOD-TRACE | master | required | - |
 | `supplier_certifications` | FSQM-AUDIT-SUPPLIER (Certification Audit and Supplier Risk) - FSQM | contributor | required | - |
@@ -154,7 +154,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `supplier_esg_assessments` | consumer | optional | _(no canonical owner recorded)_ | - |
 | `supplier_questionnaires` | consumer | optional | SRM-SUPPLIER-LIFECYCLE (SRM) | - |

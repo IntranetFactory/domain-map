@@ -38,7 +38,7 @@ Their tier was set from the verb in the name only. Their description contains a 
 | 32 | create_frontline_recognition | semantius_crud | post | Post a recognition for a frontline worker into the team feed. | |
 | 33 | create_frontline_task | semantius_crud | push | Push a task or checklist instance to a frontline worker or location. | |
 | 34 | create_incident | semantius_crud | via | Open a new ITSM incident via Semantius CRUD. | |
-| 35 | create_job_application | semantius_crud | posting | Create a job application linking a candidate to a posting at an initial stage. | |
+| 35 | create_job_application | semantius_crud | posting | Create a job application relating a candidate to a posting at an initial stage. | |
 | 36 | create_job_posting | semantius_crud | posting | Create a job posting record (role title, location, requirements, posting channel). | |
 | 37 | create_license_audit | semantius_crud | via | Open a license audit / true-up case record via Semantius CRUD. | |
 | 38 | create_metric_access_policy | semantius_crud | via | Create a metric access policy in draft state via Semantius CRUD. | |

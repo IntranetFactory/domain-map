@@ -64,7 +64,7 @@
 
 ---
 
-## Phase 4 — Connect the skill to the catalog (~0.5 sessions)
+## Phase 4 — Relate the skill to the catalog (~0.5 sessions)
 
 - [ ] **Wire the skill's tool-resolution.** The skill needs to call `query_employees`, `update_hardware_assets`, `send_email`, etc. Decide the mechanism:
   - Direct PostgREST calls (simplest, matches catalog idiom): the skill calls `semantius call crud postgrestRequest` with the right path. Tool names from the catalog map directly to PostgREST paths via `tools.data_object_id`.
@@ -76,7 +76,7 @@
 
 ---
 
-## Phase 5 — Productionise (~1 session, blocked on Phase 1-4)
+## Phase 5 — Productionize (~1 session, blocked on Phase 1-4)
 
 - [ ] **Audit trail.** Every action the skill takes writes a row somewhere queryable. Decide where: a new `process_skill_executions` table or reuse `handoffs` with the skill_id added? Recommendation: new table — handoffs are the static catalog, executions are runtime.
 - [ ] **Idempotency.** Re-running the skill on an already-offboarded employee must be safe (no double-COBRA notice, no duplicate ITSM ticket reassignments). Add idempotency keys to all mutate calls.
@@ -115,7 +115,7 @@
 | 2 — references/ | 0.5 |
 | 3 — validation harness | 1 |
 | 4 — catalog wire-up | 0.5 |
-| 5 — productionise | 1 |
+| 5 — productionize | 1 |
 | 6 — pilot + iterate | 2-4 calendar weeks (passive) |
 
 **Active build to ship-ready leaver flow: ~4-5 sessions.**

@@ -135,7 +135,7 @@ So we **don't** have a clean equivalent of monday's `allSolutions` blob from a s
 - **Try a sitemap**: `https://www.airtable.com/sitemap.xml` or `/sitemap_index.xml` often lists every template URL. URLs alone wouldn't give descriptions, but combined with a fetch per template page (scraping the H1 + paragraph) it could work — slower but viable.
 - **Check the public schema-API**: `https://www.airtable.com/api/meta/...` — no public docs but worth probing.
 
-Once a JSON shape is in hand, identify the analogues of:
+Once a JSON shape is in hand, identify the analogs of:
 
 | Monday field                          | What we need for Airtable                                                       |
 | ---                                   | ---                                                                             |

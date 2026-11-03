@@ -34,7 +34,7 @@ Supplier master data, onboarding, registration, and qualification. The intake an
 | Supplier Qualifications | `supplier_qualifications` | Risk and compliance profiles for active suppliers, including sanctions screening, financial health, ESG scoring, and certifications. |
 | Supplier Questionnaires | `supplier_questionnaires` | Reusable questionnaire templates used across qualification, performance, and risk workflows, such as insurance, security, ESG, and financial forms. |
 | Supplier Registrations | `supplier_registrations` | Self-service registrations submitted by prospective suppliers before onboarding, with company, tax, and contact basics. |
-| Supplier Relationships | `supplier_relationships` | Hierarchy and affiliate links between supplier records, such as parent, child, and affiliate relationships. |
+| Supplier Relationships | `supplier_relationships` | Hierarchy and affiliate relationships between supplier records, such as parent, child, and affiliate. |
 | Supplier Segmentation Tiers | `supplier_segmentation_tiers` | Tier classifications that rank suppliers by strategic importance, such as strategic, preferred, and transactional. |
 | Supplier Tasks | `supplier_tasks` | Tasks and to-dos assigned across the supplier-management lifecycle, with assignee, due date, and status. |
 | Suppliers | `suppliers` | Vendor master records, holding legal name, tax id, addresses, payment terms, contacts, currency, status, and risk profile. |
@@ -87,7 +87,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `supplier_bank_accounts` | `supplier_bank_accounts` | Supplier Bank Account | Supplier Bank Accounts | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `supplier_contacts` | `supplier_contacts` | Supplier Contact | Supplier Contacts | master | - | - | required | yes | operational_record | `:manage` | - |
@@ -109,7 +109,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `suppliers` | holds | `supplier_qualifications` | one_to_many | composition | optional | source | cascade | parent | - |
 | `supplier_onboardings` | yields | `supplier_qualifications` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -126,7 +126,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | approves | `supplier_onboardings` | one_to_many | optional | source | clear | reference | - |
 | `users` | approves | `supplier_qualifications` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -152,17 +152,17 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `engineering_parts` | sourced_from | `suppliers` | many_to_many | optional | none | n/a | - |
 | `suppliers` | submits | `product_compliance_declarations` | one_to_many | required | none (required-if-present) | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `supplier_questionnaires` | SRM-PERFORMANCE-MGMT (Supplier Performance Management) - SRM | consumer | optional | - |
 | `supplier_questionnaires` | SRM-RISK-COMPLIANCE (Supplier Risk and Compliance) - SRM | consumer | optional | - |
@@ -218,7 +218,7 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | 20 | `sent` | - | - | - | - | - |
 | 30 | `in_progress` | - | - | - | - | - |
 | 40 | `completed` | - | ✓ | ✓ | `srm-supplier-lifecycle:close_information_request` | - |
-| 50 | `cancelled` | - | ✓ | - | - | - |
+| 50 | `canceled` | - | ✓ | - | - | - |
 
 ### `supplier_registrations` (Supplier Registration)
 
@@ -237,7 +237,7 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | 10 | `open` | ✓ | - | - | - | - |
 | 20 | `in_progress` | - | - | - | - | - |
 | 30 | `completed` | - | ✓ | - | - | - |
-| 40 | `cancelled` | - | ✓ | - | - | - |
+| 40 | `canceled` | - | ✓ | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 

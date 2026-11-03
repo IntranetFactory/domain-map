@@ -44,7 +44,7 @@ SocialChorus + Dynamic Signal. GaggleAMP, DSMN8, Oktopost remain independent.
   on the gamification side for standalone deploy of shares + advocate_profiles, 4 consumer of
   employees/social_posts/users); 9 aliases; 28 lifecycle states across the 7 workflow masters
   (well-formed: one initial, >=1 terminal, gates on the right transitions); 4 trigger_events;
-  22 data_object_relationships (intra-domain + 4 users edges per Rule #10 + 2 cross-domain
+  22 data_object_relationships (intra-domain + 4 relationships to `users` per Rule #10 + 2 cross-domain
   outbound: advocate_profiles->employees, advocacy_content->social_posts); 4 handoffs.
 - **Handoffs.** intra-domain CONTENT-DISTRIBUTION -> GAMIFICATION on advocacy_share.posted;
   outbound advocacy_share_metrics -> SMM-PUBLISHING (organic social attribution),
@@ -58,7 +58,7 @@ SocialChorus + Dynamic Signal. GaggleAMP, DSMN8, Oktopost remain independent.
   (11 required, 5 optional). External social posting/fetch is `external` coverage_tier because
   Semantius does not own LinkedIn/X/Facebook schemas.
 - **Phase E.** 3 personas (MKT-ADVOCACY-PROGRAM-MANAGER, MKT-ADVOCACY-CONTENT-CURATOR
-  function-scoped; EMP-ADVOCATE cross-functional); 6 role_modules (each persona reaches both
+  function-scoped; EMP-ADVOCATE cross-functional); 6 persona_modules (each persona reaches both
   modules, satisfying the 2-module floor); 3 gated lifecycle states wired to real PCF nodes
   (advocacy_campaigns.running + advocacy_content.published -> 665 "Execute promotional activities";
   advocacy_leaderboards.live -> 666 "Evaluate promotional performance metrics"); 4 process_raci
@@ -68,7 +68,7 @@ SocialChorus + Dynamic Signal. GaggleAMP, DSMN8, Oktopost remain independent.
 
 - A1 metadata complete; every touched row record_status='new' (no approved/pending); zero `notes`
   on every touched table (DMDO, relationships, aliases, lifecycle, handoffs, domain_module_tools,
-  role_modules, solution_domains, solutions, vendors).
+  persona_modules, solution_domains, solutions, vendors).
 - M7 single-master: each data_object mastered in exactly one module; advocacy_shares +
   advocate_profiles carried embedded_master (not master) in the gamification module = correct
   autonomous-deployable shape.

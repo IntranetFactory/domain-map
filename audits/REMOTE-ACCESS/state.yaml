@@ -22,12 +22,12 @@ b1a:
     summary: "Author intra-domain relationship remote_sessions produces session_recordings."
     finding: >
       Zero intra-domain data_object_relationships between the two REMOTE-ACCESS masters.
-      The natural edge remote_sessions (238) -> session_recordings (239) with verb
+      The natural relationship remote_sessions (238) -> session_recordings (239) with verb
       produces / produced_during is absent. Cardinality (1:0..1 single recording per
       session = one_to_one, or 1:N segmented recordings per session = one_to_many) is a
       user pick. Both masters live in separate modules (238 in 294, 239 in 295), so this
-      is a cross-module intra-domain edge. 2026-06-07: re-confirmed still absent; the only
-      edges on 238/239 are the users (748) actor edges 1613-1616.
+      is a cross-module intra-domain relationship. 2026-06-07: re-confirmed still absent; the only
+      relationships on 238/239 are the users (748) actor relationships 1613-1616.
     action: >
       Surface the cardinality question. On user pick, INSERT one data_object_relationships
       row: data_object_id=238, related_data_object_id=239, relationship_verb='produces',
@@ -74,16 +74,16 @@ b1b:
       - {data_object_id: 238, name: remote_sessions, target_module_id: 294, workflow: "requested -> consent_pending -> connected -> privileged -> ended (proposed)"}
       - {data_object_id: 239, name: session_recordings, target_module_id: 295, workflow: "recording -> archived -> retention_lock -> expired (proposed)"}
   - id: B1B-B8
-    summary: "Author 3-5 outbound cross-domain data_object_relationships (remote_sessions -> msp_tickets / service_incidents / msp_time_entries; GRC edges blocked on B3)."
+    summary: "Author 3-5 outbound cross-domain data_object_relationships (remote_sessions -> msp_tickets / service_incidents / msp_time_entries; GRC relationships blocked on B3)."
     finding: >
-      Zero cross-domain data_object_relationships on REMOTE-ACCESS masters. Outbound edges
+      Zero cross-domain data_object_relationships on REMOTE-ACCESS masters. Outbound relationships
       owed for handoffs 162 / 163 / 164 / 646 / 647 / 648: remote_sessions references
       msp_tickets (h.163, h.647), remote_sessions resolves service_incidents (h.162, h.646),
       remote_sessions generates_billing_for msp_time_entries (h.163). All source from
-      remote_sessions (238) in module 294. GRC-targeted edges (h.164 session_recordings -> ?,
+      remote_sessions (238) in module 294. GRC-targeted relationships (h.164 session_recordings -> ?,
       h.648 remote_sessions -> ?) blocked on Bucket 3 GRC target masters not existing yet.
     blocked_by:
-      - {type: prerequisite_entity, ref: B3-S3, reason: "GRC-targeted edges need GRC target masters which are Phase 0 pending"}
+      - {type: prerequisite_entity, ref: B3-S3, reason: "GRC-targeted relationships need GRC target masters which are Phase 0 pending"}
     affected_handoffs:
       - {handoff_id: 162, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: support_session.completed, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 163, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}

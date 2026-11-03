@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 // scripts/loaders/load_ats_personas_pilot.ts
 //
-// Plan 3 step E pilot: author the ATS persona / RACI layer FRESH (the _core roles were
+// Plan 3 step E pilot: author the ATS persona / RACI layer FRESH (the _core personas were
 // deleted in step D). Function-anchored discovery (Recruiting owns ATS, Legal contributes;
 // Hiring Manager is cross-functional). Authors, idempotently (read-before-create on the
 // natural key):
-//   1. domain_roles  (6 personas)
-//   2. role_modules  (reach across the 8 ATS modules)
-//   3. data_object_lifecycle_states.process_id  (the process-to-permission edge, 6 gates)
+//   1. personas  (6 personas)
+//   2. persona_modules  (reach across the 8 ATS modules)
+//   3. data_object_lifecycle_states.process_id  (the process-to-permission relationship, 6 gates)
 //   4. process_raci  (RACI assignments on the 5 wired processes)
 //
 // Re-runnable. After it, regenerate the ATS blueprints (B3 in §9 fills in).
@@ -17,13 +17,13 @@ const RECRUITING = 37;
 const LEGAL = 7;
 
 // module codes -> ids: CRM=1 POOL=2 REF=3 PIPE=4 INTV=5 OFFER=6 BG=7 PRE-EMP=8
-const PERSONAS: { role_code: string; role_name: string; business_function_id: number | null; description: string }[] = [
-  { role_code: "RECRUITING-RECRUITER", role_name: "Recruiter", business_function_id: RECRUITING, description: "Owns the requisition-to-offer pipeline for assigned reqs: sources, screens, schedules, drafts and sends offers, drives candidates to hire." },
-  { role_code: "RECRUITING-SOURCER", role_name: "Sourcer", business_function_id: RECRUITING, description: "Builds and works talent pools and the candidate CRM; generates qualified pipeline ahead of open reqs." },
-  { role_code: "RECRUITING-COORDINATOR", role_name: "Recruiting Coordinator", business_function_id: RECRUITING, description: "Owns interview logistics and offer / pre-employee paperwork; schedules panels and keeps the process moving." },
-  { role_code: "RECRUITING-MANAGER", role_name: "Recruiting Manager", business_function_id: RECRUITING, description: "Accountable for the recruiting function's output: approves reqs and offers, owns pipeline health and vendor relationships." },
-  { role_code: "HIRING-MANAGER", role_name: "Hiring Manager", business_function_id: null, description: "The role owning the open position. Cross-functional (sits in the hiring department, not Recruiting): defines the req, interviews, decides the hire, approves the offer." },
-  { role_code: "LEGAL-COMPLIANCE-SPECIALIST", role_name: "Compliance Specialist", business_function_id: LEGAL, description: "Owns hiring-compliance surfaces: background-check adjudication, FCRA / adverse-action, EEO / OFCCP, and candidate data-subject requests." },
+const PERSONAS: { persona_code: string; persona_name: string; business_function_id: number | null; description: string }[] = [
+  { persona_code: "RECRUITING-RECRUITER", persona_name: "Recruiter", business_function_id: RECRUITING, description: "Owns the requisition-to-offer pipeline for assigned reqs: sources, screens, schedules, drafts and sends offers, drives candidates to hire." },
+  { persona_code: "RECRUITING-SOURCER", persona_name: "Sourcer", business_function_id: RECRUITING, description: "Builds and works talent pools and the candidate CRM; generates qualified pipeline ahead of open reqs." },
+  { persona_code: "RECRUITING-COORDINATOR", persona_name: "Recruiting Coordinator", business_function_id: RECRUITING, description: "Owns interview logistics and offer / pre-employee paperwork; schedules panels and keeps the process moving." },
+  { persona_code: "RECRUITING-MANAGER", persona_name: "Recruiting Manager", business_function_id: RECRUITING, description: "Accountable for the recruiting function's output: approves reqs and offers, owns pipeline health and vendor relationships." },
+  { persona_code: "HIRING-MANAGER", persona_name: "Hiring Manager", business_function_id: null, description: "The role owning the open position. Cross-functional (sits in the hiring department, not Recruiting): defines the req, interviews, decides the hire, approves the offer." },
+  { persona_code: "LEGAL-COMPLIANCE-SPECIALIST", persona_name: "Compliance Specialist", business_function_id: LEGAL, description: "Owns hiring-compliance surfaces: background-check adjudication, FCRA / adverse-action, EEO / OFCCP, and candidate data-subject requests." },
 ];
 
 const REACH: Record<string, [number, string][]> = {
@@ -45,7 +45,7 @@ const WIRING: [number, string, number][] = [
   [12, "completed_consider", 222], // background_checks adjudicate -> Manage new hire/re-hire
 ];
 
-// [process_id, role_code, raci, consultation_blocking]
+// [process_id, persona_code, raci, consultation_blocking]
 const RACI: [number, string, string, boolean][] = [
   [220, "RECRUITING-SOURCER", "responsible", false],
   [220, "RECRUITING-RECRUITER", "responsible", false],
@@ -66,31 +66,31 @@ const RACI: [number, string, string, boolean][] = [
   [222, "RECRUITING-COORDINATOR", "consulted", true],
 ];
 
-const roleIdByCode: Record<string, number> = {};
+const personaIdByCode: Record<string, number> = {};
 
 for (const p of PERSONAS) {
-  const existing = await pg("GET", `/domain_roles?role_code=eq.${p.role_code}&select=id`);
+  const existing = await pg("GET", `/personas?persona_code=eq.${p.persona_code}&select=id`);
   if (existing && existing.length) {
-    roleIdByCode[p.role_code] = existing[0].id as number;
-    console.log(`persona exists:  ${p.role_code} (#${existing[0].id})`);
+    personaIdByCode[p.persona_code] = existing[0].id as number;
+    console.log(`persona exists:  ${p.persona_code} (#${existing[0].id})`);
     continue;
   }
-  const created = await pg("POST", "/domain_roles", p);
-  roleIdByCode[p.role_code] = created[0].id as number;
-  console.log(`persona created: ${p.role_code} (#${created[0].id})`);
+  const created = await pg("POST", "/personas", p);
+  personaIdByCode[p.persona_code] = created[0].id as number;
+  console.log(`persona created: ${p.persona_code} (#${created[0].id})`);
 }
 
 let rmCreated = 0;
 for (const [code, rows] of Object.entries(REACH)) {
-  const rid = roleIdByCode[code];
+  const personaId = personaIdByCode[code];
   for (const [mid, level] of rows) {
-    const ex = await pg("GET", `/role_modules?role_id=eq.${rid}&domain_module_id=eq.${mid}&select=id`);
+    const ex = await pg("GET", `/persona_modules?persona_id=eq.${personaId}&domain_module_id=eq.${mid}&select=id`);
     if (ex && ex.length) continue;
-    await pg("POST", "/role_modules", { role_id: rid, domain_module_id: mid, interaction_level: level });
+    await pg("POST", "/persona_modules", { persona_id: personaId, domain_module_id: mid, interaction_level: level });
     rmCreated++;
   }
 }
-console.log(`role_modules created: ${rmCreated}`);
+console.log(`persona_modules created: ${rmCreated}`);
 
 let wired = 0;
 for (const [doid, state, pid] of WIRING) {
@@ -101,10 +101,10 @@ console.log(`lifecycle process_id wirings applied: ${wired}`);
 
 let raciCreated = 0;
 for (const [pid, code, letter, blocking] of RACI) {
-  const rid = roleIdByCode[code];
-  const ex = await pg("GET", `/process_raci?process_id=eq.${pid}&actor_role_id=eq.${rid}&raci=eq.${letter}&select=id`);
+  const personaId = personaIdByCode[code];
+  const ex = await pg("GET", `/process_raci?process_id=eq.${pid}&persona_id=eq.${personaId}&raci=eq.${letter}&select=id`);
   if (ex && ex.length) continue;
-  await pg("POST", "/process_raci", { process_id: pid, actor_role_id: rid, raci: letter, consultation_blocking: blocking });
+  await pg("POST", "/process_raci", { process_id: pid, persona_id: personaId, raci: letter, consultation_blocking: blocking });
   raciCreated++;
 }
 console.log(`process_raci created: ${raciCreated}`);

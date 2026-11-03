@@ -46,7 +46,7 @@ type Spec = {
   }>;
   data_objects?: Array<{ name: string }>;
   bundle?: { code: string; name: string };
-  composes?: Array<{ name: string; role?: string; owning_domain?: string | null }>;
+  composes?: Array<{ name: string; held_as?: string; owning_domain?: string | null }>;
 };
 
 // Normalize a domain spec OR a domain-less bundle spec into one model.

@@ -29,7 +29,7 @@ Core HR case management surface: HR cases, case taxonomy, triage, approval routi
 | --- | --- | --- |
 | HR Case Categories | `case_categories` | Taxonomy of HR request types such as pay, benefits, leave, and policy, driving routing, SLAs, knowledge lookup, and trend analytics. |
 | HR Cases | `hr_cases` | Employee inquiries and service requests routed to HR operations, such as pay questions, benefits changes, leave requests, and complaints. |
-| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit. |
+| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit. |
 | Background Checks | `background_checks` | External verification results for a candidate (criminal, employment, education, credit, identity), with status and findings from a screening provider. |
 | Carrier Feeds | `carrier_feeds` | Outbound integrations that send enrollment and remittance data to a benefit carrier, typically as weekly batches whose failures cause coverage discrepancies. |
 | Compensation Statements | `compensation_statements` | Personalized total-rewards statements showing a worker the value of their base, bonus, equity, benefits, and perks. |
@@ -100,7 +100,7 @@ flowchart TD
   users -->|"launches"| engagement_surveys
   users -->|"attests to policies"| policy_attestations
   policy_attestations -->|"has attester"| users
-  employees -->|"is_linked_to"| users
+  employees -->|"is_related_to"| users
   users -->|"performs"| onboarding_tasks
   users -->|"created"| onboarding_tasks
   users -->|"must complete"| compliance_assignments
@@ -144,7 +144,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `case_categories` | `case_categories` | HR Case Category | HR Case Categories | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `hr_cases` | `hr_cases` | HR Case | HR Cases | master | - | - | required | yes | operational_workflow | `:manage` | - |
@@ -168,7 +168,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -192,7 +192,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `case_categories` | drives | `knowledge_base_articles` | one_to_many | reference | optional | source | clear | reference | - |
 | `case_categories` | drives | `employees` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -212,7 +212,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | launches | `engagement_surveys` | many_to_many | optional | target | clear | reference | - |
 | `users` | attests to policies | `policy_attestations` | one_to_many | optional | source | clear | reference | - |
 | `policy_attestations` | has attester | `users` | many_to_many | required | source | restrict | reference | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
 | `users` | performs | `onboarding_tasks` | one_to_many | optional | source | clear | reference | - |
 | `users` | created | `onboarding_tasks` | one_to_many | optional | source | clear | reference | - |
 | `users` | must complete | `compliance_assignments` | one_to_many | required | source | restrict | reference | - |
@@ -225,7 +225,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | authors | `knowledge_articles` | one_to_many | optional | source | clear | reference | - |
 | `users` | authored articles | `knowledge_articles` | one_to_many | required | source | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -235,7 +235,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `hr_cases` | spawns | `service_requests` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -256,10 +256,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `background_check_packages` | shapes | `background_checks` | one_to_many | required | none (required-if-present) | n/a | - |
 | `background_checks` | adjudicated_via | `background_check_adjudications` | one_to_one | required | none (required-if-present) | n/a | - |
 | `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | optional | none | n/a | - |
-| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgements` | one_to_one | required | none (required-if-present) | n/a | - |
+| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgments` | one_to_one | required | none (required-if-present) | n/a | - |
 | `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `compliance_assignments` | evidences | `compliance_audit_records` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | optional | none | n/a | - |
 | `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | optional | none | n/a | - |
 | `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | optional | none | n/a | - |
 | `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | optional | none | n/a | - |
@@ -318,7 +318,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | none | n/a | - |
 | `document_versions` | mirrors_to | `knowledge_base_articles` | one_to_many | optional | none | n/a | - |
 | `content_documents` | realigns | `iga_access_requests` | one_to_many | optional | none | n/a | - |
-| `retail_labour_schedules` | materializes_as | `work_shifts` | one_to_many | required | none (required-if-present) | n/a | - |
+| `retail_labor_schedules` | materializes_as | `work_shifts` | one_to_many | required | none (required-if-present) | n/a | - |
 | `store_associate_checklists` | escalates_to | `work_shifts` | one_to_many | optional | none | n/a | - |
 | `job_offers` | is contingent on | `background_checks` | one_to_many | required | none (required-if-present) | n/a | - |
 | `job_offers` | seeds | `compensation_statements` | one_to_one | required | none (required-if-present) | n/a | - |
@@ -347,7 +347,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `case_categories` | HRSD-KNOWLEDGE (HR Knowledge) - HRSD | consumer | optional | - |
 | `hr_cases` | BEN-ENROLLMENT (Enrollment and Life Events) - BEN-ADMIN | consumer | required | BEN-ENROLLMENT consumes hr_cases when HRSD escalates a benefits question (escalated_to_benefits). Receiving side of handoff 1119. |
@@ -372,12 +372,12 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
 | HRSD-CASE-MGMT | PAYROLL | PAYROLL-RUN | `hr_case.escalated_to_payroll` | `escalated` _(state_change)_ | `hr_cases` | api_call | medium | HR-case escalation to Payroll Operations. Payroll-related HR cases (off-cycle pay, W-2 reissue, garnishment questions) require Payroll Ops to take the next action; medium friction because PAYROLL and HRSD are usually different vendor stacks. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
 | HRSD-CASE-MGMT | LMS | _(domain-level)_ | `case_category.updated` | _(state_change)_ | `case_categories` | event_stream | low | Case taxonomy update propagates to LMS so compliance-assignment categories and HR-case categories stay aligned for training-targeting and remediation-routing logic. |
 | HCM-CORE-WORKER | LMS | LMS-COURSE-DELIVERY | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
@@ -413,11 +413,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
 | HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `employees` | embedded_master | required | HCM-CORE-WORKER (HCM) | - |
 | `background_checks` | consumer | optional | BGV-SCREENING-ORDERS (BGV) | - |
@@ -641,7 +641,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `manage_maintain_employee_data` | Manage and maintain employee data | 7.7.3 | 10524 | 3 | Capturing and updating employee information and data and information on the employees. |
 | `manage_leave_absence` | Manage leave of absence | 7.6.2.2 | 10515 | 4 | Managing the period of time that an employee must be away from their primary job, while maintaining the status of employee (i.e., paid and unpaid leave of absence but not vacations, holidays, hiatuses, sabbaticals, and work-from-home programs). |
 | `manage_separation` | Manage separation | 7.6.2 | 10513 | 3 | Managing the process of employee separation, including leaves of absence, resignations, discharges, and layoffs. Inform the employee of the termination. Complete paperwork for continuation of benefits. Enter employment status change into system. |
-| `manage_employee_inquiry_process` | Manage employee inquiry process | 7.7.2 | 10523 | 3 | Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the enquiry has been made. |
+| `manage_employee_inquiry_process` | Manage employee inquiry process | 7.7.2 | 10523 | 3 | Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the inquiry has been made. |
 
 **RACI realization:**
 

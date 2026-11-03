@@ -21,7 +21,7 @@ b2:
     options:
       - "(a) re-attribute all 3 to SEM as source (corrects the (c) boundary; adds SEM outbound; overwrites existing source_domain_id)"
       - "(b) leave as-is (SPM keeps them as forwarded events; source_domain_module_id stays NULL)"
-      - "(c) delete the 3 rows if SEM already publishes the same outbound edges (check for SEM duplicates first)"
+      - "(c) delete the 3 rows if SEM already publishes the same outbound relationships (check for SEM duplicates first)"
     why: "Destructive overwrite of existing rows + adds rows attributed to a neighbor domain. Recommended (a): it matches the boundary the user just chose. Needs sign-off because it overwrites a non-empty FK and modifies SEM's outbound surface."
   - id: B2-B9D-OWN-297
     summary: "Strategic Portfolio Management: name an owner for \"Perform planning/budgeting/forecasting\" (no one is responsible for it today)"
@@ -98,6 +98,6 @@ b3:
     proposed_module: SPM-PORTFOLIO-PLANNING as consumer of GRC master
   - id: B3-VALUE-STREAMS-CONSUMER
     candidate: value_streams
-    rationale: "VSDP masters value_streams (id 80 sibling); SPM should declare a consumer link rather than master."
+    rationale: "VSDP masters value_streams (id 80 sibling); SPM should declare a consumer relationship rather than master."
     vendor_evidence: [Jira Align, ServiceNow Value Stream Delivery Platform]
     proposed_module: SPM-PORTFOLIO-PLANNING as consumer of VSDP master

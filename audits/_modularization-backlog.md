@@ -7,7 +7,7 @@ Established 2026-06-02; re-derive counts with `bun run c:/tmp/enrich_no_module_d
 As of 2026-06-02: **104** domains had no modules, all `next_action_by: agent`. Bucketed by how much substrate
 each already holds, because that determines the work each needs.
 
-Readiness buckets (caps = `capability_domains` count; masters = `domain_data_objects role=master` count):
+Readiness buckets (caps = `capability_domains` count; masters = `domain_data_objects held_as=master` count):
 
 | Bucket | Test | Count | Work needed |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Readiness buckets (caps = `capability_domains` count; masters = `domain_data_obj
 ## READY — clean modularization (reuse existing entities, Phase M only)
 
 This is the only bucket that fits the "reuse existing entities" depth. Each subagent creates the `domain_modules`,
-links existing capabilities (`domain_module_capabilities`), and assigns existing data_objects
+relates existing capabilities (`domain_module_capabilities`), and assigns existing data_objects
 (`domain_module_data_objects`) at their existing role + necessity. No new entities.
 
 **Done 2026-06-02 (pilot, 5):** EXPENSE, WFM, MA, SAM, FLEET-MGMT.
@@ -57,7 +57,7 @@ AP-AUTO, CCAAS, DAM, GRC, KMS, LSD, MDM, MFG-OPS, RET-STORE, S2P, SPM
 
 Have masters (5-12 each) but most have **zero capabilities**. A module needs ≥1 capability (M6), so you cannot
 even create a valid module without authoring capabilities. **Different work:** run the Phase A capability slice
-(3-6 noun-phrase capabilities per domain + `capability_domains` links), then modularize. No master research needed
+(3-6 noun-phrase capabilities per domain + `capability_domains` relationships), then modularize. No master research needed
 (the masters are already there), so this is medium weight: Phase A caps + Phase M.
 
 AIOPS, APIM, APP-PAAS, AUDIT, BANK-OPS, BI, CLIN-DEV, CONV-AI, DCG, DCIM, DEM, DI, DISCOVERY, DQ, EAM, ESG, ESIGN,
@@ -135,7 +135,7 @@ were purged; their modules carry none yet):
 The 4 already-authored full-module domains (72 CDP, 91 ECM, 130 RMM, 149 FLEET-MAINT) kept their
 per-module tools through the migration and are NOT enrolled.
 
-**5 generic `side_effect` links with no module counterpart** that per-module re-authoring will NOT
+**5 generic `side_effect` relationships with no module counterpart** that per-module re-authoring will NOT
 auto-restore (domain-grain only; retained in the snapshot; re-add them explicitly when these already
 authored domains gain or revise tools):
 

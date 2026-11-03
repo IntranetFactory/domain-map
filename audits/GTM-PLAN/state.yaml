@@ -18,7 +18,7 @@ last_audit: "2026-06-15"
 b1b:
   - id: B1B-PHASE-P
     summary: "Persona / RACI layer (E1) for the 5-module domain. DEFERRED (author on go-ahead)."
-    finding: "GTM-PLAN now has 5 full modules and 0 personas. Candidate personas: GTM Planning Lead / RevOps Strategist (cross-module), Territory and Quota Planner, Capacity Planner, Sales-Ops Analyst. Author domain_roles + role_modules reach + process_raci, and wire lifecycle.process_id."
+    finding: "GTM-PLAN now has 5 full modules and 0 personas. Candidate personas: GTM Planning Lead / RevOps Strategist (cross-module), Territory and Quota Planner, Capacity Planner, Sales-Ops Analyst. Author personas + persona_modules reach + process_raci, and wire lifecycle.process_id."
 
   - id: B1B-TOOLS
     summary: "domain_module_tools breadth for the 5 modules; gtm-plan-system skill derives from them."

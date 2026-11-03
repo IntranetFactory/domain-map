@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 10 master entities across 4 modules (`FUND-ADMIN-FUND-LEDGER`, `FUND-ADMIN-LP-COMMITMENTS`, `FUND-ADMIN-CAPITAL-CALLS`, `FUND-ADMIN-DISTRIBUTIONS`); 8 capabilities (7 domain-prefixed + 1 cross-cutting `APPROVAL-WORKFLOW`); 5 solutions (4 primary + 1 secondary); 0 regulations linked; 5 trigger_events; 3 outbound + 4 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 roles + 0 role_modules + 0 role_permissions; 0 system skills + 0 skill_tools links.
+- Current footprint: 10 master entities across 4 modules (`FUND-ADMIN-FUND-LEDGER`, `FUND-ADMIN-LP-COMMITMENTS`, `FUND-ADMIN-CAPITAL-CALLS`, `FUND-ADMIN-DISTRIBUTIONS`); 8 capabilities (7 domain-prefixed + 1 cross-cutting `APPROVAL-WORKFLOW`); 5 solutions (4 primary + 1 secondary); 0 regulations related; 5 trigger_events; 3 outbound + 4 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 roles + 0 persona_modules + 0 role_permissions; 0 system skills + 0 skill_tools relationships.
 - Vendor-surface basis: Allvue Systems, eFront (BlackRock), Juniper Square, Carta Fund Admin, Carta Cap Table (secondary). Cross-checked against SS&C GlobeOp, Citco, Apex Group, AlterDomus, IQ-EQ (third-party fund-administrator services) and Pregin Pro Reporting / Confluence Unity / Vermilion (regulatory-reporting specialists).
 - Catalog UX fields: empty (`catalog_tagline=''`, `catalog_description=''`).
 - Domain Semantius score: **uncomputable**, F2/F3 fail (zero system skills across all 4 modules).
@@ -29,7 +29,7 @@ Flagship picks deliberately mix three sub-segments:
 | ID | Entity | Proposed module | Notes |
 |---|---|---|---|
 | B1-M1 | `regulations` rows for AIFMD, SEC Marketing Rule, ILPA Reporting Standards, FATCA, CRS, and the Cayman Mutual Funds Law | n/a (catalog-level) | `domain_regulations` for FUND-ADMIN is empty. AIFMD (EU Directive 2011/61/EU) governs depositary + reporting; SEC Marketing Rule (Rule 206(4)-1) governs LP-facing performance reporting; ILPA Reporting Standards (capital-call notice templates, distribution notices); FATCA + CRS govern LP tax-status collection during KYC. Existing in catalog or net new (verify against `/regulations` before insert). |
-| B1-M2 | `domain_regulations` rows linking FUND-ADMIN to AIFMD, SEC-MKT-RULE, ILPA, FATCA, CRS | n/a (link) | After B1-M1 lands, attach the six rows with `applicability` set per regulation. AIFMD is mandatory for EU-domiciled funds; FATCA + CRS are mandatory for every fund accepting US/CRS-reportable LP capital. |
+| B1-M2 | `domain_regulations` rows relating FUND-ADMIN to AIFMD, SEC-MKT-RULE, ILPA, FATCA, CRS | n/a (relationship) | After B1-M1 lands, attach the six rows with `applicability` set per regulation. AIFMD is mandatory for EU-domiciled funds; FATCA + CRS are mandatory for every fund accepting US/CRS-reportable LP capital. |
 
 #### MISSING (workflow substrate the current footprint omits)
 
@@ -46,9 +46,9 @@ Flagship picks deliberately mix three sub-segments:
 |---|---|---|---|
 | B1-S1 | A4 | `domains.catalog_tagline` and `catalog_description` are empty strings on FUND-ADMIN. Per Rule #20 buyer-voice surface is required; absence blocks the catalog UX. | Draft `catalog_tagline` (single-sentence buyer-voice one-liner) + `catalog_description` (1-3 buyer-voice paragraphs covering workflow + value). Surface to user BEFORE writing per A4 fix discipline. |
 | B1-S2 | B4 | Pattern flags considered, but the audit pass requires positive re-evaluation. `funds`, `fund_distributions`, `capital_calls`, `waterfall_calculations` all default-false on all three flags; `lp_subscriptions` has `has_personal_content=true` + `has_submit_lock=true`; `lp_commitments` has `has_personal_content=true`; `pcap_statements` has `has_submit_lock=true`. Re-evaluate: `capital_call_notices` and `distribution_notices` (once loaded per B1-W3/W4) need `has_submit_lock=true`; `waterfall_calculations` needs `has_single_approver=true` (CFO sign-off before notice publishes). | PATCH flags after re-confirmation; record the audit pass in the audit decisions, not in `notes` (Rule #15). |
-| B1-S3 | B7 | Six masters with user-typed actors lack explicit `→ users` edges in `data_object_relationships`: `fund_ledger_entries` (poster), `fund_close_periods` (closer + approver), `lp_subscriptions` (onboarder + reviewer), `pcap_statements` (preparer + approver), `capital_call_responses` (booker), `waterfall_calculations` (calculator + approver). Existing user edges cover `funds`, `lp_commitments`, `capital_calls`, `fund_distributions` only. | Author 6 edges per Rule #10 into `data_object_relationships` with `related_data_object_id=748` and verb describing actor role. |
+| B1-S3 | B7 | Six masters with user-typed actors lack explicit `→ relationships to `users` in `data_object_relationships`: `fund_ledger_entries` (poster), `fund_close_periods` (closer + approver), `lp_subscriptions` (onboarder + reviewer), `pcap_statements` (preparer + approver), `capital_call_responses` (booker), `waterfall_calculations` (calculator + approver). Existing relationships to `users` cover `funds`, `lp_commitments`, `capital_calls`, `fund_distributions` only. | Author 6 relationships per Rule #10 into `data_object_relationships` with `related_data_object_id=748` and verb describing actor role. |
 | B1-S4 | M5 | All 13 `data_object_lifecycle_states` rows for FUND-ADMIN masters have `domain_module_id=NULL`. Two states are `requires_permission=true` (`funds.final_close` → module 12, `fund_distributions.declared` → module 15). FUND-ADMIN is a 4-module domain; the workflow-gate permissions need module attribution to materialize with the right `<domain_module_code>:` prefix. | PATCH `domain_module_id` per the mastering module on every state row: `funds` states → 12, `lp_commitments` states → 13, `fund_distributions` states → 15. The non-gate states benefit from attribution too even when `requires_permission=false`. |
-| B1-S5 | M7 | `capital_calls` (id 367) and `fund_distributions` (id 368) carry legacy `domain_data_objects.role='master'` rows on **both** FUND-ADMIN (domain 160) and RE-INVEST (domain 146). At the module level only FUND-ADMIN modules master them; RE-INVEST has zero modules loaded so the legacy domain-level row is pre-modular drift. | This is a RE-INVEST audit fix in scope (RE-INVEST owes either modules that master these entities, or the legacy rows need DELETE). Report-only on the FUND-ADMIN side; included in the report-only follow-ups section. |
+| B1-S5 | M7 | `capital_calls` (id 367) and `fund_distributions` (id 368) carry legacy `domain_data_objects.held_as='master'` rows on **both** FUND-ADMIN (domain 160) and RE-INVEST (domain 146). At the module level only FUND-ADMIN modules master them; RE-INVEST has zero modules loaded so the legacy domain-level row is pre-modular drift. | This is a RE-INVEST audit fix in scope (RE-INVEST owes either modules that master these entities, or the legacy rows need DELETE). Report-only on the FUND-ADMIN side; included in the report-only follow-ups section. |
 
 #### MISSING (lifecycle states + trigger events)
 
@@ -116,7 +116,7 @@ Candidate entities surfaced from flagship vendors but not yet confirmed by full 
 
 ### Cross-bucket dependencies
 
-- Bucket 1 B1-M2 (regulation links) depends on Bucket 1 B1-M1 (the regulations rows existing), sequence in the fix-loop.
+- Bucket 1 B1-M2 (regulation relationships) depends on Bucket 1 B1-M1 (the regulations rows existing), sequence in the fix-loop.
 - Bucket 1 B1-W1/W2/W3/W4 (notice + KYC + docs entities) interact with Bucket 2 #4 (waterfall pattern flags) only at the audit-narrative level, not load-order.
 - Bucket 2 #2 (split out close-and-audit module) blocks Bucket 1 B1-L4 / B1-L7 (lifecycle on `fund_close_periods` and the `fund_ledger_entries` config-shape exemption); the module attribution depends on whether close stays in FUND-LEDGER or moves.
 - Bucket 2 #3 (LP-PORTAL promotion) interacts with Bucket 1 B1-S4 (module attribution on lifecycle states): if LP-PORTAL becomes its own module, `pcap_statements.published` belongs there.
@@ -165,7 +165,7 @@ _(none in this pass; read-only audit only)_
 
 ### Scope
 
-Residual B1 items from the 2026-05-30 audit that were strictly technical (no user judgment required) and pre-specified enough to load: PATCH enum backfills, INSERT to existing rows, INSERT user-edges that the audit named row-by-row, INSERT `handoff_processes` for the proposals where both `handoff_id` and a resolvable PCF `process_id` were named.
+Residual B1 items from the 2026-05-30 audit that were strictly technical (no user judgment required) and pre-specified enough to load: PATCH enum backfills, INSERT to existing rows, INSERT relationships to `users` that the audit named row-by-row, INSERT `handoff_processes` for the proposals where both `handoff_id` and a resolvable PCF `process_id` were named.
 
 Loader: [.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts). Idempotent.
 
@@ -175,7 +175,7 @@ Loader: [.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts](../.tmp_deploy/f
 |---|---|---|---|
 | B1-S4 | PATCH `data_object_lifecycle_states.domain_module_id` | 13 | `funds` (5: ids 449-453) -> module 12 (FUND-LEDGER); `lp_commitments` (4: ids 454-457) -> module 13 (LP-COMMITMENTS); `fund_distributions` (4: ids 458-461) -> module 15 (DISTRIBUTIONS). The two `requires_permission=true` states (`funds.final_close` id 450, `fund_distributions.declared` id 459) now materialize against the right `<domain_module_code>:` prefix. |
 | B1-M2 | INSERT `domain_regulations` | 2 | AIFMD (regulation_id 41) + FATCA (50) -> FUND-ADMIN (160), both `applicability='mandatory'`. SEC Marketing Rule, ILPA Reporting Standards, CRS, and the Cayman Mutual Funds Law are deferred because the underlying `regulations` rows do not yet exist (B1-M1 new-entity work). |
-| B1-S3 | INSERT `data_object_relationships` user-edges (Rule #10) | 10 | `related_data_object_id=748` (`users`), `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. Per-actor edges: `fund_ledger_entries` (posted by); `fund_close_periods` (closed by, approved by); `lp_subscriptions` (onboarded by, reviewed by); `pcap_statements` (prepared by, approved by); `capital_call_responses` (booked by); `waterfall_calculations` (calculated by, approved by). |
+| B1-S3 | INSERT `data_object_relationships` relationships to `users` (Rule #10) | 10 | `related_data_object_id=748` (`users`), `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. Per-actor relationships: `fund_ledger_entries` (posted by); `fund_close_periods` (closed by, approved by); `lp_subscriptions` (onboarded by, reviewed by); `pcap_statements` (prepared by, approved by); `capital_call_responses` (booked by); `waterfall_calculations` (calculated by, approved by). |
 | B1-H1 | INSERT `handoff_processes` (agent_curated, additive) | 4 | H1b: handoff 1041 -> process 1480 (PCF 10911, "Process and oversee debt and investment transactions"). H1c: handoff 1042 -> process 1422 (PCF 10862, "Process and distribute payments"). H1d: handoff 1043 -> process 56 (PCF 10730, "Perform general accounting and reporting"). H1f: handoff 1038 -> process 310 (PCF 10751, "Perform capital planning and project approval"). All `proposal_source='agent_curated'`, `record_status='new'` by default. Additive to any pre-existing tags on the same handoffs. |
 
 ### Deferred this pass
@@ -196,7 +196,7 @@ Loader: [.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts](../.tmp_deploy/f
 
 - `/data_object_lifecycle_states?data_object_id=in.(755,759,368)&select=data_object_id,state_name,domain_module_id`: all 13 rows now carry the expected `domain_module_id`.
 - `/domain_regulations?domain_id=eq.160`: 2 rows (AIFMD id 270, FATCA id 271).
-- `/data_object_relationships?related_data_object_id=eq.748&data_object_id=in.(756,757,758,760,761,762)`: 10 user-edges present (ids 1897-1906).
+- `/data_object_relationships?related_data_object_id=eq.748&data_object_id=in.(756,757,758,760,761,762)`: 10 relationships to `users` present (ids 1897-1906).
 - `/handoff_processes?handoff_id=in.(1038,1041,1042,1043)`: the 4 new rows are present (ids 761-764) alongside any pre-existing tags.
 
 UI link: https://tests.semantius.app/domain_map/data_object_lifecycle_states
@@ -205,7 +205,7 @@ UI link: https://tests.semantius.app/domain_map/data_object_lifecycle_states
 
 ### Summary
 
-- Current footprint: 10 master entities across 4 modules (`FUND-ADMIN-FUND-LEDGER` id 12, `FUND-ADMIN-LP-COMMITMENTS` id 13, `FUND-ADMIN-CAPITAL-CALLS` id 14, `FUND-ADMIN-DISTRIBUTIONS` id 15); 8 capabilities (7 domain-prefixed + `APPROVAL-WORKFLOW`); 5 solutions (4 primary + 1 secondary); 2 regulations linked (AIFMD id 41, FATCA id 50); 5 trigger_events; 3 outbound + 4 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 roles, 0 role_modules, 0 role_permissions, 0 module-scoped permissions; 0 system skills, 0 skill_tools.
+- Current footprint: 10 master entities across 4 modules (`FUND-ADMIN-FUND-LEDGER` id 12, `FUND-ADMIN-LP-COMMITMENTS` id 13, `FUND-ADMIN-CAPITAL-CALLS` id 14, `FUND-ADMIN-DISTRIBUTIONS` id 15); 8 capabilities (7 domain-prefixed + `APPROVAL-WORKFLOW`); 5 solutions (4 primary + 1 secondary); 2 regulations related (AIFMD id 41, FATCA id 50); 5 trigger_events; 3 outbound + 4 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 roles, 0 persona_modules, 0 role_permissions, 0 module-scoped permissions; 0 system skills, 0 skill_tools.
 - Structural verdict by band: A1/A2/A3 pass, A4 partial (catalog UX empty); M1/M2/M4/M5/M6 pass, M7 partial (RE-INVEST legacy multi-master rows on `capital_calls` id 597 and `fund_distributions` id 598 unresolved); B1/B2/B3/B5/B6/B7/B10b/B11 pass, B4 partial (waterfall_calculations / capital_calls / fund_distributions / fund_close_periods still default-false on at least one pattern flag), B9/B9b fail (0 intra-domain handoffs), B12 partial (7 of 10 masters still lack lifecycle states), C1 pass, D1 deferred, E1-E5 all fail (zero roles), F1 vacuously pass, F2/F3/F5 fail (0 system skills), H quality 0/7 approved with H process health 6/7 agent_curated (1040 still discovery_substring only, 1046 untagged).
 - Domain Semantius score: uncomputable, F2 / F3 fail on all 4 modules.
 - Bucket 1 (in-scope, agent fixable): 11 items.
@@ -218,7 +218,7 @@ UI link: https://tests.semantius.app/domain_map/data_object_lifecycle_states
 
 | ID | Entity | Proposed module | Notes |
 |---|---|---|---|
-| B1-M1 | `regulations` rows for SEC Marketing Rule (Rule 206(4)-1), ILPA Reporting Standards, CRS, Cayman Mutual Funds Law | n/a (catalog-level) | Carried from 2026-05-30; the 2026-05-31 continuation linked AIFMD + FATCA only because the others did not yet exist as `regulations` rows. After insert, attach via `domain_regulations` with appropriate `applicability`. |
+| B1-M1 | `regulations` rows for SEC Marketing Rule (Rule 206(4)-1), ILPA Reporting Standards, CRS, Cayman Mutual Funds Law | n/a (catalog-level) | Carried from 2026-05-30; the 2026-05-31 continuation related AIFMD + FATCA only because the others did not yet exist as `regulations` rows. After insert, attach via `domain_regulations` with appropriate `applicability`. |
 | B1-W1 | `subscription_documents` | FUND-ADMIN-LP-COMMITMENTS | Carried from 2026-05-30. Subscription docs are the legal artifact of `lp_subscriptions`; PDF blobs + version history. |
 | B1-W2 | `lp_kyc_records` | FUND-ADMIN-LP-COMMITMENTS | Carried from 2026-05-30. KYC/AML output + sanction-screening trail; periodic re-screen. |
 | B1-W3 | `distribution_notices` | FUND-ADMIN-DISTRIBUTIONS | Carried from 2026-05-30. LP-facing notice document; ILPA template format. |
@@ -282,11 +282,11 @@ All six candidates from 2026-05-30 remain open, unchanged:
 
 ### Cross-bucket dependencies
 
-- B1-M1 -> domain_regulations follow-on link rows once new regulations land.
+- B1-M1 -> domain_regulations follow-on junction rows once new regulations land.
 - B1-B9b depends on B1-L1..L6 for the trigger events that anchor three of the five proposed intra-domain handoffs.
 - Bucket 2 #2 (split CLOSE-AND-AUDIT) gates B1-L4 / B1-L7 module attribution.
 - Bucket 2 #3 (LP-PORTAL promotion) gates pcap_statements lifecycle state module attribution within B1-L2.
-- E-band fixes (roles, role_modules, role_permissions) gate F-band (system skills are typically authored after roles per the per-domain checklist).
+- E-band fixes (roles, persona_modules, role_permissions) gate F-band (system skills are typically authored after roles per the per-domain checklist).
 - Buckets 2 and 3 are otherwise independent of each other.
 
 ### Per-bucket prompts
@@ -335,8 +335,8 @@ State-driven Validate pass over FUND-ADMIN (domain 160; modules 12 FUND-LEDGER, 
 |---|---|---|
 | B1A-ENTITY-TYPE | PATCH data_objects.entity_type unclassified -> typed | 10 (9 operational_workflow; fund_ledger_entries 756 -> operational_record, which structurally resolves the B1B-L7 / B2-LEDGER-LIFECYCLE config-shape exemption per Rule 12, no notes write) |
 | Catalog UX (Rule 20) | PATCH empty catalog_tagline + catalog_description | 5 (domain 160 + modules 12/13/14/15); buyer-voice, no vendor names, no em-dash |
-| B1A-M1 | INSERT regulations + domain_regulations links to 160 | 4 regulations (SEC Marketing Rule 94, ILPA Reporting Standards 95, Common Reporting Standard 96, Cayman Mutual Funds Act 97) + 4 domain_regulations (FUND-ADMIN now links 6) |
-| B1A-W1..W4 | INSERT new master data_objects + DMDO master + relationships | 4 data_objects (subscription_documents 1021, lp_kyc_records 1022, distribution_notices 1023, capital_call_notices 1024); 4 DMDO master rows (13/13/15/14); 11 data_object_relationships (5 cross-master one_to_many references + 6 per-actor user-edges) |
+| B1A-M1 | INSERT regulations + domain_regulations relationships to 160 | 4 regulations (SEC Marketing Rule 94, ILPA Reporting Standards 95, Common Reporting Standard 96, Cayman Mutual Funds Act 97) + 4 domain_regulations (FUND-ADMIN now relationships 6) |
+| B1A-W1..W4 | INSERT new master data_objects + DMDO master + relationships | 4 data_objects (subscription_documents 1021, lp_kyc_records 1022, distribution_notices 1023, capital_call_notices 1024); 4 DMDO master rows (13/13/15/14); 11 data_object_relationships (5 cross-master one_to_many references + 6 per-actor relationships to `users`) |
 | B1A-L1..L6 + W1..W4 lifecycle | INSERT data_object_lifecycle_states (module-attributed, gate states requires_permission=true) | 39 states across lp_subscriptions, pcap_statements, capital_calls, fund_close_periods, capital_call_responses, waterfall_calculations + the 4 new masters |
 | B1A-L1..L6 events | INSERT trigger_events | 8 (lp_subscription.submitted, pcap_statement.published, capital_call.drafted, fund_close_period.locked, capital_call_response.paid/.defaulted, waterfall_calculation.approved, lp_commitment.committed). The 9th, lp_subscription.executed on 758, could NOT be created: name collides with pre-existing row 955 on limited_partners 728 (surfaced below). |
 | B1A-B9b | INSERT intra-domain handoffs (source=target=160, lifecycle_progression, low friction) | 5 wiring 12->13 (fund.final_close), 13->14 (lp_commitment.committed), 14->13 (capital_call.funded), 15->13 (fund_distribution.executed), 15->12 (GL posting) |

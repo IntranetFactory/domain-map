@@ -1,0 +1,355 @@
+schema_version: 2
+domain: TMS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-11-03"
+b1a:
+  - id: B1A-COPY-DOMAIN
+    summary: Write the approved catalog copy for Transportation Management System.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domains
+        natural_key: TMS
+        field: catalog_tagline
+        to: >-
+          Buy freight with control: source carriers, tender shipments, track deliveries, and catch
+          invoice errors before you pay.
+      - table: domains
+        natural_key: TMS
+        field: catalog_description
+        to: >-
+          Run your freight from one place. Bid lanes out to carriers, keep agreements and rates
+          current, turn orders into shipments, and tender them to the right carrier at the
+          contracted price. Follow every shipment to delivery and keep the paperwork, from bills of
+          lading to consignment notes, attached to it.
+
+
+          When invoices arrive, check them against the shipment and the agreed rate, resolve
+          disputes with the carrier, and send only approved charges to accounts payable. File claims
+          for loss or damage on time, and book dock appointments so trucks arrive when your team is
+          ready.
+  - id: B1A-COPY-TMS-SHIPMENTS
+    summary: Write the approved catalog copy for Freight Shipment Execution.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TMS-SHIPMENTS
+        field: catalog_tagline
+        to: >-
+          Turn orders into shipments, tender them to carriers, and track them through delivery with
+          the paperwork attached.
+      - table: domain_modules
+        natural_key: TMS-SHIPMENTS
+        field: catalog_description
+        to: >-
+          Bring in freight demand from purchase, sales, or transfer orders, and plan it into
+          shipments. Compare carriers against your contracted rates, offer the tender, and see who
+          accepted. Follow each shipment through pickup, transit, and delivery, whichever feed
+          reports the status.
+
+
+          Produce bills of lading and consignment notes, and keep hazardous materials and food
+          transport records with the shipment they belong to.
+  - id: B1A-COPY-TMS-CARRIER-RATES
+    summary: Write the approved catalog copy for Carrier Rate and Contract Management.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TMS-CARRIER-RATES
+        field: catalog_tagline
+        to: >-
+          Keep your approved carriers, agreements, and contracted rates in one place that planning
+          and audit can trust.
+      - table: domain_modules
+        natural_key: TMS-CARRIER-RATES
+        field: catalog_description
+        to: >-
+          Maintain the list of carriers you may tender to, with their modes, service area, and
+          approval status. Record agreements, lane rates, surcharges, and capacity commitments, and
+          control when each takes effect.
+
+
+          Planners always price against current rates, and invoice audit checks against the same
+          numbers.
+  - id: B1A-COPY-TMS-PROCUREMENT
+    summary: Write the approved catalog copy for Freight Procurement.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TMS-PROCUREMENT
+        field: catalog_tagline
+        to: Run freight bids across your lanes and turn the awards into carrier agreements.
+      - table: domain_modules
+        natural_key: TMS-PROCUREMENT
+        field: catalog_description
+        to: >-
+          Run RFQs and auctions with your carriers, collect their offers lane by lane, and compare
+          them side by side. Award the lanes you want and carry the results into agreements and
+          rates, so what you negotiated is what planners use.
+  - id: B1A-COPY-TMS-SETTLEMENT
+    summary: Write the approved catalog copy for Freight Audit and Settlement.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TMS-SETTLEMENT
+        field: catalog_tagline
+        to: >-
+          Check every carrier invoice against the shipment and the agreed rate, and pay only what
+          you owe.
+      - table: domain_modules
+        natural_key: TMS-SETTLEMENT
+        field: catalog_description
+        to: >-
+          Match incoming carrier invoices to delivered shipments and contracted rates, and see which
+          ones need attention. Work exceptions and disputes with the carrier, allocate cost across
+          orders and cost centers, and pass approved invoices to accounts payable.
+
+
+          File loss and damage claims against carriers and track the dates that matter.
+  - id: B1A-COPY-TMS-DOCK
+    summary: Write the approved catalog copy for Dock Appointment Scheduling.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TMS-DOCK
+        field: catalog_tagline
+        to: Book dock appointments so trucks arrive when your team is ready for them.
+      - table: domain_modules
+        natural_key: TMS-DOCK
+        field: catalog_description
+        to: >-
+          Set up your dock doors, hours, and limits, and take appointment requests against the
+          calendar. Confirm slots, see who has arrived, and mark loads as finished, so pickups and
+          deliveries stop stacking up at the door.
+b1b:
+  - id: B1B-NEIGHBOR-MODULES
+    summary: >-
+      Eight consumed records have no module-level master because S2P, OMS, AP-AUTO, and ESG have no
+      modules yet (B5, UNOWNED in B9d).
+    finding: >-
+      sourcing_events, purchase_orders, goods_receipts, and supplier_invoices (S2P),
+      order_allocations and inventory_locations (OMS), payment_runs (AP-AUTO), and emission_factors
+      (ESG) are mastered only in the legacy domain_data_objects rollup. Health check B5 reads the
+      module junction, so it fails here until those domains are modularized. The handoffs to and
+      from them also have no module on the far side.
+    action: >-
+      Report-only. Clears when each neighbor gets its modules. Set target_domain_module_id and
+      source_domain_module_id on the handoffs then, and re-run B5.
+    blocked_by:
+      - type: domain_audit
+        blocking_domain: S2P
+        milestone: M1
+      - type: domain_audit
+        blocking_domain: OMS
+        milestone: M1
+      - type: domain_audit
+        blocking_domain: AP-AUTO
+        milestone: M1
+      - type: domain_audit
+        blocking_domain: ESG
+        milestone: M1
+    affected_entities:
+      - sourcing_events
+      - purchase_orders
+      - goods_receipts
+      - supplier_invoices
+      - order_allocations
+      - inventory_locations
+      - payment_runs
+      - emission_factors
+  - id: B1B-WMS-DOCK
+    summary: dock_appointments may move to WMS when that candidate loads.
+    finding: >-
+      Gartner places yard closer to WMS, and WMS would claim the same dock calendar. WMS is still a
+      queue candidate with nothing in the catalog.
+    action: Re-check the owner of dock_appointments when WMS is promoted.
+    blocked_by:
+      - type: catalog_addition
+        scope: domains
+        trigger: WMS promotion
+    affected_entities:
+      - dock_appointments
+  - id: B1B-HAZMAT-PAIR
+    summary: >-
+      hazmat_shipping_papers (TMS) and hazmat_load_declarations (TRUCKING-TMS) were not compared in
+      research.
+    finding: >-
+      Both were loaded as separate records. They may hold overlapping data. Neither Phase 0 report
+      compared them.
+    action: >-
+      Compare them when field-level specs are drafted, and surface a merge only if they prove to be
+      one record.
+    blocked_by:
+      - type: depends_on
+        ref: field-level spec for either module
+        reason: the catalog models no fields
+    affected_entities:
+      - hazmat_shipping_papers
+      - hazmat_load_declarations
+b2: []
+b3:
+  - id: B3-ROUTING-GUIDES
+    candidate: freight_routing_guides
+    rationale: Confirmed at Shipwell. Oracle's nearest resources are not the same concept.
+    vendor_evidence:
+      - Shipwell
+    proposed_module: TMS-CARRIER-RATES
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-LANE-AWARDS
+    candidate: freight_lane_awards
+    rationale: Confirmed at Transporeon as carrier allocations on an auction.
+    vendor_evidence:
+      - Transporeon
+    proposed_module: TMS-PROCUREMENT
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-SHIPMENT-LEGS
+    candidate: freight_shipment_legs
+    rationale: Confirmed at Oracle.
+    vendor_evidence:
+      - Oracle
+    proposed_module: TMS-SHIPMENTS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-VEHICLE-ALLOCATIONS
+    candidate: freight_vehicle_allocations
+    rationale: Confirmed at Transporeon.
+    vendor_evidence:
+      - Transporeon
+    proposed_module: TMS-SHIPMENTS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-COST-ACCRUALS
+    candidate: freight_cost_accruals
+    rationale: Confirmed at Transporeon.
+    vendor_evidence:
+      - Transporeon
+    proposed_module: TMS-SETTLEMENT
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-SHIPMENT-ALERTS
+    candidate: freight_shipment_alerts
+    rationale: Confirmed at Shipwell.
+    vendor_evidence:
+      - Shipwell
+    proposed_module: TMS-SHIPMENTS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-DELIVERY-NOTES
+    candidate: electronic_delivery_notes
+    rationale: Confirmed at Transporeon.
+    vendor_evidence:
+      - Transporeon
+    proposed_module: TMS-SHIPMENTS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-CARRIER-SCORECARDS
+    candidate: freight_carrier_scorecards
+    rationale: Manhattan marketing only.
+    vendor_evidence:
+      - Manhattan
+    proposed_module: TMS-CARRIER-RATES
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-CARRIER-QUALIFICATIONS
+    candidate: freight_carrier_qualifications
+    rationale: >-
+      Core by count, but all three cells are marketing. Do not treat as confirmed until a doc is
+      found.
+    vendor_evidence:
+      - Infios
+      - Shipwell
+      - Transporeon
+    proposed_module: TMS-CARRIER-RATES
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+
+checks:
+  # generated by scripts/analytics/domain_health.ts --record; do not hand-edit
+  checklist_version: 2
+  run_at: "2026-11-03T11:18:43.552Z"
+  results:
+    - {id: S1, result: pass, rows: []}
+    - {id: S2, result: pass, rows: []}
+    - {id: S3, result: warn, rows: [1403, 1412, 1421]}
+    - {id: A1, result: pass, rows: []}
+    - {id: A2, result: pass, rows: []}
+    - {id: A3, result: pass, rows: []}
+    - {id: A4, result: fail, rows: ["catalog_description", "catalog_tagline"]}
+    - {id: A5, result: agent, rows: []}
+    - {id: M1, result: pass, rows: []}
+    - {id: M2, result: pass, rows: []}
+    - {id: M4, result: pass, rows: []}
+    - {id: M5, result: pass, rows: []}
+    - {id: M6, result: pass, rows: []}
+    - {id: M7, result: pass, rows: []}
+    - {id: M8, result: fail, rows: [422, 423, 424, 425, 426]}
+    - {id: M9, result: pass, rows: []}
+    - {id: M10, result: agent, rows: []}
+    - {id: B1, result: pass, rows: []}
+    - {id: B2, result: pass, rows: []}
+    - {id: B3, result: pass, rows: []}
+    - {id: B4, result: agent, rows: []}
+    - {id: B5, result: fail, rows: [71, 73, 74, 75, 205, 322, 424, 425]}
+    - {id: B6, result: agent, rows: []}
+    - {id: B6b, result: pass, rows: []}
+    - {id: B7, result: warn, rows: [1396, 1397, 1399, 1400, 1401, 1403, 1404, 1407, 1410, 1411, 1412, 1413, 1414, 1416, 1420, 1424, 1426, 1429, 1430]}
+    - {id: B7b, result: pass, rows: []}
+    - {id: B8, result: pass, rows: []}
+    - {id: B9, result: pass, rows: []}
+    - {id: B9b, result: pass, rows: []}
+    - {id: B9c, result: pass, rows: []}
+    - {id: B9d, result: delegated, rows: []}
+    - {id: B9e, result: delegated, rows: []}
+    - {id: B9f, result: pass, rows: []}
+    - {id: B10, result: warn, rows: [97, 195, 196, 206, 370, 371, 375, 381, 785, 795, 811]}
+    - {id: B10b, result: pass, rows: []}
+    - {id: B11, result: warn, rows: [1397, 1399, 1401, 1403, 1407, 1408, 1410, 1411, 1412, 1413, 1415, 1418, 1420, 1421, 1422, 1424, 1426, 1427, 1428, 1429, 1430, 1433]}
+    - {id: B12, result: pass, rows: []}
+    - {id: B13, result: pass, rows: []}
+    - {id: B14, result: agent, rows: []}
+    - {id: B15, result: pass, rows: []}
+    - {id: B16, result: pass, rows: []}
+    - {id: C1, result: pass, rows: []}
+    - {id: C2, result: agent, rows: []}
+    - {id: D1, result: agent, rows: []}
+    - {id: E1, result: pass, rows: []}
+    - {id: E2, result: pass, rows: []}
+    - {id: E3, result: pass, rows: []}
+    - {id: E4, result: pass, rows: []}
+    - {id: E4b, result: pass, rows: []}
+    - {id: E4c, result: pass, rows: []}
+    - {id: E4d, result: pass, rows: []}
+    - {id: E5, result: skipped, rows: []}
+    - {id: E6, result: warn, rows: ["R6:1556", "R6:1557", "R6:1558"]}
+    - {id: F1, result: pass, rows: []}
+    - {id: F2, result: pass, rows: []}
+    - {id: F3, result: pass, rows: []}
+    - {id: F4, result: pass, rows: []}
+    - {id: F5, result: pass, rows: []}
+    - {id: F6, result: skipped, rows: []}
+    - {id: F7, result: agent, rows: []}
+    - {id: F8, result: agent, rows: []}
+    - {id: H1, result: pass, rows: []}

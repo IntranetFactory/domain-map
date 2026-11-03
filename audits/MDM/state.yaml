@@ -36,7 +36,7 @@ b1b:
       1 module. Recommended candidate codes: MDM-GOLDEN-RECORD-MGMT (single-module path) or
       MDM-GOLDEN-RECORDS + MDM-MATCH-MERGE-ENGINE (two-module path). This is the unbuilt-domain
       build: the agent does NOT scaffold it; it is surfaced as a user decision. Blocks every
-      downstream concern (M4, M6, B7 user-edges, B10b own outbound, B12 lifecycle states,
+      downstream concern (M4, M6, B7 relationships to users, B10b own outbound, B12 lifecycle states,
       C1 via Rule #10, intra-domain handoffs, master reconciliation realization).
     blocked_by:
       - {type: user_decision, ref: B2-S2}
@@ -48,8 +48,8 @@ b1b:
       domain_module_data_objects has master+required on customers (97) in CRM-ACCT-MGT
       (module 46, CRM domain 69) and on employees (31) in HCM-CORE-WORKER (module 54, HCM
       domain 54). The legacy domain_data_objects rollup also claims master+required on
-      (87, 97), (87, 206), (87, 31). Rule M7 forbids 2 role='master' rows for the same
-      data_object_id across the catalog. suppliers (206) has no role='master' row anywhere in
+      (87, 97), (87, 206), (87, 31). Rule M7 forbids 2 held_as='master' rows for the same
+      data_object_id across the catalog. suppliers (206) has no held_as='master' row anywhere in
       domain_module_data_objects; only the MDM legacy rollup claims it. Recommended path-b
       (MDM consumer of canonical masters, master only of golden_records / source_records /
       match_rules / merge_rules). Realizing the chosen path is DESTRUCTIVE (DELETE/demote the
@@ -70,7 +70,7 @@ b1b:
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
     affected_handoffs:
-      - {handoff_id: 222, direction: outbound, source_domain: MDM, target_domain: KGP, trigger_event: "kg_entity.linked", payload: "knowledge_graph_entities", null_field: "source_domain_module_id"}
+      - {handoff_id: 222, direction: outbound, source_domain: MDM, target_domain: KGP, trigger_event: "kg_entity.related", payload: "knowledge_graph_entities", null_field: "source_domain_module_id"}
       - {handoff_id: 269, direction: outbound, source_domain: MDM, target_domain: CRM, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "source_domain_module_id"}
       - {handoff_id: 270, direction: outbound, source_domain: MDM, target_domain: CSM, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "source_domain_module_id"}
       - {handoff_id: 271, direction: outbound, source_domain: MDM, target_domain: SUB-MGMT, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "source_domain_module_id"}
@@ -119,23 +119,23 @@ b1b:
       - {handoff_id: 719, direction: outbound, source_domain: MDM, target_domain: DCG, trigger_event: "merge_rule.published", payload: "merge_rules", null_field: "target_domain_module_id"}
 
   - id: B1B-S7
-    summary: "C1/Rule #10 users-relationship edges: 1 of expected ~12 to 18 present (employees 31 -> users 748)"
+    summary: "C1/Rule #10 users-relationships: 1 of expected ~12 to 18 present (employees 31 -> users 748)"
     finding: >-
-      Only 1 data_object_relationships row connects an MDM-claimed master to users (748):
-      employees 31 is_linked_to users. The 6 MDM-owned masters (315, 316, 317, 318, 319, 320)
-      carry zero edges to users. Per Rule #10 each must have steward/approver/author/ingester
-      edges. Estimated 11 to 17 missing rows. Cannot author without the role/persona shape
+      Only 1 data_object_relationships row relates an MDM-claimed master to users (748):
+      employees 31 is_related_to users. The 6 MDM-owned masters (315, 316, 317, 318, 319, 320)
+      carry zero relationships to users. Per Rule #10 each must have steward/approver/author/ingester
+      relationships. Estimated 11 to 17 missing rows. Cannot author without the role/persona shape
       (B2-S6) and module attribution (B1B-S1).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-S6}
     affected_masters:
-      - {data_object_id: 315, name: customer_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver edges to users"}
-      - {data_object_id: 316, name: supplier_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver edges to users"}
-      - {data_object_id: 317, name: employee_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver edges to users"}
-      - {data_object_id: 318, name: match_rules, target_module_id: null, workflow: "needs author + approver edges to users"}
-      - {data_object_id: 319, name: merge_rules, target_module_id: null, workflow: "needs author + approver edges to users"}
-      - {data_object_id: 320, name: source_records, target_module_id: null, workflow: "needs ingester + steward edges to users"}
+      - {data_object_id: 315, name: customer_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver relationships to users"}
+      - {data_object_id: 316, name: supplier_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver relationships to users"}
+      - {data_object_id: 317, name: employee_golden_records, target_module_id: null, workflow: "needs data_steward + merge_approver relationships to users"}
+      - {data_object_id: 318, name: match_rules, target_module_id: null, workflow: "needs author + approver relationships to users"}
+      - {data_object_id: 319, name: merge_rules, target_module_id: null, workflow: "needs author + approver relationships to users"}
+      - {data_object_id: 320, name: source_records, target_module_id: null, workflow: "needs ingester + steward relationships to users"}
 
   - id: B1B-S8
     summary: "B9 missing trigger_events for workflow-gate states (~9 candidate events)"
@@ -172,7 +172,7 @@ b1b:
       - {type: user_decision, ref: B2-S3}
 
   - id: B1B-B6
-    summary: "B6 weak intra-master data_object_relationships: 2 cross-domain resolves_to edges only; missing employee_golden_records -> employees, missing rules and source_records edges"
+    summary: "B6 weak intra-master data_object_relationships: 2 cross-domain resolves_to relationships only; missing employee_golden_records -> employees, missing rules and source_records relationships"
     finding: >-
       Only 2 data_object_relationships rows present on MDM masters: customer_golden_records
       (315) resolves_to customers (97); supplier_golden_records (316) resolves_to suppliers
@@ -202,9 +202,9 @@ b1b:
       - {data_object_id: 320, name: source_records, target_module_id: null, workflow: "proposed ingested / matched / merged_to_golden / quarantined / rejected"}
 
   - id: B1B-PERSONAS
-    summary: "Personas / RACI (domain_roles, role_modules, process_raci) deferred to a focused persona pass"
+    summary: "Personas / RACI (personas, persona_modules, process_raci) deferred to a focused persona pass"
     finding: >-
-      No MDM-owned domain_roles, role_modules, or process_raci. Candidate personas surfaced:
+      No MDM-owned personas, persona_modules, or process_raci. Candidate personas surfaced:
       data_steward, match_curator, merge_approver, mdm_admin (shape gated on B2-S6). Per the
       Validate-mode persona policy these are NOT authored in a bulk state-driven pass; they
       are deferred to a dedicated persona pass that runs AFTER the domain is built (B1B-S1).
@@ -331,12 +331,12 @@ b2:
       The baseline read/manage/admin pattern is mechanical, but workflow-specific MDM personas
       need user input. (a) Single data_steward persona + match_curator + merge_approver +
       mdm_admin (recommend); (b) Per-master stewards (3 personas); (c) Different shape.
-      Drives the persona pass (B1B-PERSONAS) and the user-edge shape (B1B-S7).
+      Drives the persona pass (B1B-PERSONAS) and the users relationship shape (B1B-S7).
     options: ["a-unified-steward", "b-per-master-stewards", "c-other"]
-    why: "Persona design owns the cross-module bundle pattern that downstream RACI + user-edge authoring reads."
+    why: "Persona design owns the cross-module bundle pattern that downstream RACI + users relationship authoring reads."
 
   - id: B2-S7
-    summary: "Compliance regulation linkage (GDPR / CCPA / KYC-AML / DCAM)"
+    summary: "Compliance regulation relationship (GDPR / CCPA / KYC-AML / DCAM)"
     question: >-
       Zero domain_regulations rows for MDM. GDPR (right-to-erasure cascading from golden
       record), CCPA (consumer data subject rights), KYC-AML (financial-services customer

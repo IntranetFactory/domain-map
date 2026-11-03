@@ -42,7 +42,7 @@ b1b:
   - id: B1B-S4-R5
     summary: Encode the maintenance_defects triggers_revision preventive_maintenance_schedules relationship after Bucket 2 #10 picks a cardinality.
     finding: |
-      The 2026-05-30 audit specified maintenance_defects -> preventive_maintenance_schedules with cardinality many_to_one, verb triggers_revision, inverse revised_via. data_object_relationships.relationship_type enum is one_to_one | one_to_many | many_to_many; no many_to_one. The other 4 audit-specified intra-domain edges (R1 R2 R3 R4) are already loaded as rows 1912-1915. Both entities are now FLEET-MAINT-mastered (maintenance_defects -> 249, preventive_maintenance_schedules -> 250).
+      The 2026-05-30 audit specified maintenance_defects -> preventive_maintenance_schedules with cardinality many_to_one, verb triggers_revision, inverse revised_via. data_object_relationships.relationship_type enum is one_to_one | one_to_many | many_to_many; no many_to_one. The other 4 audit-specified intra-domain relationships (R1 R2 R3 R4) are already loaded as rows 1912-1915. Both entities are now FLEET-MAINT-mastered (maintenance_defects -> 249, preventive_maintenance_schedules -> 250).
     blocked_by:
       - {type: user_decision, ref: B2-10}
   - id: B1B-S7
@@ -84,7 +84,7 @@ b1b:
   - id: B1B-S11
     summary: Author data_object_lifecycle_states for vehicle_work_orders and maintenance_defects with domain_module_id set; surface vehicle_parts_inventory config-shape exemption without writing notes (Rule #15).
     finding: |
-      Zero data_object_lifecycle_states rows. vehicle_work_orders state machine (draft -> assigned -> in_progress -> on_hold -> completed -> invoiced -> closed -> cancelled), maintenance_defects (reported -> triaged -> in_progress -> resolved -> deferred), preventive_maintenance_schedules optionally workflow-bearing (draft -> active -> due_soon -> overdue -> disabled). vehicle_parts_inventory is config-shape. permission_verb_override needs setting on vehicle_work_orders completion / closure / cancellation states. The module split landed 2026-06-02 so the required domain_module_id is now available (vehicle_work_orders + maintenance_defects -> 249; preventive_maintenance_schedules -> 250; vehicle_parts_inventory -> 251).
+      Zero data_object_lifecycle_states rows. vehicle_work_orders state machine (draft -> assigned -> in_progress -> on_hold -> completed -> invoiced -> closed -> canceled), maintenance_defects (reported -> triaged -> in_progress -> resolved -> deferred), preventive_maintenance_schedules optionally workflow-bearing (draft -> active -> due_soon -> overdue -> disabled). vehicle_parts_inventory is config-shape. permission_verb_override needs setting on vehicle_work_orders completion / closure / cancellation states. The module split landed 2026-06-02 so the required domain_module_id is now available (vehicle_work_orders + maintenance_defects -> 249; preventive_maintenance_schedules -> 250; vehicle_parts_inventory -> 251).
     blocked_by:
       - {type: user_decision, ref: B12-state-machine-approval}
       - {type: user_decision, ref: B12-pm-schedules-config-shape}
@@ -96,7 +96,7 @@ b1b:
   - id: B1B-S15
     summary: After Bucket 2 #6 resolves, either redistribute sign_document (tool 42) to a new module skill or DELETE skill_tools row 547. Also carries the now-only-B2-6-gated DELETE of legacy skill 59 + its 6 skill_tools.
     finding: |
-      skill_tools row 547 links legacy skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial. Redistribution target (if kept): FLEET-MAINT-WORK-ORDER 249 system skill #291 (customer signature) or FLEET-MAINT-PARTS 251 system skill #293 (warranty attestation). The B1A-SYSTEM-SKILLS prerequisite is now SATISFIED: 3 module system skills exist (#291/#292/#293) with query_* + notify_person linked (2026-06-06). The ONLY remaining gate is B2-6. Once B2-6 lands: redistribute-or-delete row 547, then DELETE legacy skill 59 (id 59, domain_module_id NULL) and ALL 6 of its skill_tools (544, 545, 546, 547, 969, 970) last. Deleting skill 59 also clears the open F1 condition (legacy domain-level system skill coexisting with module-level skills). Snapshot the skill 59 row + the 6 skill_tools rows into history.md before the DELETE (reversibility).
+      skill_tools row 547 relationships legacy skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial. Redistribution target (if kept): FLEET-MAINT-WORK-ORDER 249 system skill #291 (customer signature) or FLEET-MAINT-PARTS 251 system skill #293 (warranty attestation). The B1A-SYSTEM-SKILLS prerequisite is now SATISFIED: 3 module system skills exist (#291/#292/#293) with query_* + notify_person related (2026-06-06). The ONLY remaining gate is B2-6. Once B2-6 lands: redistribute-or-delete row 547, then DELETE legacy skill 59 (id 59, domain_module_id NULL) and ALL 6 of its skill_tools (544, 545, 546, 547, 969, 970) last. Deleting skill 59 also clears the open F1 condition (legacy domain-level system skill coexisting with module-level skills). Snapshot the skill 59 row + the 6 skill_tools rows into history.md before the DELETE (reversibility).
     blocked_by:
       - {type: user_decision, ref: B2-6}
     extra_skill_tool_id: 547
@@ -104,9 +104,9 @@ b1b:
     extra_legacy_skill_id: 59
     extra_legacy_skill_tool_ids: [544, 545, 546, 547, 969, 970]
   - id: B1B-S14
-    summary: send_email substitution DONE on the new module skills (notify_person linked); residual is the legacy row 546 DELETE which rides the skill-59 DELETE in B1B-S15.
+    summary: send_email substitution DONE on the new module skills (notify_person related); residual is the legacy row 546 DELETE which rides the skill-59 DELETE in B1B-S15.
     finding: |
-      send_email substitution is RESOLVED on the new module skills: notify_person (tool 913) is now linked to all 3 module system skills (skill_tools #2781/#2783/#2785) as the generic operational-notification capability (PM-due reminders, defect alerts, work-order-completion, parts-low alerts). The legacy skill_tools row 546 (skill 59 -> send_email tool 37) is NOT separately patched: it is deleted as part of the legacy skill-59 cleanup in B1B-S15, which is gated only on B2-6. No standalone action remains here.
+      send_email substitution is RESOLVED on the new module skills: notify_person (tool 913) is now related to all 3 module system skills (skill_tools #2781/#2783/#2785) as the generic operational-notification capability (PM-due reminders, defect alerts, work-order-completion, parts-low alerts). The legacy skill_tools row 546 (skill 59 -> send_email tool 37) is NOT separately patched: it is deleted as part of the legacy skill-59 cleanup in B1B-S15, which is gated only on B2-6. No standalone action remains here.
     blocked_by:
       - {type: depends_on, ref: B1B-S15, reason: "row 546 is deleted with the rest of skill 59's skill_tools once B2-6 resolves"}
     extra_skill_tool_id: 546
@@ -200,7 +200,7 @@ b2:
     options:
       - (a) Introduce TELEMATICS-owned engine_hours.threshold_reached, redirect handoff 312 source/target (recommended; cleanest)
       - (b) Self-handoff source=target=FLEET-MAINT (FLEET-MAINT-PM 250 publishes, FLEET-MAINT-WORK-ORDER 249 consumes)
-      - (c) Accept current shape (informal acknowledgement that TELEMATICS upstream)
+      - (c) Accept current shape (informal acknowledgment that TELEMATICS upstream)
     why: Trigger event 304 is published on FLEET-MAINT's master (PM schedules, now in FLEET-MAINT-PM 250). Handoff 312's source=TELEMATICS mis-attributes the event source.
   - id: B2-5
     summary: maintenance_defect.resolved outbound handoff shape (1-3 new handoff rows).
@@ -214,7 +214,7 @@ b2:
     why: Event fires but no handoff row consumes it; need user to scope outbound shape.
   - id: B2-6
     summary: sign_document workflow rationale on legacy skill 59 (folds into B1A-SYSTEM-SKILLS).
-    question: Why is sign_document linked from skill 59 (tool id 42)?
+    question: Why is sign_document related from skill 59 (tool id 42)?
     options:
       - (a) Customer signature on shop completion - keep, redistribute to fleet_maint_work_order_agent (module 249)
       - (b) OEM warranty claim attestation - keep, redistribute to fleet_maint_parts_agent (module 251)
@@ -251,7 +251,7 @@ b2:
     options:
       - (a) Swap source/target (source=preventive_maintenance_schedules, related=maintenance_defects, one_to_many, owner=target, verb=revised_via, inverse=triggers_revision)
       - (b) Keep verb direction with one_to_many (logically inverted from audit text)
-      - (c) Abandon the edge
+      - (c) Abandon the relationship
     why: 2026-05-30 audit specified many_to_one, which is not a valid relationship_type value. Decision unblocks B1B-S4-R5.
   - id: B2-CATALOG-COPY
     summary: REVIEW (no longer a blocking gate) - buyer-voice catalog_tagline + catalog_description are now written into the previously-empty fields on domains#149 and modules 249/250/251; review the copy in the catalog UI.
@@ -311,10 +311,10 @@ b2:
     question: |
       The completed-work-order handoff to accounts payable is currently labeled with the broad process "Process accounts payable" (9.6.1), but a more specific process for the same work-order entity, "Update work and asset records" (10.3.2.4), already exists in the catalog. Should the existing tag be re-pointed to the more specific one?
     options:
-      - "Re-point the tag to the more specific process (deletes-and-replaces the existing tag link)."
+      - "Re-point the tag to the more specific process (deletes-and-replaces the existing tag relationship)."
       - "Leave the broad tag as it is."
     why: |
-      B9d RE-TAG: handoff 316 is tagged at a coarser grain than the realized work. Re-pointing the handoff_processes link is a destructive edit (overwrites an existing tag), so it needs explicit sign-off (Rule #21). Surfaced as q-FLEET-MAINT.md q19.
+      B9d RE-TAG: handoff 316 is tagged at a coarser grain than the realized work. Re-pointing the handoff_processes relationship is a destructive edit (overwrites an existing tag), so it needs explicit sign-off (Rule #21). Surfaced as q-FLEET-MAINT.md q19.
     extra_b9d_added: "2026-06-13"
     extra_handoff_id: 316
     extra_retag_from_process_id: 315
@@ -342,7 +342,7 @@ b3:
   - id: B3-M4
     candidate: mechanic_labor_entries master
     rationale: |
-      Per-mechanic time entries on a work order (clock-in / out, labor code, billing rate). Distinct from the generic users edge. FM-MECHANIC-MGMT (419) lives in FLEET-MAINT-WORK-ORDER.
+      Per-mechanic time entries on a work order (clock-in / out, labor code, billing rate). Distinct from the generic relationship to users. FM-MECHANIC-MGMT (419) lives in FLEET-MAINT-WORK-ORDER.
     vendor_evidence: [AssetWorks FleetFocus, Trimble TMT]
     proposed_module: FLEET-MAINT-WORK-ORDER (249)
   - id: B3-M5

@@ -21,7 +21,7 @@ semantius_coverage_note: |
   A second design reversal also landed 2026-05-21 (after substantial discussion). The
   original spec defined Semantius's coverage via a Semantius row in `solutions` (with
   `solution_kind='semantius_native'`), three pseudo-tools (`semantius_crud`,
-  `semantius_cube`, `semantius_jsonlogic`), and explicit `tool_solutions` rows linking
+  `semantius_cube`, `semantius_jsonlogic`), and explicit `tool_solutions` rows relating
   Semantius to each Semantius-deliverable tool. That whole layer is REMOVED. Semantius
   coverage is now intrinsic to `tools.operation_kind`: certain enum values are
   Semantius-covered (today: `query`, `mutate`), others are not (today: `side_effect`,
@@ -55,7 +55,7 @@ initial_request: |
 
 ## 1. Overview
 
-The Tool Catalog records the side-effect operations agent skills need to do their job, and which concrete vendor solutions deliver each one. Tools are abstract JSON-RPC function signatures (verb-shaped, vendor-independent: `send_email`, `query_invoices`, `transcribe_audio`), classified by operation kind. Skills are first-class records that bundle a coherent agent capability and link to the tools they require; a junction matrix maps each tool to every solution that delivers it.
+The Tool Catalog records the side-effect operations agent skills need to do their job, and which concrete vendor solutions deliver each one. Tools are abstract JSON-RPC function signatures (verb-shaped, vendor-independent: `send_email`, `query_invoices`, `transcribe_audio`), classified by operation kind. Skills are first-class records that bundle a coherent agent capability and relate to the tools they require; a junction matrix maps each tool to every solution that delivers it.
 
 A typical workload is an integration architect picking from the catalog: "this skill needs `send_email`, `query_invoices`, and `sign_document`; which of our deployed solutions cover those needs natively versus through a connector versus not at all?" The other typical workload is the inverse: given a skill, can every required tool be served by a Semantius-native solution, or does the skill force an external connector or action solution into the picture?
 
@@ -191,7 +191,7 @@ Two-permission fallback: the Tool Catalog is a pure reference catalog (every ent
 **Label column:** `tool_solution_label`
 **Audit log:** no
 **Edit permission:** manage
-**Description:** A junction record linking one Tool to one Solution that delivers it, with delivery strength, delivery method, and an optional endpoint URL. A single tool typically has many tool_solution rows (M365 + Gmail + AWS SES all deliver send_email); a single solution may deliver many tools (Microsoft 365 covers send_email, create_calendar_event, post_chat_message, and more).
+**Description:** A junction record relating one Tool to one Solution that delivers it, with delivery strength, delivery method, and an optional endpoint URL. A single tool typically has many tool_solution rows (M365 + Gmail + AWS SES all deliver send_email); a single solution may deliver many tools (Microsoft 365 covers send_email, create_calendar_event, post_chat_message, and more).
 
 **Fields**
 
@@ -236,7 +236,7 @@ Two-permission fallback: the Tool Catalog is a pure reference catalog (every ent
 **Label column:** `skill_tool_label`
 **Audit log:** no
 **Edit permission:** manage
-**Description:** A junction record linking one Skill to one Tool it requires, with the requirement level (required, optional, or fallback) and a one-line workflow context note. The matrix of `skill_tools` rows is the input to the "100% Semantius" derivation: a skill is 100% Semantius iff every required tool has at least one tool_solution where the solution is classified semantius_native.
+**Description:** A junction record relating one Skill to one Tool it requires, with the requirement level (required, optional, or fallback) and a one-line workflow context note. The matrix of `skill_tools` rows is the input to the "100% Semantius" derivation: a skill is 100% Semantius iff every required tool has at least one tool_solution where the solution is classified semantius_native.
 
 **Fields**
 
@@ -320,7 +320,7 @@ Two-permission fallback: the Tool Catalog is a pure reference catalog (every ent
 - `approved`
 - `rejected`
 
-## 6. Cross-model link suggestions
+## 6. Cross-model relationship suggestions
 
 | From | To | Verb | Cardinality | Delete |
 |---|---|---|---|---|
@@ -358,7 +358,7 @@ None.
    - `"tool_solutions.tool_solution_label"` → title `"Name"`
    - `"skill_tools.skill_tool_label"` → title `"Name"`
 6. Deduplicate against Semantius built-in tables. No built-in overlap is expected for this module; if any of the four declared entities collides with a built-in name at deploy time, treat the collision per the standard deployer Stage 2d / 2e flow.
-7. Apply §6 cross-model link suggestions against the live Domain Map. The three rows resolve to entities (`data_objects`, `domains`, `solutions`) that are part of the Domain Map module (slug `domain_map`); the deployer creates the FK columns on `tools`, `skills`, and `tool_solutions` respectively, with `relationship_label` and `reference_delete_mode` from the §6 row.
+7. Apply §6 cross-model relationship suggestions against the live Domain Map. The three rows resolve to entities (`data_objects`, `domains`, `solutions`) that are part of the Domain Map module (slug `domain_map`); the deployer creates the FK columns on `tools`, `skills`, and `tool_solutions` respectively, with `relationship_label` and `reference_delete_mode` from the §6 row.
 8. Extend the existing `domain_map.solutions` entity additively with one new column. The platform supports adding fields to an existing entity via `create_field`; this is the only change to the sibling module:
    - `table_name`: `solutions`
    - `field_name`: `solution_kind`

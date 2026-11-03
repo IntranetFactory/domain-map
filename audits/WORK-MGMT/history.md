@@ -24,7 +24,7 @@ Footprint counts (live state):
 | `handoffs` (outbound from 135) | 9 | ITSM x2, SPM x2, PSA x2, PROD-MGMT x2, WSC x1 |
 | `handoffs` (inbound to 135) | 22 | PROD-MGMT x6, SPM x4, PSA x3, EMP-EXP x2, TEST-MGMT, IPAAS, PROC-MIN, VSDP, NCDB, BPA, CRM x1 each |
 | `handoffs` (intra-domain, 135→135) | 0 | B9b candidates exist (see below) |
-| `data_object_relationships` touching masters | 28 | intra + cross + 5 `users` edges |
+| `data_object_relationships` touching masters | 28 | intra + cross + 5 relationships to `users` |
 | `data_object_aliases` | 12 | 3 per master |
 | `data_object_lifecycle_states` | 24 rows across 4 masters | `okr_objectives` lifecycle is dual-realized in modules 150 + 51 (TALENT-PERFORMANCE-MGMT) |
 | `trigger_events` on WORK-MGMT masters | 8 | gaps documented below |
@@ -42,16 +42,16 @@ Bucket counts: **6 in-scope confirmed**, **5 surface-for-user**, **1 Phase-0 pen
 
 ### Bucket 1 — In-scope confirmed gaps (agent-fixable)
 
-#### STRUCTURAL — `roles` and `role_modules` empty (E1, E2, E3, E4, E5 all fail)
+#### STRUCTURAL — `roles` and `persona_modules` empty (E1, E2, E3, E4, E5 all fail)
 
-WORK-MGMT is a multi-module domain (2 modules) but has zero `roles` rows touching either module via `role_modules`. The Phase-E checklist requires ≥3 roles for a multi-module domain. The natural Work Management personas are well-defined from the market (Asana/Monday/ClickUp role catalogs):
+WORK-MGMT is a multi-module domain (2 modules) but has zero `roles` rows touching either module via `persona_modules`. The Phase-E checklist requires ≥3 roles for a multi-module domain. The natural Work Management personas are well-defined from the market (Asana/Monday/ClickUp role catalogs):
 
-| Proposed `role_code` | Business function | Modules touched | Why |
+| Proposed `persona_code` | Business function | Modules touched | Why |
 | --- | --- | --- | --- |
 | `OPERATIONS-WORK-PROGRAM-LEAD` | Business Operations | 149 primary, 150 secondary | PMO / BizOps lead who owns cross-team programs and rolls up OKR progress from work_items |
 | `OPERATIONS-WORK-CONTRIBUTOR` | Business Operations | 149 primary | Default IC seat — assigned work_items, files updates, can author automations within their projects |
 | `MARKETING-CAMPAIGN-MANAGER` | Marketing | 149 primary | Most-cited cross-functional WORK-MGMT persona (Workfront/Asana/Wrike marketing buyer) — runs campaign projects with creative review |
-| `EXECUTIVE-OKR-OWNER` (cross-functional, `business_function_id IS NULL`) | — | 150 primary, 149 secondary | Owns objectives, links KRs to work_items for progress rollup |
+| `EXECUTIVE-OKR-OWNER` (cross-functional, `business_function_id IS NULL`) | — | 150 primary, 149 secondary | Owns objectives, relationships KRs to work_items for progress rollup |
 
 Proposed permission bundles (using tier-level grants per the role-layer guidance):
 
@@ -60,7 +60,7 @@ Proposed permission bundles (using tier-level grants per the role-layer guidance
 - `MARKETING-CAMPAIGN-MANAGER` → `work-mgmt-task-exec:admin`
 - `EXECUTIVE-OKR-OWNER` → `work-mgmt-goals-okr:admin`, `work-mgmt-task-exec:read`, plus the explicit gate `work-mgmt-goals-okr:commit_okr_objective` (IC-tier OKR owners commit but don't admin the module)
 
-E1/E2/E3/E4/E5 cure together as soon as 3+ roles ship with ≥2 `role_modules` entries each and matching `role_permissions` bundles. Path A / Path B agreement (E5) becomes the loader's pre-flight check.
+E1/E2/E3/E4/E5 cure together as soon as 3+ roles ship with ≥2 `persona_modules` entries each and matching `role_permissions` bundles. Path A / Path B agreement (E5) becomes the loader's pre-flight check.
 
 #### STRUCTURAL — Permission materialization never run for these modules (Rule #12, Rule #14)
 
@@ -74,7 +74,7 @@ The catalog has lifecycle states with `requires_permission=true` on every master
 | WORK-MGMT-GOALS-OKR (150) | `work-mgmt-goals-okr:read`, `:manage`, `:admin` | baseline triad |
 | WORK-MGMT-GOALS-OKR (150) | `work-mgmt-goals-okr:commit_okr_objective`, `:score_okr_objective` | lifecycle `okr_objectives.committed`/`scored` (module 150 realization) |
 
-11 rows. Roles can't bundle them until they exist; same for `permission_hierarchy` edges (`:admin` ⊇ workflow-gates).
+11 rows. Roles can't bundle them until they exist; same for `permission_hierarchy` relationships (`:admin` ⊇ workflow-gates).
 
 #### MISSING TRIGGER EVENTS — workflow-gate states without matching events (B9 partial fail)
 
@@ -95,18 +95,18 @@ WORK-MGMT has 2 modules with real cross-module surface (work_items mastered in 1
 | --- | --- | --- | --- | --- | --- | --- |
 | 149 (TASK-EXEC) | 150 (GOALS-OKR) | `work_item.status_changed` | `work_items` (243) | `lifecycle_progression` | `low` | OKR KR progress rollup reads work_item state directly |
 | 149 (TASK-EXEC) | 150 (GOALS-OKR) | `work_item.completed` | `work_items` (243) | `lifecycle_progression` | `low` | Same — terminal state drives KR closure recalculation |
-| 150 (GOALS-OKR) | 149 (TASK-EXEC) | `okr_objective.committed` *(new event, see above)* | `okr_objectives` (245) | `lifecycle_progression` | `low` | Committing an OKR unlocks work_item linking + auto-creation of placeholder items |
+| 150 (GOALS-OKR) | 149 (TASK-EXEC) | `okr_objective.committed` *(new event, see above)* | `okr_objectives` (245) | `lifecycle_progression` | `low` | Committing an OKR unlocks work_item relating + auto-creation of placeholder items |
 | 149 (TASK-EXEC) | 150 (GOALS-OKR) | `work_automation.triggered` | `work_automations` (246) | `event_stream` | `low` | Automation rules can drive OKR check-in updates |
 
 4 rows. Module-FK columns set on both sides since both modules are loaded.
 
 #### M7 SOFT FAIL — `work_items` is mastered in 149 AND embedded_master in 150
 
-WORK-MGMT-GOALS-OKR's description ("Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR linking") signals this is **intentional** for standalone deployability. That said, M7 calls it out as redundant when both full modules sit in the same domain — the GOALS-OKR module relying on TASK-EXEC's master row inside the same domain is dead weight, and the standalone-deploy narrative may be better served by promoting GOALS-OKR to `module_kind='starter'` (Rule #19), or by leaving it as is and treating M7 as documented exception. **Surface for user choice in Bucket 2.**
+WORK-MGMT-GOALS-OKR's description ("Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR relating") signals this is **intentional** for standalone deployability. That said, M7 calls it out as redundant when both full modules sit in the same domain — the GOALS-OKR module relying on TASK-EXEC's master row inside the same domain is dead weight, and the standalone-deploy narrative may be better served by promoting GOALS-OKR to `module_kind='starter'` (Rule #19), or by leaving it as is and treating M7 as documented exception. **Surface for user choice in Bucket 2.**
 
 #### A5 NOT RUN — vendor ownership not refreshed
 
-Skipped by default per the checklist. The 12 linked solutions include Atlassian's Trello (acquired Trello 2017, still current), Adobe Workfront (acquired 2020, still current), Asana (public, independent), Monday.com (public, independent). No obvious staleness from a glance, but a formal refresh wasn't run.
+Skipped by default per the checklist. The 12 related solutions include Atlassian's Trello (acquired Trello 2017, still current), Adobe Workfront (acquired 2020, still current), Asana (public, independent), Monday.com (public, independent). No obvious staleness from a glance, but a formal refresh wasn't run.
 
 ---
 
@@ -128,9 +128,9 @@ Skipped by default per the checklist. The 12 linked solutions include Atlassian'
 
 4. **CRM inbound on `crm_opportunity.closed_won` (high friction) — payload to work_items implies a relationship row that doesn't exist (B8 inbound is report-only for us, but the structural mirror is missing).**
    - Inbound handoff 175: `CRM.crm_opportunity.closed_won → WORK-MGMT-TASK-EXEC` with payload `crm_opportunities` (id 100).
-   - No `data_object_relationships` edge from `crm_opportunities` → any WORK-MGMT master. CRM's B8 owes the row (its master spawns a work_item / work_project for post-sale execution). **Owed by CRM B8; report-only, not in-scope here. Surface to user if they want CRM also queued for audit.**
+   - No `data_object_relationships` row from `crm_opportunities` → any WORK-MGMT master. CRM's B8 owes the row (its master spawns a work_item / work_project for post-sale execution). **Owed by CRM B8; report-only, not in-scope here. Surface to user if they want CRM also queued for audit.**
 
-5. **A5 ownership refresh — run it or skip?** Recommend skip unless the user specifically wants a refresh on the 12 linked solutions.
+5. **A5 ownership refresh — run it or skip?** Recommend skip unless the user specifically wants a refresh on the 12 related solutions.
 
 ---
 
@@ -154,9 +154,9 @@ Skipped by default per the checklist. The 12 linked solutions include Atlassian'
 
 ### Neighbors (auto-discovered)
 
-Ranked by edge weight (handoff rows + cross-domain DMDO consumer rows):
+Ranked by relationship weight (handoff rows + cross-domain DMDO consumer rows):
 
-| Neighbor | Edges (handoffs) | DMDO consumer rows | Weight | Notable shape |
+| Neighbor | Relationships (handoffs) | DMDO consumer rows | Weight | Notable shape |
 | --- | --- | --- | --- | --- |
 | `PROD-MGMT` (101) | 7 (2 out, 5 in) | 3 | 10 | Bidirectional. WORK-MGMT roadmap/release/feature-request consumer; product_roadmaps + product_releases events flow inbound. |
 | `SPM` (9) | 6 (2 out, 4 in) | 3 | 9 | WORK-MGMT acts as execution layer below SPM strategy. Multiple high-friction inbound (`strategic_portfolio.rebalanced`, `demand_intake.approved`). |
@@ -173,7 +173,7 @@ Ranked by edge weight (handoff rows + cross-domain DMDO consumer rows):
 | `NCDB` (134) | 1 inbound | 1 | 2 | `nocode_automation.triggered` → WORK-MGMT. |
 | `BPA` (136) | 1 inbound | 1 | 2 | `process_simulation_run.bottleneck_identified`. |
 
-**Per SKILL.md default**, deep-dive pairwise reconciliation runs against weight ≥3 neighbors: **PROD-MGMT, SPM, PSA, TALENT-MGMT (structural), EMP-EXP**. ITSM (weight 2) is a candidate add given the `work_items↔service_requests` mirror is one of the highest-friction edges in the catalog.
+**Per SKILL.md default**, deep-dive pairwise reconciliation runs against weight ≥3 neighbors: **PROD-MGMT, SPM, PSA, TALENT-MGMT (structural), EMP-EXP**. ITSM (weight 2) is a candidate add given the `work_items↔service_requests` mirror is one of the highest-friction relationships in the catalog.
 
 Lighter neighbors (weight ≤2): one-table summary unless explicitly asked.
 
@@ -214,11 +214,11 @@ Loader: [.tmp_deploy/load_work_mgmt_phase_e.ts](../.tmp_deploy/load_work_mgmt_ph
 | `trigger_events` | 3 | `okr_objective.committed` (drafted→committed, mod 150), `okr_objective.scored` (in_progress→scored, mod 150), `work_automation.enabled` (drafted→enabled, mod 149) |
 | `permissions` | 11 | Baseline triad × 2 modules (6 rows) + workflow gates: `complete_work_project`, `enable_work_automation`, `disable_work_automation` on mod 149; `commit_okr_objective`, `score_okr_objective` on mod 150 |
 | `roles` | 4 | `OPERATIONS-WORK-PROGRAM-LEAD`, `OPERATIONS-WORK-CONTRIBUTOR`, `MARKETING-CAMPAIGN-MANAGER` (function-scoped); `OKR-OWNER` (cross-functional, business_function_id NULL — per SKILL.md cross-functional roles drop the function prefix, so `OKR-OWNER` not `EXECUTIVE-OKR-OWNER` as the audit-prep doc had it) |
-| `role_modules` | 8 | Every role gets ≥2 entries (E2 hard invariant). All 4 roles touch both modules at primary/secondary. |
+| `persona_modules` | 8 | Every role gets ≥2 entries (E2 hard invariant). All 4 roles touch both modules at primary/secondary. |
 | `role_permissions` | 9 | Tier-level grants where possible; OKR-OWNER explicitly lists `:commit_okr_objective` gate since they're IC-tier on the OKR module. |
 | `handoffs` (intra-domain B9b) | 4 | TASK-EXEC↔GOALS-OKR cross-module flows on `work_item.status_changed`, `work_item.completed` (rollup direction), `okr_objective.committed` (reverse direction unlock), `work_automation.triggered` (event_stream not lifecycle_progression — eventful at runtime) |
 
-Post-load E5 verification: every role's `role_modules` set equals the module set reachable from `role_permissions → permissions.domain_module_id`. Path A == Path B for all 4 roles. ✓
+Post-load E5 verification: every role's `persona_modules` set equals the module set reachable from `role_permissions → permissions.domain_module_id`. Path A == Path B for all 4 roles. ✓
 
 In-scope structural-pass closures from this load:
 - E1, E2, E3, E4, E5: previously hard-fail, now pass.
@@ -246,11 +246,11 @@ Reconciliation summary:
 | `okr_objective.scored` | 150 GOALS-OKR | 51 TALENT-PERFORMANCE-MGMT | api_call | **high** | End-of-cycle OKR score feeds per-employee perf review compensation discussion. Most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when OKR tool ≠ perf tool. |
 
 - **Section 3 missing (B→A):** 0. By design — WORK-MGMT has no consumer / contributor DMDO rows on any TALENT-MGMT master, and HR-confidential perf data doesn't push to a team-execution surface in any vendor model.
-- **Section 5 cross-domain relationships:** no new rows needed (existing evaluates / aligns_to edges cover the structural mirror).
+- **Section 5 cross-domain relationships:** no new rows needed (existing evaluates / aligns_to relationships cover the structural mirror).
 
 TALENT-MGMT B10b debt surfaced (report-only on TALENT-MGMT's side):
 - handoff id=113 (`calibration.complete`) references trigger_event 14 which is a legacy duplicate of event 446 (`talent_calibration.completed`).
-- Workflow-gate states on `performance_reviews` (self_assessment / manager_assessment / submitted / calibrated / published) have `requires_permission=true` with no matching `trigger_events` rows. Same for `performance_goals` (approved, cancelled) and `talent_calibrations` (scheduled, ratings_locked, published). Owed by TALENT-MGMT's own B9 audit.
+- Workflow-gate states on `performance_reviews` (self_assessment / manager_assessment / submitted / calibrated / published) have `requires_permission=true` with no matching `trigger_events` rows. Same for `performance_goals` (approved, canceled) and `talent_calibrations` (scheduled, ratings_locked, published). Owed by TALENT-MGMT's own B9 audit.
 
 ---
 
@@ -263,7 +263,7 @@ Flagship-vendor basis: Asana, Monday.com, ClickUp, Adobe Workfront, Smartsheet. 
 ### Diff counts
 - **MISSING:** 22 entities not modeled in current footprint
 - **WRONG-OWNERSHIP:** 0
-- **SCOPE-CREEP:** 14 consumer links flagged for review
+- **SCOPE-CREEP:** 14 consumer relationships flagged for review
 - **MODULARIZATION:** 4 issues — no INTAKE module, no CREATIVE-OPS module, templates homeless, OKR module thin without KRs
 
 ### Highest-confidence MISSING (structural gaps, blocking buyer-shape parity)
@@ -305,15 +305,15 @@ Flagship-vendor basis: Asana, Monday.com, ClickUp, Adobe Workfront, Smartsheet. 
 - `project_baselines` (Workfront + Smartsheet) — variance-reporting audit
 - Workfront proofing/creative cluster (above)
 
-### SCOPE-CREEP — TASK-EXEC consumer links to review
+### SCOPE-CREEP — TASK-EXEC consumer relationships to review
 
 The 16 optional consumers on TASK-EXEC include several that don't fit the cross-functional-work scope:
 
-| Consumer link | Verdict |
+| Consumer relationship | Verdict |
 | --- | --- |
-| `business_value_assessments`, `product_roadmaps`, `feature_requests`, `product_releases` | PRODUCT-MGMT territory; consumer-only link defensible if cross-module reads needed |
-| `crm_opportunities` | CRM; consumer link defensible (campaign work tied to opportunities) |
-| `strategic_initiatives`, `strategic_portfolios` | SPM; consumer-only link defensible |
+| `business_value_assessments`, `product_roadmaps`, `feature_requests`, `product_releases` | PRODUCT-MGMT territory; consumer-only relationship defensible if cross-module reads needed |
+| `crm_opportunities` | CRM; consumer relationship defensible (campaign work tied to opportunities) |
+| `strategic_initiatives`, `strategic_portfolios` | SPM; consumer-only relationship defensible |
 | `pull_requests`, `test_defects` | **Engineering-sprint shape; explicitly out of WORK-MGMT scope per the domain description.** Should not be consumers here. |
 | `process_simulation_runs`, `business_rules_extracted`, `nocode_automations` | Cross-domain; likely SCOPE-CREEP — flag for removal |
 | `webhook_subscriptions` | Platform-infra; should not be a WORK-MGMT consumer |
@@ -330,23 +330,23 @@ Two loaders, ~210 catalog writes total. Excluded per user direction: `WORK-MGMT-
 | Phase | Rows | Detail |
 | --- | --- | --- |
 | 1. SCOPE-CREEP cleanup | 6 deletes | DMDO consumer rows dropped from TASK-EXEC: `pull_requests`, `test_defects`, `webhook_subscriptions`, `process_simulation_runs`, `business_rules_extracted`, `nocode_automations`. Engineering-sprint shape is out of scope per the domain description; platform-infra (`webhook_subscriptions`) doesn't belong here either. No matching legacy DDO rows to clean. |
-| 2. INTAKE module | 4 inserts | New capability `WORK-INTAKE-FORMS` (id 641), new module `WORK-MGMT-INTAKE` (id 183, `module_kind='full'`), capability_domains link to WM, domain_module_capabilities link to INTAKE. |
+| 2. INTAKE module | 4 inserts | New capability `WORK-INTAKE-FORMS` (id 641), new module `WORK-MGMT-INTAKE` (id 183, `module_kind='full'`), capability_domains relationship to WM, domain_module_capabilities relationship to INTAKE. |
 | 3. data_objects | 18 inserts | 15 in TASK-EXEC + 2 in GOALS-OKR + 2 in INTAKE. Naming arbitration applied per Rule #9 — generic nouns (`approval_steps`, `project_templates`, `user_workloads`) prefixed as `work_*` rather than claiming canonical-bare-word. Renamed `goal_check_ins → okr_check_ins` (more specific). |
 | 4. DMDO master rows | 18 inserts | One master row per new data_object on its respective module. |
 | 5. Lifecycle states | 31 inserts | Workflow-bearing masters get state machines: `okr_key_results` (6 states, 3 gates), `work_milestones` (3, 2), `work_approval_steps` (4, 2), `work_approval_chains` (5, 3), `work_project_templates` (3, 1), `work_task_templates` (3, 1), `work_forms` (3, 1), `work_form_submissions` (4, 2). Config-shape masters (`work_dependencies`, `work_user_workloads`, `work_custom_fields`, `work_custom_field_values`, `work_sections`, `work_tags`, `work_item_tags`, `work_item_comments`, `work_item_attachments`, `okr_check_ins`) get no lifecycle states — config-shape exemption per Rule #12. **Notes column NOT written per Rule #15**; exemption is recorded here in the audit log. |
 | 6. Aliases | 48 inserts | ≥1 alias per non-self-explanatory master. Vendor synonyms loaded (`KR`, `subgoal`, `card`, `ticket`, `board`, `workspace`, `column`, `cell`, `request_queue`, etc.). |
 | 7. Pattern flags | 1 PATCH + flags-on-insert | `work_projects.has_submit_lock=true` (typical work-mgmt UX: archived projects lock). On-insert flags: `okr_check_ins.has_personal_content=true`, `work_user_workloads.has_personal_content=true`, `work_approval_steps.has_single_approver=true`, `work_item_comments.has_personal_content=true`, `work_form_submissions.has_personal_content=true`. Cap dedup item (GOAL-MGMT vs WORK-GOALS-OKR) **dropped** after verifying GOAL-MGMT realizes across 4 domains (legit cross-cutting capability per SKILL.md convention, not a dup). |
-| 8. work_items cancellation gate | 2 inserts + 1 PATCH | New trigger event `work_item.cancelled` (id 1382), new permission `work-mgmt-task-exec:cancel_work_item` (workflow-gate), PATCH `work_items.cancelled` lifecycle state to `requires_permission=true` with verb override `cancel_work_item`. Asana/Monday/ClickUp model: any assignee can mark done, only project admin can cancel. |
-| 9. Intra-domain relationships | 23 inserts | Every new master gets the right belongs_to / composition / reference / association edge against existing or new masters. Includes the work_form_submissions → work_items "converts_to" edge that wires INTAKE into TASK-EXEC. |
-| 10. users edges | 13 inserts | Rule #10 compliance: each new master with a user-typed actor gets the users edge (owns_key_results, authored_check_ins, approves_steps, authored_comments, uploaded_attachments, submitted_forms, etc.). |
+| 8. work_items cancellation gate | 2 inserts + 1 PATCH | New trigger event `work_item.canceled` (id 1382), new permission `work-mgmt-task-exec:cancel_work_item` (workflow-gate), PATCH `work_items.canceled` lifecycle state to `requires_permission=true` with verb override `cancel_work_item`. Asana/Monday/ClickUp model: any assignee can mark done, only project admin can cancel. |
+| 9. Intra-domain relationships | 23 inserts | Every new master gets the right belongs_to / composition / reference / association relationship against existing or new masters. Includes the work_form_submissions → work_items "converts_to" relationship that wires INTAKE into TASK-EXEC. |
+| 10. relationships to `users` | 13 inserts | Rule #10 compliance: each new master with a user-typed actor gets the relationship to `users` (owns_key_results, authored_check_ins, approves_steps, authored_comments, uploaded_attachments, submitted_forms, etc.). |
 
 ### [.tmp_deploy/load_work_mgmt_bucket_closeout.ts](../.tmp_deploy/load_work_mgmt_bucket_closeout.ts) — structural completeness for the new masters and INTAKE module
 
 | Phase | Rows | Detail |
 | --- | --- | --- |
-| 1. trigger_events | 15 inserts | Matching events for the 15 workflow-gate lifecycle states added in the Bucket 1+2 load. `work_milestone.reached`/`missed`, `work_approval_step.approved`/`rejected`, `work_approval_chain.approved`/`rejected`/`cancelled`, `work_project_template.published`, `work_task_template.published`, `work_form.published`, `work_form_submission.converted`/`rejected`, `okr_key_result.committed`/`achieved`/`missed`. |
+| 1. trigger_events | 15 inserts | Matching events for the 15 workflow-gate lifecycle states added in the Bucket 1+2 load. `work_milestone.reached`/`missed`, `work_approval_step.approved`/`rejected`, `work_approval_chain.approved`/`rejected`/`canceled`, `work_project_template.published`, `work_task_template.published`, `work_form.published`, `work_form_submission.converted`/`rejected`, `okr_key_result.committed`/`achieved`/`missed`. |
 | 2. permissions | 18 inserts | TASK-EXEC: 9 workflow-gate permissions for the new master states. GOALS-OKR: 3 workflow-gate permissions for KR states. INTAKE: baseline triad (read/manage/admin) + 3 workflow gates (publish_work_form, convert_form_submission, reject_form_submission). |
-| 3. INTAKE role coverage | 2 role_modules + 2 role_permissions | `OPERATIONS-WORK-PROGRAM-LEAD` adds INTAKE at `secondary` with bundle entry `work-mgmt-intake:manage`. `OPERATIONS-WORK-CONTRIBUTOR` adds INTAKE at `secondary` with `work-mgmt-intake:read`. INTAKE now has ≥1 role per E1; PROGRAM-LEAD now spans all 3 modules. |
+| 3. INTAKE role coverage | 2 persona_modules + 2 role_permissions | `OPERATIONS-WORK-PROGRAM-LEAD` adds INTAKE at `secondary` with bundle entry `work-mgmt-intake:manage`. `OPERATIONS-WORK-CONTRIBUTOR` adds INTAKE at `secondary` with `work-mgmt-intake:read`. INTAKE now has ≥1 role per E1; PROGRAM-LEAD now spans all 3 modules. |
 | 4. INTAKE system skill | 1 skills + 4 tools + 4 skill_tools | `work_mgmt_intake_agent` (id 243, `skill_type='system'`, `domain_module_id=183`). Tools: `query_work_forms`, `create_work_form`, `query_work_form_submissions`, `convert_form_submission_to_work_item`. All `coverage_tier='platform'`. Rule #17 satisfied (exactly one system skill per module + ≥1 skill_tools). |
 
 ### End state for WORK-MGMT
@@ -360,7 +360,7 @@ Two loaders, ~210 catalog writes total. Excluded per user direction: `WORK-MGMT-
 | `trigger_events` | 26 | every workflow-gate state has a matching event |
 | `permissions` | 30 | baseline triad × 3 modules + 21 workflow gates |
 | `roles` | 4 | 3 with all-3-modules coverage; OKR-OWNER covers 2/3 |
-| `role_modules` | 10 | E2 (≥2 per role) satisfied for all 4 roles |
+| `persona_modules` | 10 | E2 (≥2 per role) satisfied for all 4 roles |
 | `role_permissions` | 11 | E4 satisfied |
 | `skills` (system) | 3 | one per module per Rule #17 |
 | `skill_tools` | ~18 | 8 + 4 + 4 (TASK-EXEC + GOALS-OKR + INTAKE) + optional `notify_person` on the first two |
@@ -395,7 +395,7 @@ Loader: [.tmp_deploy/reconcile_work_mgmt_neighbors.ts](../.tmp_deploy/reconcile_
 - **Section 1 (existing):** 8 handoffs, all green.
 - **Section 2 (NULL FK):** 0.
 - **Section 3 missing (A→B):** **3 authored.**
-  - `work_item.completed` (149→131): work_item completion updates roadmap progress when linked to feature_requests / product_releases. api_call/medium.
+  - `work_item.completed` (149→131): work_item completion updates roadmap progress when related to feature_requests / product_releases. api_call/medium.
   - `okr_objective.committed` (150→131): team OKR commits flow into roadmap-OKR alignment. api_call/medium.
   - `okr_objective.scored` (150→131): end-of-cycle score feeds roadmap retrospective. api_call/medium.
 - **Section 3 missing (B→A):** Candidates exist (`feature_request.shipped` event 1145, `product_feature.released` 1146, `product_metric.threshold_breached` 1151) but each requires a WM consumer DMDO row, and the SCOPE-CREEP cleanup deliberately kept WM lean here. Report-only on PROD-MGMT's B9.
@@ -410,7 +410,7 @@ Loader: [.tmp_deploy/reconcile_work_mgmt_neighbors.ts](../.tmp_deploy/reconcile_
 - **Section 3 missing (A→B):** **2 authored** (`target_domain_module_id NULL`, the legitimate-NULL case per SKILL.md when counterparty not modularized).
   - `okr_objective.committed` → SPM: team OKRs cascade into portfolio rollup.
   - `work_project.completed` → SPM: project closure as a strategic-portfolio milestone.
-- **Section 3 missing (B→A):** Report-only — `strategic_initiative.approved` (1265), `strategic_initiative.completed` (1266), `strategic_initiative.cancelled` (1267), `initiative.kickoff` (216), `initiative.completed` (217) — all owed by SPM's own B9 (and downstream backfill once SPM is modularized).
+- **Section 3 missing (B→A):** Report-only — `strategic_initiative.approved` (1265), `strategic_initiative.completed` (1266), `strategic_initiative.canceled` (1267), `initiative.kickoff` (216), `initiative.completed` (217) — all owed by SPM's own B9 (and downstream backfill once SPM is modularized).
 - **Section 4 (boundary):** SPM has no DMDO; B5 not applicable.
 - **Section 5 (relationships):** `okr_objectives advanced_by strategic_initiatives` (245→274) exists. ✓
 
@@ -477,18 +477,18 @@ Validate b1 (structural pass) re-run against live state. Modules: WORK-MGMT-TASK
 | Band | Result | Notes |
 | --- | --- | --- |
 | A1 | PASS | All 7 business-metadata fields populated (crud=90, cost_band=$$, min_org_size=10 xs <50, USA TAM=$1.8B, 2025) |
-| A2 | PASS | 10 capabilities linked (7 WM-prefixed + 3 cross-cutting: APPROVAL-WORKFLOW, CREATIVE-REVIEW, GOAL-MGMT) |
-| A3 | PASS | 12 solutions linked, 10 primary, 1 secondary (Hive), 1 partial (Notion) |
+| A2 | PASS | 10 capabilities related (7 WM-prefixed + 3 cross-cutting: APPROVAL-WORKFLOW, CREATIVE-REVIEW, GOAL-MGMT) |
+| A3 | PASS | 12 solutions related, 10 primary, 1 secondary (Hive), 1 partial (Notion) |
 | A4 | **FAIL** | `catalog_tagline` and `catalog_description` on domain row both empty strings (Rule #20 draft-and-surface needed) |
 | M1 | PASS | 3 modules hosted on WM, no host-junction rows |
 | M2 | PASS | capability_count=10 ≥3, module_count=3 ≥2 |
 | M4 | PASS | every capability has at least one realizing module; GOAL-MGMT in 150, APPROVAL-WORKFLOW + CREATIVE-REVIEW in 149 |
 | M5 | PASS | every workflow-gate state has `domain_module_id` set (149/150/183 as appropriate); `okr_objectives` dual-realized across 150 + 51 (TALENT-PERFORMANCE-MGMT) is intentional |
 | M6 | PASS | every module realizes ≥1 capability (149=7, 150=2, 183=1) |
-| M7 | PASS | 22 mastered data_objects, each has exactly one `role=master` DMDO row across the catalog; within-domain `work_items` (243) is master in 149 + embedded_master in 150 (the autonomous-deployable-unit pattern, per M7 explicit pass criterion) |
+| M7 | PASS | 22 mastered data_objects, each has exactly one `held_as=master` DMDO row across the catalog; within-domain `work_items` (243) is master in 149 + embedded_master in 150 (the autonomous-deployable-unit pattern, per M7 explicit pass criterion) |
 | M8 | **FAIL** | all 3 module rows have empty `catalog_tagline` + `catalog_description` |
 | B5 | PASS | embedded_master on 243 in mod 150 resolves to canonical master in mod 149 (same data_object, same domain) |
-| B7 | PASS | `users` (id 748) has 17 edges to WM masters covering creators/owners/approvers/authors/uploaders/submitters |
+| B7 | PASS | `users` (id 748) has 17 relationships to WM masters covering creators/owners/approvers/authors/uploaders/submitters |
 | B9 | PASS | 27 trigger_events for WM-mastered data_objects; every workflow-gate state has matching event |
 | B9b | PASS | 4 intra-domain handoffs (135→135) loaded across module pairs 149↔150 |
 | B10b (outbound) | partial PASS | 4 outbound rows with NULL `target_domain_module_id`: handoffs 176, 789, 1326, 1327 → SPM (target unmodularized, legit-NULL); handoff 787 → PSA (target IS modularized — defect on PSA-side, deferred to PSA audit) |
@@ -499,16 +499,16 @@ Validate b1 (structural pass) re-run against live state. Modules: WORK-MGMT-TASK
 | C2 | PASS | no diverging capability-level RACI required |
 | D1 | deferred | UI spot-check not part of structural pass output |
 | E1 | PASS | 4 roles cover 149/150/183 — OPERATIONS-WORK-PROGRAM-LEAD (10114), OPERATIONS-WORK-CONTRIBUTOR (10115), MARKETING-CAMPAIGN-MANAGER (10116), OKR-OWNER (10117, cross-functional) |
-| E2 | PASS | every role has ≥2 `role_modules` entries (10114=3, 10115=3, 10116=2, 10117=2) |
-| E3 | PASS | every `role_modules` row has `interaction_level` set |
+| E2 | PASS | every role has ≥2 `persona_modules` entries (10114=3, 10115=3, 10116=2, 10117=2) |
+| E3 | PASS | every `persona_modules` row has `interaction_level` set |
 | E4 | PASS | 11 `role_permissions` rows total, each role has ≥1 |
-| E5 | PASS | Path A (`role_modules → domain_modules.domain_id`) and Path B (`role_permissions → permissions.domain_module_id → domain_id`) agree for all 4 roles |
+| E5 | PASS | Path A (`persona_modules → domain_modules.domain_id`) and Path B (`role_permissions → permissions.domain_module_id → domain_id`) agree for all 4 roles |
 | F1 | PASS | no legacy `domain_id`-only system skills remain |
 | F2 | PASS | exactly one `skill_type=system` skill per module: 215 (149), 216 (150), 243 (183) |
 | F3 | PASS | 9 + 5 + 4 = 18 `skill_tools` rows across the three system skills |
-| F4 | PASS | every linked tool obeys the `operation_kind` ↔ `data_object_id` pairing (queries + mutates have data_object_id, `notify_person` is `side_effect` with NULL) |
+| F4 | PASS | every related tool obeys the `operation_kind` ↔ `data_object_id` pairing (queries + mutates have data_object_id, `notify_person` is `side_effect` with NULL) |
 | F5 | PASS | strict_score = operational_score = 100% on every module (all 18 tools `coverage_tier=platform`) |
-| F7 | PASS | only `notify_person` abstraction linked; no channel primitives present |
+| F7 | PASS | only `notify_person` abstraction related; no channel primitives present |
 | H1 | **FAIL** | 39 cross-domain handoffs (17 outbound, 22 inbound). Only 11 carry `handoff_processes` rows (28%, all `proposal_source=agent_curated`, `record_status=new`). 28 cross-domain handoffs untagged. Approved count = 0. Below the 0.5N target (would need ~20 tagged). |
 
 ### Bucket 1, in-scope confirmed gaps
@@ -562,11 +562,11 @@ None this pass, audit only.
 
 ## 2026-06-02 — Audit
 
-Re-run of the full Validate mode (structural S/A/M/B/C/E/F/H + neighbor + pairwise). Two events since the 2026-05-31 audit changed the picture: (a) the `entity_type` column was never classified on any WORK-MGMT master — a latent B13 fail across all 22 masters that the prior audit did not run; (b) **Plan 3 (2026-06-02) deleted the `_core` persona layer**, wiping the personas the 2026-05-29 fix had loaded, so E1 fires zero-personas again under the new `domain_roles` layer. This audit applied the agent-fixable Bucket-1 items per explicit user direction ("fix Bucket 1 now" + "re-author 4 personas").
+Re-run of the full Validate mode (structural S/A/M/B/C/E/F/H + neighbor + pairwise). Two events since the 2026-05-31 audit changed the picture: (a) the `entity_type` column was never classified on any WORK-MGMT master — a latent B13 fail across all 22 masters that the prior audit did not run; (b) **Plan 3 (2026-06-02) deleted the `_core` persona layer**, wiping the personas the 2026-05-29 fix had loaded, so E1 fires zero-personas again under the new `personas` layer. This audit applied the agent-fixable Bucket-1 items per explicit user direction ("fix Bucket 1 now" + "re-author 4 personas").
 
 ### Summary
 
-- Footprint: 22 masters across 3 full modules (TASK-EXEC 149, GOALS-OKR 150, INTAKE 183), 3 system skills, 12 solutions, 10 capabilities, 5 business-function links.
+- Footprint: 22 masters across 3 full modules (TASK-EXEC 149, GOALS-OKR 150, INTAKE 183), 3 system skills, 12 solutions, 10 capabilities, 5 business-function relationships.
 - Clean bands (no action): S1-S3, A1-A3, M1-M2, M4-M7, M9, B1-B3, B6/B6b, B7, B14, C1, F1-F7. M7 healthy (`work_items` master/embedded, `okr_objectives` single-master holds). F-band fully green; Semantius strict score = 100%.
 - Bucket 1 (agent-fixable): **6 finding types, applied this pass** (B13, B12-confirm, E1-E4 personas+RACI, Phase-S skill_tools, B9b, B9c, H1).
 - Bucket 2 (judgment): catalog UX wording (A4/M8), entity_type ambiguous calls, legacy DDO rollup drift, capability near-dup, H1 approval posture, handoff 787.
@@ -578,8 +578,8 @@ Re-run of the full Validate mode (structural S/A/M/B/C/E/F/H + neighbor + pairwi
 | --- | --- | --- |
 | **B13** entity_type | All 22 masters were `unclassified` — blocked B12 + forced write-tier fallback catalog-wide. | 22 classified (5 operational_workflow, 5 operational_record, 8 catalog, 3 junction, 1 computed). 0 remain. |
 | **B12** lifecycle | `work_approval_steps` (970) + `work_form_submissions` (983) classified operational_workflow; both already carried lifecycle (pending/approved/rejected/expired; submitted/triaged/converted/rejected). | Confirmed present; loader insert was idempotent (0 new). |
-| **E1/E2/E3** personas | Zero personas after Plan-3 deletion. | 4 `domain_roles` + 9 `role_modules`: OPERATIONS-WORK-PROGRAM-LEAD [149·150·183], OPERATIONS-WORK-CONTRIBUTOR [149·183], MARKETING-CAMPAIGN-MANAGER [149·183], OKR-OWNER (cross-functional) [150·149]. All ≥2 modules, interaction_level set. |
-| **E4** RACI + gate wiring | No process_raci, no lifecycle `process_id`. | 4 `process_raci` rows on PCF 411 (R=Contributor 13, A=Program-Lead 12) + 98 (R=A=OKR-Owner 15); 4 lifecycle gates wired (`work_projects.completed`+`work_items.cancelled`→411, `okr_objectives.committed`+`.scored`→98). |
+| **E1/E2/E3** personas | Zero personas after Plan-3 deletion. | 4 `personas` + 9 `persona_modules`: OPERATIONS-WORK-PROGRAM-LEAD [149·150·183], OPERATIONS-WORK-CONTRIBUTOR [149·183], MARKETING-CAMPAIGN-MANAGER [149·183], OKR-OWNER (cross-functional) [150·149]. All ≥2 modules, interaction_level set. |
+| **E4** RACI + gate wiring | No process_raci, no lifecycle `process_id`. | 4 `process_raci` rows on PCF 411 (R=Contributor 13, A=Program-Lead 12) + 98 (R=A=OKR-Owner 15); 4 lifecycle gates wired (`work_projects.completed`+`work_items.canceled`→411, `okr_objectives.committed`+`.scored`→98). |
 | **Phase-S** skill_tools | Skill surface lagged the master expansion. | 13 new tools + 13 `skill_tools`: TASK-EXEC (215) gained queries for milestones/dependencies/approval chains+steps/workloads/comments/sections/custom_fields + approve_work_approval_step; GOALS-OKR (216) gained key_results/check_ins query+create. All `coverage_tier='platform'`. |
 | **B9b** intra-domain handoff | INTAKE→TASK-EXEC missing despite `work_form_submissions converts_to work_items`. | 1 handoff (183→149, payload work_items 243, trigger `work_form_submission.converted` id 1393, lifecycle_progression/low). Event pre-existed. |
 | **B9c** trigger hygiene | 4 malformed events. | Patched: `okr_objective.created` to_state draft→drafted; `work_automation.created`/`.disabled` event_category→lifecycle + states; `work_automation.triggered` event_category→signal. |
@@ -628,7 +628,7 @@ Bucket 2 #1 (catalog wording) depends on no other bucket. Buckets 1, 2, 3 indepe
 ### Decisions
 
 - Run scope: **fix Bucket 1 now**.
-- E-band: **re-author 4 personas now** (domain_roles + role_modules + process_raci).
+- E-band: **re-author 4 personas now** (personas + persona_modules + process_raci).
 - B2 #1 (catalog wording): agent drafts, user reviews — drafts produced this session, pending approval.
 - B2 #5 (H1 approval posture): **approve now** — all 31 agent_curated WM tags promoted to `record_status='approved'`.
 - B3 (Phase 0): **run formal vendor-surface pass** — subagent launched.
@@ -636,7 +636,7 @@ Bucket 2 #1 (catalog wording) depends on no other bucket. Buckets 1, 2, 3 indepe
 
 ### Fixes applied
 
-- [.tmp_deploy/fix_work_mgmt_2026_06_02.ts](../../.tmp_deploy/fix_work_mgmt_2026_06_02.ts): 22 entity_type PATCH, 0 lifecycle (idempotent), 4 domain_roles, 9 role_modules, 13 tools, 13 skill_tools, 4 trigger_event PATCH, 1 intra-domain handoff.
+- [.tmp_deploy/fix_work_mgmt_2026_06_02.ts](../../.tmp_deploy/fix_work_mgmt_2026_06_02.ts): 22 entity_type PATCH, 0 lifecycle (idempotent), 4 personas, 9 persona_modules, 13 tools, 13 skill_tools, 4 trigger_event PATCH, 1 intra-domain handoff.
 - [.tmp_deploy/fix_work_mgmt_apqc_raci_2026_06_02.ts](../../.tmp_deploy/fix_work_mgmt_apqc_raci_2026_06_02.ts): 20 handoff_processes (agent_curated/new), 4 process_raci, 4 lifecycle process_id wirings.
 - **H1 approval (B2 #5):** PATCH `handoff_processes` → `record_status='approved'` on all 31 WM agent_curated cross-domain tags. H1 catalog-quality headline now 31/39 approved.
 - All structural writes `record_status='new'`; no `notes` populated.
@@ -650,7 +650,7 @@ Bucket 2 #1 (catalog wording) depends on no other bucket. Buckets 1, 2, 3 indepe
 - **Module 149 (Task and Project Execution) tagline:** "Plan projects, assign tasks, and track them from kickoff to done."
 - **Module 149 description:** "Organize work into projects and sections, then assign tasks with owners, due dates, priorities, and dependencies. Track everything on boards, lists, and timelines, and keep work moving with approval steps, milestones, and automations that handle routine status changes and notifications. // Standardize recurring work with reusable project and task templates, tailor records with custom fields, and use workload views to spot who is over or under capacity before deadlines slip."
 - **Module 150 (Team-Execution Goals and OKRs) tagline:** "Set objectives, score key results, and see progress roll up from the work behind them."
-- **Module 150 description:** "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Link objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand. // Commit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked."
+- **Module 150 description:** "Define objectives and measurable key results for the quarter or year, assign owners, and keep them current with regular check-ins. Relationship objectives to the tasks and projects that drive them so progress updates as work gets done instead of being re-entered by hand. // Commit objectives once agreed, track them through the cycle, and score them at close so the team learns what worked."
 - **Module 183 (Request Intake) tagline:** "Capture work requests through structured forms and route them straight into the right project."
 - **Module 183 description:** "Replace ad-hoc requests with structured intake forms that collect exactly what the team needs to start. Submissions are triaged and converted into work items in the right project, with the requester's details captured along the way. // Standardized intake means no lost requests in chat or email, a consistent starting point for every piece of work, and a clear record of what was asked and what happened next."
 
@@ -672,13 +672,13 @@ MISSING entities, by confidence tier (AI-derived — NOT auto-loaded, Rule #1 + 
 - `work_views` — saved/named/shareable board·list·gantt view with persisted filters/grouping (a config master, not a per-user UI toggle).
 - `time_entries` — native NON-billable time tracking against work items. The billable worklog (rate/utilization/invoice) stays PSA-mastered; if WM needs billable hours it consumes the PSA worklog, never re-masters it.
 - `work_portfolios` — light team-level project roll-up for cross-project status (distinct from SEM strategic_portfolios).
-- `work_goal_links` — link table for work_item→okr_objective contribution; GOALS-OKR currently only embeds work_items with no link entity.
+- `work_goal_relationships` — junction table for work_item→okr_objective contribution; GOALS-OKR currently only embeds work_items with no junction entity.
 - `work_statuses`, `work_status_updates` — configurable status taxonomy + status-change log.
 
 **Tier 3 — lower confidence / likely-attribute:**
 - `form_routing_rules` (may be a field on work_forms), `work_item_assignees` (likely a users-junction already covered by relationships), `creative_assets` (DAM consumer, not WM master). Noted-not-asserted: `work_subtasks`, `work_recurrences` (likely self-ref/attributes of work_items), `work_docs` (adjacent KM scope).
 
-Pre-flagged verdicts: proofing slice JUSTIFIED (as TASK-EXEC masters, not a new module); work_views IS a persisted entity; time_entries belongs to WM for non-billable only; add `work_goal_links` to GOALS-OKR.
+Pre-flagged verdicts: proofing slice JUSTIFIED (as TASK-EXEC masters, not a new module); work_views IS a persisted entity; time_entries belongs to WM for non-billable only; add `work_goal_relationships` to GOALS-OKR.
 
 ---
 
@@ -815,10 +815,10 @@ Processed `a-WORK-MGMT.md`. Loader: [.tmp_deploy/2026-06-16_work_mgmt_a_file_exe
 
 ### Decided and executed
 
-- **a3 (B2-CAPABILITY-NEAR-DUP) = yes, RESOLVED (destructive, q-file approved).** Deduplicated the capability near-dup on module 150 into the cross-cutting GOAL-MGMT (25). DELETE `domain_module_capabilities` 284 (WORK-GOALS-OKR 329 on mod 150) and `capability_domains` 362 (cap 329 <-> domain 135), fully retiring 329's WM footprint so no orphaned (M4-failing) capability is left behind. Module 150 keeps GOAL-MGMT (25) via `domain_module_capabilities` 285. Verified: capability 329 now has 0 links catalog-wide.
+- **a3 (B2-CAPABILITY-NEAR-DUP) = yes, RESOLVED (destructive, q-file approved).** Deduplicated the capability near-dup on module 150 into the cross-cutting GOAL-MGMT (25). DELETE `domain_module_capabilities` 284 (WORK-GOALS-OKR 329 on mod 150) and `capability_domains` 362 (cap 329 <-> domain 135), fully retiring 329's WM footprint so no orphaned (M4-failing) capability is left behind. Module 150 keeps GOAL-MGMT (25) via `domain_module_capabilities` 285. Verified: capability 329 now has 0 relationships catalog-wide.
 - **a5 (B2-B9D-MISTAG-OKR-PERF) = a, RESOLVED (destructive, q-file approved).** Re-pointed `handoff_processes` 878 (handoff 1320) and 879 (handoff 1321) from process 225 (PCF 7.3.2 "Manage employee performance") to process 98 (PCF 1.2.6 "Develop and set organizational objectives"). Both rows stayed `record_status='new'`.
 - **a6 (B2-B9D-ROLLUP-OKR-PROD) = recommended (yes), RESOLVED (destructive, q-file approved).** Re-pointed `handoff_processes` 880 (handoff 1324) from process 506 (PCF 1.2.6.3 "Monitor performance against objective") to process 98 (PCF 1.2.6, the realized parent grain). Row stayed `record_status='new'`.
-- **a7 (B1A-PHASE0-MISSING) = recommended (load Tier 1 + Tier 2, hold Tier 3), RESOLVED (expansive additive, q-file approved).** Loaded 9 new masters with full Phase-B wiring (data_objects + DMDO master rows at `necessity='optional'` per Rule #16 + aliases + relationships + Rule #10 users edges; `proofing_sessions` also got a 5-state lifecycle and 3 trigger_events as the only gated master). New data_objects: proofing_sessions (1287, operational_workflow, mod 149), proofing_annotations (1288, operational_record, mod 149), work_dashboards (1289, catalog, mod 149), work_views (1290, catalog, mod 149), work_time_entries (1291, operational_record, mod 149), work_portfolios (1292, catalog, mod 149), work_goal_links (1293, junction, mod 150), work_statuses (1294, catalog, mod 149), work_status_updates (1295, operational_record, mod 149). WM master DMDO count 22 -> 31. proofing_sessions backs CREATIVE-REVIEW (446); work_dashboards backs WORK-DASHBOARDS (331), both already realized on mod 149 (capabilities no longer master-less). Tier 1 candidate `time_entries` was renamed to `work_time_entries` per Rule #9: the bare `time_entries` (162) already exists and is WFM-mastered (clock-in/out for payroll) on module 194, a different concept from WM non-billable effort tracking. Tier 3 entities (form_routing_rules, work_item_assignees, creative_assets, work_subtasks, work_recurrences, work_docs) HELD per the user's recommended pick; not loaded, not carried (a settled "hold" decision, not a deferred action).
+- **a7 (B1A-PHASE0-MISSING) = recommended (load Tier 1 + Tier 2, hold Tier 3), RESOLVED (expansive additive, q-file approved).** Loaded 9 new masters with full Phase-B wiring (data_objects + DMDO master rows at `necessity='optional'` per Rule #16 + aliases + relationships + Rule #10 relationships to `users`; `proofing_sessions` also got a 5-state lifecycle and 3 trigger_events as the only gated master). New data_objects: proofing_sessions (1287, operational_workflow, mod 149), proofing_annotations (1288, operational_record, mod 149), work_dashboards (1289, catalog, mod 149), work_views (1290, catalog, mod 149), work_time_entries (1291, operational_record, mod 149), work_portfolios (1292, catalog, mod 149), work_goal_relationships (1293, junction, mod 150), work_statuses (1294, catalog, mod 149), work_status_updates (1295, operational_record, mod 149). WM master DMDO count 22 -> 31. proofing_sessions backs CREATIVE-REVIEW (446); work_dashboards backs WORK-DASHBOARDS (331), both already realized on mod 149 (capabilities no longer master-less). Tier 1 candidate `time_entries` was renamed to `work_time_entries` per Rule #9: the bare `time_entries` (162) already exists and is WFM-mastered (clock-in/out for payroll) on module 194, a different concept from WM non-billable effort tracking. Tier 3 entities (form_routing_rules, work_item_assignees, creative_assets, work_subtasks, work_recurrences, work_docs) HELD per the user's recommended pick; not loaded, not carried (a settled "hold" decision, not a deferred action).
 
 ### Routed
 

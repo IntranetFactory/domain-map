@@ -20,9 +20,9 @@ Pure-play DCIM specialists: **Nlyte** (the long-standing reference schema, deep 
 
 ### Pass 3, Neighbor discovery
 
-Edge weights by outbound handoff (DCIM has zero inbound, so neighbors are publish-only from this side):
+Relationship weights by outbound handoff (DCIM has zero inbound, so neighbors are publish-only from this side):
 
-| Neighbor | Domain code | Outbound edges | DMDO cross-refs | Total |
+| Neighbor | Domain code | Outbound relationships | DMDO cross-refs | Total |
 | --- | --- | ---: | ---: | ---: |
 | ITSM | 1 | 4 | 0 | 4 |
 | ITOM | 2 | 2 | 0 | 2 |
@@ -38,7 +38,7 @@ Only ITSM crosses the weight-3 threshold for full pairwise reconciliation. ITOM 
 
 **DCIM, ITOM (weight 2).** `dc_environmental_reading.threshold_breached` (694) and `dc_power_distribution_unit.failure` (690) publish into ITOM. Both rows have NULL `target_domain_module_id`, this is **ITOM's B10b** to resolve, not DCIM's. Captured in report-only follow-ups.
 
-**Lighter neighbors:** AIOPS (1 row, `dc_power_distribution_unit.failure` 690, NULL target module, AIOPS B10b), CMDB (1 row, `dc_port_connection.changed` 696, CMDB-CORE 108 is the target but **no consumer DMDO row exists** linking CMDB-CORE to `dc_port_connections` 554, CMDB's B-band gap), SPM (1 row, `dc_capacity_plan.refreshed` 695, NULL target module, SPM B10b).
+**Lighter neighbors:** AIOPS (1 row, `dc_power_distribution_unit.failure` 690, NULL target module, AIOPS B10b), CMDB (1 row, `dc_port_connection.changed` 696, CMDB-CORE 108 is the target but **no consumer DMDO row exists** relating CMDB-CORE to `dc_port_connections` 554, CMDB's B-band gap), SPM (1 row, `dc_capacity_plan.refreshed` 695, NULL target module, SPM B10b).
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -48,10 +48,10 @@ Only ITSM crosses the weight-3 threshold for full pairwise reconciliation. ITOM 
 | --- | --- | --- | --- |
 | B1-S1 | Author `domain_modules` for DCIM | M1 / M2 | Recommended split (3 modules): `DCIM-ASSET-CAPACITY` (racks, cabinets, port_connections, cable_connections, capacity_plans), `DCIM-POWER-COOLING` (PDUs, power_circuits, UPSes, cooling_units, environmental_readings), `DCIM-FLOORPLAN-SITE` optional starter. Module count 2 or 3 satisfies M2 once capabilities are at 3 or more. |
 | B1-S2 | Author DCIM `capabilities` and `capability_domains` | A2 / M4 | Floor of 3, target 5 to 8. Proposed: `DCIM-ASSET-REGISTER`, `DCIM-CAPACITY-PLAN`, `DCIM-POWER-MGMT`, `DCIM-COOLING-MGMT`, `DCIM-CONNECTIVITY-MAP`, `DCIM-ENV-MONITORING`, `DCIM-FLOOR-PLAN`. Wire to the modules from B1-S1. |
-| B1-S3 | Author DCIM `solutions` and `solution_domains` | A3 | Floor 3 with at least 1 `primary`. Proposed primaries: Nlyte, Sunbird dcTrack, Schneider EcoStruxure IT, Vertiv Environet. Secondaries: Device42 (id 46 already exists, link with `coverage_level=secondary`), NetBox. |
+| B1-S3 | Author DCIM `solutions` and `solution_domains` | A3 | Floor 3 with at least 1 `primary`. Proposed primaries: Nlyte, Sunbird dcTrack, Schneider EcoStruxure IT, Vertiv Environet. Secondaries: Device42 (id 46 already exists, relationship with `coverage_level=secondary`), NetBox. |
 | B1-S4 | Populate domain `catalog_tagline` and `catalog_description` | A4 | Both fields are empty strings. Draft per Rule #20 buyer voice, surface for user review BEFORE writing. Never overwrite once non-empty. |
 | B1-S5 | Author 1 system skill per module | F2 / F3 / Phase S | Names `dcim_asset_capacity_agent`, `dcim_power_cooling_agent`, etc. Each needs at least 1 `skill_tools` row. Retire legacy `dcim-system` skill id 46 once any module-level skill lands (F1). |
-| B1-S6 | Author DCIM `roles` and `role_modules` and `role_permissions` | E1 / E2 / E3 / E4 / E5 | Once at least 2 modules exist, target roles: `IT-INFRA-DC-OPERATOR` (primary: power, cooling and asset modules), `IT-INFRA-CAPACITY-PLANNER` (primary: capacity, secondary: asset), `FACILITIES-DC-FACILITIES-LEAD` (primary on the cooling and floor-plan modules, secondary on the others). Function-scoped prefixes per Rule. |
+| B1-S6 | Author DCIM `roles` and `persona_modules` and `role_permissions` | E1 / E2 / E3 / E4 / E5 | Once at least 2 modules exist, target roles: `IT-INFRA-DC-OPERATOR` (primary: power, cooling and asset modules), `IT-INFRA-CAPACITY-PLANNER` (primary: capacity, secondary: asset), `FACILITIES-DC-FACILITIES-LEAD` (primary on the cooling and floor-plan modules, secondary on the others). Function-scoped prefixes per Rule. |
 
 #### STRUCTURAL (band failures fixable without modules)
 
@@ -61,9 +61,9 @@ Only ITSM crosses the weight-3 threshold for full pairwise reconciliation. ITOM 
 | B1-T2 | B9 | `dc_power_circuit.overload` (event 691) has **zero** handoff rows, the only DCIM event without a downstream subscriber. | Author a handoff into ITSM-INCIDENT-MGMT (module 38, payload `service_incidents` 47), `integration_pattern: event_stream`, `friction_level: high`. Source module FK is part of B1-S1. |
 | B1-T3 | B2 | `dc_power_distribution_units.plural_label` = `Power Distribution Unit (PDU)s` reads as `PDU)s` with the stray closing-paren-s. | PATCH `plural_label` to `Power Distribution Units (PDUs)`. |
 | B1-T4 | B4 | All three pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) sit at `false` default on every DCIM master with zero recorded re-evaluation. | Run the consideration in the audit: every master is **infrastructure asset data**, not user-content, so `has_personal_content=false` is the correct positive answer everywhere. `has_submit_lock` and `has_single_approver` are workflow-shaped and depend on B1-S7 lifecycle authoring, defer the answer until then. Record the consideration in the audit transcript, not in `notes` (Rule #15). |
-| B1-T5 | B6 / B7 / B8 | Zero `data_object_relationships` rows exist. Required edges: intra-domain (`dc_racks contains dc_cabinets`, `dc_cabinets contains dc_power_distribution_units`, `dc_power_distribution_units feeds dc_power_circuits`, `dc_power_circuits powers dc_cabinets`, `dc_uninterruptible_power_supplies backs dc_power_distribution_units`, `dc_cooling_units serves dc_cabinets`, `dc_environmental_readings sampled_at dc_cabinets`, `dc_capacity_plans plans dc_racks`, `dc_port_connections connects dc_cable_connections`); user edges per Rule #10 (`users owns dc_racks`, `users authors dc_capacity_plans`, `users approves dc_capacity_plans`, `users inspects dc_environmental_readings`); cross-domain edges (`dc_port_connections updates configuration_items` for CMDB outbound, `dc_capacity_plans informs financial_plans` or similar for SPM). | Draft and load as a focused relationships loader once B1-S1 modules exist (some edges resolve cleanly without modules, but they belong in the same load). |
+| B1-T5 | B6 / B7 / B8 | Zero `data_object_relationships` rows exist. Required relationships: intra-domain (`dc_racks contains dc_cabinets`, `dc_cabinets contains dc_power_distribution_units`, `dc_power_distribution_units feeds dc_power_circuits`, `dc_power_circuits powers dc_cabinets`, `dc_uninterruptible_power_supplies backs dc_power_distribution_units`, `dc_cooling_units serves dc_cabinets`, `dc_environmental_readings sampled_at dc_cabinets`, `dc_capacity_plans plans dc_racks`, `dc_port_connections connects dc_cable_connections`); relationships to `users` per Rule #10 (`users owns dc_racks`, `users authors dc_capacity_plans`, `users approves dc_capacity_plans`, `users inspects dc_environmental_readings`); cross-domain relationships (`dc_port_connections updates configuration_items` for CMDB outbound, `dc_capacity_plans informs financial_plans` or similar for SPM). | Draft and load as a focused relationships loader once B1-S1 modules exist (some relationships resolve cleanly without modules, but they belong in the same load). |
 | B1-T6 | B11 | Zero aliases on every master. Industry synonyms exist for several: `dc_racks` = `rack`, `dc_cabinets` = `cabinet`, `dc_power_distribution_units` = `PDU`, `dc_uninterruptible_power_supplies` = `UPS`, `dc_environmental_readings` = `sensor reading`, `dc_port_connections` = `patch port`, `dc_cable_connections` = `patch cable`. | Author 7 alias rows of `alias_type='industry'`. |
-| B1-T7 | B12 | Zero lifecycle states on every DCIM master. Workflow-bearing masters need state machines: `dc_capacity_plans` (draft, in-review, approved, archived), `dc_power_circuits` (provisioned, energised, deenergised, decommissioned), `dc_racks` (planned, installed, active, retired). Pure-sensor masters (`dc_environmental_readings`, `dc_port_connections`, `dc_cable_connections`) are arguably config-shape; surface the exemption explicitly to the user (Bucket 2 #4), do NOT auto-populate `notes` (Rule #15). | Draft state machines for the workflow masters, surface the config-shape exemption decision for the read-only ones. Module FK on each state row is part of B1-S1. |
+| B1-T7 | B12 | Zero lifecycle states on every DCIM master. Workflow-bearing masters need state machines: `dc_capacity_plans` (draft, in-review, approved, archived), `dc_power_circuits` (provisioned, energized, deenergized, decommissioned), `dc_racks` (planned, installed, active, retired). Pure-sensor masters (`dc_environmental_readings`, `dc_port_connections`, `dc_cable_connections`) are arguably config-shape; surface the exemption explicitly to the user (Bucket 2 #4), do NOT auto-populate `notes` (Rule #15). | Draft state machines for the workflow masters, surface the config-shape exemption decision for the read-only ones. Module FK on each state row is part of B1-S1. |
 | B1-H1 | H1 / APQC | All 9 outbound handoffs are untagged. The agent built the mental model while reading them; tag now per the volume expectation of 0.5N to 0.8N (~5 to 7 tags on 9 handoffs). | Author `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status='new'`. Proposed mapping below in the APQC TAGGING sub-table. |
 
 #### BOUNDARY
@@ -72,7 +72,7 @@ Only ITSM crosses the weight-3 threshold for full pairwise reconciliation. ITOM 
 | --- | --- | --- |
 | B1-B1 | All 9 outbound handoffs have NULL `source_domain_module_id` (B10b sub-case 1, no module exists yet). | Becomes a deterministic PATCH the moment B1-S1 modules land, the strongest-role module that holds the source data_object wins. |
 | B1-B2 | Handoff 681 (`dc_rack.capacity_threshold_breached` to ITOM target 2, NULL `target_domain_module_id`) and handoff 673 (`dc_environmental_reading.threshold_breached` to ITOM target 2, NULL `target_domain_module_id`) and handoff 676 (`dc_power_distribution_unit.failure` to AIOPS target 6, NULL `target_domain_module_id`) and handoff 680 (`dc_capacity_plan.refreshed` to SPM target 9, NULL `target_domain_module_id`) need target-module resolution. | These are **report-only follow-ups** on the receiving domains (ITOM B10b, AIOPS B10b, SPM B10b). Listed below; do not author from DCIM's pass. |
-| B1-B3 | CMDB-CORE (module 108) is named as the target on handoff 679 (`dc_port_connection.changed` to CMDB) but no `domain_module_data_objects` row links module 108 to `dc_port_connections` (554) as `consumer` or `contributor`. | **CMDB's B-band gap**, report-only on the CMDB side. DCIM cannot author the consumer row on CMDB's behalf. |
+| B1-B3 | CMDB-CORE (module 108) is named as the target on handoff 679 (`dc_port_connection.changed` to CMDB) but no `domain_module_data_objects` row relates module 108 to `dc_port_connections` (554) as `consumer` or `contributor`. | **CMDB's B-band gap**, report-only on the CMDB side. DCIM cannot author the consumer row on CMDB's behalf. |
 
 #### APQC TAGGING (agent_curated proposals, all `record_status='new'`)
 
@@ -93,7 +93,7 @@ All 9 handoffs tagged, zero deferrals.
 ### Bucket 2, Surface-for-user (judgment calls)
 
 1. **Module split.** Recommended is 3 modules (`DCIM-ASSET-CAPACITY`, `DCIM-POWER-COOLING`, optional `DCIM-FLOORPLAN-SITE`). Decisions: (a) approve 3-module split, (b) collapse to 2 (`DCIM-PHYSICAL` + `DCIM-POWER-COOLING`), (c) start with 1 full module (`DCIM-CORE`) and the optional starter, (d) propose a different split. The module FK on every B-band fix depends on this answer.
-2. **Capability set.** Recommended seven capability codes above (B1-S2). User confirms which land and whether any should fold into existing cross-cutting codes (e.g. `ITOM-CAPACITY` 227 already exists, should DCIM capacity be a separate `DCIM-CAPACITY-PLAN` or a `domain_module_capabilities` link to the existing one? Cross-cutting capability convention applies.).
+2. **Capability set.** Recommended seven capability codes above (B1-S2). User confirms which land and whether any should fold into existing cross-cutting codes (e.g. `ITOM-CAPACITY` 227 already exists, should DCIM capacity be a separate `DCIM-CAPACITY-PLAN` or a `domain_module_capabilities` relationship to the existing one? Cross-cutting capability convention applies.).
 3. **`dc_environmental_reading.threshold_breached` fan-out.** Currently publishes only to ITOM. ITSM-INCIDENT-MGMT plausibly also subscribes (an environmental threshold breach is a major-incident trigger). Add a second outbound handoff DCIM to ITSM on the same trigger event? (a) yes, fan out, (b) no, ITOM correlates and re-publishes to ITSM, (c) defer.
 4. **Lifecycle state authoring scope.** Workflow-bearing masters (`dc_capacity_plans`, `dc_power_circuits`, `dc_racks`) get state machines, that is uncontroversial. The sensor-shape masters (`dc_environmental_readings`, `dc_port_connections`, `dc_cable_connections`) are config-shape, no real state machine. Rule #12 exempts them but the prior license to record the exemption in `data_objects.notes` is rescinded (Rule #15). User decides whether to: (a) accept the exemption silently (tracked in this audit only), (b) author the user-approved exact `notes` wording for each exempt master.
 
@@ -114,7 +114,7 @@ Universal-vendor entities surfaced by the flagship-vendor scan that did NOT make
 
 - **Bucket 1 modules (B1-S1) gate everything downstream.** B1-S5, B1-S6, every B-band relationships and lifecycle authoring, every APQC handoff_process row that needs a source module FK, and every B10b PATCH on existing handoffs depends on the module set landing first.
 - **Bucket 2 #1 (module split) gates Bucket 1 module-FK choices.** Three modules versus two changes which master sits where, which changes every DMDO authoring and every B10b PATCH.
-- **Bucket 2 #2 (capability set) interacts with B1-S2 and M4.** A capability that folds into an existing cross-cutting code reduces the new-capability count by one but adds a `capability_domains` link instead.
+- **Bucket 2 #2 (capability set) interacts with B1-S2 and M4.** A capability that folds into an existing cross-cutting code reduces the new-capability count by one but adds a `capability_domains` relationship instead.
 - **Bucket 3 candidates are independent of Bucket 1 fixes** but candidate `dc_floor_plans` and `dc_sites` would alter the recommended module split in Bucket 2 #1 (a 3-module split with FLOORPLAN-SITE makes more sense once floor_plans and sites land).
 - **B1-T4 pattern flags depend on B1-T7 lifecycle authoring** for the `has_submit_lock` and `has_single_approver` answers.
 
@@ -131,7 +131,7 @@ Universal-vendor entities surfaced by the flagship-vendor scan that did NOT make
 | ITOM B10b | `handoffs.target_domain_module_id` NULL on rows 681 (`dc_rack.capacity_threshold_breached`) and 673 (`dc_environmental_reading.threshold_breached`) | ITOM owes the consumer DMDO row and the B10b backfill on whichever ITOM module subscribes to capacity and environmental signals (likely `ITOM-MONITORING` or `ITOM-CAPACITY`). |
 | AIOPS B10b | `handoffs.target_domain_module_id` NULL on row 676 (`dc_power_distribution_unit.failure`) | AIOPS owes the consumer DMDO row and the B10b backfill on the correlator module. |
 | SPM B10b | `handoffs.target_domain_module_id` NULL on row 680 (`dc_capacity_plan.refreshed`) | SPM owes the consumer DMDO row on whichever SPM module reads capacity plans into the build-out portfolio. |
-| CMDB B-band | No `domain_module_data_objects` row exists linking CMDB-CORE (108) to `dc_port_connections` (554) as `consumer`, yet handoff 679 names CMDB-CORE as the target_domain_module_id. | CMDB owes a consumer DMDO row on `dc_port_connections` (and arguably on `dc_cable_connections` for completeness). |
+| CMDB B-band | No `domain_module_data_objects` row exists relating CMDB-CORE (108) to `dc_port_connections` (554) as `consumer`, yet handoff 679 names CMDB-CORE as the target_domain_module_id. | CMDB owes a consumer DMDO row on `dc_port_connections` (and arguably on `dc_cable_connections` for completeness). |
 | ITOM B8 (inbound) | When DCIM authors the `dc_environmental_readings` outbound, ITOM should mirror the `data_object_relationships` row on its side (`monitoring_signals receives dc_environmental_readings` or similar). | Audited on ITOM's pass. |
 
 ### Candidates queued
@@ -146,7 +146,7 @@ Applied the truly-technical subset of Bucket 1 via [.tmp_deploy/fix_dcim_b1_tech
 
 - **B1-T1** PATCH `trigger_events.event_category` on all 10 DCIM events (688 to 697), values exactly as the 2026-05-30 pass pre-specified (threshold / threshold / state_change / threshold / state_change / state_change / threshold / lifecycle / state_change / lifecycle). B9 now passes for category coverage.
 - **B1-T3** PATCH `data_objects.plural_label` on id 548 to `Power Distribution Units (PDUs)`. B2 partial-fail clears.
-- **B1-T5 (user-edges only)** INSERT 4 `data_object_relationships` rows from `users` (748) per Rule #10: `owns` -> `dc_racks` (546), `authors` -> `dc_capacity_plans` (553), `approves` -> `dc_capacity_plans` (553), `inspects` -> `dc_environmental_readings` (552). Shape: `one_to_many` / `reference` / `owner_side=source` / `is_required=false`. Intra-domain (`dc_racks contains dc_cabinets` etc.) and cross-domain (CMDB, SPM) edges deferred, they belong in the same load as B1-S1 modules so the per-module DMDOs anchor them.
+- **B1-T5 (relationships to `users` only)** INSERT 4 `data_object_relationships` rows from `users` (748) per Rule #10: `owns` -> `dc_racks` (546), `authors` -> `dc_capacity_plans` (553), `approves` -> `dc_capacity_plans` (553), `inspects` -> `dc_environmental_readings` (552). Shape: `one_to_many` / `reference` / `owner_side=source` / `is_required=false`. Intra-domain (`dc_racks contains dc_cabinets` etc.) and cross-domain (CMDB, SPM) relationships deferred, they belong in the same load as B1-S1 modules so the per-module DMDOs anchor them.
 - **B1-T6** INSERT 7 `data_object_aliases` (rack, cabinet, PDU, UPS, sensor reading, patch port, patch cable). Reinterpreted the audit's `alias_type='industry'` as `alias_type='synonym'`: (a) `industry` is not a valid enum value (live enum: `synonym`, `industry_term`, `solution_term`), (b) the catalog check-constraint requires `industry_id` when `alias_type='industry_term'` and these terms are general data-center vocabulary not tied to one vertical. B11 now non-empty.
 - **B1-H1** INSERT 8 `handoff_processes` rows with `role='implements'`, `proposal_source='agent_curated'`, defaults for `record_status` (Rule #1) and `notes` (Rule #15). PCFs 1299 / 1304 / 291 verified live before insert. Handoff 679 -> PCF 1309 was already present (row id 435) and skipped. All 9 DCIM handoffs are now PCF-tagged; H1 clears.
 
@@ -155,7 +155,7 @@ Applied the truly-technical subset of Bucket 1 via [.tmp_deploy/fix_dcim_b1_tech
 - **B1-S1 .. B1-S6** new entities (modules, capabilities, solutions, system skills, roles) and Rule #20 catalog text. Gated on the module-split decision.
 - **B1-T2** new handoff for `dc_power_circuit.overload` (event 691). Needs `source_domain_module_id` which depends on B1-S1.
 - **B1-T4** pattern-flag re-evaluation. All three flags are already at the audit-recommended `false`, no PATCH is needed; `has_submit_lock` / `has_single_approver` are explicitly deferred to B1-T7 lifecycle authoring per the audit text. Recorded as transcript-only per Rule #15.
-- **B1-T5 (rest)** intra-domain edges (9 edges) and cross-domain edges (CMDB, SPM). Belong in the modules load.
+- **B1-T5 (rest)** intra-domain relationships (9 relationships) and cross-domain relationships (CMDB, SPM). Belong in the modules load.
 - **B1-T7** lifecycle states. New `data_object_lifecycle_states` rows need the module FK (B1-S1) and the user picks (a)/(b) on the config-shape exemption for the three sensor masters (Bucket 2 #4).
 - **B1-B1 / B1-B2 / B1-B3** handoff source/target module FKs are derivable only after B1-S1; B1-B2 and B1-B3 are explicitly owned by ITOM / AIOPS / SPM / CMDB per Bucket 1 BOUNDARY.
 
@@ -165,7 +165,7 @@ No domain_regulations, DELETEs, permission_verb_overrides, or `notes=''` reverts
 
 - 10/10 trigger_events show non-empty `event_category` matching the audit table.
 - 9/9 DCIM-source handoffs now have a `handoff_processes` row (8 new + 1 pre-existing).
-- 4 user-edges present on `data_object_relationships` for `data_object_id=748` against DCIM masters 546 / 552 / 553.
+- 4 relationships to `users` present on `data_object_relationships` for `data_object_id=748` against DCIM masters 546 / 552 / 553.
 - 7 alias rows present on the 7 listed masters.
 - `data_objects.id=548 plural_label = 'Power Distribution Units (PDUs)'`.
 
@@ -176,7 +176,7 @@ UI links: `https://tests.semantius.app/domain_map/trigger_events`, `/data_object
 ### Summary
 
 - Current footprint reconfirmed: 10 master `data_objects` (546 to 555), 0 `domain_modules`, 0 `capabilities`, 0 `solutions`, 0 `regulations`, 0 inbound handoffs, 9 outbound handoffs, 1 legacy domain-level `system` skill (`dcim-system`, id 46, 10 `skill_tools` rows attached).
-- Continuation fixes from the same day verified live: B1-T1 (10/10 events carry valid `event_category`), B1-T3 (id 548 `plural_label` reads `Power Distribution Units (PDUs)`), B1-T5 user-edges (4 rows on 1782 to 1785), B1-T6 (7 alias rows, ids 1010 to 1016), B1-H1 APQC tagging (9/9 handoffs covered: 1299 x4, 1304 x3, 291, 1309).
+- Continuation fixes from the same day verified live: B1-T1 (10/10 events carry valid `event_category`), B1-T3 (id 548 `plural_label` reads `Power Distribution Units (PDUs)`), B1-T5 relationships to `users` (4 rows on 1782 to 1785), B1-T6 (7 alias rows, ids 1010 to 1016), B1-H1 APQC tagging (9/9 handoffs covered: 1299 x4, 1304 x3, 291, 1309).
 - Bucket 1 (in-scope, agent fixable) remaining: 4 items (all gated structural fixes that still resolve once the module-split decision lands).
 - Bucket 2 (surface-for-user, judgment): 4 items, unchanged from 2026-05-30.
 - Bucket 3 (Phase 0 pending, speculative): 6 items, unchanged.
@@ -194,7 +194,7 @@ UI links: `https://tests.semantius.app/domain_map/trigger_events`, `/data_object
 - **B3** pass (every master `dc_`-prefixed).
 - **B4** pass on `has_personal_content` (positive false confirmed for all 10, infrastructure data). `has_submit_lock` and `has_single_approver` deferred to B12 lifecycle authoring per Rule #15 (no `notes` annotation).
 - **B5** vacuous pass (zero `embedded_master` rows).
-- **B7** partial pass (4 user-edges present, 9 intra-domain edges still missing, blocked on modules).
+- **B7** partial pass (4 relationships to `users` present, 9 intra-domain relationships still missing, blocked on modules).
 - **B9** pass (all 10 events carry valid enum values).
 - **B9b** vacuous pass (no modules yet).
 - **B10b** fail (every outbound handoff has NULL `source_domain_module_id`, deterministic PATCH the moment modules land).
@@ -211,9 +211,9 @@ UI links: `https://tests.semantius.app/domain_map/trigger_events`, `/data_object
 
 | ID | Pass | Finding | Action |
 | --- | --- | --- | --- |
-| B1A-S1 | M1 / M2 | Author `domain_modules` rows once Bucket 2 #1 settles (2 or 3 modules). Each row needs the `module_kind='full'` flag and the description, plus host-domain wiring. | Loader insert; Phase A obligation per Rule #14. Carries B1A-S2 / S3 / S5 / S6, B1-T2, B1-T5 (intra-domain edges), B1-T7, and B1-B1 PATCH as a single dependent bundle. |
+| B1A-S1 | M1 / M2 | Author `domain_modules` rows once Bucket 2 #1 settles (2 or 3 modules). Each row needs the `module_kind='full'` flag and the description, plus host-domain wiring. | Loader insert; Phase A obligation per Rule #14. Carries B1A-S2 / S3 / S5 / S6, B1-T2, B1-T5 (intra-domain relationships), B1-T7, and B1-B1 PATCH as a single dependent bundle. |
 | B1A-T2 | B9 | `dc_power_circuit.overload` (event 691) still has zero handoff rows. | INSERT handoff into ITSM-INCIDENT-MGMT (module 38, payload `service_incidents` 47, integration_pattern `event_stream`, friction_level `high`) AND tag the new handoff with PCF 1299 in the same load. Source module FK is part of B1A-S1. |
-| B1A-T5b | B7 / B8 | 9 intra-domain `data_object_relationships` edges still missing (`dc_racks contains dc_cabinets`, `dc_cabinets contains dc_power_distribution_units`, `dc_power_distribution_units feeds dc_power_circuits`, `dc_power_circuits powers dc_cabinets`, `dc_uninterruptible_power_supplies backs dc_power_distribution_units`, `dc_cooling_units serves dc_cabinets`, `dc_environmental_readings sampled_at dc_cabinets`, `dc_capacity_plans plans dc_racks`, `dc_port_connections connects dc_cable_connections`). Plus cross-domain edges to CMDB (`dc_port_connections updates configuration_items`) and SPM (`dc_capacity_plans informs financial_plans` or equivalent). | INSERT into `data_object_relationships`. Edges that do not need a module FK can in principle ship now, but bundling them with B1A-S1 avoids two loads. |
+| B1A-T5b | B7 / B8 | 9 intra-domain `data_object_relationships` rows still missing (`dc_racks contains dc_cabinets`, `dc_cabinets contains dc_power_distribution_units`, `dc_power_distribution_units feeds dc_power_circuits`, `dc_power_circuits powers dc_cabinets`, `dc_uninterruptible_power_supplies backs dc_power_distribution_units`, `dc_cooling_units serves dc_cabinets`, `dc_environmental_readings sampled_at dc_cabinets`, `dc_capacity_plans plans dc_racks`, `dc_port_connections connects dc_cable_connections`). Plus cross-domain relationships to CMDB (`dc_port_connections updates configuration_items`) and SPM (`dc_capacity_plans informs financial_plans` or equivalent). | INSERT into `data_object_relationships`. Relationships that do not need a module FK can in principle ship now, but bundling them with B1A-S1 avoids two loads. |
 | B1A-B1 | B10b | All 9 outbound handoffs at NULL `source_domain_module_id`. | PATCH each row once B1A-S1 modules land, strongest-role module that holds the source data_object wins. |
 
 ### Bucket 2, Surface-for-user (judgment calls, 4 remaining, unchanged)
@@ -239,8 +239,8 @@ UI links: `https://tests.semantius.app/domain_map/trigger_events`, `/data_object
 - ITOM B10b on handoffs 673 and 681 (NULL `target_domain_module_id`).
 - AIOPS B10b on handoff 676.
 - SPM B10b on handoff 680.
-- CMDB B-band gap, no `domain_module_data_objects` row links CMDB-CORE (108) to `dc_port_connections` (554), yet handoff 679 names CMDB-CORE as target. CMDB owes the consumer DMDO row.
-- ITOM B8 mirror edge once DCIM authors `dc_environmental_readings` outbound (monitoring_signals receives dc_environmental_readings).
+- CMDB B-band gap, no `domain_module_data_objects` row relates CMDB-CORE (108) to `dc_port_connections` (554), yet handoff 679 names CMDB-CORE as target. CMDB owes the consumer DMDO row.
+- ITOM B8 mirror relationship once DCIM authors `dc_environmental_readings` outbound (monitoring_signals receives dc_environmental_readings).
 
 ### Decisions
 
@@ -275,12 +275,12 @@ State-driven Validate pass over the open items in `audits/DCIM/state.yaml` (no f
 
 - **entity_type (B13 / Rule #12), 10 PATCHes.** All 10 DCIM masters were `entity_type='unclassified'`. Classified deterministically from the description: `operational_workflow` x3 (dc_racks 546, dc_power_circuits 549, dc_capacity_plans 553, the masters with explicit state machines), `operational_record` x7 (dc_cabinets 547, dc_power_distribution_units 548, dc_uninterruptible_power_supplies 550, dc_cooling_units 551, dc_environmental_readings 552, dc_port_connections 554, dc_cable_connections 555). 0 remain unclassified. The three sensor/topology-shape masters (552, 554, 555) classified `operational_record` IS the new structural config-shape lifecycle exemption per Rule #12; this resolves and retires the old `B2-LIFECYCLE-EXEMPTION` judgment call (no `data_objects.notes` write, Rule #15 honored).
 - **Catalog UX (Rule #20), 2 fields written.** `catalog_tagline` and `catalog_description` on domain row 84 were both empty strings; authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) and wrote it in. The stale "surface-before-write / user approval first" gate on the old B1B-S4 item was overridden per the state-driven execute contract. B1B-S4 dropped from state (executed).
-- **data_object_relationships (B1A-T5b), 11 INSERTs (rows 2142 to 2152).** The 9 intra-domain master-to-master edges (dc_racks contains dc_cabinets; dc_cabinets contains dc_power_distribution_units; dc_power_distribution_units feeds dc_power_circuits; dc_power_circuits powers dc_cabinets; dc_uninterruptible_power_supplies backs dc_power_distribution_units; dc_cooling_units serves dc_cabinets; dc_environmental_readings sampled_at dc_cabinets; dc_capacity_plans plans dc_racks; dc_port_connections connects dc_cable_connections) plus the 2 cross-domain edges (dc_port_connections updates configuration_items 76 / CMDB; dc_capacity_plans informs financial_plans 37 / SPM). `data_object_relationships` has NO module FK column, so the state.yaml `blocked_by` on these was a round-trip-optimization gate, not a data dependency; executed now. Shape matches the existing user-edges (1782 to 1785): `relationship_type=one_to_many`, `owner_side=source`, `is_required=false`; `relationship_kind` = composition for the structural "contains" edges, association for functional topology edges, reference for cross-domain. The 4 user-edges were left untouched. B1A-T5b dropped from state (executed).
+- **data_object_relationships (B1A-T5b), 11 INSERTs (rows 2142 to 2152).** The 9 intra-domain master-to-master relationships (dc_racks contains dc_cabinets; dc_cabinets contains dc_power_distribution_units; dc_power_distribution_units feeds dc_power_circuits; dc_power_circuits powers dc_cabinets; dc_uninterruptible_power_supplies backs dc_power_distribution_units; dc_cooling_units serves dc_cabinets; dc_environmental_readings sampled_at dc_cabinets; dc_capacity_plans plans dc_racks; dc_port_connections connects dc_cable_connections) plus the 2 cross-domain relationships (dc_port_connections updates configuration_items 76 / CMDB; dc_capacity_plans informs financial_plans 37 / SPM). `data_object_relationships` has NO module FK column, so the state.yaml `blocked_by` on these was a round-trip-optimization gate, not a data dependency; executed now. Shape matches the existing relationships to `users` (1782 to 1785): `relationship_type=one_to_many`, `owner_side=source`, `is_required=false`; `relationship_kind` = composition for the structural "contains" relationships, association for functional topology relationships, reference for cross-domain. The 4 relationships to `users` were left untouched. B1A-T5b dropped from state (executed).
 
 ### Surfaced (for the user, no write made)
 
 - **B2-MODULE-SPLIT (b2, gating).** Pick the DCIM module split: (a) 3-module (DCIM-ASSET-CAPACITY + DCIM-POWER-COOLING + optional DCIM-FLOORPLAN-SITE), (b) 2-module (DCIM-PHYSICAL + DCIM-POWER-COOLING), (c) 1 full + 1 starter (DCIM-CORE + DCIM-LITE), (d) other. Gates the entire build and every remaining b1 item.
-- **B2-CAPABILITY-SET (b2).** Which of the 7 proposed capability codes land, and whether DCIM-CAPACITY-PLAN folds into the existing cross-cutting ITOM-CAPACITY (227) via a capability_domains link rather than a new code.
+- **B2-CAPABILITY-SET (b2).** Which of the 7 proposed capability codes land, and whether DCIM-CAPACITY-PLAN folds into the existing cross-cutting ITOM-CAPACITY (227) via a capability_domains relationship rather than a new code.
 - **B2-ENV-READING-FAN-OUT (b2).** Should dc_environmental_reading.threshold_breached (event 694) fan out a second outbound to ITSM-INCIDENT-MGMT (major-incident trigger), or leave it to ITOM to correlate and re-publish?
 - **B1A-BUILD (the unbuilt-domain build).** DCIM has masters but no modules/capabilities/solutions. Run Phase A then M then B then S to build (and Phase P if multi-module). Blocked on B2-MODULE-SPLIT.
 
@@ -299,7 +299,7 @@ State-driven Validate pass over the open items in `audits/DCIM/state.yaml` (no f
 
 - `https://tests.semantius.app/domain_map/data_objects` (entity_type)
 - `https://tests.semantius.app/domain_map/domains?id=eq.84` (catalog UX)
-- `https://tests.semantius.app/domain_map/data_object_relationships` (11 new edges)
+- `https://tests.semantius.app/domain_map/data_object_relationships` (11 new relationships)
 
 ## 2026-06-07 - Build (grounded review)
 
@@ -308,16 +308,16 @@ DCIM had its 10 masters, outbound handoffs, and a legacy domain-level system ski
 Executed (all record_status=new):
 - Phase A: 7 capabilities (DCIM-ASSET-REG, DCIM-POWER-CHAIN, DCIM-THERMAL, DCIM-ENV-MON, DCIM-CAP-PLAN, DCIM-CONN-MAP, DCIM-MAC) + capability_domains.
 - Phase M: 3 full modules - DCIM-ASSET-SPACE (326), DCIM-POWER-ENV (327), DCIM-CAP-CONN (328) - + domain_module_capabilities; all 10 existing masters assigned to modules; new master dc_change_requests (1025, the moves-adds-changes entity) authored and assigned to 326.
-- Phase B completion (this run): lifecycle states for the 3 operational_workflow masters (dc_racks 546, dc_power_circuits 549, dc_capacity_plans 553); data_object_relationships +13 (intra-domain: cooling_unit emits_readings env_reading, capacity_plan projects power_circuit + cooling_unit, rack/cabinet changed_by change_request; users edges: submits change_request, operates PDU, maintains cooling_unit, documents port_connection; cross-domain outbound: dc_cabinets/PDUs/UPSes/cooling_units raise service_incidents 47, mirroring the published ITSM handoffs 674/675/677/678); +8 lifecycle-cover trigger_events covering the rack, power-circuit, and capacity-plan transitions that had no event (dc_rack.installed/activated/decommissioned, dc_power_circuit.energized/de_energized/decommissioned, dc_capacity_plan.published/superseded), each anchored to its mastering module; handoff module-FK backfill (B10b) - all 9 outbound handoffs (673-681) patched with source_domain_module_id derived from the module mastering each trigger_event data_object (673 327, 674 326, 675 327, 676 327, 677 327, 678 327, 679 328, 680 328, 681 326). DCIM has 0 inbound handoffs, so no consumer DMDO rows and no inbound target-module backfill were needed.
+- Phase B completion (this run): lifecycle states for the 3 operational_workflow masters (dc_racks 546, dc_power_circuits 549, dc_capacity_plans 553); data_object_relationships +13 (intra-domain: cooling_unit emits_readings env_reading, capacity_plan projects power_circuit + cooling_unit, rack/cabinet changed_by change_request; relationships to `users`: submits change_request, operates PDU, maintains cooling_unit, documents port_connection; cross-domain outbound: dc_cabinets/PDUs/UPSes/cooling_units raise service_incidents 47, mirroring the published ITSM handoffs 674/675/677/678); +8 lifecycle-cover trigger_events covering the rack, power-circuit, and capacity-plan transitions that had no event (dc_rack.installed/activated/decommissioned, dc_power_circuit.energized/de_energized/decommissioned, dc_capacity_plan.published/superseded), each anchored to its mastering module; handoff module-FK backfill (B10b) - all 9 outbound handoffs (673-681) patched with source_domain_module_id derived from the module mastering each trigger_event data_object (673 327, 674 326, 675 327, 676 327, 677 327, 678 327, 679 328, 680 328, 681 326). DCIM has 0 inbound handoffs, so no consumer DMDO rows and no inbound target-module backfill were needed.
 - Phase S: tools + domain_module_tools wired so dcim-system derives a non-empty toolset.
-- Phase E: 4 personas (Data Center Manager, Critical Facilities Engineer, Capacity Planner, Data Center Technician) + role_modules.
+- Phase E: 4 personas (Data Center Manager, Critical Facilities Engineer, Capacity Planner, Data Center Technician) + persona_modules.
 
-Note on relationship_type: the DB check constraint allows only one_to_many / one_to_one / many_to_many (not many_to_one), so child-to-parent edges were authored parent-side as one_to_many with owner_side=source.
+Note on relationship_type: the DB check constraint allows only one_to_many / one_to_one / many_to_many (not many_to_one), so child-to-parent relationships were authored parent-side as one_to_many with owner_side=source.
 
 Left for the user (q-DCIM.md, all vendor-grounded): module-split confirmation (built as 3-module, grounded in Sunbird/Schneider/Vertiv/Nlyte product packaging); EAM/CMDB ownership of the physical masters (grounded in the Device42 publish-not-own pattern); the two dc_change_requests pattern-flag freezes (submit-lock + single-approver, grounded in Sunbird/Nlyte/Vertiv MAC workflows); Device42 DCIM coverage_level (partial, grounded in Device42 discovery/CMDB-led positioning); and the environmental-reading ITSM fan-out (grounded in EcoStruxure IT / Vertiv Environet alarm-to-ticket routing). B3 ideas (dc_floor_plans, dc_sites, dc_power_reservations, dc_audit_trails, dc_discovery_scans) parked as non-blocking Phase 0 vetting candidates.
 
 ### UI links (tables written)
 
-- https://tests.semantius.app/domain_map/data_object_relationships (13 new edges)
+- https://tests.semantius.app/domain_map/data_object_relationships (13 new relationships)
 - https://tests.semantius.app/domain_map/trigger_events (8 new lifecycle-cover events)
 - https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.84 (9 source-module FK backfills)

@@ -10,10 +10,10 @@ Map your end-to-end processes, capabilities, and value streams in one connected 
 q1: (answer this first) Which area should canonically own business capability maps (the shared "what the business can do" entity)?
 
 - a) Keep APM (the portfolio registry) as the canonical owner. BPA's capability-map module keeps its embedded copy, and BPA's leftover legacy master claim is removed. No further moves.
-- b) Make BPA the canonical owner. Move the master to BPA's capability-map module, demote APM to a consumer, relocate the three lifecycle states, drop APM's duplicate capability links, and re-derive the BPA publish permission.
+- b) Make BPA the canonical owner. Move the master to BPA's capability-map module, demote APM to a consumer, relocate the three lifecycle states, drop APM's duplicate capability relationships, and re-derive the BPA publish permission.
 - c) Defer to a future Enterprise Architecture domain (still a queued candidate): revisit once it exists.
 
-Recommended: a. It is the current loaded state and keeps APM's portfolio coupling intact, so it is the least disruptive. Pick (b) only if you want BPA to own capability mapping outright (BPA-prefixed capability codes argue for it). This decision drives the master row, the three lifecycle states, the publish permission, and the duplicate capability links, so it unblocks the rest of the build.
+Recommended: a. It is the current loaded state and keeps APM's portfolio coupling intact, so it is the least disruptive. Pick (b) only if you want BPA to own capability mapping outright (BPA-prefixed capability codes argue for it). This decision drives the master row, the three lifecycle states, the publish permission, and the duplicate capability relationships, so it unblocks the rest of the build.
 
 a1:
 
@@ -57,11 +57,11 @@ a5:
 
 q6: If a future Enterprise Architecture domain is promoted, how should the four BPA solutions that also lead the EA market (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) be split?
 
-- a) Keep all four as primary on BPA, and re-link to EA when it lands.
+- a) Keep all four as primary on BPA, and re-relate to EA when it lands.
 - b) Downgrade those four to secondary on BPA, and create primary rows on EA at promotion time.
 - c) Split per solution (for example, Signavio as BPA primary, ARIS as EA primary).
 
-Recommended: a. This is moot unless EA is promoted (see the Optional section), so the safe default is to keep BPA's current primary links and revisit only if EA lands.
+Recommended: a. This is moot unless EA is promoted (see the Optional section), so the safe default is to keep BPA's current primary relationships and revisit only if EA lands.
 
 a6:
 
@@ -73,7 +73,7 @@ q7: Should I author a candidate handoff from process mining to BPA when a discov
 - b) Defer it to a process-mining audit.
 - c) Skip it as overspecification.
 
-Recommended: b. It is a speculative cross-domain edge surfaced during reconciliation, not a confirmed gap, so a process-mining audit is the natural place to decide it.
+Recommended: b. It is a speculative cross-domain relationship surfaced during reconciliation, not a confirmed gap, so a process-mining audit is the natural place to decide it.
 
 a7:
 

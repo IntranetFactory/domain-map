@@ -20,14 +20,14 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Phase-P discipline: personas/RACI are not auto-authored during a state-driven execute pass."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Benefits Administrator, Enrollment Specialist, Plan Manager, Compliance Analyst (mirrors the retired _core role set; the four legacy roles 10065-10068 still exist as the permission-bundle layer and anchor the persona shape)."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Phase-P discipline: personas/RACI are not auto-authored during a state-driven execute pass."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Benefits Administrator, Enrollment Specialist, Plan Manager, Compliance Analyst (mirrors the retired _core role set; the four legacy roles 10065-10068 still exist as the permission-bundle layer and anchor the persona shape)."
     extra_phase_p_triage: "2026-06-02"
     surfaced: personas_deferred
 
   - id: B1A-SELF-CONTAIN
     summary: "3 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 3 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. DESTRUCTIVE: the fix rewrites role/necessity on an existing DMDO row (convert to embedded_master with a local shell, or relax necessity to optional). Surfaced for user approval; not executed."
+    finding: "Live triage 2026-06-02: 3 domain_module_data_objects rows on this domain's modules are held_as=contributor or held_as=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. DESTRUCTIVE: the fix rewrites role/necessity on an existing DMDO row (convert to embedded_master with a local shell, or relax necessity to optional). Surfaced for user approval; not executed."
     action: "User-approved only, per row: convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency. NOTE: the deduction_codes and hr_cases rows interact with B1B-S4 / B2-S1 (hr_cases) and the PAYROLL boundary; resolve B2-S1 first for the hr_cases row."
     extra_m9_shapes:
       - {entity: deduction_codes, module: BEN-PLAN-DESIGN, role: contributor, master_domain: PAYROLL}
@@ -73,8 +73,8 @@ b1b:
     extra_band: F2
 
   - id: B1B-RPT-ERPFIN-MASTER
-    summary: "Report-only. FIN owes a module-layer role=master DMDO row on legal_entities (197)."
-    finding: "BEN-PLAN-DESIGN (71) and BEN-ACA-COMPLIANCE (74) both consume legal_entities (197) as consumer + required. Catalog-wide query /domain_module_data_objects?data_object_id=eq.197&role=eq.master returns []. The blueprint emitter cannot resolve the canonical owning module at deploy time. BEN-ADMIN's own consumer rows are correctly authored; the missing master row is an FIN obligation."
+    summary: "Report-only. FIN owes a module-layer held_as=master DMDO row on legal_entities (197)."
+    finding: "BEN-PLAN-DESIGN (71) and BEN-ACA-COMPLIANCE (74) both consume legal_entities (197) as consumer + required. Catalog-wide query /domain_module_data_objects?data_object_id=eq.197&held_as=eq.master returns []. The blueprint emitter cannot resolve the canonical owning module at deploy time. BEN-ADMIN's own consumer rows are correctly authored; the missing master row is an FIN obligation."
     action: "Schedule b1 audit on FIN; FIN audit authors the master row on the relevant FIN module. No action by BEN-ADMIN."
     blocked_by:
       - {type: domain_audit, blocking_domain: FIN, milestone: legal_entities_master_row}
@@ -214,7 +214,7 @@ b3:
 
   - id: B3-SPENDING-CLAIMS
     candidate: fsa_hsa_commuter_claims
-    rationale: "Alegeus, WEX Health, HealthEquity, Discovery Benefits, P&A Group master claims against FSA / HSA / commuter benefit accounts as a distinct ledger entity (claim submitted, adjudicated, paid or rejected). The PAYROLL deduction_codes connection captures the contribution side; the claim / disbursement side has no entity."
+    rationale: "Alegeus, WEX Health, HealthEquity, Discovery Benefits, P&A Group master claims against FSA / HSA / commuter benefit accounts as a distinct ledger entity (claim submitted, adjudicated, paid or rejected). The PAYROLL deduction_codes relationship captures the contribution side; the claim / disbursement side has no entity."
     vendor_evidence: [Alegeus, WEX Health, HealthEquity, Discovery Benefits, P&A Group]
     proposed_module: "new BEN-SPENDING-ACCOUNTS module or BEN-ENROLLMENT"
 

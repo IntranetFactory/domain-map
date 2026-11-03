@@ -18,7 +18,7 @@ last_audit: "2026-06-06"
 # Both items resolved:
 #   - B1A-MODULE-SYSTEM-SKILLS: skills 386/387/388 authored (one per module 321/322/323),
 #     legacy query tools 744-748 redistributed by master ownership, mutate tools 1785/1786/1787
-#     added, skill_tools 3177-3186 linked, legacy skill 116 + its skill_tools deleted (F1).
+#     added, skill_tools 3177-3186 related, legacy skill 116 + its skill_tools deleted (F1).
 #   - B1A-MODULE-CATALOG-UX: catalog_tagline + catalog_description written into the empty fields
 #     on modules 321/322/323 and domain 151 (Rule #20 empty-guard, no overwrites).
 b1a:
@@ -134,8 +134,8 @@ b1b:
     blocked_by:
       - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules-and-payload-masters}
     affected_handoffs:
-      - {handoff_id: 335, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: cross-domain-mirror-edge}
-      - {handoff_id: 948, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_lab_result.critical, payload: veterinary_lab_results, null_field: cross-domain-mirror-edge}
+      - {handoff_id: 335, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: cross-domain-mirror-relationship}
+      - {handoff_id: 948, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_lab_result.critical, payload: veterinary_lab_results, null_field: cross-domain-mirror-relationship}
 
   - id: B1B-B8-SUP-LIFE-MIRROR
     summary: No outbound data_object_relationships mirror handoff 336 (-> SUP-LIFE); blocked on SUP-LIFE reorder payload master.
@@ -148,7 +148,7 @@ b1b:
     blocked_by:
       - {type: domain_audit, blocking_domain: SUP-LIFE, milestone: M1-modules-and-reorder-master}
     affected_handoffs:
-      - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: cross-domain-mirror-edge}
+      - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: cross-domain-mirror-relationship}
 
   - id: B1B-B8-FIN-MIRROR
     summary: No outbound data_object_relationships mirror handoff 946 (-> FIN); blocked on FIN AR payload master.
@@ -161,7 +161,7 @@ b1b:
     blocked_by:
       - {type: domain_audit, blocking_domain: FIN, milestone: M1-modules-and-AR-master}
     affected_handoffs:
-      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: cross-domain-mirror-edge}
+      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: cross-domain-mirror-relationship}
 
   - id: B1B-H1-FIN-APQC
     summary: Handoff 946 (pet_owner.registered -> FIN) is the only outbound without a handoff_processes row.

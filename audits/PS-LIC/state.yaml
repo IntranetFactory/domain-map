@@ -102,12 +102,12 @@ b1b:
       `/trigger_events?data_object_id=in.(641,642,643,644,645,646)` returns 8 events; `/handoffs?source_domain_id=eq.46`
       returns 6 outbound rows. Events `permit_application.submitted` (id 1052), `permit_application.approved` (id 1053), and
       `permit_inspection.scheduled` (id 1056) each have zero subscribers. All three are valid published verbs that should
-      have at least one cross-domain subscriber (CSM constituent acknowledgement, FIN fee intake, dispatch via FSM or
+      have at least one cross-domain subscriber (CSM constituent acknowledgment, FIN fee intake, dispatch via FSM or
       CCAAS). The events now carry `event_category` (1052/1053/1056 = lifecycle), but the missing-subscriber drafts still
       gate on per-module FK derivation.
     action: >-
       Once B1B-M1 cures, draft handoff rows per the Authoring rule. Minimal proposed set: `permit_application.submitted` to
-      CSM (acknowledgement case) and FIN (fee intake); `permit_application.approved` to CSM (approval notification);
+      CSM (acknowledgment case) and FIN (fee intake); `permit_application.approved` to CSM (approval notification);
       `permit_inspection.scheduled` to FSM (inspector dispatch, if modeled; otherwise CSM scheduling case). Populate both
       `source_domain_module_id` (from PS-LIC's M1 cure) and `target_domain_module_id` (subject to target M1 cures).
     blocked_by:

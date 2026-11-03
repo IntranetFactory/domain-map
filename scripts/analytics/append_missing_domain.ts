@@ -21,7 +21,9 @@
 //
 // Re-run with the same --code: bumps counter, appends "Surfaced by" line,
 // updates "Most recently surfaced". Other fields are NOT overwritten on
-// re-run (they widen at review time, not on each surface).
+// re-run (they widen at review time, not on each surface). A re-run whose
+// --name differs from the entry's name is refused (exit 2), because it means
+// two markets share one code.
 //
 // Optional --semantius-score "<text>": sets the "Estimated Semantius score"
 // line on the entry (a coarse CRUD-vs-side-effect/compute estimate). On a
@@ -101,9 +103,26 @@ const prelude = raw.slice(0, pendingStart);
 const pendingBlock = raw.slice(pendingStart, promotedStart);
 const tail = raw.slice(promotedStart);
 
-// Per-candidate sub-section header pattern: "### <CODE> — <Name>"
-const entryHeaderRe = new RegExp(`^### ${code}\\b.*$`, "m");
+// Per-candidate sub-section header pattern: "### <CODE>: <Name>" (older entries
+// separate them with an em-dash). The lookahead keeps a code from matching a
+// longer kebab-case code that starts with it (ELD must not match ELD-COMPLIANCE).
+const entryHeaderRe = new RegExp(`^### ${code}(?![A-Z0-9-]).*$`, "m");
 const existing = entryHeaderRe.exec(pendingBlock);
+
+// Same code with a different name is a different market sharing an abbreviation
+// (TMS: Translation vs Transportation). Refuse rather than bump the wrong entry.
+if (existing && name) {
+  const existingName = existing[0]
+    .slice(`### ${code}`.length)
+    .replace(/^\W+/, "")
+    .trim();
+  const normalizeName = (s: string) => s.replace(/\s+/g, " ").toLowerCase();
+  if (existingName && normalizeName(existingName) !== normalizeName(name)) {
+    console.error(`Code ${code} already belongs to "${existingName}", not "${name}".`);
+    console.error(`Same candidate: re-run with --name "${existingName}". Different market: use a different --code.`);
+    process.exit(2);
+  }
+}
 
 // Set (or insert) the "Estimated Semantius score" line on an entry body.
 // Inserts after "Candidate capabilities" when the line is absent (older
@@ -195,7 +214,7 @@ if (existing) {
 } else {
   // New candidate. Build the entry block.
   const placeholder = "_(no candidates yet)_";
-  const newEntry = `### ${code} — ${name}
+  const newEntry = `### ${code}: ${name}
 
 - **Mention count:** 1
 - **First surfaced:** ${today} (${surfacedBy})
@@ -227,7 +246,7 @@ if (existing) {
       newPendingBlock = pendingBlock.trimEnd() + "\n\n" + newEntry;
     }
   }
-  console.log(`Added new candidate ${code} — ${name} (surfaced by ${surfacedBy}).`);
+  console.log(`Added new candidate ${code}: ${name} (surfaced by ${surfacedBy}).`);
 }
 
 const updated = prelude + newPendingBlock + tail;

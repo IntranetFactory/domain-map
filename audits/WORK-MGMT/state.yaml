@@ -96,7 +96,7 @@ b1b:
     finding: >-
       Inbound handoff 175 (CRM crm_opportunity.closed_won → WORK-MGMT-TASK-EXEC, payload
       crm_opportunities 100) has no data_object_relationships mirror. CRM's master spawns a
-      work_item/work_project for post-sale execution; CRM's B8 owes the edge. Report-only for WM.
+      work_item/work_project for post-sale execution; CRM's B8 owes the relationship. Report-only for WM.
     blocked_by:
       - {type: domain_audit, blocking_domain: CRM, milestone: "author-crm_opportunities-to-work_items-relationship"}
 

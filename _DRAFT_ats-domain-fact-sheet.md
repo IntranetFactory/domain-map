@@ -39,7 +39,7 @@ initial_request: |
 
 ## 1. Overview
 
-An Applicant Tracking System (ATS) manages the end-to-end recruiting workflow: opening requisitions, sourcing and tracking candidates, running interviews, gathering panel feedback, and extending offers. The central work record is the job application, which links one candidate to one job opening and progresses through a configurable pipeline of stages from applied to hired or rejected.
+An Applicant Tracking System (ATS) manages the end-to-end recruiting workflow: opening requisitions, sourcing and tracking candidates, running interviews, gathering panel feedback, and extending offers. The central work record is the job application, which relates one candidate to one job opening and progresses through a configurable pipeline of stages from applied to hired or rejected.
 
 The model supports a panel-interview pattern with per-interviewer scorecards that lock on submit, a single-approver offer flow, and personal-content scoping on interviewer feedback and recruiter notes. It assumes a single ATS deployment per tenant; multi-region tenancy is provided by the platform.
 
@@ -53,9 +53,9 @@ The model supports a panel-interview pattern with per-interviewer scorecards tha
 | 4 | `candidate_sources` | Candidate Source | Lookup of where a candidate originated (referral, job board, agency, event) |
 | 5 | `job_applications` | Job Application | One candidate's application to one job opening; the central work record |
 | 6 | `application_stages` | Application Stage | Lookup defining the recruiting pipeline |
-| 7 | `hiring_team_members` | Hiring Team Member | Junction linking users (recruiter, hiring manager, interviewers) to a job opening |
+| 7 | `hiring_team_members` | Hiring Team Member | Junction relating users (recruiter, hiring manager, interviewers) to a job opening |
 | 8 | `interviews` | Interview | A scheduled interview event for one job application |
-| 9 | `interview_panelists` | Interview Panelist | Junction linking users to an interview |
+| 9 | `interview_panelists` | Interview Panelist | Junction relating users to an interview |
 | 10 | `interview_feedback` | Interview Feedback | One interviewer's scorecard for one interview, personal and submit-then-lock |
 | 11 | `job_offers` | Job Offer | A formal offer extended on a job application |
 | 12 | `application_notes` | Application Note | A free-form note on a job application |
@@ -118,7 +118,7 @@ flowchart LR
 
 ### 3.1 `job_openings`
 
-**Description:** A requisition for one or more positions the company is hiring for. The job opening carries the role definition, compensation range, ownership (hiring manager and recruiter), and lifecycle status from draft through filled or cancelled.
+**Description:** A requisition for one or more positions the company is hiring for. The job opening carries the role definition, compensation range, ownership (hiring manager and recruiter), and lifecycle status from draft through filled or canceled.
 
 **Singular label:** Job Opening
 **Plural label:** Job Openings
@@ -161,7 +161,7 @@ flowchart LR
 
 ### 3.5 `job_applications`
 
-**Description:** The central work record of the ATS. A job application links one candidate to one job opening, sits in one pipeline stage, and progresses through statuses from active to a terminal value (hired, rejected, or withdrawn). All interviews, offers, and notes hang off the application.
+**Description:** The central work record of the ATS. A job application relates one candidate to one job opening, sits in one pipeline stage, and progresses through statuses from active to a terminal value (hired, rejected, or withdrawn). All interviews, offers, and notes hang off the application.
 
 **Singular label:** Job Application
 **Plural label:** Job Applications
@@ -209,7 +209,7 @@ flowchart LR
 
 ### 3.9 `interview_panelists`
 
-**Description:** Junction record linking a user to an interview as a panelist. A user may panel on many interviews; an interview includes one or more panelists.
+**Description:** Junction record relating a user to an interview as a panelist. A user may panel on many interviews; an interview includes one or more panelists.
 
 **Singular label:** Interview Panelist
 **Plural label:** Interview Panelists
@@ -320,7 +320,7 @@ Public notes are visible to every reader of the application. Private notes are v
 | `application_notes.job_application_id` | `job_applications` | parent | N:1 | cascade |
 | `application_notes.author_id` | `users` | reference | N:1 | restrict |
 
-## 6. Cross-model link suggestions
+## 6. Cross-model relationship suggestions
 
 | From | To | Verb | Cardinality | Delete |
 |---|---|---|---|---|

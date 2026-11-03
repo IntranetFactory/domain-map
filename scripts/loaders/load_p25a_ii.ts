@@ -97,7 +97,7 @@ const newTools: ToolDraft[] = [
   // HCM queries (employees + employment_events exist)
   { tool_name: "query_employment_contracts", operation_kind: "query", data_object_name: "employment_contracts", description: "Read employment contracts via Semantius CRUD." },
   { tool_name: "query_job_profiles", operation_kind: "query", data_object_name: "job_profiles", description: "Read HCM job profile catalog via Semantius CRUD." },
-  { tool_name: "query_org_units", operation_kind: "query", data_object_name: "org_units", description: "Read organisational units via Semantius CRUD." },
+  { tool_name: "query_org_units", operation_kind: "query", data_object_name: "org_units", description: "Read organizational units via Semantius CRUD." },
   { tool_name: "query_positions", operation_kind: "query", data_object_name: "positions", description: "Read HCM position records via Semantius CRUD." },
   // PAYROLL queries (employees + pay_slips exist)
   { tool_name: "query_pay_runs", operation_kind: "query", data_object_name: "pay_runs", description: "Read payroll runs via Semantius CRUD." },
@@ -218,7 +218,7 @@ const skillToolsMatrix: Record<string, SkillToolTuple[]> = {
     ["query_configuration_items", "required", "ITSM constantly references CMDB CIs"],
     ["send_email", "required", "Incident assignment / status notifications — standard ITSM workflow"],
     ["post_chat_message", "required", "Major-incident bridge / ChatOps integration (Slack/Teams) is table-stakes"],
-    ["classify_text", "optional", "Auto-categorisation of inbound incidents (enhancement)"],
+    ["classify_text", "optional", "Auto-categorization of inbound incidents (enhancement)"],
     ["generate_text", "optional", "AI-suggested resolution drafts"],
   ],
   "hcm-system": [

@@ -48,7 +48,7 @@ q4: Two trigger events (attrition_risk.high and attrition.forecast_updated) fire
 - b) Patch the two events to point at the People-Analytics-mastered attrition_forecasts entity.
 - c) Accept the cross-domain attribution as legitimate (events fire on the affected data, not the publisher's master).
 
-Recommended: a. It is the cleanest semantic fix and keeps each event tied to a publisher that actually masters its data; option (b) breaks the publisher-master link. This is destructive (repoint and retire), so it needs your sign-off.
+Recommended: a. It is the cleanest semantic fix and keeps each event tied to a publisher that actually masters its data; option (b) breaks the publisher-master relationship. This is destructive (repoint and retire), so it needs your sign-off.
 
 a4:
 

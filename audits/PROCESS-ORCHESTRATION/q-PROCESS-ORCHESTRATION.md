@@ -45,9 +45,9 @@ a3:
 
 ---
 
-q4: Should I add the process_events to Process Mining relationship edge? (yes/no)
+q4: Should I add the process_events to Process Mining relationship? (yes/no)
 
-The handoff from this domain's event stream to Process Mining is loaded (Process Mining ingests the runtime event log to discover and conform the real execution behavior). The payload-to-target relationship edge was NOT authored because Process Mining masters no single canonical event-log object - it masters derived objects (discovered process models, conformance results, variants, bottleneck findings) computed FROM logs, not the log itself.
+The handoff from this domain's event stream to Process Mining is loaded (Process Mining ingests the runtime event log to discover and conform the real execution behavior). The payload-to-target relationship was NOT authored because Process Mining masters no single canonical event-log object - it masters derived objects (discovered process models, conformance results, variants, bottleneck findings) computed FROM logs, not the log itself.
 
 Recommended: no for now - the handoff alone is correct; revisit if Process Mining gains an explicit event-log master.
 

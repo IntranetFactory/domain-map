@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 // Load the Strategic Workforce Planning (SWP) domain end-to-end:
 //   Phase 1: SWP domain + 2 new vendors (eQ8, OrgVue) + 3 new solutions
-//            (eQ8, OrgVue, Visier Plan) + 9 solution_domains links
+//            (eQ8, OrgVue, Visier Plan) + 9 solution_domains relationships
 //   Phase 2: 8 data_objects (workforce_plans, headcount_plans,
 //            position_demand_forecasts, skills_gap_analyses, workforce_scenarios,
 //            org_designs, labor_market_benchmarks, workforce_cost_projections)
-//            + 8 domain_data_objects (role: master)
+//            + 8 domain_data_objects (held_as: master)
 //            + multi-master signal: SWP also masters job_requisitions
 //              (ATS already master from the ATS load)
 //   Phase 3: 7 cross_domain_handoffs around SWP, including the canonical
@@ -80,7 +80,7 @@ const swpDomain = {
   domain_code: "SWP",
   domain_name: "Strategic Workforce Planning",
   description:
-    "Multi-year strategic capacity planning: target headcount, skills, location, and cost over a 1-5 year horizon, with what-if scenarios (growth, reduction, restructure, geography shift, skill pivot, cost optimization) and labor-market overlay. Distinct from WFM (operational scheduling, time and attendance) and EPM (financial planning) although it produces a cost projection that EPM consumes. Pure-play market (eQ8, OrgVue) coexists with bundled WFP modules inside EPM platforms (Anaplan, Pigment, Workday Adaptive Planning) and PA platforms (Visier Plan, ChartHop). Most spend flows through the bundled side; the catalog records both pure-plays and the bundled offerings as covering the domain. Operates upstream of ATS: SWP authorises hiring (headcount.approved triggers requisition creation), making SWP and ATS co-masters of job_requisitions — the canonical multi-master Signal-1 example.",
+    "Multi-year strategic capacity planning: target headcount, skills, location, and cost over a 1-5 year horizon, with what-if scenarios (growth, reduction, restructure, geography shift, skill pivot, cost optimization) and labor-market overlay. Distinct from WFM (operational scheduling, time and attendance) and EPM (financial planning) although it produces a cost projection that EPM consumes. Pure-play market (eQ8, OrgVue) coexists with bundled WFP modules inside EPM platforms (Anaplan, Pigment, Workday Adaptive Planning) and PA platforms (Visier Plan, ChartHop). Most spend flows through the bundled side; the catalog records both pure-plays and the bundled offerings as covering the domain. Operates upstream of ATS: SWP authorizes hiring (headcount.approved triggers requisition creation), making SWP and ATS co-masters of job_requisitions — the canonical multi-master Signal-1 example.",
   certification_required: false,
 };
 const domainMap = await syncByKey("/domains", [swpDomain], "domain_code");
@@ -100,7 +100,7 @@ const newVendors = [
   {
     vendor_name: "eQ8",
     description:
-      "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modelling, skills-gap analysis, and capacity planning for large enterprises.",
+      "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modeling, skills-gap analysis, and capacity planning for large enterprises.",
     vendor_url: "https://www.eq8.ai",
     headquarters_country: "Australia",
     notes: "",
@@ -108,7 +108,7 @@ const newVendors = [
   {
     vendor_name: "OrgVue",
     description:
-      "London-based org-design and workforce-planning platform. Strong in restructure modelling, position management, span-of-control analysis, and what-if scenarios on top of HR data.",
+      "London-based org-design and workforce-planning platform. Strong in restructure modeling, position management, span-of-control analysis, and what-if scenarios on top of HR data.",
     vendor_url: "https://www.orgvue.com",
     headquarters_country: "UK",
     notes: "",
@@ -128,7 +128,7 @@ const newSolutions = [
   {
     solution_name: "eQ8",
     description:
-      "Pure-play strategic workforce planning platform. Built for scenario modelling, skills-gap analysis, and demand/supply forecasting over multi-year horizons.",
+      "Pure-play strategic workforce planning platform. Built for scenario modeling, skills-gap analysis, and demand/supply forecasting over multi-year horizons.",
     solution_url: "https://www.eq8.ai",
     vendor_id: vendorIdByName.get("eQ8")!,
     solution_type: "saas",
@@ -138,7 +138,7 @@ const newSolutions = [
   {
     solution_name: "OrgVue",
     description:
-      "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modelling, and headcount scenarios on top of HR data.",
+      "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modeling, and headcount scenarios on top of HR data.",
     solution_url: "https://www.orgvue.com",
     vendor_id: vendorIdByName.get("OrgVue")!,
     solution_type: "saas",
@@ -165,7 +165,7 @@ const refSolutions = await get(
 const solIdByName = new Map<string, number>(solMap);
 for (const r of refSolutions) solIdByName.set(String(r.solution_name), Number(r.id));
 
-const solutionDomainLinks: { solution_name: string; coverage_level: "primary" | "secondary" | "partial"; notes?: string }[] = [
+const solutionDomainRelationships: { solution_name: string; coverage_level: "primary" | "secondary" | "partial"; notes?: string }[] = [
   // Primary — pure-plays and dedicated SWP products
   { solution_name: "eQ8", coverage_level: "primary", notes: "Pure-play strategic workforce planning." },
   { solution_name: "OrgVue", coverage_level: "primary", notes: "Pure-play org-design and workforce planning." },
@@ -184,7 +184,7 @@ const existingSD = await get(
 );
 const existingSDSet = new Set(existingSD.map(r => Number(r.solution_id)));
 
-const sdRows = solutionDomainLinks
+const sdRows = solutionDomainRelationships
   .filter(l => {
     const id = solIdByName.get(l.solution_name);
     if (!id) {
@@ -201,14 +201,14 @@ const sdRows = solutionDomainLinks
   }));
 
 if (sdRows.length > 0) {
-  console.log(`  /solution_domains: inserting ${sdRows.length} new SWP links`);
+  console.log(`  /solution_domains: inserting ${sdRows.length} new SWP relationships`);
   await insertChunked("/solution_domains", sdRows);
 } else {
-  console.log(`  /solution_domains: all SWP links already present`);
+  console.log(`  /solution_domains: all SWP relationships already present`);
 }
 
 // =============================================================================
-// PHASE 2 — data_objects + domain_data_objects (role: master) + multi-master row
+// PHASE 2 — data_objects + domain_data_objects (held_as: master) + multi-master row
 // =============================================================================
 console.log("\n=== Phase 2: SWP data_objects (incl. multi-master signal on job_requisitions) ===");
 
@@ -235,7 +235,7 @@ const swpDataObjects = [
     plural_label: "Position Demand Forecasts",
     display_label: "Position Demand Forecast",
     description:
-      "Projected need for specific roles derived from the capacity model: which positions, when, where, at what level. Feeds the requisition pipeline — approved demand becomes an authorised requisition in ATS via the headcount.approved handoff.",
+      "Projected need for specific roles derived from the capacity model: which positions, when, where, at what level. Feeds the requisition pipeline — approved demand becomes an authorized requisition in ATS via the headcount.approved handoff.",
   },
   {
     data_object_name: "skills_gap_analyses",
@@ -251,7 +251,7 @@ const swpDataObjects = [
     plural_label: "Workforce Scenarios",
     display_label: "Workforce Scenario",
     description:
-      "What-if models layered on top of a base workforce plan. Each scenario carries a type (growth / reduction / restructure / geography_shift / skill_pivot / cost_optimization), the perturbation parameters, and the modelled outcome on headcount, skills, and cost. RIF planning, expansion planning, M&A integration, and reorgs all sit here.",
+      "What-if models layered on top of a base workforce plan. Each scenario carries a type (growth / reduction / restructure / geography_shift / skill_pivot / cost_optimization), the perturbation parameters, and the modeled outcome on headcount, skills, and cost. RIF planning, expansion planning, M&A integration, and reorgs all sit here.",
   },
   {
     data_object_name: "org_designs",
@@ -280,7 +280,7 @@ const swpDataObjects = [
 ];
 const dataObjMap = await syncByKey("/data_objects", swpDataObjects, "data_object_name");
 
-// domain_data_objects (role: master) for SWP-owned objects
+// domain_data_objects (held_as: master) for SWP-owned objects
 const existingDDO = await get(
   `/domain_data_objects?domain_id=eq.${SWP_ID}&select=data_object_id&limit=10000`,
 );
@@ -292,15 +292,15 @@ const ddoRows = swpDataObjects
   .map(id => ({
     domain_id: SWP_ID,
     data_object_id: id,
-    role: "master",
+    held_as: "master",
     notes: "",
   }));
 
 if (ddoRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${ddoRows.length} new SWP-master links`);
+  console.log(`  /domain_data_objects: inserting ${ddoRows.length} new SWP-master relationships`);
   await insertChunked("/domain_data_objects", ddoRows);
 } else {
-  console.log(`  /domain_data_objects: all SWP master links already present`);
+  console.log(`  /domain_data_objects: all SWP master relationships already present`);
 }
 
 // --- Multi-master signal: SWP also masters job_requisitions ---
@@ -317,16 +317,16 @@ const existingSwpJr = await get(
   `/domain_data_objects?domain_id=eq.${SWP_ID}&data_object_id=eq.${JOB_REQ_ID}&select=id`,
 );
 if (existingSwpJr.length === 0) {
-  console.log("    inserting SWP→job_requisitions master link");
+  console.log("    inserting SWP→job_requisitions master relationship");
   await post("/domain_data_objects", {
     domain_id: SWP_ID,
     data_object_id: JOB_REQ_ID,
-    role: "master",
+    held_as: "master",
     notes:
       "Headcount intent — SWP masters the position approval, budget alignment, and plan-to-actual reconciliation slice. ATS masters the recruiting-execution slice (pipeline stages, candidates, interviews, offers). Cross-domain handoff SWP→ATS on headcount.approved is the bridge.",
   });
 } else {
-  console.log("    SWP→job_requisitions link already present");
+  console.log("    SWP→job_requisitions relationship already present");
 }
 
 // Refine the ATS→job_requisitions notes if they're still empty
@@ -370,7 +370,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "high",
     description:
-      "Annual (or rolling) budget cycle in EPM triggers refresh of workforce plans aligned to the new budget envelope. SWP planners rebuild scenarios under updated cost ceilings. High friction because EPM and SWP rarely share a common plan structure (org-unit dimensions, time grain, account hierarchies all differ), forcing manual reconciliation and re-modelling.",
+      "Annual (or rolling) budget cycle in EPM triggers refresh of workforce plans aligned to the new budget envelope. SWP planners rebuild scenarios under updated cost ceilings. High friction because EPM and SWP rarely share a common plan structure (org-unit dimensions, time grain, account hierarchies all differ), forcing manual reconciliation and re-modeling.",
     notes: "",
   },
   {
@@ -381,7 +381,7 @@ const handoffs = [
     integration_pattern: "batch_sync",
     friction_level: "medium",
     description:
-      "Actual headcount changes (hires, terminations, transfers, leaves) from HCM flow to SWP for plan-vs-actual reconciliation. Usually nightly batch; some orgs run weekly. Friction sits in normalising HCM's org structure to the planning structure SWP uses.",
+      "Actual headcount changes (hires, terminations, transfers, leaves) from HCM flow to SWP for plan-vs-actual reconciliation. Usually nightly batch; some orgs run weekly. Friction sits in normalizing HCM's org structure to the planning structure SWP uses.",
     notes: "",
   },
   {
@@ -403,7 +403,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "medium",
     description:
-      "People Analytics produces an attrition forecast (typically per org unit × tenure × performance band). SWP consumes the forecast to update plan assumptions on natural reduction, refining demand for backfill hires. Friction is medium — the forecast is well-defined but pushing it back into SWP scenarios requires manual planner judgement.",
+      "People Analytics produces an attrition forecast (typically per org unit × tenure × performance band). SWP consumes the forecast to update plan assumptions on natural reduction, refining demand for backfill hires. Friction is medium — the forecast is well-defined but pushing it back into SWP scenarios requires manual planner judgment.",
     notes: "",
   },
   // Outbound from SWP — including the canonical co-master driver
@@ -415,7 +415,7 @@ const handoffs = [
     integration_pattern: "api_call",
     friction_level: "high",
     description:
-      "Approved headcount in SWP authorises requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves.",
+      "Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves.",
     notes: "",
   },
   {
@@ -476,7 +476,7 @@ const solCount = (await get(`/solutions?solution_name=in.(eQ8,OrgVue,Visier%20Pl
 const sdCount = (await get(`/solution_domains?domain_id=eq.${SWP_ID}&select=id`)).length;
 const doCount = (await get(`/data_objects?data_object_name=in.(${swpDataObjects.map(o => o.data_object_name).join(",")})&select=id`)).length;
 const ddoCount = (await get(`/domain_data_objects?domain_id=eq.${SWP_ID}&select=id`)).length;
-const jrMasters = (await get(`/domain_data_objects?data_object_id=eq.${JOB_REQ_ID}&role=eq.master&select=domain_id`)).length;
+const jrMasters = (await get(`/domain_data_objects?data_object_id=eq.${JOB_REQ_ID}&held_as=eq.master&select=domain_id`)).length;
 const hoIn = (await get(`/cross_domain_handoffs?target_domain_id=eq.${SWP_ID}&select=id`)).length;
 const hoOut = (await get(`/cross_domain_handoffs?source_domain_id=eq.${SWP_ID}&select=id`)).length;
 

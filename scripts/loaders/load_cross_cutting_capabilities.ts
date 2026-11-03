@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 // First pass at cross-cutting capabilities.
 // 1. Rename 5 existing domain-prefixed capabilities to domain-neutral codes
-//    + generalise their descriptions
+//    + generalize their descriptions
 // 2. Insert 3 new cross-cutting capabilities that don't exist yet
-// 3. Add capability_domains rows so each cross-cutting capability links to
+// 3. Add capability_domains rows so each cross-cutting capability relates to
 //    every domain it genuinely spans (3+ domains per capability)
 // Idempotent.
 
@@ -38,7 +38,7 @@ async function insert(path: string, rows: Row[]): Promise<Row[]> {
 }
 
 // ============================================================
-// 1. RENAMES (existing capability code → new generic code) + description generalisation
+// 1. RENAMES (existing capability code → new generic code) + description generalization
 // ============================================================
 type Rename = { from: string; to: string; newName: string; newDescription: string; addDomains: string[] };
 
@@ -49,23 +49,23 @@ const renames: Rename[] = [
     newName: "Knowledge Management",
     newDescription:
       "Lifecycle of articles (draft / review / publish / retire), authoring workflow, version control, agent-assist surfacing in the work-item cockpit, and deflection-rate analytics back to the self-service portal. The same engine serves IT, HR, customer service, and legal knowledge bases — same capability, different audiences.",
-    addDomains: ["CSM", "HRSD", "LSD"], // ITSM already linked
+    addDomains: ["CSM", "HRSD", "LSD"], // ITSM already related
   },
   {
     from: "ITSM-AI-TRIAGE",
     to: "AI-TRIAGE-CLASSIFICATION",
     newName: "AI Triage and Classification",
     newDescription:
-      "Predictive categorisation, priority scoring, similar-case suggestion, suggested-response drafting, and auto-routing based on historical work-item patterns. Same model family used across IT incidents, customer cases, and HR cases — vendors increasingly market it as one cross-workflow capability (Now Assist, Salesforce Einstein, Freddy AI).",
-    addDomains: ["CSM", "HRSD"], // ITSM already linked
+      "Predictive categorization, priority scoring, similar-case suggestion, suggested-response drafting, and auto-routing based on historical work-item patterns. Same model family used across IT incidents, customer cases, and HR cases — vendors increasingly market it as one cross-workflow capability (Now Assist, Salesforce Einstein, Freddy AI).",
+    addDomains: ["CSM", "HRSD"], // ITSM already related
   },
   {
     from: "ITSM-SLA",
     to: "SLA-MGMT",
     newName: "SLA and OLA Management",
     newDescription:
-      "Service-level, operational-level, and underpinning-contract definitions; attachment to work items by priority/category/customer tier; breach detection; escalation triggers; breach reporting. Applies across internal IT services, external customer services, contact-centre work, and project services.",
-    addDomains: ["CSM", "CCAAS", "PSA"], // ITSM already linked
+      "Service-level, operational-level, and underpinning-contract definitions; attachment to work items by priority/category/customer tier; breach detection; escalation triggers; breach reporting. Applies across internal IT services, external customer services, contact-center work, and project services.",
+    addDomains: ["CSM", "CCAAS", "PSA"], // ITSM already related
   },
   {
     from: "ITSM-PORTAL",
@@ -73,7 +73,7 @@ const renames: Rename[] = [
     newName: "Self-Service Portal",
     newDescription:
       "End-user-facing portal for catalog browse, request submission, work-item status and updates, knowledge search, and announcements. Pattern is shared across IT service, HR service, and legal service delivery — same UI shape, different consumer audience.",
-    addDomains: ["HRSD", "LSD"], // ITSM already linked
+    addDomains: ["HRSD", "LSD"], // ITSM already related
   },
   {
     from: "CDP-IDENT-RES",
@@ -81,18 +81,18 @@ const renames: Rename[] = [
     newName: "Identity Resolution",
     newDescription:
       "Deterministic and probabilistic stitching of disparate identifiers (email, device, cookie, CRM ID, employee ID, contractor ID) into a unified entity graph. Marketing CDPs, MDM platforms, and IGA tools all build on the same resolution engine — vendors like Reltio, Quantexa, and SAS sell across all three markets.",
-    addDomains: ["MDM", "IGA"], // CDP already linked
+    addDomains: ["MDM", "IGA"], // CDP already related
   },
 ];
 
 // ============================================================
-// 2. EXTENDS (existing capability, already domain-neutral, link to more domains)
+// 2. EXTENDS (existing capability, already domain-neutral, relate to more domains)
 // ============================================================
 type Extend = { code: string; addDomains: string[] };
 
 const extends_: Extend[] = [
-  { code: "TIME-TRACKING",    addDomains: ["PSA", "EXPENSE"] }, // WFM already linked
-  { code: "COMPLIANCE-TRAIN", addDomains: ["GRC"] },             // LMS already linked
+  { code: "TIME-TRACKING",    addDomains: ["PSA", "EXPENSE"] }, // WFM already related
+  { code: "COMPLIANCE-TRAIN", addDomains: ["GRC"] },             // LMS already related
 ];
 
 // ============================================================
@@ -105,7 +105,7 @@ const newCaps: NewCap[] = [
     code: "CUSTOMER-360",
     name: "Customer 360 (Unified Customer View)",
     description:
-      "Single, reconciled view of a customer across transactional, marketing, and operational systems. Combines CRM account/contact records, CDP behavioural profile, and MDM golden-record stewardship into one queryable surface. Vendors compete on this explicitly across CRM (Salesforce Customer 360), CDP (Treasure Data, Adobe RT-CDP), and MDM (Reltio, Informatica) markets.",
+      "Single, reconciled view of a customer across transactional, marketing, and operational systems. Combines CRM account/contact records, CDP behavioral profile, and MDM golden-record stewardship into one queryable surface. Vendors compete on this explicitly across CRM (Salesforce Customer 360), CDP (Treasure Data, Adobe RT-CDP), and MDM (Reltio, Informatica) markets.",
     domains: ["CRM", "CDP", "MDM"],
   },
   {
@@ -119,7 +119,7 @@ const newCaps: NewCap[] = [
     code: "WORKFORCE-SCHEDULING",
     name: "Workforce Scheduling and Dispatch",
     description:
-      "Demand-driven shift assignment, route optimisation, skill matching, and dispatch for frontline workers. Same engine serves hourly workforce scheduling (WFM), field-service dispatch (FSM), shop-floor crew assignment (MFG-OPS), and store labour scheduling (RET-STORE). Vendors like UKG/Kronos, Quinyx, and ServiceMax compete across multiple of these.",
+      "Demand-driven shift assignment, route optimization, skill matching, and dispatch for frontline workers. Same engine serves hourly workforce scheduling (WFM), field-service dispatch (FSM), shop-floor crew assignment (MFG-OPS), and store labor scheduling (RET-STORE). Vendors like UKG/Kronos, Quinyx, and ServiceMax compete across multiple of these.",
     domains: ["WFM", "FSM", "MFG-OPS", "RET-STORE"],
   },
 ];
@@ -177,14 +177,14 @@ async function main() {
   }
 
   console.log("\n=== Step 4: add capability_domains rows ===");
-  type Link = { capCode: string; domainCode: string };
-  const links: Link[] = [];
-  for (const r of renames)   for (const d of r.addDomains)   links.push({ capCode: r.to, domainCode: d });
-  for (const e of extends_)  for (const d of e.addDomains)   links.push({ capCode: e.code, domainCode: d });
-  for (const c of newCaps)   for (const d of c.domains)      links.push({ capCode: c.code, domainCode: d });
+  type Relationship = { capCode: string; domainCode: string };
+  const relationships: Relationship[] = [];
+  for (const r of renames)   for (const d of r.addDomains)   relationships.push({ capCode: r.to, domainCode: d });
+  for (const e of extends_)  for (const d of e.addDomains)   relationships.push({ capCode: e.code, domainCode: d });
+  for (const c of newCaps)   for (const d of c.domains)      relationships.push({ capCode: c.code, domainCode: d });
 
   const toInsert: Row[] = [];
-  for (const l of links) {
+  for (const l of relationships) {
     const capId = capIdByCode.get(l.capCode);
     const domainId = domainIdByCode.get(l.domainCode);
     if (!capId) throw new Error(`Capability not found: ${l.capCode}`);
@@ -210,11 +210,11 @@ async function main() {
   for (const code of allCrossCutting) {
     const id = capIdByCode.get(code);
     if (!id) { console.log(`  ! ${code} not found`); continue; }
-    const links = await call({
+    const relationships = await call({
       method: "GET",
       path: `/capability_domains?capability_id=eq.${id}&select=domains(domain_code)`,
     });
-    const codes = links.map((l: any) => l.domains.domain_code).sort();
+    const codes = relationships.map((l: any) => l.domains.domain_code).sort();
     console.log(`  ${code}: ${codes.length} domain${codes.length !== 1 ? "s" : ""} — ${codes.join(", ")}`);
   }
 

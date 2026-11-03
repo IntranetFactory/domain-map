@@ -38,8 +38,8 @@ Three sub-flows:
 
 ## Why this build
 
-- Highest function spread per handoff (13 functions / 5 handoffs = 2.6 functions per edge — denser than `employee` at 19/12 = 1.58).
-- Three high-friction handoffs in five — every edge is contended.
+- Highest function spread per handoff (13 functions / 5 handoffs = 2.6 functions per handoff — denser than `employee` at 19/12 = 1.58).
+- Three high-friction handoffs in five — every handoff is contended.
 - The two-audience (customer + HR) overlap is a design decision: build one skill that handles both, or split into `customer-case` and `hr-case` skills. The catalog handoffs span both, suggesting either is defensible. **Recommendation: start with one skill and split only if the workflows diverge significantly during build.**
 
 ## Open design decisions
@@ -50,7 +50,7 @@ Three sub-flows:
 
 ## Tool requirements (deferred to P2.5B)
 
-Expected mix: query/mutate across all 7 domains; + `send_email` (acknowledgement, escalation notifications, CSAT survey); + `post_chat_message` (when ITSM/Slack escalation happens); + `compute` for case-routing classification + `detect_sentiment` (CSAT free-text). Estimated Semantius-coverage: ~65-75% (the lowest of the top 3 — comms-heavy domain).
+Expected mix: query/mutate across all 7 domains; + `send_email` (acknowledgment, escalation notifications, CSAT survey); + `post_chat_message` (when ITSM/Slack escalation happens); + `compute` for case-routing classification + `detect_sentiment` (CSAT free-text). Estimated Semantius-coverage: ~65-75% (the lowest of the top 3 — comms-heavy domain).
 
 ## Status
 

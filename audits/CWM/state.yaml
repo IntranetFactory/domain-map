@@ -9,7 +9,7 @@ last_audit: "2026-06-19"
 #   - 5 pattern flags PATCHed: 186 has_personal_content=true; 188/189/187/191 has_single_approver=true.
 #   - domain 64 catalog_tagline + catalog_description written (q8, were empty).
 #   - domain 64 business_logic written (q9, was empty; crud_percentage=92<95).
-#   - B9D owners: process_raci R/A rows authored (CWM personas exist in domain_roles, bf 68):
+#   - B9D owners: process_raci R/A rows authored (CWM personas exist in personas, bf 68):
 #       process 315 "Process accounts payable (AP)" -> Contingent Labor Coordinator (role 21) R+A (ids 228,229);
 #       process 815 "Monitor/Manage supplier information" -> Staffing Supplier Manager (role 20) R+A (ids 230,231).
 #     (q11 footer pointed at the legacy process 167; the live orphan/handoff-591 tag is process 815.)
@@ -28,7 +28,7 @@ last_audit: "2026-06-19"
 #   - The CWM Phase-B expansion's "Services Procurement / SOW" module is DROPPED as a CWM master. The CWM
 #     expansion is now 2 new modules only: Direct Sourcing / Freelance Management + Worker Classification
 #     and Compliance (down from 3). CWM EMBEDDED_MASTERS the SVCS-PROC SOW masters if/when a SOW-adjacent
-#     surface is deployed (CWM links SOW engagements to its contingent-workforce spine; never re-masters).
+#     surface is deployed (CWM relationships SOW engagements to its contingent-workforce spine; never re-masters).
 #     The embedded_master rows are pending a CWM SOW-adjacent module + the SVCS-PROC build (now done), so
 #     they are deferred, not loaded here (no CWM SOW module exists to host them yet).
 # DRAFTED, NOT LOADED (Rule #21 -- expansive structure, approve-before-load):

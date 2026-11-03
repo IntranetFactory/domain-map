@@ -6,7 +6,7 @@ Banking Operations is the day-to-day operational backbone of a retail / commerci
 
 | Vendor | URL | Specialist in | Why included |
 | --- | --- | --- | --- |
-| nCino (Bank Operating System) | ncino.com/our-platform | Salesforce-native cloud banking OS: commercial + consumer loan origination, deposit account opening, treasury onboarding, portfolio monitoring, collateral, compliance docs | Currently linked as a BANK-OPS solution; the canonical end-to-end origination + onboarding surface |
+| nCino (Bank Operating System) | ncino.com/our-platform | Salesforce-native cloud banking OS: commercial + consumer loan origination, deposit account opening, treasury onboarding, portfolio monitoring, collateral, compliance docs | Currently related as a BANK-OPS solution; the canonical end-to-end origination + onboarding surface |
 | Backbase (Engagement Banking Platform / Banking OS) | backbase.com/engagement-banking-platform | Digital onboarding, origination, servicing, disputes, case management as an orchestration layer over a core | Engagement-banking leader; packages onboarding + origination + servicing + disputes/case mgmt as one workflow plane |
 | Mambu (Cloud Banking Platform) | mambu.com/cloud-banking-platform | Composable SaaS core: deposits, lending, payments, product engine, account sub-ledger, audit logs | Core-ledger pure-play; shows the ledger / product-config / sub-ledger substrate beneath the headline masters |
 | Thought Machine (Vault Core) | thoughtmachine.net/vault-core | Cloud-native core: real-time immutable double-entry ledger, smart-contract product engine, accounts | Second core pure-play; confirms the append-only-ledger shape of banking_transactions and product-catalog config |

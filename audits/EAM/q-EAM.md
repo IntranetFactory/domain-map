@@ -17,7 +17,7 @@ a1:
 
 ---
 
-q2: The work-order to ITSM service-incident escalation link (EAM work orders escalate to ITSM service incidents) is currently wired in. Is that a real first-class escalation path, or modeling drift that should be removed?
+q2: The work-order to ITSM service-incident escalation relationship (EAM work orders escalate to ITSM service incidents) is currently wired in. Is that a real first-class escalation path, or modeling drift that should be removed?
 
 - a) Keep as-is (the escalation is real in plant-OT, where a fault becomes a customer-visible IT outage).
 - b) Downgrade it to a soft consumer pointer.
@@ -106,7 +106,7 @@ q9: Which actor relationships should be authored from users to the EAM masters (
 - a) Use the proposed verb set: asset owner / commissioner / decommissioner; work-order assignee / created-by / completed-by; PM-schedule maintainer.
 - b) You specify the verbs instead.
 
-Recommended: a. The proposed verbs match standard EAM roles and satisfy the explicit-user-edge rule; override only if your org names these roles differently.
+Recommended: a. The proposed verbs match standard EAM roles and satisfy the explicit-relationship to `users` rule; override only if your org names these roles differently.
 
 a9:
 
@@ -135,4 +135,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODSPLIT q2=B2-M7-ESCALATES q3=B2-WORK-ORDERS-BARE q4=B2-FIXED-ASSETS q5=B2-DOMAIN-CANDIDATES.apm q6=B2-DOMAIN-CANDIDATES.iiot q7=B2-DOMAIN-CANDIDATES.ptw q8=B2-REG-SCOPE q9=B2-USERS-EDGES q10=B3-MARKET-ENTITIES q11=B2-REPARENT | domain_id=53 -->
+<!-- agent map, ignore: q1=B2-MODSPLIT q2=B2-M7-ESCALATES q3=B2-WORK-ORDERS-BARE q4=B2-FIXED-ASSETS q5=B2-DOMAIN-CANDIDATES.apm q6=B2-DOMAIN-CANDIDATES.iiot q7=B2-DOMAIN-CANDIDATES.ptw q8=B2-REG-SCOPE q9=B2-USERS-RELATIONSHIPS q10=B3-MARKET-ENTITIES q11=B2-REPARENT | domain_id=53 -->

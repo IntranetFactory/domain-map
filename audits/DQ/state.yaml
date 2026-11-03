@@ -25,7 +25,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live (2026-06-07): still 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Build shape is gated on B2-MOD-SPLIT (modules) and B2-ANOMALY-OWNER (the contested anomaly_detections master)."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SPLIT, reason: "module count and code mapping is gated on module-split shape decision"}
       - {type: user_decision, ref: B2-ANOMALY-OWNER, reason: "the contested anomaly_detections master must be resolved before the monitoring module can claim it"}
@@ -52,7 +52,7 @@ b1b:
   - id: B1B-S2
     summary: "anomaly_detections (94) catalog-wide single-master conflict between DQ (90) and AIOPS (6); decision required."
     finding: |
-      Live state: domain_data_objects has role=master rows for data_object_id=94 in both DQ (domain_id=90)
+      Live state: domain_data_objects has held_as=master rows for data_object_id=94 in both DQ (domain_id=90)
       and AIOPS (domain_id=6). Catalog-wide single-master violation. DMDO layer is empty for this
       data_object today (both domains pre-modular), so the conflict has not yet propagated forward, but
       modularization will reproduce it. NOTE: entity_type on 94 is already 'computed'; lifecycle states are
@@ -63,7 +63,7 @@ b1b:
       - {type: user_decision, ref: B2-ANOMALY-OWNER, reason: "canonical owner decision required before either domain can modularize this entity"}
     affected_entities: [anomaly_detections]
   - id: B1B-S3
-    summary: "Author 5-7 capabilities (profiling, rules, matching, monitoring, incident triage, SLA mgmt, anomaly); 0 currently linked."
+    summary: "Author 5-7 capabilities (profiling, rules, matching, monitoring, incident triage, SLA mgmt, anomaly); 0 currently related."
     finding: |
       capability_domains has zero rows for domain_id=90. DQ has at least 5-7 capabilities suggested by the
       vendor cohort split. Once authored, Rule #14 forces the >=2-module floor (capability_count >= 3
@@ -74,7 +74,7 @@ b1b:
   - id: B1B-S4
     summary: "Add primary-coverage rows for pure-play DQ flagships; current 10 solutions are 0 primary / 2 secondary / 8 partial."
     finding: |
-      solution_domains has 10 rows linked to domain_id=90, all platform-shaped with coverage_level in
+      solution_domains has 10 rows related to domain_id=90, all platform-shaped with coverage_level in
       {secondary, partial}. No pure-play DQ specialists are loaded as solutions. A3 requires >=1 primary
       solution. This blocks the 7 vendor-specific aliases below (each needs alias_type='solution_term' with
       a non-null solution_id, which requires the vendor solution rows to exist).
@@ -98,14 +98,14 @@ b1b:
       domain_module_tools when DQ is modularized (tracked in audits/_modularization-backlog.md). No action.
     status: superseded
   - id: B1B-S8
-    summary: "Author 6 intra-domain master edges (data_object_relationships) with verbs, inverse_verbs, cardinality, owner_side."
+    summary: "Author 6 intra-domain master relationships (data_object_relationships) with verbs, inverse_verbs, cardinality, owner_side."
     finding: |
-      Zero intra-domain data_object_relationships exist between DQ's 7 masters. Expected edges:
+      Zero intra-domain data_object_relationships exist between DQ's 7 masters. Expected relationships:
       quality_rules -> quality_incidents, quality_rules -> profile_results, profile_results -> dq_dimensions,
       dq_dimensions -> dq_scorecards, dq_scorecards -> dq_sla_definitions, anomaly_detections ->
       quality_incidents. Verbs/cardinalities not yet pre-specified row-by-row; draft via cluster-drafts.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: "catalog convention drafts these edges in the same load as the modules; the 6 edges themselves are not strictly module-gated but are deferred to the build load"}
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "catalog convention drafts these relationships in the same load as the modules; the 6 relationships themselves are not strictly module-gated but are deferred to the build load"}
   - id: B1B-S11
     summary: "Author lifecycle states for the 2 operational_workflow masters; record-shape masters now exempt by entity_type."
     finding: |
@@ -164,7 +164,7 @@ b2:
       - "(a) Split into two data_objects: data_anomalies (DQ canonical) + event_anomalies (AIOPS canonical). Verbs and lifecycle diverge; recommendation."
       - "(b) Keep anomaly_detections canonical in DQ; AIOPS demotes to consumer."
       - "(c) Keep anomaly_detections canonical in AIOPS; DQ demotes to consumer."
-    why: "Catalog-wide single-master rule (M7) requires exactly one role=master row per data_object_id. Both domains currently claim it on the legacy DDO layer; this reproduces on the DMDO layer once either modularizes. Gates B1A-BUILD and B1B-S1/S2 on the DQ-MONITORING module side."
+    why: "Catalog-wide single-master rule (M7) requires exactly one held_as=master row per data_object_id. Both domains currently claim it on the legacy DDO layer; this reproduces on the DMDO layer once either modularizes. Gates B1A-BUILD and B1B-S1/S2 on the DQ-MONITORING module side."
   - id: B2-MOD-SPLIT
     summary: "DQ module split shape (gates B1A-BUILD, B1B-S1, B1B-S3, B1B-S11, B1B-S13)."
     question: "Which module split is correct for DQ?"

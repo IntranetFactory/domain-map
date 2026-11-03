@@ -8,9 +8,9 @@ New domain created from a "is this a domain?" classification that the user promo
 
 **Build (domain_id=183, modules 374-379).** Loader `.tmp_deploy/load_marina_mgmt_2026_06_15.ts` (idempotent, modern modular shape, mirrors load_str_mgmt). Loaded:
 - Phase A: domain (crud 80, `$$`, xs, US TAM $150M/2024); 8 capabilities; 6 full modules; 8 `domain_module_capabilities`; 5 vendors; 5 solutions (all primary coverage); 2 regulations (Clean Vessel Act, EPA SPCC) + 2 `domain_regulations` (conditional).
-- Phase B: 27 masters; 36 `domain_module_data_objects` (27 master + 9 embedded_master shells); 42 lifecycle states across 9 workflow masters; 4 trigger events; 5 intra-domain handoffs; 33 `data_object_relationships` (incl. 5 `users` edges); 58 aliases.
+- Phase B: 27 masters; 36 `domain_module_data_objects` (27 master + 9 embedded_master shells); 42 lifecycle states across 9 workflow masters; 4 trigger events; 5 intra-domain handoffs; 33 `data_object_relationships` (incl. 5 relationships to `users`); 58 aliases.
 - Phase C: 4 `business_function_domains` (Business Operations owner; Customer Service + Sales contributors; Finance consumer); 2 `business_function_capabilities` overrides (Finance -> billing, Field Service Ops -> boatyard).
-- Phase E: 5 personas (Harbormaster, Dockmaster, Office Manager, Service Yard Manager, Bookkeeper) + 18 `role_modules` reach rows. RACI (`process_raci` + lifecycle `process_id` wiring) deferred (see B1B-RACI-LAYER).
+- Phase E: 5 personas (Harbormaster, Dockmaster, Office Manager, Service Yard Manager, Bookkeeper) + 18 `persona_modules` reach rows. RACI (`process_raci` + lifecycle `process_id` wiring) deferred (see B1B-RACI-LAYER).
 - Phase S: 1 domain system skill (`marina-mgmt-system`); 57 distinct tools; 62 `domain_module_tools`. Semantius strict score 0.95 (54/57 platform; non-platform = notify_team, execute_payment, sign_document).
 
 **Modules:** INVENTORY (slips/moorings/racks/storage/size-classes/assignments), RESERVATIONS (reservations + waitlist; embeds slip/boater/vessel), CRM (boaters/vessels/insurance/registration), BILLING (contracts/recurring/utilities/meters/invoices/house-accounts; embeds slip/boater/reservation), SERVICE (work orders/estimates/haul-outs/dry-stack launches/pump-out logs; embeds vessel/slip), FUEL-RETAIL (fuel sales/tanks/inventory logs/ship-store sales; embeds boater).

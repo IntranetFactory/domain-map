@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 5 masters (`sourcing_events`, `purchase_requisitions`, `purchase_orders`, `goods_receipts`, `supplier_invoices`) + 2 contributors (`saas_subscriptions`, `legal_contracts`) + 2 consumers (`contingent_invoices`, `suppliers`) + 1 embedded_master (`org_units`) recorded **only in the legacy `domain_data_objects` rollup**. **Zero `domain_modules` rows.** Zero `domain_module_data_objects` rows. 1 capability (`APPROVAL-WORKFLOW`, cross-cutting). 11 `solution_domains` rows (9 primary, 2 secondary). 5 regulations linked. 12 outbound handoffs, 17 inbound handoffs. 1 legacy domain-level `skill` (`s2p-system`, id 22) with 14 `skill_tools` rows. Zero `roles` directly linked.
+- Current footprint: 5 masters (`sourcing_events`, `purchase_requisitions`, `purchase_orders`, `goods_receipts`, `supplier_invoices`) + 2 contributors (`saas_subscriptions`, `legal_contracts`) + 2 consumers (`contingent_invoices`, `suppliers`) + 1 embedded_master (`org_units`) recorded **only in the legacy `domain_data_objects` rollup**. **Zero `domain_modules` rows.** Zero `domain_module_data_objects` rows. 1 capability (`APPROVAL-WORKFLOW`, cross-cutting). 11 `solution_domains` rows (9 primary, 2 secondary). 5 regulations related. 12 outbound handoffs, 17 inbound handoffs. 1 legacy domain-level `skill` (`s2p-system`, id 22) with 14 `skill_tools` rows. Zero `roles` directly related.
 - Vendor-surface basis (flagship vendors, agent-curated from existing `solutions`): SAP Ariba, Coupa Business Spend Management, Oracle Procurement Cloud (via Workday Spend / NetSuite proxy), Ivalua Platform, JAGGAER ONE, Tradeshift, Basware AP Automation. Pure-play S2P suite vendors; the catalog already names Workday Strategic Sourcing + Workday Spend Management + ServiceNow Source-to-Pay Operations under primary coverage.
 - **Bucket 1 (in-scope, agent fixable):** 21 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
@@ -28,7 +28,7 @@
 | B1-A4 | A4 | `catalog_tagline` empty, `catalog_description` empty. Rule #20 fail. | Draft both fields in buyer voice, surface to user before write (Rule #20 backfill path). Drafts proposed in Bucket 2 #3. |
 | B1-M1 | M1 | Zero `domain_modules` rows for `domain_id=27`. Hard structural fail blocking M2 to M7, B-band, E-band, F2 to F5. | Author the proposed S2P module set (Bucket 2 #1) and load via a focused Phase M loader. |
 | B1-M2 | M2 | Vacuous on capability_count=1 today, but the Bucket 1 A2 fix will push capability_count past 3, at which point M2 requires >= 2 modules. The proposed split in Bucket 2 #1 already satisfies this. | Tied to M1 + A2 fix. |
-| B1-M4 | M4 | The single `APPROVAL-WORKFLOW` capability has zero realizing modules in `domain_module_capabilities`. Will resolve once M1 + Bucket 1 A2 capabilities land. | Add `domain_module_capabilities` rows linking each capability to its realizing module. |
+| B1-M4 | M4 | The single `APPROVAL-WORKFLOW` capability has zero realizing modules in `domain_module_capabilities`. Will resolve once M1 + Bucket 1 A2 capabilities land. | Add `domain_module_capabilities` rows relating each capability to its realizing module. |
 | B1-M5 | M5 | 4 lifecycle states across 4 masters carry `requires_permission=true` (`sourcing_event.awarded` id 71 / state `awarded`; `purchase_requisitions` state `approved`; `purchase_orders` state `issued`; `supplier_invoices` state `approved`). All four have `domain_module_id=NULL`. | PATCH each to its realizing module once modules exist. |
 | B1-M6 | M6 | Vacuous while modules are zero; will need the converse check after M1. | Re-run after M1 clears. |
 | B1-M7 | M7 | At the DMDO layer (the authoritative single-master layer) S2P's 5 masters have **zero** DMDO master rows, so no within-domain conflict can be detected yet. At the legacy `domain_data_objects` layer, `suppliers` (id 206) carries two master rows (`SUP-LIFE` id 28 AND `MDM` id 87). Catalog-wide duplicate-master smell, surfaced for the SUP-LIFE / MDM audit. | Report-only (owed by SUP-LIFE and MDM); see Report-only follow-ups. |
@@ -37,11 +37,11 @@
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S4 | E1 | Zero `roles` linked to S2P (no rows with `business_function_id=19` Procurement; no `role_modules` rows touching S2P modules because no modules exist). | After M1 + Phase E, author at least 3 roles (Buyer / Sourcing Manager / AP Specialist / CPO) with the function-scoped naming `PROCUREMENT-BUYER`, `PROCUREMENT-SOURCING-MGR`, `FINANCE-AP-SPECIALIST`, `PROCUREMENT-CPO`. |
+| B1-S4 | E1 | Zero `roles` related to S2P (no rows with `business_function_id=19` Procurement; no `persona_modules` rows touching S2P modules because no modules exist). | After M1 + Phase E, author at least 3 roles (Buyer / Sourcing Manager / AP Specialist / CPO) with the function-scoped naming `PROCUREMENT-BUYER`, `PROCUREMENT-SOURCING-MGR`, `FINANCE-AP-SPECIALIST`, `PROCUREMENT-CPO`. |
 | B1-S5 | F1 | Legacy domain-level system skill present: `s2p-system` (id 22), `skill_type=system`, `domain_id=27`, `domain_module_id=null`, 14 `skill_tools` rows. Per Rule #17 / F1, the legacy row retires once module-level system skills exist. | After M1 + Phase S, author one system skill per S2P module (`<module_code_lower>_agent` per Phase-S convention), redistribute the 14 skill_tools rows across the per-module skills, then DELETE skill id 22. |
 | B1-S6 | F2 | Zero module-level system skills (F2 fail trivially while modules are zero). | Bundle with the S5 fix once modules land. |
 | B1-S7 | F4 | Skill 22's `skill_tools` rows already pass F4 invariants (`query` / `mutate` rows carry `data_object_id`; `send_email` / `sign_document` / `extract_entities` have `data_object_id=NULL`). PASS structurally. | None. |
-| B1-S8 | F7 | Skill 22 links `send_email` (id 37, `platform`, `side_effect`) without a workflow-specific justification. Per Rule's Channel vs Capability rule, generic notifications should use `notify_person` / `notify_team`. | When re-authoring per-module skills (S5 fix), replace `send_email` with `notify_person` unless a specific workflow demands email (e.g. supplier-facing PO dispatch where email IS the contract; surface in Bucket 2 #4). |
+| B1-S8 | F7 | Skill 22 relationships `send_email` (id 37, `platform`, `side_effect`) without a workflow-specific justification. Per Rule's Channel vs Capability rule, generic notifications should use `notify_person` / `notify_team`. | When re-authoring per-module skills (S5 fix), replace `send_email` with `notify_person` unless a specific workflow demands email (e.g. supplier-facing PO dispatch where email IS the contract; surface in Bucket 2 #4). |
 
 #### STRUCTURAL band failures (B)
 
@@ -50,8 +50,8 @@
 | B1-S9 | B2 | All 5 masters have non-empty `singular_label` + `plural_label`. PASS. | None. |
 | B1-S10 | B3 | None of the 5 masters are bare-word names (all are `<noun>_<noun>` or `<adj>_<noun>`). PASS. | None. |
 | B1-S11 | B4 | Pattern flags considered, with hits on `purchase_requisitions` (submit_lock + single_approver) and `supplier_invoices` (single_approver). The other 3 masters carry all-false (default). Audit re-evaluation: `purchase_orders` likely should be `has_submit_lock=true` once issued (a buyer cannot edit an issued PO without a change order). `sourcing_events` likely should be `has_submit_lock=true` once published. | PATCH `has_submit_lock=true` on `purchase_orders` (id 73) and `sourcing_events` (id 71); surface to user for confirmation. |
-| B1-S12 | B6 | Intra-domain `data_object_relationships` cover the requisition to PO to GR to invoice chain, plus the sourcing-event to PO leg via CLM contracts. PASS on present edges, but missing the direct `purchase_requisitions to purchase_orders` edge: today the link is mediated through `legal_contracts` (id 66) via rows 503 + 502. | Add `purchase_requisitions becomes purchase_order` (verb `becomes` / inverse `originates_from`, one_to_many, owner_side=source, is_required=false). Surface for user approval. |
-| B1-S13 | B7 | Zero edges from any S2P master to `users` (id 748). Every master has user-typed actors (requester on `purchase_requisitions`, buyer / approver on `purchase_orders`, receiver on `goods_receipts`, AP-clerk on `supplier_invoices`, sourcing-manager on `sourcing_events`). | Author 5 `data_object_relationships` rows per Rule #10 (one per master to `users`), with the right relationship verb per actor role. |
+| B1-S12 | B6 | Intra-domain `data_object_relationships` cover the requisition to PO to GR to invoice chain, plus the sourcing-event to PO leg via CLM contracts. PASS on present relationships, but missing the direct `purchase_requisitions to purchase_orders` relationship: today the relationship is mediated through `legal_contracts` (id 66) via rows 503 + 502. | Add `purchase_requisitions becomes purchase_order` (verb `becomes` / inverse `originates_from`, one_to_many, owner_side=source, is_required=false). Surface for user approval. |
+| B1-S13 | B7 | Zero relationships from any S2P master to `users` (id 748). Every master has user-typed actors (requester on `purchase_requisitions`, buyer / approver on `purchase_orders`, receiver on `goods_receipts`, AP-clerk on `supplier_invoices`, sourcing-manager on `sourcing_events`). | Author 5 `data_object_relationships` rows per Rule #10 (one per master to `users`), with the right relationship verb per actor role. |
 | B1-S14 | B9 | Outbound trigger events are mostly covered (13 events across 5 masters). One stale-shaped event: `po.saas_subscription_created` (id 97) reads as an embedded handoff payload rather than a `purchase_order` state transition. Already used by handoff 42 (S2P to SMP). Acceptable as-is; flag only. | None (review only). |
 | B1-S15 | B9b | Skip; precondition `>= 2 modules` not met. | Re-run after M1. |
 | B1-S16 | B10b | 10 of 12 outbound handoffs have `source_domain_module_id=NULL` (only handoffs 602, 40, 42 carry a target_domain_module_id; none carry source). All 17 inbound handoffs have `target_domain_module_id=NULL` (3 carry `source_domain_module_id`). | The source side cannot be backfilled until S2P is modularized (M1). The target side on inbound handoffs is owed by S2P's own M1 fix. Re-run B10b after M1 + DMDO re-anchor. |
@@ -62,7 +62,7 @@
 
 | ID | Finding | Fix |
 |---|---|---|
-| B1-B1 | `data_object_relationships` row 270 (`data_object 54` (`work_orders` MWO / FSM) `fulfilled_by` `purchase_orders`) carries `owner_side=target`. The S2P side is the target of this verb. Acceptable as cross-domain; just flag it remains a cross-domain edge. No fix needed. | None (informational). |
+| B1-B1 | `data_object_relationships` row 270 (`data_object 54` (`work_orders` MWO / FSM) `fulfilled_by` `purchase_orders`) carries `owner_side=target`. The S2P side is the target of this verb. Acceptable as cross-domain; just flag it remains a cross-domain relationship. No fix needed. | None (informational). |
 | B1-B2 | `data_object_relationships` row 715 (`supplier_invoices reimbursed via invoice expense_reports`) verb is freeform string with spaces; convention is single underscore-or-spaceless verb (`reimburses_via`). | PATCH the verb to `reimburses_via` (surface to user). |
 
 #### APQC TAGGING
@@ -108,7 +108,7 @@ Counting convention: APQC TAGGING is **one** Bucket 1 item (B1-H1) per Rule #10 
 
 #### Boundary findings per neighbor (Pass 4 pairwise, weight >= 3)
 
-S2P's edge weights to neighbors (outbound + inbound count):
+S2P's relationship weights to neighbors (outbound + inbound count):
 
 | Neighbor | Code | Outbound | Inbound | Total |
 |---|---|---|---|---|
@@ -157,7 +157,7 @@ Neighbors at weight >= 3: SUP-LIFE (5), AP-AUTO (4), CLM (4), SMP (3).
    - Proposed `catalog_description` paragraph 2: *"Buyers run requisitions through approval workflows, sourcing managers run RFx events and award contracts, receivers post goods receipts against open POs, and AP specialists match invoices to POs and receipts before releasing payment. Spend categories drive routing (direct, indirect, services, tail), and savings against negotiated contract prices are tracked at line-item granularity."*
    - **Question:** approve text as-is, request edits, or defer? **Independent.**
 
-4. **F7 channel-vs-capability question for the re-authored per-module skills.** The current legacy skill links `send_email` (`platform`) without justification. Per the abstraction rule, the default replacement is `notify_person` / `notify_team`. But in S2P specifically, supplier-facing PO dispatch is often email-as-contract (the PO email IS the order to the supplier in many B2B flows). **Question:** keep `send_email` on the `S2P-REQ-TO-PO` skill with a workflow-specific justification ("PO dispatch email is the supplier-facing contract artifact"), or move to `notify_person` and let the deployment pick the channel? Same question applies to invoice receipt confirmations on `S2P-INVOICE-MATCHING`. **Independent.**
+4. **F7 channel-vs-capability question for the re-authored per-module skills.** The current legacy skill relates `send_email` (`platform`) without justification. Per the abstraction rule, the default replacement is `notify_person` / `notify_team`. But in S2P specifically, supplier-facing PO dispatch is often email-as-contract (the PO email IS the order to the supplier in many B2B flows). **Question:** keep `send_email` on the `S2P-REQ-TO-PO` skill with a workflow-specific justification ("PO dispatch email is the supplier-facing contract artifact"), or move to `notify_person` and let the deployment pick the channel? Same question applies to invoice receipt confirmations on `S2P-INVOICE-MATCHING`. **Independent.**
 
 5. **`supplier_invoices` pattern flag refinement.** `has_personal_content=false` is correct (B2B invoices), but consider: in jurisdictions with mandatory e-invoicing (Italy SdI, France Chorus, Mexico CFDI), the invoice IS a regulated document with personal data on it (the supplier's tax id + legal address). **Question:** does the catalog treat tax-personal data the same as employee-personal-data for the `has_personal_content` flag, or only the latter? **Independent.** (Editorial note: leans no, but worth confirming.)
 
@@ -173,7 +173,7 @@ Neighbors at weight >= 3: SUP-LIFE (5), AP-AUTO (4), CLM (4), SMP (3).
 - **Bucket 1 B1-A2 <- Bucket 2 #1.** Capability authoring depends on which modules each capability realizes.
 - **Bucket 3 #1 <- Bucket 2 #1.** Whether `procurement_catalogs` becomes a master in `S2P-CATALOG-MGMT` depends on whether that module is approved.
 - Bucket 2 #2 (Jaggaer duplicate), #3 (catalog UX text), #5 (e-invoice personal data), #6 (pairwise timing) are **independent** of each other and of Bucket 3.
-- Bucket 2 #4 (F7 channel question) depends on Bucket 2 #1 (per-module skill targets must exist before deciding what channels each links).
+- Bucket 2 #4 (F7 channel question) depends on Bucket 2 #1 (per-module skill targets must exist before deciding what channels each relationships).
 
 ### Per-bucket prompts
 
@@ -183,9 +183,9 @@ Neighbors at weight >= 3: SUP-LIFE (5), AP-AUTO (4), CLM (4), SMP (3).
 
 ### Report-only follow-ups (owed by other domains)
 
-- **SUP-LIFE / MDM B1 / M7 conflict on `suppliers` (id 206).** Both SUP-LIFE (id 28) and MDM (id 87) carry a legacy `domain_data_objects.role='master'` row for `suppliers`. The catalog can only have one canonical master per data_object. Surface for the next SUP-LIFE or MDM audit; the user picks which domain owns canonical mastery, the other demotes to `embedded_master`. (S2P consumes `suppliers`, does not master it; resolves from S2P's perspective independently of this conflict.)
+- **SUP-LIFE / MDM B1 / M7 conflict on `suppliers` (id 206).** Both SUP-LIFE (id 28) and MDM (id 87) carry a legacy `domain_data_objects.held_as='master'` row for `suppliers`. The catalog can only have one canonical master per data_object. Surface for the next SUP-LIFE or MDM audit; the user picks which domain owns canonical mastery, the other demotes to `embedded_master`. (S2P consumes `suppliers`, does not master it; resolves from S2P's perspective independently of this conflict.)
 - **AGENCY-MGMT B10b owes target attribution on inbound handoff 347** (`vendor_invoice.received`, payload `contingent_invoices` id 191). AGENCY-MGMT's audit (or VMS's, since VMS canonically masters `contingent_invoices` id 191) owes the target-side module FK on this handoff once their modules exist.
-- **CLM B9 owes mid-stream PO-creation event acknowledgement.** Handoffs 40 + 41 fire from CLM (`legal_contract.signed` / `sourcing.contract_drafted`) into S2P. Once S2P modularizes, the CLM side should carry `target_domain_module_id=<S2P-REQ-TO-PO>`. CLM already carries source attribution (module 127); the target attribution is owed by S2P's M1 fix (in-scope), but the verification of the CLM-side wiring is a CLM-audit concern.
+- **CLM B9 owes mid-stream PO-creation event acknowledgment.** Handoffs 40 + 41 fire from CLM (`legal_contract.signed` / `sourcing.contract_drafted`) into S2P. Once S2P modularizes, the CLM side should carry `target_domain_module_id=<S2P-REQ-TO-PO>`. CLM already carries source attribution (module 127); the target attribution is owed by S2P's M1 fix (in-scope), but the verification of the CLM-side wiring is a CLM-audit concern.
 - **SMP B9 wiring (handoffs 39, 45) source-side reads as `shadow_app.requires_sanctioning` and `seat_demand.exceeded`** firing from SMP modules 30 + 31 into S2P. Both carry valid `source_domain_module_id`. The S2P-side target attribution is in-scope (B1-N4). The verification of whether these are the right SMP source modules is an SMP-audit concern.
 - **INV-MGMT / PLM / HAM / SAM / FINOPS B10b inbound source-side attribution.** Inbound handoffs 1050 (INV-MGMT), 1089 (PLM), 668 + 669 (HAM), 636 (SAM), 198 (FINOPS) into S2P. All carry NULL source-side module FK except 1089 (`engineering_change_order.released` carries source_domain_module_id=66). When each of those domains is next audited, their outbound source-side attribution should be PATCHed.
 - **PSA B10b on inbound handoff 132** (`service_project.staffing_required`, payload `purchase_requisitions`). PSA module 86 is already the source; S2P side target attribution is in-scope (B1-N4 / M1 cascade).
@@ -201,7 +201,7 @@ Loader: [`.tmp_deploy/fix_s2p_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_s2
 
 ### Applied (25 writes)
 
-- **B1-S13 (B7), 6 INSERTs into `data_object_relationships`** (Rule #10 user-edges). All six audit-pre-specified actor roles authored, including the two distinct actors on `purchase_orders` (approver + buyer, mirroring the hardware_assets precedent at rows 256 + 257):
+- **B1-S13 (B7), 6 INSERTs into `data_object_relationships`** (Rule #10 relationships to `users`). All six audit-pre-specified actor roles authored, including the two distinct actors on `purchase_orders` (approver + buyer, mirroring the hardware_assets precedent at rows 256 + 257):
   - users `requests purchase requisitions` -> 72
   - users `approves purchase orders` -> 73
   - users `places purchase orders` -> 73
@@ -226,7 +226,7 @@ Gated on M1 module-split (Bucket 2 #1), or judgment, or out-of-scope categories 
 - **User-pick judgment:** B1-A3 (Jaggaer duplicate DELETE: user picks survivor id 129 vs 518, Bucket 2 #2).
 - **Catalog UX text (Rule #20 backfill, defer per prompt):** B1-A4 (`catalog_tagline` + `catalog_description`).
 - **Pattern flag flips (defer per prompt):** B1-S11 (B4) on `purchase_orders` + `sourcing_events` `has_submit_lock`.
-- **Cross-master relationship (surface for user per audit text):** B1-S12 (B6) `purchase_requisitions` `becomes` `purchase_order` edge. Not a Rule #10 user-edge.
+- **Cross-master relationship (surface for user per audit text):** B1-S12 (B6) `purchase_requisitions` `becomes` `purchase_order` relationship. Not a Rule #10 relationship to `users`.
 - **Bulk aliases without exact tuples (defer per prompt):** B1-S17 (B11) ~15 `data_object_aliases`. Audit gives counts + vendor examples; not exact (alias_name, data_object_id) tuples.
 - **PASS / informational (no fix needed):** B1-A1, B1-S7 (F4), B1-S9 (B2), B1-S10 (B3), B1-S14 (B9), B1-B1.
 
@@ -238,8 +238,8 @@ None. Tenant `ma@adenin.com` throughout.
 
 ### Summary
 
-- Re-audit of S2P after the 2026-05-31 B1 technical continuation load. The technical-scope fixes from that run (6 user-edge `data_object_relationships`, 1 `sourcing_events.awarded` verb PATCH, 1 `reimburses_via` verb PATCH, 17 `handoff_processes` rows) are confirmed present and not re-flagged below.
-- **Structural footprint unchanged from the 2026-05-30 run.** Zero `domain_modules`. Zero `domain_module_data_objects`. Zero `domain_module_capabilities`. Five masters (`sourcing_events`, `purchase_requisitions`, `purchase_orders`, `goods_receipts`, `supplier_invoices`) + 2 contributors + 2 consumers + 1 embedded_master still recorded only in legacy `domain_data_objects`. One capability (`APPROVAL-WORKFLOW`, cross-cutting). 11 `solution_domains` (9 primary, 2 secondary). 5 regulations. 12 outbound handoffs (170, 347, 565, 581, 582, 583, 584, 585, 586, 602, 40, 42). 17 inbound handoffs (1050, 45, 117, 127, 132, 198, 545, 546, 548, 560, 636, 668, 669, 215, 41, 39, 1089). 29 cross-domain handoffs total. One legacy domain-level system skill (id 22, `s2p-system`) with 14 `skill_tools`. Zero `roles` linked (the 3 Procurement-function roles in the catalog, `PROCUREMENT-NEGOTIATOR`, `PROCUREMENT-PIM-SUPPLIER-LIAISON`, `PROCUREMENT-SAAS-RENEWAL-OWNER`, touch CLM, MDM, SMP modules; none touch any S2P module because none exist).
+- Re-audit of S2P after the 2026-05-31 B1 technical continuation load. The technical-scope fixes from that run (6 relationship to `users` `data_object_relationships`, 1 `sourcing_events.awarded` verb PATCH, 1 `reimburses_via` verb PATCH, 17 `handoff_processes` rows) are confirmed present and not re-flagged below.
+- **Structural footprint unchanged from the 2026-05-30 run.** Zero `domain_modules`. Zero `domain_module_data_objects`. Zero `domain_module_capabilities`. Five masters (`sourcing_events`, `purchase_requisitions`, `purchase_orders`, `goods_receipts`, `supplier_invoices`) + 2 contributors + 2 consumers + 1 embedded_master still recorded only in legacy `domain_data_objects`. One capability (`APPROVAL-WORKFLOW`, cross-cutting). 11 `solution_domains` (9 primary, 2 secondary). 5 regulations. 12 outbound handoffs (170, 347, 565, 581, 582, 583, 584, 585, 586, 602, 40, 42). 17 inbound handoffs (1050, 45, 117, 127, 132, 198, 545, 546, 548, 560, 636, 668, 669, 215, 41, 39, 1089). 29 cross-domain handoffs total. One legacy domain-level system skill (id 22, `s2p-system`) with 14 `skill_tools`. Zero `roles` related (the 3 Procurement-function roles in the catalog, `PROCUREMENT-NEGOTIATOR`, `PROCUREMENT-PIM-SUPPLIER-LIAISON`, `PROCUREMENT-SAAS-RENEWAL-OWNER`, touch CLM, MDM, SMP modules; none touch any S2P module because none exist).
 - **Headline unchanged.** M1 fail (zero `domain_modules`) cascades into M2 / M4 / M5 / M6 / B9b / B10b / E1 / E2 / E3 / E4 / E5 / F2 / F3 / F5 / pairwise reconciliation. The 5-module split proposed in the 2026-05-30 history.md Bucket 2 #1 (`S2P-SOURCING`, `S2P-REQ-TO-PO`, `S2P-RECEIVING`, `S2P-INVOICE-MATCHING`, `S2P-CATALOG-MGMT`) remains the proposed unblocker but is still awaiting user decision.
 - **Vendor evidence basis** (carried forward; same flagship set since no module structure changed): SAP Ariba, Coupa Business Spend Management, Oracle Procurement Cloud (via Workday Spend / NetSuite), Ivalua Platform, JAGGAER ONE, Tradeshift, Basware AP Automation.
 - Bucket 1 (in-scope, agent fixable): 5 items (4 PASS confirmations not surfaced; 5 still-open technical/content fixes).
@@ -249,7 +249,7 @@ None. Tenant `ma@adenin.com` throughout.
 
 ### Vendor surface basis
 
-Carried forward from 2026-05-30 (no module-set additions or splits since). The agent-curated flagship set remains: SAP Ariba (Sourcing / Buying / Invoice / Catalog), Coupa Business Spend Management (Sourcing / Procure / Receiving / Invoice / Catalog), Oracle Procurement Cloud, Ivalua Platform, JAGGAER ONE, Tradeshift (network), Basware (AP / e-invoice). Compliance-specialist coverage is satisfied via the Tradeshift / SAP / Coupa e-invoice surfaces against the 5 EU regulations linked (SOX, EU VAT Directive, Eco-design Sustainable Products, EU Battery Regulation, Carbon Border Adjustment Mechanism).
+Carried forward from 2026-05-30 (no module-set additions or splits since). The agent-curated flagship set remains: SAP Ariba (Sourcing / Buying / Invoice / Catalog), Coupa Business Spend Management (Sourcing / Procure / Receiving / Invoice / Catalog), Oracle Procurement Cloud, Ivalua Platform, JAGGAER ONE, Tradeshift (network), Basware (AP / e-invoice). Compliance-specialist coverage is satisfied via the Tradeshift / SAP / Coupa e-invoice surfaces against the 5 EU regulations related (SOX, EU VAT Directive, Eco-design Sustainable Products, EU Battery Regulation, Carbon Border Adjustment Mechanism).
 
 ### S-band structural sweep
 
@@ -276,7 +276,7 @@ S2: cannot run (zero modules). S3 per-master (5 masters): all carry lifecycle st
 | goods_receipts | 4 | 2 | 0 |
 | supplier_invoices | 6 | 4 | 0 |
 
-`purchase_requisitions` has zero trigger events even though states `approved`, `po_created`, `closed`, `rejected`, `cancelled` are all published verb shapes. Likely B9 gap: the `purchase_requisition.submitted` / `.approved` events that fire toward `S2P-REQ-TO-PO` lifecycle progression are absent.
+`purchase_requisitions` has zero trigger events even though states `approved`, `po_created`, `closed`, `rejected`, `canceled` are all published verb shapes. Likely B9 gap: the `purchase_requisition.submitted` / `.approved` events that fire toward `S2P-REQ-TO-PO` lifecycle progression are absent.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -294,14 +294,14 @@ All other M / E / F structural gaps (M2, M4, M5, M6, M7-within-S2P, B9b, B10b, E
 |---|---|---|---|
 | B1-A2 | A2 | `capability_domains` has 1 row (`APPROVAL-WORKFLOW`). Rule #14 expects 5 to 8 market-specific capabilities. | Author 5 to 8 `capabilities` + `capability_domains` rows (e.g. `S2P-SOURCING`, `S2P-REQ-TO-PO`, `S2P-RECEIVING`, `S2P-INVOICE-MATCHING`, `S2P-CATALOG-MGMT`, `S2P-SAVINGS-TRACKING`). Gated on Bucket 2 #1 module-shape decision. |
 | B1-S11 | B4 | Pattern flags partially considered: `purchase_orders` likely needs `has_submit_lock=true` once issued; `sourcing_events` likely needs `has_submit_lock=true` once published. Carried forward from 2026-05-30. | Surface to user for confirmation; PATCH `data_objects.has_submit_lock=true` on ids 71, 73 on approval. |
-| B1-S12 | B6 | Direct `purchase_requisitions becomes purchase_order` intra-master relationship absent. Today the link is mediated through `legal_contracts` rows 502 + 503. Confirmed via `data_object_relationships?and=(data_object_id.eq.72,related_data_object_id.eq.73)` returning empty. | Surface to user; on approval INSERT `data_object_relationships` row (verb `becomes` / inverse `originates_from`, one_to_many, owner_side=source, is_required=false). |
+| B1-S12 | B6 | Direct `purchase_requisitions becomes purchase_order` intra-master relationship absent. Today the relationship is mediated through `legal_contracts` rows 502 + 503. Confirmed via `data_object_relationships?and=(data_object_id.eq.72,related_data_object_id.eq.73)` returning empty. | Surface to user; on approval INSERT `data_object_relationships` row (verb `becomes` / inverse `originates_from`, one_to_many, owner_side=source, is_required=false). |
 | B1-S17 | B11 | Zero `data_object_aliases` rows on any of the 5 masters. Carried forward; vendor-term coverage authoring still owed. | Author ~15 alias rows per Phase B; bundle into cluster-drafts. |
-| B1-N2-REL | Section 5 | Cross-domain `data_object_relationships`: direct `goods_receipts confirms supplier_invoices` three-way-match relationship row still missing (the link is mediated via `contingent_invoices flows_into supplier_invoices` row 536). Same finding as 2026-05-30 B1-N2 Section 5. | Author the row on approval; verb `confirms` / inverse `confirmed_by`, one_to_many, owner_side=source. |
+| B1-N2-REL | Section 5 | Cross-domain `data_object_relationships`: direct `goods_receipts confirms supplier_invoices` three-way-match relationship row still missing (the relationship is mediated via `contingent_invoices flows_into supplier_invoices` row 536). Same finding as 2026-05-30 B1-N2 Section 5. | Author the row on approval; verb `confirms` / inverse `confirmed_by`, one_to_many, owner_side=source. |
 
 #### PASS confirmations (re-verified live, no fix needed)
 
 - B1-A1 (A1): `domains.crud_percentage=78`, `cost_band=$$$$`, `min_org_size=30 m <2500`, `usa_market_size_usd_m=7000`, `market_size_source_year=2025`, `business_logic` non-empty, `certification_required=false`. PASS.
-- B1-S13 (B7): All 6 user-edge `data_object_relationships` rows (1924 to 1929) present. PASS.
+- B1-S13 (B7): All 6 relationship to `users` `data_object_relationships` rows (1924 to 1929) present. PASS.
 - B1-S18 (B12): `data_object_lifecycle_states` id 427 (`sourcing_events.awarded`) verb override `award_sourcing_event` present. PASS.
 - B1-B2: `data_object_relationships` id 715 verb `reimburses_via` present. PASS.
 
@@ -343,7 +343,7 @@ Five of the six judgment-call questions from the 2026-05-30 audit remain open (c
 
 Carried forward from 2026-05-30 (none of these resolved in the technical fix pass since each is owed by a sibling domain's audit):
 
-- **SUP-LIFE / MDM B1 / M7 conflict on `suppliers`** (id 206). Still two legacy `domain_data_objects.role='master'` rows. Surface for SUP-LIFE or MDM audit.
+- **SUP-LIFE / MDM B1 / M7 conflict on `suppliers`** (id 206). Still two legacy `domain_data_objects.held_as='master'` rows. Surface for SUP-LIFE or MDM audit.
 - **AGENCY-MGMT B10b** owes target attribution on inbound handoff 347 (`vendor_invoice.received`, payload `contingent_invoices`).
 - **CLM B9 / B10b** owes target attribution on outbound handoffs 40 + 41 + 215 (`legal_contract.signed` etc.) once S2P modularizes; CLM source attribution already present (module 127).
 - **SMP B9 / B10b** on handoffs 39 + 45 (`shadow_app.requires_sanctioning`, `seat_demand.exceeded`). SMP source attribution present (modules 30 + 31); S2P target NULL pending M1.
@@ -501,7 +501,7 @@ modules/masters is expansive (Rule #21) and loads only after the user answers th
   domain_data_objects: sourcing_events (71), purchase_requisitions (72), purchase_orders (73),
   goods_receipts (74), supplier_invoices (75).
 - AP-AUTO boundary RESOLVED from live state: supplier_invoices (75) has S2P as its ONLY master
-  anywhere (AP-AUTO holds it at role=contributor); invoice_matches (204) and payment_runs (205) are
+  anywhere (AP-AUTO holds it at held_as=contributor); invoice_matches (204) and payment_runs (205) are
   mastered by AP-AUTO. So S2P masters the invoice RECORD, AP-AUTO retains match + pay. The prior
   q-file's "S2P owns matching" option is dispreferred (it would re-master AP-AUTO's object). Surfaced
   as new b2 B2-AP-BOUNDARY rather than guessed.

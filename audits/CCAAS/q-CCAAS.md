@@ -24,7 +24,7 @@ q2: Should workforce engagement (the recording, quality-management, and adherenc
 - a) Keep it inside CCaaS (the Quality and Analytics module plus agent-state adherence).
 - b) Promote workforce engagement to a standalone WEM domain.
 
-Recommended: a, with an honest caveat. Genesys Cloud CX and NICE CXone both bundle workforce engagement (recording, QM, WFM, coaching) inside the suite as a licensed tier, so keeping it in CCaaS matches how the platform vendors package it. The real counter-argument is that Verint and Calabrio sell workforce engagement as a standalone platform that overlays any ACD, and NICE markets its own WEM as a separable product line, so WEM is a genuine point-solution market. Take (b) if you want to model that market faithfully and free the Verint/Calabrio vendor surface to its own domain; the trade-off is that it moves the call-recording, evaluation, and form masters out of CCaaS and duplicates the agent-state adherence link across two domains.
+Recommended: a, with an honest caveat. Genesys Cloud CX and NICE CXone both bundle workforce engagement (recording, QM, WFM, coaching) inside the suite as a licensed tier, so keeping it in CCaaS matches how the platform vendors package it. The real counter-argument is that Verint and Calabrio sell workforce engagement as a standalone platform that overlays any ACD, and NICE markets its own WEM as a separable product line, so WEM is a genuine point-solution market. Take (b) if you want to model that market faithfully and free the Verint/Calabrio vendor surface to its own domain; the trade-off is that it moves the call-recording, evaluation, and form masters out of CCaaS and duplicates the agent-state adherence relationship across two domains.
 
 a2:
 

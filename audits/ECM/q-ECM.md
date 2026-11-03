@@ -34,7 +34,7 @@ a2:
 
 ---
 
-q3: Two duplicate relationship rows describe the same chat-to-document edges that ECM already records from its own side, but with the direction flipped and the wrong owner. May I delete the two duplicates and keep ECM's source-side pair? (yes/no)
+q3: Two duplicate relationship rows describe the same chat-to-document relationships that ECM already records from its own side, but with the direction flipped and the wrong owner. May I delete the two duplicates and keep ECM's source-side pair? (yes/no)
 
 Recommended: yes. The kept pair is authored from the correct (source) side; the duplicates label the source as the target, which is structurally wrong. This deletes rows, so it needs your sign-off.
 
@@ -55,7 +55,7 @@ a4:
 
 ---
 
-q5: The seven flagship ECM products are not yet linked, and the only two linked are both secondary from one vendor. May I draft a product description for each of the seven and surface each one to you for per-row approval before it loads? (yes/no)
+q5: The seven flagship ECM products are not yet related, and the only two related are both secondary from one vendor. May I draft a product description for each of the seven and surface each one to you for per-row approval before it loads? (yes/no)
 
 Recommended: yes. The catalog floor needs at least three products and at least one primary; the naming rule means each description gets surfaced for your approval rather than bulk-written.
 

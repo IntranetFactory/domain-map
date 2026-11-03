@@ -1307,9 +1307,9 @@
   {
     "name": "CMDB",
     "title": "Configuration Management Database",
-    "tagline": "Keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+    "tagline": "Keep one trusted record of every server, application, database, and the relationships between them, so changes and incidents can be reasoned about in minutes.",
     "domain_class": "domain",
-    "prompt": "I need a system to keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+    "prompt": "I need a system to keep one trusted record of every server, application, database, and the relationships between them, so changes and incidents can be reasoned about in minutes.",
     "department": [
       "IT Operations",
       "IT Infrastructure"

@@ -29,12 +29,12 @@ b1a:
     finding: >-
       Live 2026-06-07: of the 2 M9 shapes recorded in the prior snapshot, only 1 remains
       a violation. domain_module_data_objects id 686 on MSP-PSA-SVC-DESK (137) is
-      role=consumer, necessity=required on hardware_assets (data_object 56, mastered by HAM).
+      held_as=consumer, necessity=required on hardware_assets (data_object 56, mastered by HAM).
       The second recorded shape, service_incidents (data_object 47) on SVC-DESK 137
-      (id 687), is already role=contributor, necessity=optional, so it no longer trips M9.
+      (id 687), is already held_as=contributor, necessity=optional, so it no longer trips M9.
     action: >-
       DESTRUCTIVE (rewrites role/necessity on an existing DMDO row), so SURFACED not executed.
-      Recommended fix for id 686: either convert to role=embedded_master (carry a local
+      Recommended fix for id 686: either convert to held_as=embedded_master (carry a local
       hardware_assets shell in SVC-DESK for standalone deployment) or set necessity=optional
       (presence-conditional), per references/modules.md section 5 and SKILL.md M9. User picks.
     extra_m9_shapes:
@@ -43,12 +43,12 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer. DEFERRED."
-    finding: "4 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    finding: "4 domain_modules and 0 personas reach this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
     action: >-
       DEFERRED per Rule #21 (personas/RACI authoring is not auto-run). Candidate operational
       personas to consider when the user opens Phase P: MSP-TECHNICIAN (SVC-DESK/TIME-BILLING/
       DISPATCH), MSP-DISPATCHER (DISPATCH), MSP-ACCOUNT-MANAGER (CONTRACTS), MSP-BILLING-ADMIN
-      (TIME-BILLING/CONTRACTS), MSP-CSAT-ANALYST (SVC-DESK). Wire role_modules reach across the
+      (TIME-BILLING/CONTRACTS), MSP-CSAT-ANALYST (SVC-DESK). Wire persona_modules reach across the
       4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id.
       ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). This overlaps the
       role-list decision tracked in b2 B2-S5; confirm that list before authoring.
@@ -117,7 +117,7 @@ b1b:
   - id: B1B-S6
     summary: Phase E roles missing (5 role authoring blocked on user role-list confirmation)
     finding: >-
-      The 4 MSP-PSA modules carry zero role_modules rows. No MSP-prefixed roles exist.
+      The 4 MSP-PSA modules carry zero persona_modules rows. No MSP-prefixed roles exist.
       Proposed 5 roles per 2026-05-30 audit: MSP-TECHNICIAN, MSP-DISPATCHER,
       MSP-ACCOUNT-MANAGER, MSP-BILLING-ADMIN, MSP-CSAT-ANALYST. Authoring is judgment work.
     blocked_by:
@@ -167,7 +167,7 @@ b1b:
       - {type: superseded, ref: per-domain-skill-restoration, date: "2026-06-06"}
 
   - id: B1B-S10
-    summary: M1 SOFT-FAIL on DISPATCH 140 (hosts zero role=master DMDOs); blocked on B2-S7
+    summary: M1 SOFT-FAIL on DISPATCH 140 (hosts zero held_as=master DMDOs); blocked on B2-S7
     finding: >-
       DISPATCH 140 contributes to msp_tickets (DMDO 695) and msp_time_entries (DMDO 696)
       but masters nothing. Rule #14 requires every full module to host at least one
@@ -244,7 +244,7 @@ b2:
   - id: B2-S7
     summary: DISPATCH 140 M1 cure (promote a master vs. demote to starter vs. waive)
     question: >-
-      DISPATCH 140 hosts zero role=master DMDOs. Cure options are (a) PROMOTE
+      DISPATCH 140 hosts zero held_as=master DMDOs. Cure options are (a) PROMOTE
       msp_dispatch_schedules (or msp_dispatch_assignments) as a new master in DISPATCH 140,
       (b) DEMOTE DISPATCH 140 to module_kind=starter with embedded shells of msp_tickets +
       msp_time_entries, (c) ACCEPT DISPATCH 140 as a contributor-only module and waive M1.

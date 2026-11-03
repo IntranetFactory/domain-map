@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: **headless `domains` row** (id 126). Zero `domain_modules`, zero `domain_module_data_objects`, zero `domain_data_objects`, zero `data_objects` mastered, zero `handoffs` (outbound or inbound), zero `skills`, zero `domain_regulations`, zero `domain_aliases`, zero `data_object_lifecycle_states`, zero `trigger_events`. 8 capabilities linked, 16 solutions linked, 4 business_function_domains rows.
+- Current footprint: **headless `domains` row** (id 126). Zero `domain_modules`, zero `domain_module_data_objects`, zero `domain_data_objects`, zero `data_objects` mastered, zero `handoffs` (outbound or inbound), zero `skills`, zero `domain_regulations`, zero `domain_aliases`, zero `data_object_lifecycle_states`, zero `trigger_events`. 8 capabilities related, 16 solutions related, 4 business_function_domains rows.
 - Vendor-surface basis: pure-play modern intranet platforms (Staffbase, Simpplr, Firstup, LumApps, Unily, Workvivo, Microsoft Viva Connections), internal-newsletter specialists (ContactMonkey, Workshop, Poppulo Harmony), and frontline-comms anchors (WorkJam, Beekeeper) per the existing 16 `solutions` rows on `solution_domains`.
 - SKILL.md classifies INTRANET as leadership-tier (line 1573: "INTRANET, COLLAB-GOV - 16 domains"); leadership-tier domains are expected to have zero masters but Rule #14 still requires at least one `domain_modules` row (a landing module). Sibling COLLAB-GOV is in the same state (zero modules). Both fail M1 under the strict reading of Rule #14.
 - The vendor evidence (Staffbase / Simpplr / Firstup / LumApps are dedicated software products bought as the system of record for internal communications) suggests INTRANET is in fact a real point-solution market that masters entities, not a derived-signals aggregator like REV-INTEL / SALES-PERF. The leadership-tier label looks like a misclassification carried in from an early load. The classification decision lives in Bucket 2 and gates everything else; until it is settled, M1 / B-band / E / F / H findings cannot land.
@@ -46,7 +46,7 @@ If the Bucket 2 classification flips INTRANET to "real point-solution market", t
 
 #### Vendor-surface basis (manual enumeration; replaces the subagent run for this audit)
 
-Pure-play intranet specialists chosen over diversified DXP / WSC bundles. Six anchors selected from the 16 `solutions` rows already linked:
+Pure-play intranet specialists chosen over diversified DXP / WSC bundles. Six anchors selected from the 16 `solutions` rows already related:
 
 - **Staffbase** (`primary`) - Germany-based modern intranet for medium-to-large, employee-app + newsletter + journey orchestration in one suite. Acquired Bananatag / Dirico / tchop / Valo, consolidates the European employee-comms stack.
 - **Simpplr** (`primary`) - AI-first modern intranet; auto-publishing, "EX layer over Microsoft 365 / Google Workspace" positioning. Heavy on personalization and analytics.
@@ -59,9 +59,9 @@ Compliance / personal-content specialists: none specific to INTRANET (no FCRA / 
 
 ### Pass 3 - Neighbor discovery
 
-Zero outbound and zero inbound handoffs in the catalog mean the catalog has no edges from which to auto-derive the neighbor set for INTRANET today. Manually-derived neighbor list (based on the modern intranet vendor surface):
+Zero outbound and zero inbound handoffs in the catalog mean the catalog has no relationships from which to auto-derive the neighbor set for INTRANET today. Manually-derived neighbor list (based on the modern intranet vendor surface):
 
-| Neighbor (manually inferred) | Why | Edge weight signal |
+| Neighbor (manually inferred) | Why | Relationship weight signal |
 |---|---|---|
 | HCM | Employee directory, org chart, profile photos, manager hierarchy. Intranet platforms federate employee search and target audiences by HCM attributes (department, location, job-grade). | Heavy (every flagship vendor wires HCM as source of audience truth). |
 | EMP-EXP | Engagement signal feedback, pulse-survey embedding, recognition-feed embedding. | Medium. |
@@ -114,7 +114,7 @@ The eight inbound handoff candidates the vendor surface implies (HCM publishing 
 
 4. **Regulations scope.** `domain_regulations` is empty. Internal communications has no FCRA / HIPAA / SOX direct regulation, but personal-content broadcasting (audience targeting, read-receipts, advocacy social shares) intersects GDPR (Articles 13-14 information notices, Articles 21-22 profiling pushback), CCPA, the EU Whistleblower Directive (interactions with policy-broadcast workflows), and works-council co-determination regulations (German BetrVG, French CSE). Decide whether to attach any of GDPR / CCPA / EU-Whistleblower-Directive at `applicability='mandatory'` or `'recommended'`. Independent of Bucket 2 item 1.
 
-5. **Modularization (only loadable on the Bucket 2 item 1 "real market" route).** If the user picks (b) or (c), decide the module split. Proposed shape mirrors the 8 capabilities one-for-one (8 modules feels heavy); a tighter 5-module split: `INTRANET-PUBLISH` (publishing + spaces + governance), `INTRANET-NEWS` (announcements + audiences + acknowledgements + newsletter), `INTRANET-JOURNEY` (journey definitions + steps + employee journeys), `INTRANET-FRONTLINE` (frontline shoutouts + push messaging + read receipts), `INTRANET-SEARCH` (federated indices + employee directory). `INTRANET-MOBILE` could fold into `INTRANET-PUBLISH` (mobile is a delivery axis on every module, not a separate module). `INTRANET-ANALYTICS` is genuinely cross-cutting (analytics on every other module); typically not a module of its own. `INTRANET-ADVOCACY` could split or fold under PUBLISH; if the EMP-ADVOCACY candidate gets promoted (already mention_count=4 on `_missing-domains.md`), INTRANET-ADVOCACY likely drops. Direct dependency on Bucket 2 item 1 and on the EMP-ADVOCACY promotion decision.
+5. **Modularization (only loadable on the Bucket 2 item 1 "real market" route).** If the user picks (b) or (c), decide the module split. Proposed shape mirrors the 8 capabilities one-for-one (8 modules feels heavy); a tighter 5-module split: `INTRANET-PUBLISH` (publishing + spaces + governance), `INTRANET-NEWS` (announcements + audiences + acknowledgments + newsletter), `INTRANET-JOURNEY` (journey definitions + steps + employee journeys), `INTRANET-FRONTLINE` (frontline shoutouts + push messaging + read receipts), `INTRANET-SEARCH` (federated indices + employee directory). `INTRANET-MOBILE` could fold into `INTRANET-PUBLISH` (mobile is a delivery axis on every module, not a separate module). `INTRANET-ANALYTICS` is genuinely cross-cutting (analytics on every other module); typically not a module of its own. `INTRANET-ADVOCACY` could split or fold under PUBLISH; if the EMP-ADVOCACY candidate gets promoted (already mention_count=4 on `_missing-domains.md`), INTRANET-ADVOCACY likely drops. Direct dependency on Bucket 2 item 1 and on the EMP-ADVOCACY promotion decision.
 
 6. **Existing `INTRANET-ADVOCACY` capability vs EMP-ADVOCACY domain candidate.** The capability is wired to INTRANET in `capability_domains`. The EMP-ADVOCACY domain candidate (Hootsuite Amplify, Sprinklr Advocacy, Sociabble, GaggleAMP, EveryoneSocial) has mention_count=4 across SMM, EMP-EXP, INTRANET audits in `audits/_missing-domains.md`. If EMP-ADVOCACY gets promoted, INTRANET-ADVOCACY likely needs to demote (move under EMP-ADVOCACY) or stay as a partial-overlap module reference. Decide. Depends on Bucket 2 item 1 and on `_missing-domains.md` triage.
 
@@ -128,7 +128,7 @@ The 8 candidate masters below are speculative until vendor-research confirms the
 |---|---|---|---|---|
 | B3-1 | `intranet_spaces` | INTRANET-PUBLISH | Universal (Staffbase, Simpplr, Firstup, LumApps, Unily, Viva Connections all model "spaces" / "communities" / "sites" as containers for pages). | Pull `/spaces` (Staffbase API), `/communities` (Simpplr Studio), `/sites` (Viva). Confirm common attributes (owner, audience, membership). |
 | B3-2 | `intranet_pages` OR `intranet_posts` | INTRANET-PUBLISH | Universal authoring entity. Most vendors split into static "pages" (long-lived policy / org content) and "posts" (timeline / activity-feed entries); pick one or both. | Vendor doc walk: Staffbase pages vs posts; Workvivo posts; LumApps pages. Decide single vs split. |
-| B3-3 | `announcements` (or `news_articles`) + `announcement_targeting_rules` + `announcement_acknowledgements` | INTRANET-NEWS | Universal. Read-receipt and mandatory-acknowledge flows are the differentiating workflow vs plain publishing. Staffbase, Firstup, Workvivo, Viva all model this triplet. Lifecycle gates: `published`, `mandatory_acknowledge_required`, `acknowledged`, `archived`. | Vendor doc walk: Staffbase news, Firstup must-read campaigns, Viva mandatory news. |
+| B3-3 | `announcements` (or `news_articles`) + `announcement_targeting_rules` + `announcement_acknowledgments` | INTRANET-NEWS | Universal. Read-receipt and mandatory-acknowledge flows are the differentiating workflow vs plain publishing. Staffbase, Firstup, Workvivo, Viva all model this triplet. Lifecycle gates: `published`, `mandatory_acknowledge_required`, `acknowledged`, `archived`. | Vendor doc walk: Staffbase news, Firstup must-read campaigns, Viva mandatory news. |
 | B3-4 | `internal_newsletters` + `newsletter_editions` + `newsletter_subscriptions` | INTRANET-NEWS | Specialist anchor (ContactMonkey, Workshop, Poppulo Harmony, Staffbase Email). Editorial-calendar + recipient-tracking entity set. | Vendor doc walk on the four specialists. |
 | B3-5 | `employee_directory_entries` (embedded shell on HCM `employees`) | INTRANET-SEARCH | Universal. Federated employee search ranks across HCM directory plus advocacy + content. The intranet's directory entry shape often carries fields the HCM directory does not (intranet profile photo, status message, kudos count). | Confirm whether the intranet really masters a separate row or just enriches HCM `employees` via projection. If projection, this is `embedded_master` not a new master. |
 | B3-6 | `journey_definitions` + `employee_journeys` + `journey_steps` | INTRANET-JOURNEY | Common (Staffbase Journeys, Firstup Journeys, LumApps Journeys, Simpplr Employee Journeys, plus pure-play Enboarder / ChangeEngine which are queued as the EMP-JOURNEY-ORCH candidate). Trigger-driven multi-channel workflows; lifecycle gates: `draft`, `active`, `paused`, `archived`; per-step: `pending`, `delivered`, `completed`, `skipped`. | Decide whether INTRANET-JOURNEY is the right home or whether EMP-JOURNEY-ORCH (queued in `_missing-domains.md`) absorbs it. Hard dependency on the EMP-JOURNEY-ORCH triage outcome. |
@@ -153,12 +153,12 @@ The 8 candidate masters below are speculative until vendor-research confirms the
 
 ### Report-only follow-ups (owed by other domains)
 
-Because INTRANET currently masters nothing and authors no handoffs, every potential cross-domain edge is owed by the partner domain's next B9 / B8 pass. These rows are informational only on this audit:
+Because INTRANET currently masters nothing and authors no handoffs, every potential cross-domain relationship is owed by the partner domain's next B9 / B8 pass. These rows are informational only on this audit:
 
 - **HCM B9 candidate:** `employee.profile_updated` -> INTRANET (employee directory) and `org_unit.changed` -> INTRANET (audience-targeting rules). Only meaningful if Bucket 2 item 1 flips INTRANET to "real market" and B3-5 (`employee_directory_entries`) lands.
 - **EMP-EXP B9 candidate:** `recognition.posted` -> INTRANET-NEWS feed; only meaningful on the same condition.
-- **KM B9 candidate:** `knowledge_article.published` -> INTRANET-PUBLISH cross-link; same condition.
-- **HRSD B9 candidate:** `policy.published` -> INTRANET-NEWS mandatory-acknowledgement flow; same condition. This is the GDPR / EU-Whistleblower-Directive intersection from Bucket 2 item 4.
+- **KM B9 candidate:** `knowledge_article.published` -> INTRANET-PUBLISH cross-relationship; same condition.
+- **HRSD B9 candidate:** `policy.published` -> INTRANET-NEWS mandatory-acknowledgment flow; same condition. This is the GDPR / EU-Whistleblower-Directive intersection from Bucket 2 item 4.
 - **ONBOARDING B9 candidate:** `onboarding_journey.started` -> INTRANET-JOURNEY orchestrator (if INTRANET-JOURNEY survives Bucket 2 item 5 / EMP-JOURNEY-ORCH collision).
 - **LMS B9 candidate:** `compliance_training.assigned` -> INTRANET-NEWS / -JOURNEY nudge channel.
 - **WSC B9 candidate:** `news.cross_posted` reverse direction; lower-priority.
@@ -237,7 +237,7 @@ Vacuous: zero cross-domain handoffs to tag. H-band still passes by exception. Th
 
 ### Report-only follow-ups
 
-Unchanged from 2026-05-30: every cross-domain edge candidate (HCM, EMP-EXP, KM, HRSD, ONBOARDING, LMS, WSC) is owed by the partner domain's next B9 / B8 pass; none loadable from INTRANET's side until Bucket 2 item 1 resolves.
+Unchanged from 2026-05-30: every cross-domain relationship candidate (HCM, EMP-EXP, KM, HRSD, ONBOARDING, LMS, WSC) is owed by the partner domain's next B9 / B8 pass; none loadable from INTRANET's side until Bucket 2 item 1 resolves.
 
 ### Candidate domains queued during this audit
 
@@ -285,7 +285,7 @@ State-driven Validate (Rule #21), working the open `next_action_by: agent` items
 ### Executed
 
 - **B1A-B9D-VERIFY (resolved, moved here from state.yaml):** ran `scripts/analytics/b9d_resolver.ts INTRANET --dry-run`. Output: `boundary tags: 0 | distinct (process,owner) findings: 0 | verdicts: {}`. INTRANET has zero handoff boundaries (zero outbound and zero inbound handoffs in the catalog), so there are no payloads to classify in either direction. B9d is now verified clean both ways; nothing to re-point, no MIS-TAG, no ORPHAN, no owner-side b2 to write. The item is closed.
-- **Phase 0 vendor research (Rule #22 forcing step for B2-CLASSIFICATION):** the entire build is gated on a market-shape decision, so Phase 0 ran this pass before re-surfacing the question. Report at `.tmp_deploy/INTRANET-phase0-2026-06-13.md`. Verdict: **master-bearing but PARTIAL.** Genuinely owned spine no other domain masters: spaces/pages, news/announcements + targeting + mandatory-acknowledgement receipts (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news), internal newsletters + editions + subscriptions (Poppulo Harmony, Workshop, ContactMonkey as newsletter systems of record), mobile push messages, read/open/click receipts. Overlays on dedicated adjacent markets: JOURNEY (Enboarder, ChangeEngine; only Firstup rich among intranet vendors), FRONTLINE (WorkJam, Beekeeper, Crew, YOOBIC), ADVOCACY (Hootsuite Amplify, Sprinklr, GaggleAMP, EveryoneSocial; only Haiilo/Sociabble master it among intranet players). SEARCH is an index over HCM/KM, not an owned master. Recommended route: **(c) hybrid** = ~3 entity-owning modules (PUBLISH, NEWS, NEWSLETTER) + ANALYTICS receipt store; demote journey/frontline/advocacy to overlays, FRONTLINE flagged as a possible standalone domain.
+- **Phase 0 vendor research (Rule #22 forcing step for B2-CLASSIFICATION):** the entire build is gated on a market-shape decision, so Phase 0 ran this pass before re-surfacing the question. Report at `.tmp_deploy/INTRANET-phase0-2026-06-13.md`. Verdict: **master-bearing but PARTIAL.** Genuinely owned spine no other domain masters: spaces/pages, news/announcements + targeting + mandatory-acknowledgment receipts (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news), internal newsletters + editions + subscriptions (Poppulo Harmony, Workshop, ContactMonkey as newsletter systems of record), mobile push messages, read/open/click receipts. Overlays on dedicated adjacent markets: JOURNEY (Enboarder, ChangeEngine; only Firstup rich among intranet vendors), FRONTLINE (WorkJam, Beekeeper, Crew, YOOBIC), ADVOCACY (Hootsuite Amplify, Sprinklr, GaggleAMP, EveryoneSocial; only Haiilo/Sociabble master it among intranet players). SEARCH is an index over HCM/KM, not an owned master. Recommended route: **(c) hybrid** = ~3 entity-owning modules (PUBLISH, NEWS, NEWSLETTER) + ANALYTICS receipt store; demote journey/frontline/advocacy to overlays, FRONTLINE flagged as a possible standalone domain.
 
 ### Phase 0 effect on the open decisions (fresh evidence wins, Rule #22)
 

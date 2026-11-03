@@ -19,8 +19,8 @@ last_audit: "2026-06-07"
 b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per audit policy (personas not auto-authored)."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI deferred (not authored by the audit); candidate operational personas listed below for a future persona pass."
-    action: "DEFERRED. When run: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI deferred (not authored by the audit); candidate operational personas listed below for a future persona pass."
+    action: "DEFERRED. When run: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 3 modules, add process_raci responsibility rows, wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas: ["PIM Administrator", "Merchandising Manager", "Product Content Editor", "Digital Asset Manager", "Syndication Operations", "Localization Manager", "Supplier Data Liaison"]
     extra_phase_p_triage: "2026-06-02"
 
@@ -43,9 +43,9 @@ b1b:
   - id: B1B-B11-REGULATIONS
     summary: PIM has 0 domain_regulations rows; regulation set + ownership pending B2-S6
     finding: |
-      PIM declares zero rows in domain_regulations for domain_id 167. PIM-PRODUCT-COMPLIANCE capability (601) exists but the regulations themselves are not loaded. PIM is a regulated merchandising domain per vendor practice (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP). Ownership question is whether the linkage belongs to PIM, PLM-COMPLIANCE (module 69), or both.
+      PIM declares zero rows in domain_regulations for domain_id 167. PIM-PRODUCT-COMPLIANCE capability (601) exists but the regulations themselves are not loaded. PIM is a regulated merchandising domain per vendor practice (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP). Ownership question is whether the relationship belongs to PIM, PLM-COMPLIANCE (module 69), or both.
     action: |
-      Conditional on B2-S6 outcome: if PIM owns or splits, insert missing regulations rows (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP) where absent, then link via domain_regulations (167 to each) with applicability per-regulation. If PLM owns end-to-end, this item resolves to no-op for PIM.
+      Conditional on B2-S6 outcome: if PIM owns or splits, insert missing regulations rows (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP) where absent, then relate via domain_regulations (167 to each) with applicability per-regulation. If PLM owns end-to-end, this item resolves to no-op for PIM.
     blocked_by:
       - {type: user_decision, ref: B2-S6}
     affected_entities:
@@ -127,10 +127,10 @@ b2:
   - id: B2-S6
     summary: Regulation ownership for PIM vs PLM-COMPLIANCE
     question: |
-      Which domain holds the domain_regulations linkage for REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP? PLM-COMPLIANCE (69) already owns product_compliance_declarations (805) and feeds PIM via inbound 1243.
+      Which domain holds the domain_regulations relationship for REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP? PLM-COMPLIANCE (69) already owns product_compliance_declarations (805) and feeds PIM via inbound 1243.
     options:
       - "(a) PLM owns; PIM consumes via handoff 1243"
-      - "(b) PIM links the same regulation rows via domain_regulations (overlap acceptable)"
+      - "(b) PIM relates the same regulation rows via domain_regulations (overlap acceptable)"
       - "(c) Split: REACH / RoHS / Prop 65 to PLM (engineering); GS1 GDSN / EU GPSR / EU DPP to PIM (merchandising channel)"
 
   - id: B2-S7

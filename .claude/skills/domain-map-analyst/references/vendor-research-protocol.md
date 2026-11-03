@@ -11,7 +11,7 @@ Phase 0 produces the domain's expected entity set **before** any Phase A/B draft
 
 ## Skippable for
 
-- Hot-fix patches on already-loaded domains (renaming one entity, adding one relationship, fixing a single edge)
+- Hot-fix patches on already-loaded domains (renaming one entity, adding one relationship, fixing a single relationship)
 - The "is X a domain?" classification question (no load = no Phase 0)
 - Adding a single capability or a single solution row to an existing domain
 
@@ -44,7 +44,7 @@ For each flagship vendor, list the entities their flagship product masters. Sour
 - Customer-facing onboarding pages, trial signup walkthroughs
 - Help center articles describing what the product tracks
 
-Group entities by lifecycle role:
+Group entities by where they sit in the lifecycle:
 
 | Category | What it carries |
 |---|---|
@@ -82,10 +82,20 @@ These are non-optional regardless of how many vendors model them explicitly. The
 | Banking | `kyc_records`, `aml_alerts`, `suspicious_activity_reports` |
 | Insurance | `claim_audit_trails`, `regulatory_filings` |
 | Payments (PCI) | `card_data_access_logs`, `pci_scope_attestations` |
+| US for-hire motor carriers | `bills_of_lading`, `cargo_claims`, `owner_operator_leases`, `settlement_escrow_accounts`, `motor_carrier_authorities`, `carrier_insurance_filings` |
+| US freight brokers | `brokered_transaction_records` |
+| US commercial fleets, any operator | `eld_logs`, `vehicle_inspections`, `driver_qualification_records`, `clearinghouse_queries`, `ifta_quarterly_returns`, `ucr_registrations` |
+| EU road haulage | `consignment_notes`, `cabotage_operation_records`, `driver_posting_declarations`, `tachograph_records` |
+| US shipper transportation (motor) | `bills_of_lading`, `freight_claims` |
+| US hazardous materials shipping | `hazmat_shipping_papers`, `hazmat_classifications` |
+| US food shippers (FSMA) | `sanitary_transport_records` |
+| European cross-border road freight | `consignment_notes` |
 
 This table grows as new regulated markets are loaded. When you encounter a market not listed here, surface the compliance entities you identified so the table can be extended.
 
 ### 5. Propose modularization
+
+Say "domain module", never "optional module" or "core module": every module deploys on its own, and `is_install_optional` applies to records, not modules. A module must master at least one record, so a concept with no records of its own folds into the module that holds them.
 
 For each entity in the union surface, name the module it belongs in. Validate against the rules:
 

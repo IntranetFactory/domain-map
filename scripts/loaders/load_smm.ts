@@ -480,8 +480,8 @@ async function main() {
   const capMap = await syncTable("/capabilities", capRows, "capability_code");
 
   console.log("\n=== capability_domains junctions ===");
-  const existingCapDomLinks = await get("/capability_domains?select=capability_id,domain_id&limit=10000");
-  const existingCapDomSet = new Set(existingCapDomLinks.map(r => `${r.capability_id}:${r.domain_id}`));
+  const existingCapDomRelationships = await get("/capability_domains?select=capability_id,domain_id&limit=10000");
+  const existingCapDomSet = new Set(existingCapDomRelationships.map(r => `${r.capability_id}:${r.domain_id}`));
   const newCapDomRows: Row[] = [];
   for (const c of capabilities) {
     const cid = capMap.get(c.capability_code)!;
@@ -520,13 +520,13 @@ async function main() {
   const solutionMap = await syncTable("/solutions", solutionRows, "solution_name");
 
   console.log("\n=== solution_domains junctions ===");
-  const existingSolDomLinks = await get("/solution_domains?select=solution_id,domain_id,coverage_level&limit=10000");
-  const existingSolDomSet = new Set(existingSolDomLinks.map(r => `${r.solution_id}:${r.domain_id}:${r.coverage_level}`));
+  const existingSolDomRelationships = await get("/solution_domains?select=solution_id,domain_id,coverage_level&limit=10000");
+  const existingSolDomSet = new Set(existingSolDomRelationships.map(r => `${r.solution_id}:${r.domain_id}:${r.coverage_level}`));
   const newSolDomRows: Row[] = [];
   let skippedSolDom = 0;
   for (const s of solutions) {
     const sid = solutionMap.get(s.solution_name)!;
-    const buildLink = (code: string, coverage: "primary" | "secondary" | "partial") => {
+    const buildRelationship = (code: string, coverage: "primary" | "secondary" | "partial") => {
       const did = allDomainMap.get(code);
       if (!did) { console.warn(`  ! domain ${code} not found for ${s.solution_name}`); return; }
       const key = `${sid}:${did}:${coverage}`;
@@ -534,9 +534,9 @@ async function main() {
       existingSolDomSet.add(key);
       newSolDomRows.push({ solution_id: sid, domain_id: did, coverage_level: coverage, notes: "" });
     };
-    for (const code of s.primary ?? []) buildLink(code, "primary");
-    for (const code of s.secondary ?? []) buildLink(code, "secondary");
-    for (const code of s.partial ?? []) buildLink(code, "partial");
+    for (const code of s.primary ?? []) buildRelationship(code, "primary");
+    for (const code of s.secondary ?? []) buildRelationship(code, "secondary");
+    for (const code of s.partial ?? []) buildRelationship(code, "partial");
   }
   if (newSolDomRows.length > 0) {
     console.log(`  inserting ${newSolDomRows.length} solution_domains rows (${skippedSolDom} already present)`);
@@ -546,8 +546,8 @@ async function main() {
   }
 
   console.log("\n=== solution_capabilities junctions ===");
-  const existingSolCapLinks = await get("/solution_capabilities?select=solution_id,capability_id&limit=10000");
-  const existingSolCapSet = new Set(existingSolCapLinks.map(r => `${r.solution_id}:${r.capability_id}`));
+  const existingSolCapRelationships = await get("/solution_capabilities?select=solution_id,capability_id&limit=10000");
+  const existingSolCapSet = new Set(existingSolCapRelationships.map(r => `${r.solution_id}:${r.capability_id}`));
   const newSolCapRows: Row[] = [];
   let skippedSolCap = 0;
   for (const sc of solCaps) {

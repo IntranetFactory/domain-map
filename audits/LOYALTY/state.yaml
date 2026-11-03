@@ -29,7 +29,7 @@ b1b:
       loyalty_members (active, lapsed, opted_out, closed) -> module 272;
       loyalty_transactions (pending, posted, reversed, expired) -> module 273;
       redemption_rewards (draft, published, paused, discontinued) -> 273;
-      redemption_transactions (initiated, fulfilled, delivered, cancelled,
+      redemption_transactions (initiated, fulfilled, delivered, canceled,
       refunded) -> 273. loyalty_tiers -> 272 is the config-shape exemption
       candidate (B2-LIFECYCLE-EXEMPT).
     action: >-
@@ -70,7 +70,7 @@ b1b:
   - id: B1B-S6
     summary: Author intra-domain data_object_relationships (B6).
     finding: >-
-      Zero relationship rows touching LOYALTY masters. Expected edges:
+      Zero relationship rows touching LOYALTY masters. Expected relationships:
       loyalty_members has loyalty_transactions, loyalty_members belongs_to
       loyalty_tiers, redemption_transactions consumes loyalty_transactions,
       redemption_transactions redeems redemption_rewards,
@@ -81,7 +81,7 @@ b1b:
       Rule #10. Exact tuples pending user cluster draft.
     blocked_by:
       - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
-    extra_expected_edges:
+    extra_expected_relationships:
       - {verb: has, source: loyalty_members, target: loyalty_transactions}
       - {verb: belongs_to, source: loyalty_members, target: loyalty_tiers}
       - {verb: consumes, source: redemption_transactions, target: loyalty_transactions}
@@ -89,9 +89,9 @@ b1b:
       - {verb: issued_to, source: redemption_transactions, target: loyalty_members}
 
   - id: B1B-S7
-    summary: Author users edges on LOYALTY masters (B7, Rule #10).
+    summary: Author relationships to users on LOYALTY masters (B7, Rule #10).
     finding: >-
-      Zero data_object_relationships rows linking LOYALTY masters to the
+      Zero data_object_relationships rows relating LOYALTY masters to the
       platform-built-in users data_object. Expected actor labels:
       loyalty_members (account_manager when B2B2C), loyalty_tiers
       (config_author), redemption_rewards (catalog_owner),
@@ -113,11 +113,11 @@ b1b:
     summary: Author cross-domain outbound data_object_relationships (B8).
     finding: >-
       Zero outbound relationship rows mirroring the 4 outbound handoffs.
-      Edges to author: loyalty_tiers <verb> CRM payload (handoff 231);
+      Relationships to author: loyalty_tiers <verb> CRM payload (handoff 231);
       loyalty_members <verb> MA payload (handoff 232); loyalty_transactions
       <verb> FIN payload (handoff 497); redemption_transactions <verb>
       B2C-COMM payload (handoff 498). Final verbs reviewed by user.
-    action: Phase-B loader, 4 edges, same shape as B1B-S6.
+    action: Phase-B loader, 4 relationships, same shape as B1B-S6.
     blocked_by:
       - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
     affected_handoffs:
@@ -167,7 +167,7 @@ b1b:
     summary: Add unclaimed_property_records master to LOYALTY-POINTS-REWARDS (273).
     finding: >-
       US state escheatment may apply to unredeemed balances if the program
-      qualifies as stored value. Material for sizeable programs. Surfaces in
+      qualifies as stored value. Material for sizable programs. Surfaces in
       Antavo and SAP Emarsys documentation. Ledger surface lives in
       LOYALTY-POINTS-REWARDS (273).
     action: Phase-B insert (target module 273).
@@ -236,7 +236,7 @@ b2:
   - id: B2-SEND-EMAIL
     summary: Disposition of send_email (tool 37) on legacy skill 81 (F7).
     question: >-
-      skill_tools links tool 37 (send_email, side_effect) to skill 81 with
+      skill_tools relates tool 37 (send_email, side_effect) to skill 81 with
       empty skill_tools.notes. F7 default is notify_person unless workflow
       requires the channel. Skill 81 is slated for DELETE via B1A-SYSTEM-SKILLS
       once module-level skills land; this violation likely dissolves naturally.
@@ -246,7 +246,7 @@ b2:
       - keep send_email and supply workflow-specific skill_tools.notes wording (Rule #15)
 
   - id: B2-CLUSTER-DRAFTS
-    summary: Provide cluster-drafts authoring for aliases (B1B-S5), intra-domain relationships (B1B-S6), users edges (B1B-S7), cross-domain edges (B1B-S8).
+    summary: Provide cluster-drafts authoring for aliases (B1B-S5), intra-domain relationships (B1B-S6), relationships to users (B1B-S7), cross-domain relationships (B1B-S8).
     question: >-
       Four cluster-drafts items require user-side authoring of exact tuples
       (alias_name + alias_type per master; verb + inverse_verb +

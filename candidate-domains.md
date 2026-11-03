@@ -5,7 +5,7 @@ Domains that are under consideration but not yet loaded into the live `domain_ma
 - **Code** — proposed `domain_code` (uppercase, dash-separated)
 - **Why a candidate** — the evidence that meets the point-solution-market test (rule #2)
 - **Why not yet** — what's blocking promotion (market too young, overlap with existing domains, etc.)
-- **Adjacent existing entities** — what's already in the catalog that would need to be re-linked when promoting
+- **Adjacent existing entities** — what's already in the catalog that would need its relationships re-pointed when promoting
 
 Promotion path: when a candidate gets approved, run a Phase A+B+C load and remove its entry from this file.
 

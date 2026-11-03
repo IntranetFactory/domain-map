@@ -20,14 +20,14 @@ last_audit: "2026-06-17"
 #   B1B-S1 (module split + DMDO remap), B1A-BUILD (unbuilt domain), B2-S1 (module-shape
 #   decision: 3-module shape adopted). M1 hard-fail cleared.
 # 2026-06-06 b1a execution: resolved B1A-CATALOG-COPY (6 catalog fields written on
-#   modules 194/195/196) and B1A-S8-A (users->work_shifts edge id 2083). The only
+#   modules 194/195/196) and B1A-S8-A (users->work_shifts relationship id 2083). The only
 #   remaining b1a item (B1A-MODULE-SKILLS) is blocked by user_decision B2-S5, so the
 #   next action pivots to the user (resolve B2-S5 / the rest of the b2 queue).
 # 2026-06-17 cluster fix pass (keep-as-proposed-defaults): applied lifecycle states
 #   (time_entries on 194, work_schedules on 195) and a pruned alias set on all 7 masters
 #   as proposed defaults, all at record_status='new' (resolving B1B-S2 + B1B-S3, now
 #   deleted from this file and recorded in history.md). entity_type classified, intra-domain
-#   master edges added, and the British->American spelling portion of B2-S6 fixed. Pattern
+#   master relationships added, and the British->American spelling portion of B2-S6 fixed. Pattern
 #   flags (B2-S3) and the rest of the b2 queue (incl. the em-dash + notes portion of B2-S6)
 #   remain open.
 
@@ -136,7 +136,7 @@ b1b:
     finding: >-
       Inbound handoffs 499 (CCAAS -> WFM, agent_state.changed), 500 (CCAAS -> WFM,
       queue_statistics.threshold_breached), 934 (RET-STORE -> WFM,
-      retail_labour_schedule.published), 937 (RET-STORE -> WFM,
+      retail_labor_schedule.published), 937 (RET-STORE -> WFM,
       store_associate_checklist.overdue), 938 (RET-STORE -> WFM, store_task.completed)
       carry target_domain_module_id NULL on WFM's side. WFM modules now exist.
     action: >-
@@ -147,7 +147,7 @@ b1b:
     affected_handoffs:
       - {handoff_id: 499, direction: inbound, source_domain: CCAAS, target_domain: WFM, trigger_event: agent_state.changed, payload: agent_states, null_field: target_domain_module_id}
       - {handoff_id: 500, direction: inbound, source_domain: CCAAS, target_domain: WFM, trigger_event: queue_statistics.threshold_breached, payload: queue_statistics, null_field: target_domain_module_id}
-      - {handoff_id: 934, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: retail_labour_schedule.published, payload: retail_labour_schedules, null_field: target_domain_module_id}
+      - {handoff_id: 934, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: retail_labor_schedule.published, payload: retail_labor_schedules, null_field: target_domain_module_id}
       - {handoff_id: 937, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: store_associate_checklist.overdue, payload: store_associate_checklists, null_field: target_domain_module_id}
       - {handoff_id: 938, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: store_task.completed, payload: store_tasks, null_field: target_domain_module_id}
 
@@ -208,7 +208,7 @@ b2:
     question: >-
       After module-level system skills exist (B1A-MODULE-SKILLS), should the legacy
       wfm-system skill be retired (DELETE after re-anchoring its 9 skill_tools) or
-      rehomed as one of the 3 module-level skills (minimises catalog churn)?
+      rehomed as one of the 3 module-level skills (minimizes catalog churn)?
     options:
       - "Retire: DELETE skill 121 after tools re-anchored; insert 3 new module-level skills"
       - "Rehome: rename skill 121 + set its domain_module_id; insert 2 new module-level skills"
@@ -239,7 +239,7 @@ b2:
     options:
       - "134 employee.created (HCM -> WFM): replace existing row 29 (process 41 L2 Manage employee onboarding, training, and development) with process 246 (L3 Develop and manage time and attendance systems)"
       - "429 work_shift.no_show (WFM -> HRSD): replace existing row 228 (process 42 L2 Manage employee relations) with process 246 (L3 Develop and manage time and attendance systems)"
-      - "934 retail_labour_schedule.published (RET-STORE -> WFM): replace existing row 390 (process 1886) with process 246 (L3 Develop and manage time and attendance systems)"
+      - "934 retail_labor_schedule.published (RET-STORE -> WFM): replace existing row 390 (process 1886) with process 246 (L3 Develop and manage time and attendance systems)"
       - "Subset / decline / all"
     why: >-
       Each replacement is a delete-and-replace; the existing row may already be the
@@ -286,8 +286,8 @@ b3:
   - id: B3-S3
     candidate: labor_demand_forecasts
     rationale: >-
-      Forecasted required labour hours per day-part / department; the input to
-      scheduling optimisation solvers. Mastered separately from work_schedules in
+      Forecasted required labor hours per day-part / department; the input to
+      scheduling optimization solvers. Mastered separately from work_schedules in
       every demand-driven WFM platform.
     vendor_evidence:
       - Legion

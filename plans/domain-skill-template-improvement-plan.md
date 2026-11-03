@@ -351,7 +351,7 @@ Each: problem (with evidence), change, files touched, risk, re-emission safety.
 - **Problem.** discovery.md Pass 6 documents a per-entity `relationships_out` array; phase2a never
   emits it (it writes `fields`, `lifecycle_field`, `lifecycle_values`).
 - **Change.** Pick one: (a) align the doc to the producer (drop `relationships_out`), or (b) have
-  phase2a derive `relationships_out` from `reference_table` fields (cheap, useful for "what links to
+  phase2a derive `relationships_out` from `reference_table` fields (cheap, useful for "what relates to
   X"). Recommend (b) as a small enhancement since the data is already in hand from the fields pull;
   otherwise (a).
 - **Files.** `scripts/phase2a-structural.ts` and/or the discovered.json doc (now in the slimmed

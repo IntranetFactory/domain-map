@@ -55,7 +55,7 @@ a5:
 
 q6: How deep should the reconciliation with the neighboring Fund Administration and Cap Table domains go?
 
-- a) One-line summary only (both neighbors are lightly connected).
+- a) One-line summary only (both neighbors are lightly related).
 - b) Deep-dive on Fund Administration.
 - c) Deep-dive on Cap Table.
 - d) Deep-dive on both.

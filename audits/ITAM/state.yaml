@@ -23,8 +23,8 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas: author the persona / RACI layer. DEFERRED this pass (not authored)."
-    finding: "Live triage: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so the persona layer is empty on this multi-module domain."
-    action: "DEFER. Persona / RACI authoring (B1A-PHASE-P) is a dedicated worked pass, not part of the bulk state-driven execute. Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage: 4 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so the persona layer is empty on this multi-module domain."
+    action: "DEFER. Persona / RACI authoring (B1A-PHASE-P) is a dedicated worked pass, not part of the bulk state-driven execute. Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     status: deferred
     candidate_personas:
       - "Asset Manager (owns the lifecycle + portfolio surface)"
@@ -35,7 +35,7 @@ b1a:
   - id: B1A-SELF-CONTAIN
     summary: "M9 self-containment violation on module 60: saas_applications consumer/required points at an SMP-mastered entity. DESTRUCTIVE fix (rewrite role/necessity on an existing DMDO row), so surfaced, not executed."
     finding: |
-      DMDO id=224 on ITAM-PORTFOLIO-REPORTING (module 60): data_object 61 (saas_applications, mastered by SMP module 30), role=consumer, necessity=required, not embedded_master here. A required consumer on another domain's master breaks module self-containment (M9).
+      DMDO id=224 on ITAM-PORTFOLIO-REPORTING (module 60): data_object 61 (saas_applications, mastered by SMP module 30), held_as=consumer, necessity=required, not embedded_master here. A required consumer on another domain's master breaks module self-containment (M9).
     recommended_fix: |
       Either (a) set DMDO id=224 necessity='optional' (portfolio reporting can render without SaaS rows present, presence-conditional), or (b) convert to embedded_master and carry a local saas_applications shell on module 60. Recommended: (a) necessity='optional' is the lighter fix; portfolio TCO rollup degrades gracefully when SaaS feeds are absent. Either is a rewrite of an existing non-empty DMDO row and needs your sign-off before write.
     extra_m9_shapes:
@@ -55,7 +55,7 @@ b1b:
   - id: B1B-H9
     summary: APQC tag for cross-domain handoff 799 (KUBE-PLAT -> ITAM-NORMALIZATION-CATALOG, kubernetes_cluster.provisioned) deferred pending KUBE-PLAT scoping.
     finding: |
-      Kubernetes container registration is closer to platform-discovery than fixed-asset accounting; APQC has no clean cloud-platform-registration entry. Defer pending KUBE-PLAT audit decisions about whether kube clusters belong in the asset register at all. Also linked to B2-MOD57 (does module 57 master anything).
+      Kubernetes container registration is closer to platform-discovery than fixed-asset accounting; APQC has no clean cloud-platform-registration entry. Defer pending KUBE-PLAT audit decisions about whether kube clusters belong in the asset register at all. Also related to B2-MOD57 (does module 57 master anything).
     blocked_by:
       - {type: domain_audit, blocking_domain: KUBE-PLAT, milestone: scope_decision_for_kube_clusters_in_asset_register}
       - {type: user_decision, ref: B2-MOD57}
@@ -117,7 +117,7 @@ b2:
   - id: B2-GDPR
     summary: GDPR applicability on ITAM is marked conditional.
     question: |
-      Is "conditional" still right, or should it be tightened to "mandatory" given that EU deployments will trigger GDPR coverage on the embedded users edges and the org_units / hcm reference shape?
+      Is "conditional" still right, or should it be tightened to "mandatory" given that EU deployments will trigger GDPR coverage on the embedded relationships to users and the org_units / hcm reference shape?
     options:
       - "(a) Upgrade GDPR applicability to mandatory."
       - "(b) Keep conditional; deployments outside EU jurisdictions may legitimately not trigger."
@@ -127,9 +127,9 @@ b2:
   - id: B2-CROSS-CUT-CAPS
     summary: Cross-cutting capability rename for ITAM-NORMALIZATION (533) and ITAM-RECONCILIATION (537).
     question: |
-      Should we rename these two capabilities to domain-neutral ASSET-NORMALIZATION / ASSET-RECONCILIATION and add capability_domains rows linking each to HAM, SAM, SMP, FINOPS, EAM (5 sub-domains each)?
+      Should we rename these two capabilities to domain-neutral ASSET-NORMALIZATION / ASSET-RECONCILIATION and add capability_domains rows relating each to HAM, SAM, SMP, FINOPS, EAM (5 sub-domains each)?
     options:
-      - "(a) Rename + link as cross-cutting; matches the cross-cutting capability convention (>=3 domains)."
+      - "(a) Rename + relationship as cross-cutting; matches the cross-cutting capability convention (>=3 domains)."
       - "(b) Keep ITAM-prefixed; the substrate behavior is genuinely scoped to the umbrella domain."
     why: |
       Both capabilities describe substrate behaviors the sub-domains share. The convention says >=3 domains qualifies; 5 sub-domains is a clear pass. (A rename is a destructive overwrite, hence a b2.)

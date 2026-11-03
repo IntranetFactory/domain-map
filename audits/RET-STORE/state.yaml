@@ -26,7 +26,7 @@ b1a:
       pre-build additive surface is clean.
     action: >-
       Run Phase A then M then B then S to author the module set, capabilities, masters mapping, and the
-      single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules,
+      single domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules,
       process_raci, lifecycle.process_id) afterward. Module-shape choice gated on B2-1.
     extra_phase_p_triage: "2026-06-02"
 
@@ -36,7 +36,7 @@ b1b:
     finding: >-
       RET-STORE has zero domain_modules rows. Rule #14 requires >=1 module_kind='full'.
       Proposed 3-module split: RET-STORE-TASK-EXEC (masters store_tasks 647, store_associate_checklists 652),
-      RET-STORE-LABOR-SCHED (master retail_labour_schedules 648), RET-STORE-AUDIT-EXEC (masters store_audits 649,
+      RET-STORE-LABOR-SCHED (master retail_labor_schedules 648), RET-STORE-AUDIT-EXEC (masters store_audits 649,
       mystery_shopper_records 650, planogram_compliance_records 651). Embedded_master shells per Rule #16.
       Final shape pending B2-1. NOTE (supersession 2026-06-06): the per-module skill_type='system' clause from the
       original item is CANCELED; the modularized domain gets exactly ONE domain-grain system skill that derives its
@@ -51,7 +51,7 @@ b1b:
       - {type: user_decision, ref: B2-1}
     affected_masters:
       - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "task_management"}
-      - {data_object_id: 648, name: "retail_labour_schedules", target_module_id: null, workflow: "labour_scheduling"}
+      - {data_object_id: 648, name: "retail_labor_schedules", target_module_id: null, workflow: "labor_scheduling"}
       - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "store_audit_ops"}
       - {data_object_id: 650, name: "mystery_shopper_records", target_module_id: null, workflow: "mystery_shop"}
       - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "planogram_exec"}
@@ -66,7 +66,7 @@ b1b:
   - id: B1B-CAPS
     summary: "INSERT 5-6 capabilities + capability_domains (RETAIL-TASK-EXEC, STORE-AUDIT-OPS, PLANOGRAM-EXEC, MYSTERY-SHOP, FRONTLINE-CHECKLIST, RETAIL-LABOR-COMPLIANCE)"
     finding: >-
-      Only 1 capability (WORKFORCE-SCHEDULING id 312, cross-domain shared with WFM) is linked. A2 threshold of 3 not met.
+      Only 1 capability (WORKFORCE-SCHEDULING id 312, cross-domain shared with WFM) is related. A2 threshold of 3 not met.
       The 6 masters and 5 vendor surfaces span 4-6 distinct capabilities. FRONTLINE-CHECKLIST may also apply to FSM and
       FOOD-TRACE; apply the cross-cutting capability convention if it spans >=3 domains.
     action: >-
@@ -92,7 +92,7 @@ b1b:
   - id: B1B-B10B-SOURCE
     summary: "PATCH 5 outbound handoffs source_domain_module_id to realizing modules"
     finding: >-
-      All 5 outbound handoffs (934 retail_labour_schedule.published, 935 store_audit.failed,
+      All 5 outbound handoffs (934 retail_labor_schedule.published, 935 store_audit.failed,
       936 mystery_shopper_record.submitted, 937 store_associate_checklist.overdue, 938 store_task.completed) carry
       source_domain_module_id=NULL because RET-STORE has zero modules.
     action: >-
@@ -101,7 +101,7 @@ b1b:
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
     affected_handoffs:
-      - {handoff_id: 934, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "retail_labour_schedule.published", payload: "retail_labour_schedules", null_field: "source_domain_module_id"}
+      - {handoff_id: 934, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "retail_labor_schedule.published", payload: "retail_labor_schedules", null_field: "source_domain_module_id"}
       - {handoff_id: 935, direction: outbound, source_domain: "RET-STORE", target_domain: "HCM", trigger_event: "store_audit.failed", payload: "store_audits", null_field: "source_domain_module_id"}
       - {handoff_id: 936, direction: outbound, source_domain: "RET-STORE", target_domain: "CRM", trigger_event: "mystery_shopper_record.submitted", payload: "mystery_shopper_records", null_field: "source_domain_module_id"}
       - {handoff_id: 937, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "store_associate_checklist.overdue", payload: "store_associate_checklists", null_field: "source_domain_module_id"}
@@ -113,8 +113,8 @@ b1b:
       Zero data_object_lifecycle_states on any of the 6 RET-STORE masters. All 6 are now entity_type='operational_workflow'
       (classified 2026-06-07), so lifecycle states are non-deferrable per Rule #12 and must be loaded with domain_module_id
       set per Rule #14. Proposed state machines:
-      store_tasks (assigned -> acknowledged -> in_progress -> completed/cancelled/overdue);
-      retail_labour_schedules (draft -> published -> in_progress -> closed);
+      store_tasks (assigned -> acknowledged -> in_progress -> completed/canceled/overdue);
+      retail_labor_schedules (draft -> published -> in_progress -> closed);
       store_audits (scheduled -> in_progress -> conducted -> failed/passed -> remediated -> closed);
       mystery_shopper_records (scheduled -> submitted -> reviewed -> closed);
       planogram_compliance_records (scheduled -> photographed -> scored -> remediated -> closed);
@@ -126,8 +126,8 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-M1}
       - {type: user_decision, ref: B2-2}
     affected_masters:
-      - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "assigned -> acknowledged -> in_progress -> completed/cancelled/overdue"}
-      - {data_object_id: 648, name: "retail_labour_schedules", target_module_id: null, workflow: "draft -> published -> in_progress -> closed"}
+      - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "assigned -> acknowledged -> in_progress -> completed/canceled/overdue"}
+      - {data_object_id: 648, name: "retail_labor_schedules", target_module_id: null, workflow: "draft -> published -> in_progress -> closed"}
       - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "scheduled -> in_progress -> conducted -> failed/passed -> remediated -> closed"}
       - {data_object_id: 650, name: "mystery_shopper_records", target_module_id: null, workflow: "scheduled -> submitted -> reviewed -> closed"}
       - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "scheduled -> photographed -> scored -> remediated -> closed"}
@@ -179,11 +179,11 @@ b1b:
       - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "has_personal_content candidate"}
 
   - id: B1B-VERB-RENAME
-    summary: "Rename 7 user-edge data_object_relationships to snake_case verb-shape (DESTRUCTIVE: overwrites non-empty verbs)"
+    summary: "Rename 7 relationship to users data_object_relationships to snake_case verb-shape (DESTRUCTIVE: overwrites non-empty verbs)"
     finding: >-
       Relationships 694-700 use noun-phrase verbs (assigned tasks, created tasks, assigned checklists,
       publishes schedules, conducted audits, verified planogram, submitted mystery shop) instead of snake_case
-      verb-shape. Legacy WFM / ATS anti-pattern. The 2 task-assignment edges can default to assigned_to_user /
+      verb-shape. Legacy WFM / ATS anti-pattern. The 2 task-assignment relationships can default to assigned_to_user /
       created_by_user; the other 5 publisher-side verbs need user input on the exact verb form. All 7 renames overwrite
       a non-empty relationship_verb, so this is surfaced (destructive), not executed.
     action: >-
@@ -208,7 +208,7 @@ b2:
       Should the RET-STORE module split be (a) 3 modules per the proposal (RET-STORE-TASK-EXEC, RET-STORE-LABOR-SCHED,
       RET-STORE-AUDIT-EXEC), (b) 2 modules collapsing audit-exec into one (RET-STORE-EXEC + RET-STORE-LABOR-SCHED),
       or (c) some alternate shape? Sub-question: does store_associate_checklists belong with store_tasks
-      (RET-STORE-TASK-EXEC, workflow-overlap) or with retail_labour_schedules (RET-STORE-LABOR-SCHED, per-shift attestation)?
+      (RET-STORE-TASK-EXEC, workflow-overlap) or with retail_labor_schedules (RET-STORE-LABOR-SCHED, per-shift attestation)?
     options:
       - "(a) 3 modules per the proposal"
       - "(b) 2 modules collapsing audit-exec"
@@ -227,7 +227,7 @@ b2:
       Which of the 4 pattern-flag candidates should flip to true (mystery_shopper_records.has_personal_content;
       store_audits.has_single_approver; store_audits.has_submit_lock;
       planogram_compliance_records.has_personal_content)? Also for B1B-LIFECYCLE: which state transitions are
-      workflow-gates (requires_permission=true)? Obvious candidates: store_tasks.completed, retail_labour_schedules.published,
+      workflow-gates (requires_permission=true)? Obvious candidates: store_tasks.completed, retail_labor_schedules.published,
       store_audits.passed, planogram_compliance_records.scored.
     options:
       - "Per-flag yes/no on the 4 candidates"
@@ -267,11 +267,11 @@ b2:
       varies per module. Several plausible shapes.
 
   - id: B2-VERB
-    summary: "Verb form for 5 publisher-side user-edge relationships (696-700)"
+    summary: "Verb form for 5 publisher-side relationship to users (696-700)"
     question: >-
       For B1B-VERB-RENAME, what snake_case verb form should rows 696-700 take? 696 assigned checklists,
       697 publishes schedules, 698 conducted audits, 699 verified planogram, 700 submitted mystery shop. The 2 trivial
-      task edges (694 -> assigned_to_user, 695 -> created_by_user) can default; these 5 need the exact verb.
+      task relationships (694 -> assigned_to_user, 695 -> created_by_user) can default; these 5 need the exact verb.
     options:
       - "User supplies the 5 verb forms"
       - "User accepts agent suggestions (e.g. assigned_checklist_to_user / published_by_user / conducted_by_user / verified_by_user / submitted_by_user)"
@@ -301,7 +301,7 @@ b3:
 
   - id: B3-3
     candidate: "store_huddle_logs"
-    rationale: "Daily / shift-start huddle content + associate acknowledgements; may route to a queued FRONTLINE-COMMS domain instead."
+    rationale: "Daily / shift-start huddle content + associate acknowledgments; may route to a queued FRONTLINE-COMMS domain instead."
     vendor_evidence:
       - "Zipline"
       - "NewStore Huddles"

@@ -13,7 +13,7 @@ last_audit: "2026-06-14"
 # Optimization), 6 capabilities, 5 vendors + 5 solutions, 13 masters, lifecycle states,
 # relationships incl. users + cross-domain to SMM/MA/REV-INTEL, aliases, 5 trigger_events,
 # 4 handoffs, business_function_domains (Marketing owner), 1 domain-grain system skill
-# (social-ads-system, id 464), 14 tools incl. ad-platform fetch tools, 3 personas + role_modules
+# (social-ads-system, id 464), 14 tools incl. ad-platform fetch tools, 3 personas + persona_modules
 # + process_raci. The build is agent-finished; only the open user decisions below remain.
 
 b2:

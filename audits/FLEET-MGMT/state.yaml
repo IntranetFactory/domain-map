@@ -44,7 +44,7 @@ b1b:
 
   - id: B1B-PHASE-P
     summary: "Persona / RACI layer for the multi-module domain (E1). DEFERRED."
-    finding: "FLEET-MGMT now has 4 full modules (incl. relocations) + 0 personas. Author domain_roles (Fleet Manager, Driver Operations Coordinator, Maintenance/Asset Manager, Compliance Officer), role_modules reach, process_raci, wire lifecycle.process_id. Author on explicit user go-ahead."
+    finding: "FLEET-MGMT now has 4 full modules (incl. relocations) + 0 personas. Author personas (Fleet Manager, Driver Operations Coordinator, Maintenance/Asset Manager, Compliance Officer), role_modules reach, process_raci, wire lifecycle.process_id. Author on explicit user go-ahead."
 
 b2:
   - id: B2-VEHICLE-INSPECTIONS-DVIR

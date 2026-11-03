@@ -6,7 +6,7 @@ last_audit: "2026-06-13"
 b1b:
   - id: B1B-M3
     summary: "Resolve business_capability_maps (248) canonical owner; relocate DMDO master row from APM to BPA-CAPABILITY-MAP (221) or accept APM as canonical."
-    finding: "business_capability_maps (248) has its single catalog-wide DMDO role='master' row on APM-PORTFOLIO-REGISTRY (module 103, APM domain, DMDO id 528). BPA modularized 2026-06-02 and assigned 248 as embedded_master/required on BPA-CAPABILITY-MAP (221), preserving M7 single-master. To make BPA canonical: DELETE DMDO 528, INSERT a master row for 248 on module 221, demote APM-103 to embedded_master or consumer, then relocate lifecycle states 673/674/675 (B1B-M4) and re-derive the BPA-prefixed publish permission. To keep APM canonical: leave 528 and the BPA embedded_master row as-is (current state), and DELETE BPA's legacy domain_data_objects master claim on 248."
+    finding: "business_capability_maps (248) has its single catalog-wide DMDO held_as='master' row on APM-PORTFOLIO-REGISTRY (module 103, APM domain, DMDO id 528). BPA modularized 2026-06-02 and assigned 248 as embedded_master/required on BPA-CAPABILITY-MAP (221), preserving M7 single-master. To make BPA canonical: DELETE DMDO 528, INSERT a master row for 248 on module 221, demote APM-103 to embedded_master or consumer, then relocate lifecycle states 673/674/675 (B1B-M4) and re-derive the BPA-prefixed publish permission. To keep APM canonical: leave 528 and the BPA embedded_master row as-is (current state), and DELETE BPA's legacy domain_data_objects master claim on 248."
     blocked_by:
       - type: user_decision
         ref: B2-CAPMAP-OWNER
@@ -29,7 +29,7 @@ b1b:
         workflow: "publish gate"
   - id: B1B-M5b
     summary: "Remove the legacy APM-103 realizations of capabilities 343 and 344 if B2-CAPMAP-OWNER resolves BPA as canonical."
-    finding: "On 2026-06-02 capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) were linked to BPA-CAPABILITY-MAP (221). They also retain their pre-existing realizations on APM-PORTFOLIO-REGISTRY (module 103) via domain_module_capabilities rows 190 and 191. Double-realization of 343/344 is intentional for now; DELETE DMC rows 190/191 only if B2-CAPMAP-OWNER resolves BPA as the canonical owner of capability mapping."
+    finding: "On 2026-06-02 capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) were related to BPA-CAPABILITY-MAP (221). They also retain their pre-existing realizations on APM-PORTFOLIO-REGISTRY (module 103) via domain_module_capabilities rows 190 and 191. Double-realization of 343/344 is intentional for now; DELETE DMC rows 190/191 only if B2-CAPMAP-OWNER resolves BPA as the canonical owner of capability mapping."
     blocked_by:
       - type: user_decision
         ref: B2-CAPMAP-OWNER
@@ -66,7 +66,7 @@ b2:
     summary: "Decide solution coverage split with the queued EA candidate."
     question: "How should the 4 BPA-and-EA solutions be coverage-split if EA promotes?"
     options:
-      - "Keep all 4 (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) on BPA as primary; re-link to EA when it lands."
+      - "Keep all 4 (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) on BPA as primary; re-relate to EA when it lands."
       - "Downgrade those 4 to coverage_level=secondary on BPA, create primary rows on EA at promotion time."
       - "Per-solution split (e.g. Signavio as BPA primary, ARIS as EA primary)."
     why: "Gated entirely on the EA candidate's promotion decision (B3-EA-PROMOTION). If EA stays queued, this item is moot."
@@ -77,7 +77,7 @@ b2:
       - "Author now (payload discovered_process_models or business_process_models depending on intent)."
       - "Defer to a PROC-MIN audit."
       - "Skip as overspecification."
-    why: "Discovered during pairwise BPA and PROC-MIN reconciliation. Not blocking; speculative additional cross-domain edge."
+    why: "Discovered during pairwise BPA and PROC-MIN reconciliation. Not blocking; speculative additional cross-domain relationship."
   - id: B2-B9D-OWN-1708
     summary: "Business Process Architecture: name an owner for \"Reengineer business processes and systems\" (no one is responsible for it today)"
     question: |

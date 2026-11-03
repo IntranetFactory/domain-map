@@ -21,7 +21,7 @@ a1:
 q2: For the five cross-domain relationships from RE-CRE payloads, can you confirm the target master records exist (and supply their ids), or should the Investment relationships wait?
 
 - a) Supply ids now for: investment property holdings (Investment), investment underwriting (Investment), payable invoices (Accounts Payable), real estate properties (Real Estate, id 344 exists), real estate transactions (Brokerage, id 353 exists).
-- b) Defer the two Investment edges until the Investment domain is audited, and wire only the masters that already exist.
+- b) Defer the two Investment relationships until the Investment domain is audited, and wire only the masters that already exist.
 
 Recommended: b. The Investment domain has not been audited under the current schema, so its target masters may not exist yet or may carry different names; wire what is confirmed and defer the rest.
 

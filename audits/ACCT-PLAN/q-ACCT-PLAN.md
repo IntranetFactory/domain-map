@@ -59,9 +59,9 @@ q5: How should a strategic key account be modeled?
 
 - a) A separate key-accounts master that references customers (Altify, Revegy shape).
 - b) Extra fields on the existing customers record (key-account tier plus assigned team), which needs cross-domain coordination with CRM (DemandFarm, Demandbase shape).
-- c) A junction record linking customers to key-account segments (a compromise).
+- c) A junction record relating customers to key-account segments (a compromise).
 
-Recommended: a. A separate master makes the strategic subset legible to the teams that filter on it (CSM, Sales Operations) and keeps the cross-domain edge clean. Pick (b) for the lower-touch shape that piggybacks on CRM.
+Recommended: a. A separate master makes the strategic subset legible to the teams that filter on it (CSM, Sales Operations) and keeps the cross-domain relationship clean. Pick (b) for the lower-touch shape that piggybacks on CRM.
 
 a5:
 

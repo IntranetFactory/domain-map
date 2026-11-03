@@ -24,10 +24,10 @@ b2:
     question: |
       Confirm option (a): SOP-MGMT masters procedures, process_documents, procedure_steps,
       document_revisions, document_assignments, acknowledgment_records across two core full modules, and
-      links knowledge_articles (KMS), policies (GRC), document_versions (ECM) as consumer + optional
-      cross-links that light up only when those domains are co-installed.
+      relationships knowledge_articles (KMS), policies (GRC), document_versions (ECM) as consumer + optional
+      cross-relationships that light up only when those domains are co-installed.
     options:
-      - "Bounded + consumer/optional (recommended): the distinctive operator-facing set is mastered here; KMS/GRC/ECM records are consumer + optional enrichment links; standalone SOP-MGMT is fully viable without them."
+      - "Bounded + consumer/optional (recommended): the distinctive operator-facing set is mastered here; KMS/GRC/ECM records are consumer + optional enrichment relationships; standalone SOP-MGMT is fully viable without them."
       - "Embedded_master the adjacent records: carry local shells of knowledge_articles / policies / document_versions, demote to canonical master when KMS/GRC/ECM present."
       - "Broad re-master: keep independent copies of knowledge articles, policies, and a document repository."
     evidence: |
@@ -37,7 +37,7 @@ b2:
       publish -> assign -> acknowledge -> periodic review) runs entirely on records SOP-MGMT masters
       itself. Flagships SweetProcess, Process Street, Trainual, Whale, Dozuki ship and sell without a
       generic knowledge-article repository or a GRC policy register. The adjacent records are enrichment
-      only when co-installed: a procedure may cross-link to a related KB article (KMS) or to the policy it
+      only when co-installed: a procedure may cross-relationship to a related KB article (KMS) or to the policy it
       implements (GRC), and may defer heavyweight storage to ECM document_versions. None are required to
       operate, so the role is consumer + OPTIONAL (satisfies M9 self-containment by degrading gracefully),
       NOT embedded_master (no local copy carried) and NOT consumer + required (that would break standalone

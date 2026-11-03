@@ -10,7 +10,7 @@
 // Implemented on the pure B-band logic (scripts/lib/health/logic_b.ts, ported from
 // audit_backlog.ts, phase_p_triage.ts, validate_cross_domain.ts q1/q2/q3/q5 and
 // be_spelling_sweep.ts): B1, B2, B3, B5, B8, B9, B9b, B10 (report-only, at most warn), B10b, B12,
-// B13, B15, B16, and the mechanical half of B6, B7, B11, B14 (their judgment half is a second,
+// B13, B15, B16, and the mechanical half of B6, B7, B7c, B11, B14 (their judgment half is a second,
 // `agent` finding). This file only gathers the domain's rows; every rule lives in logic_b.ts.
 // Row types per check are documented there and in each finding's detail.
 
@@ -18,47 +18,39 @@ import {
   checkDuplicateHandoffs,
   checkEventStates,
   checkRelationshipShape,
-  checkUserEdges,
-  isUserEdge,
+  checkUserRelationships,
+  isUserRelationship,
 } from "../catalog_invariants.ts";
-import { agentOnly, delegated, fromInvariants, judgment, masterLifecycle } from "./helpers.ts";
+import { agentOnly, delegated, fromInvariants, judgment, masterLifecycle, personaLabel } from "./helpers.ts";
 import {
   checkAliasPresence,
   checkBareWordNaming,
   checkBritishSpelling,
+  type SpellingScope,
   checkConditionalMasters,
-  checkCrossDomainEdges,
+  checkCrossDomainRelationships,
   checkDependencyOwners,
   checkEntityTypeClassified,
   checkHandoffModuleAttribution,
   checkInboundCoverage,
-  checkIntraDomainEdges,
+  checkIntraDomainRelationships,
   checkIntraDomainHandoffs,
   checkLifecycleCoverage,
   checkMasterFloor,
   checkMasterLabels,
   checkOutboundEvents,
   checkPersonalContentClass,
-  checkUserEdgePresence,
+  checkPersonaRelationships,
+  checkUserRelationshipPresence,
   type MasterRow,
 } from "./logic_b.ts";
+import { buildSpellingColumns, DOMAIN_MAP_MODULE_ID, type SpellingColumns } from "../british_spelling.ts";
 import type { Check, HealthCtx } from "./types.ts";
 
 const TRIGGER_EVENTS_PATH = "/trigger_events?select=id,event_name,data_object_id,event_category,from_state,to_state&order=id.asc&limit=100000";
 
-// Catalog-wide text selects (memoized by ctx.query, so --all fetches each once). B3 reads
-// naming_authority_rationale from the data_objects one; the rest feed the B16 spelling scan.
+// Catalog-wide text select (memoized by ctx.query, so --all fetches it once). B3 reads naming_authority_rationale from it.
 const DATA_OBJECTS_TEXT_PATH = "/data_objects?select=id,data_object_name,singular_label,plural_label,description,naming_authority_rationale,notes&order=id.asc&limit=100000";
-const DOMAINS_TEXT_PATH = "/domains?select=id,domain_code,domain_name,description,business_logic,catalog_tagline,catalog_description,notes&order=id.asc&limit=100000";
-const MODULES_TEXT_PATH = "/domain_modules?select=id,domain_id,domain_module_code,domain_module_name,description,catalog_tagline,catalog_description,specification_requirements&order=id.asc&limit=100000";
-const CAPABILITIES_TEXT_PATH = "/capabilities?select=id,capability_code,capability_name,description&order=id.asc&limit=100000";
-const CAPABILITY_DOMAINS_PATH = "/capability_domains?select=capability_id,domain_id&order=id.asc&limit=100000";
-const TRIGGER_EVENTS_TEXT_PATH = "/trigger_events?select=id,data_object_id,event_name,description,from_state,to_state&order=id.asc&limit=100000";
-const ALIASES_TEXT_PATH = "/data_object_aliases?select=id,data_object_id,alias_name,notes&order=id.asc&limit=100000";
-const LIFECYCLE_TEXT_PATH = "/data_object_lifecycle_states?select=id,data_object_id,state_name,description,notes,permission_verb_override&order=id.asc&limit=100000";
-const SKILLS_TEXT_PATH = "/skills?select=id,domain_id,skill_name,description,trigger_keywords&order=id.asc&limit=100000";
-const TOOLS_TEXT_PATH = "/tools?select=id,tool_name,description&order=id.asc&limit=100000";
-const DOMAIN_MODULE_TOOLS_PATH = "/domain_module_tools?select=domain_module_id,tool_id&order=id.asc&limit=100000";
 
 // Lookups derived from a catalog-wide array, built once per array (so once per --all run).
 const derived = new WeakMap<object, Map<string, unknown>>();
@@ -101,38 +93,87 @@ function masterSourcedRelationships(ctx: HealthCtx): any[] {
   return ctx.all.relationships.filter((r: any) => ctx.masterSet.has(r.data_object_id as number));
 }
 
-// users edges touching a master, either direction (SKILL.md B7 query + its symmetric half).
-function masterUserEdges(ctx: HealthCtx): any[] {
+// relationships to users touching a master, either direction (SKILL.md B7 query + its symmetric half).
+function masterUserRelationships(ctx: HealthCtx): any[] {
   return ctx.all.relationships.filter((r: any) => {
-    if (!isUserEdge(r, ctx.usersId)) return false;
+    if (!isUserRelationship(r, ctx.usersId)) return false;
     const other = r.data_object_id === ctx.usersId ? r.related_data_object_id : r.data_object_id;
     return ctx.masterSet.has(other as number);
   });
 }
 
-// Every row of the domain that B16 scans, per table. "This domain's rows" = the domain row, its
-// primary modules, its masters (and their events, lifecycle states, aliases), its linked
-// capabilities, its outbound handoffs, the personas reaching its modules, its skills, and the
-// tools its modules use. Shared business_functions are left to their owner (C band).
-async function spellingScope(ctx: HealthCtx): Promise<{ table: string; rows: Record<string, unknown>[] }[]> {
-  const q = ctx.query;
+// B16 reads its tables and columns from /entities and /fields, never a hard-coded list, so a new column is scanned the
+// day it exists (classification: scripts/lib/british_spelling.ts). Memoized by ctx.query, so --all fetches each once.
+async function spellingColumns(ctx: HealthCtx): Promise<{ tables: string[]; columns: SpellingColumns }> {
+  const entities = await ctx.query(`/entities?module_id=eq.${DOMAIN_MAP_MODULE_ID}&select=table_name,computed_fields&order=table_name&limit=1000`);
+  const tables = entities.map((e: any) => e.table_name as string);
+  const fields = await ctx.query(`/fields?table_name=in.(${tables.join(",")})&select=table_name,field_name,format,ctype&limit=100000`);
+  return { tables, columns: once(entities, "spellingColumns", () => buildSpellingColumns(entities, fields)) };
+}
+
+// Every row of the domain that B16 scans, per table: the domain row and what hangs off it, its primary modules and
+// their junctions, its masters (and their events, lifecycle states, aliases and relationships), its related
+// capabilities, its outbound handoffs, the personas reaching its modules, its skills, the tools its modules use, its
+// solutions and their vendors. Tables no domain can claim are scanned whole and only warn.
+async function spellingScope(ctx: HealthCtx): Promise<{ scope: SpellingScope[]; catalogWide: SpellingScope[]; columns: SpellingColumns }> {
+  const { tables, columns } = await spellingColumns(ctx);
+  // Text columns plus the foreign keys the filters below read.
+  const textRows = (table: string, keys: string[] = []): Promise<any[]> => {
+    const cols = columns[table];
+    return ctx.query(`/${table}?select=${[...new Set(["id", ...keys, ...cols.prose, ...cols.identifier])].join(",")}&order=id.asc&limit=100000`);
+  };
+  const byDomain = (r: any) => r.domain_id === ctx.domainId;
+  const byModule = (r: any) => ctx.moduleIdSet.has(r.domain_module_id);
   const inMasters = (r: any) => ctx.masterSet.has(r.data_object_id as number);
-  const capIds = new Set((await q(CAPABILITY_DOMAINS_PATH)).filter((r: any) => r.domain_id === ctx.domainId).map((r: any) => r.capability_id));
-  const roleIds = new Set(ctx.moduleIds.flatMap((id) => (ctx.all.roleModulesByModuleId.get(id) ?? []).map((r: any) => r.role_id)));
-  const toolIds = new Set((await q(DOMAIN_MODULE_TOOLS_PATH)).filter((r: any) => ctx.moduleIdSet.has(r.domain_module_id)).map((r: any) => r.tool_id));
-  return [
-    { table: "domains", rows: (await q(DOMAINS_TEXT_PATH)).filter((d: any) => d.id === ctx.domainId) },
-    { table: "domain_modules", rows: (await q(MODULES_TEXT_PATH)).filter((m: any) => ctx.moduleIdSet.has(m.id)) },
-    { table: "data_objects", rows: (await q(DATA_OBJECTS_TEXT_PATH)).filter((d: any) => ctx.masterSet.has(d.id)) },
-    { table: "capabilities", rows: (await q(CAPABILITIES_TEXT_PATH)).filter((c: any) => capIds.has(c.id)) },
-    { table: "handoffs", rows: ctx.all.handoffs.filter((h: any) => h.source_domain_id === ctx.domainId) },
-    { table: "trigger_events", rows: (await q(TRIGGER_EVENTS_TEXT_PATH)).filter(inMasters) },
-    { table: "data_object_aliases", rows: (await q(ALIASES_TEXT_PATH)).filter(inMasters) },
-    { table: "data_object_lifecycle_states", rows: (await q(LIFECYCLE_TEXT_PATH)).filter(inMasters) },
-    { table: "domain_roles", rows: ctx.all.domainRoles.filter((r: any) => roleIds.has(r.id)) },
-    { table: "skills", rows: (await q(SKILLS_TEXT_PATH)).filter((s: any) => s.domain_id === ctx.domainId) },
-    { table: "tools", rows: (await q(TOOLS_TEXT_PATH)).filter((t: any) => toolIds.has(t.id)) },
+
+  const capabilityDomains = await textRows("capability_domains", ["capability_id", "domain_id"]);
+  const capIds = new Set(capabilityDomains.filter(byDomain).map((r: any) => r.capability_id));
+  const personaModules = await textRows("persona_modules", ["persona_id", "domain_module_id"]);
+  const personaIds = new Set(personaModules.filter(byModule).map((r: any) => r.persona_id));
+  const moduleTools = await textRows("domain_module_tools", ["domain_module_id", "tool_id"]);
+  const toolIds = new Set(moduleTools.filter(byModule).map((r: any) => r.tool_id));
+  const handoffs = (await textRows("handoffs", ["source_domain_id"])).filter((h: any) => h.source_domain_id === ctx.domainId);
+  const handoffIds = new Set(handoffs.map((h: any) => h.id));
+  const solutionDomains = await textRows("solution_domains", ["solution_id", "domain_id"]);
+  const solutionIds = new Set(solutionDomains.filter(byDomain).map((r: any) => r.solution_id));
+  const solutions = (await textRows("solutions", ["vendor_id"])).filter((s: any) => solutionIds.has(s.id));
+  const vendorIds = new Set(solutions.map((s: any) => s.vendor_id));
+
+  const scope: SpellingScope[] = [
+    { table: "domains", rows: (await textRows("domains")).filter((d: any) => d.id === ctx.domainId) },
+    { table: "domain_aliases", rows: (await textRows("domain_aliases", ["domain_id"])).filter(byDomain) },
+    { table: "domain_data_objects", rows: (await textRows("domain_data_objects", ["domain_id"])).filter(byDomain) },
+    { table: "domain_regulations", rows: (await textRows("domain_regulations", ["domain_id"])).filter(byDomain) },
+    { table: "business_function_domains", rows: (await textRows("business_function_domains", ["domain_id"])).filter(byDomain) },
+    { table: "capability_domains", rows: capabilityDomains.filter(byDomain) },
+    { table: "domain_modules", rows: (await textRows("domain_modules")).filter((m: any) => ctx.moduleIdSet.has(m.id)) },
+    { table: "domain_module_capabilities", rows: (await textRows("domain_module_capabilities", ["domain_module_id"])).filter(byModule) },
+    { table: "domain_module_data_objects", rows: (await textRows("domain_module_data_objects", ["domain_module_id"])).filter(byModule) },
+    { table: "domain_module_tools", rows: moduleTools.filter(byModule) },
+    { table: "persona_modules", rows: personaModules.filter(byModule) },
+    { table: "data_objects", rows: (await textRows("data_objects")).filter((d: any) => ctx.masterSet.has(d.id)) },
+    { table: "data_object_relationships", rows: (await textRows("data_object_relationships", ["data_object_id"])).filter(inMasters) },
+    { table: "trigger_events", rows: (await textRows("trigger_events", ["data_object_id"])).filter(inMasters) },
+    { table: "data_object_aliases", rows: (await textRows("data_object_aliases", ["data_object_id"])).filter(inMasters) },
+    { table: "data_object_lifecycle_states", rows: (await textRows("data_object_lifecycle_states", ["data_object_id"])).filter(inMasters) },
+    { table: "capabilities", rows: (await textRows("capabilities")).filter((r: any) => capIds.has(r.id)) },
+    { table: "business_function_capabilities", rows: (await textRows("business_function_capabilities", ["capability_id"])).filter((r: any) => capIds.has(r.capability_id)) },
+    { table: "handoffs", rows: handoffs },
+    { table: "handoff_processes", rows: (await textRows("handoff_processes", ["handoff_id"])).filter((r: any) => handoffIds.has(r.handoff_id)) },
+    { table: "personas", rows: (await textRows("personas")).filter((r: any) => personaIds.has(r.id)) },
+    { table: "skills", rows: (await textRows("skills", ["domain_id"])).filter(byDomain) },
+    { table: "tools", rows: (await textRows("tools")).filter((t: any) => toolIds.has(t.id)) },
+    { table: "tool_solutions", rows: (await textRows("tool_solutions", ["tool_id"])).filter((r: any) => toolIds.has(r.tool_id)) },
+    { table: "solution_domains", rows: solutionDomains.filter(byDomain) },
+    { table: "solutions", rows: solutions },
+    { table: "vendors", rows: (await textRows("vendors")).filter((v: any) => vendorIds.has(v.id)) },
   ];
+  // Whatever no domain can claim is scanned whole: industries, jurisdictions, regulations and so on, including any table
+  // added to the module later. Schema metadata and rows no domain reaches are covered by be_spelling_sweep.ts --check.
+  const claimed = new Set(scope.map((s) => s.table));
+  const catalogWide: SpellingScope[] = [];
+  for (const table of tables) if (!claimed.has(table)) catalogWide.push({ table, rows: await textRows(table) });
+  return { scope, catalogWide, columns };
 }
 
 export const B_CHECKS: Check[] = [
@@ -146,7 +187,7 @@ export const B_CHECKS: Check[] = [
         domainKind: ctx.domain.domain_kind,
         moduleCount: ctx.modules.length,
         masterCount: ctx.masters.length,
-        overlayRowCount: ctx.dmdo.filter((r: any) => r.role === "consumer" || r.role === "derived" || r.role === "embedded_master").length,
+        overlayRowCount: ctx.dmdo.filter((r: any) => r.held_as === "consumer" || r.held_as === "derived" || r.held_as === "embedded_master").length,
       }),
   },
   {
@@ -192,10 +233,10 @@ export const B_CHECKS: Check[] = [
     kind: "mechanical+agent",
     title: "intra-domain relationships populated",
     run: async (ctx) => [
-      ...checkIntraDomainEdges(ctx.masters, ctx.all.relationships, { nameOf: ctx.doName }),
+      ...checkIntraDomainRelationships(ctx.masters, ctx.all.relationships, { nameOf: ctx.doName }),
       judgment(
         "B6",
-        "every master in the domain's primary workflow has >= 1 edge to another in-domain master; an isolated master is allowed only when a data_object_relationships.notes entry justifies it",
+        "every master in the domain's primary workflow has >= 1 relationship to another in-domain master; an isolated master is allowed only when a data_object_relationships.notes entry justifies it",
       ),
     ],
   },
@@ -215,12 +256,12 @@ export const B_CHECKS: Check[] = [
     id: "B7",
     band: "B",
     kind: "mechanical+agent",
-    title: "users edges populated",
+    title: "relationships to users populated",
     run: async (ctx) => [
-      ...checkUserEdgePresence(masterRows(ctx), masterUserEdges(ctx), ctx.usersId, { nameOf: ctx.doName }),
+      ...checkUserRelationshipPresence(masterRows(ctx), masterUserRelationships(ctx), ctx.usersId, { nameOf: ctx.doName }),
       judgment(
         "B7",
-        "which masters carry a user-typed actor (assignee, creator, approver, panelist, owner, hiring_manager, recruiter, author); each needs >= 1 users edge (Rule #10)",
+        "which masters carry a user-typed person (assignee, creator, approver, panelist, owner, hiring_manager, recruiter, author); each needs >= 1 relationship to users (Rule #10)",
       ),
     ],
   },
@@ -228,13 +269,34 @@ export const B_CHECKS: Check[] = [
     id: "B7b",
     band: "B",
     kind: "mechanical",
-    title: "users edge shape (one person per reference, one role per edge)",
+    title: "shape of relationships to users (one person per reference, one kind of person per relationship)",
     run: async (ctx) => {
-      const rels = masterUserEdges(ctx);
-      const found = checkUserEdges(rels, ctx.usersId, { nameOf: ctx.doName });
-      if (found.length === 0) return [{ id: "B7b", result: "pass", detail: `${rels.length} users edges checked (rows = relationship ids)` }];
+      const rels = masterUserRelationships(ctx);
+      const found = checkUserRelationships(rels, ctx.usersId, { nameOf: ctx.doName });
+      if (found.length === 0) return [{ id: "B7b", result: "pass", detail: `${rels.length} relationships to users checked (rows = relationship ids)` }];
       return fromInvariants("B7b", found);
     },
+  },
+  {
+    id: "B7c",
+    band: "B",
+    kind: "mechanical+agent",
+    title: "row-scoped masters: each Responsible and Accountable persona has a relationship to users",
+    run: async (ctx) => [
+      ...checkPersonaRelationships({
+        masters: masterRows(ctx),
+        rels: masterUserRelationships(ctx),
+        states: masterLifecycle(ctx),
+        raci: ctx.all.processRaci,
+        usersId: ctx.usersId,
+        nameOf: ctx.doName,
+        personaLabel: (id) => personaLabel(ctx, id),
+      }),
+      judgment(
+        "B7c",
+        "for each entity and persona the mechanical half warns about, read domain_modules.specification_requirements: a view_all grant named there for that persona satisfies the check, and the script cannot read that prose",
+      ),
+    ],
   },
   {
     id: "B8",
@@ -242,7 +304,7 @@ export const B_CHECKS: Check[] = [
     kind: "mechanical",
     title: "cross-domain relationships (outbound only)",
     run: async (ctx) =>
-      checkCrossDomainEdges({
+      checkCrossDomainRelationships({
         domainId: ctx.domainId,
         masterIds: ctx.masterSet,
         handoffs: ctx.all.handoffs,
@@ -413,7 +475,10 @@ export const B_CHECKS: Check[] = [
     id: "B16",
     band: "B",
     kind: "mechanical",
-    title: "no British-English spellings",
-    run: async (ctx) => checkBritishSpelling(await spellingScope(ctx)),
+    title: "no British spellings",
+    run: async (ctx) => {
+      const { scope, catalogWide, columns } = await spellingScope(ctx);
+      return checkBritishSpelling(scope, { catalogWide, columns });
+    },
   },
 ];

@@ -38,7 +38,7 @@ b1b:
   - id: B1B-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains awaiting a build."
     finding: "Live triage re-confirmed: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / lifecycle / module-FK work applies. The build itself is a user decision (modularization shape, B2-2)."
-    action: "On B2-2 decision, run Phase A then M then B then (per the post-2026-06-06 skill model) ONE domain-grain system skill that derives its toolset from `domain_module_tools`. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. The 7 masters now carry `entity_type`, so B12 lifecycle authoring is ready to ride the build for the 6 `operational_workflow` masters."
+    action: "On B2-2 decision, run Phase A then M then B then (per the post-2026-06-06 skill model) ONE domain-grain system skill that derives its toolset from `domain_module_tools`. If multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. The 7 masters now carry `entity_type`, so B12 lifecycle authoring is ready to ride the build for the 6 `operational_workflow` masters."
     blocked_by:
       - {type: user_decision, ref: B2-2}
   - id: B1B-B9D-REALIZE
@@ -93,22 +93,22 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S2, reason: "lifecycle states need `domain_module_id` per Rule #14 permission materialization"}
       - {type: user_decision, ref: B2-5, reason: "pattern flag flips ride the same load"}
     affected_masters:
-      - {data_object_id: 654, name: telco_service_orders, entity_type: operational_workflow, workflow: "submitted -> validated -> in_provisioning -> completed | cancelled"}
-      - {data_object_id: 655, name: telco_subscriptions, entity_type: operational_workflow, workflow: "pending -> active -> suspended -> cancelled"}
+      - {data_object_id: 654, name: telco_service_orders, entity_type: operational_workflow, workflow: "submitted -> validated -> in_provisioning -> completed | canceled"}
+      - {data_object_id: 655, name: telco_subscriptions, entity_type: operational_workflow, workflow: "pending -> active -> suspended -> canceled"}
       - {data_object_id: 656, name: service_provisioning_workflows, entity_type: operational_workflow, workflow: "queued -> executing -> completed | failed"}
       - {data_object_id: 657, name: network_inventory_records, entity_type: operational_workflow, workflow: "planned -> deployed -> decommissioned"}
       - {data_object_id: 658, name: telco_customer_bills, entity_type: operational_workflow, workflow: "draft -> issued -> paid | disputed | written_off"}
       - {data_object_id: 659, name: service_trouble_tickets, entity_type: operational_workflow, workflow: "opened -> triaged -> in_repair -> resolved -> closed"}
 
   - id: B1B-S7
-    summary: "Author 7 intra-domain `data_object_relationships` edges between the 7 masters (B6)."
-    finding: "B6 fails: zero intra-domain master-to-master edges. Expected: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`."
+    summary: "Author 7 intra-domain `data_object_relationships` rows between the 7 masters (B6)."
+    finding: "B6 fails: zero intra-domain master-to-master relationships. Expected: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`."
     blocked_by:
       - {type: user_decision, ref: B2-2, reason: "verb tuples (verb, inverse_verb, type, kind, owner_side, is_required) are not pre-specified in the audit; confirm before bulk load"}
 
   - id: B1B-S8
-    summary: "Author 7 `users` edges to the 7 masters (Rule #10, B7)."
-    finding: "B7 fails: zero `users` (id 748) edges on any of the 7 masters. Each carries at least one user-typed actor: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian."
+    summary: "Author 7 `users` relationships to the 7 masters (Rule #10, B7)."
+    finding: "B7 fails: zero `users` (id 748) relationships on any of the 7 masters. Each carries at least one user-typed actor: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian."
     blocked_by:
       - {type: user_decision, ref: B2-2, reason: "exact `(verb, inverse_verb, type, kind, owner_side, is_required)` per master not pre-specified; needs confirmation"}
 

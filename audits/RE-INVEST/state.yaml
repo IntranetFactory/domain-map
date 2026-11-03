@@ -14,10 +14,10 @@ b1a:
 
 b1b:
   - id: B1B-B6
-    summary: "Author intra-domain master-master data_object_relationships (audit lists 7 candidate edges as prose only)."
+    summary: "Author intra-domain master-master data_object_relationships (audit lists 7 candidate relationships as prose only)."
     finding: >
       Zero intra-domain master-master data_object_relationships exist among the masters 366, 367,
-      368, 369, 727, 728, 729. Candidate edges: investment_funds owns investment_properties, issues
+      368, 369, 727, 728, 729. Candidate relationships: investment_funds owns investment_properties, issues
       capital_calls, declares fund_distributions, subscribed_by limited_partners, accrues
       asset_management_fees; fund_distributions offsets capital_calls; investment_properties
       revalued_by property_valuations. Tuples are narrated as prose, not as exact
@@ -103,11 +103,11 @@ b1b:
     finding: >
       The 2026-06-02 modularization assigned capital_calls (367) and fund_distributions (368) as
       embedded_master at the module grain (FUND-ADMIN keeps catalog mastery). The pre-modular
-      domain_data_objects rows 597 / 598 still read role='master' on RE-INVEST, which a naive
+      domain_data_objects rows 597 / 598 still read held_as='master' on RE-INVEST, which a naive
       DDO-reading auditor would treat as a competing catalog master. This is the same rollup-drift
       class as ATS B2-ROLLUP-POLICY.
     action: >
-      Either PATCH rows 597 / 598 to role='embedded_master' (or DELETE if the DDO rollup is being
+      Either PATCH rows 597 / 598 to held_as='embedded_master' (or DELETE if the DDO rollup is being
       deprecated catalog-wide), tracked jointly with FUND-ADMIN B1B-RE-INVEST-M7. Defer to the
       catalog-wide rollup policy decision (ATS B2-ROLLUP-POLICY).
     blocked_by:

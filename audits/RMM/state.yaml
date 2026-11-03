@@ -23,7 +23,7 @@ b1b:
     finding: |
       B9d (2026-06-13, both directions) classified outbound handoff 147 (RMM
       network_device.discovered -> DISCOVERY, PCF 8.7.7.1 "Manage infrastructure
-      configuration") as UNOWNED: the carried entity discovered_devices has no role='master'
+      configuration") as UNOWNED: the carried entity discovered_devices has no held_as='master'
       row in any domain_module_data_objects across the catalog, so the payload cannot be
       routed to an owner. RMM is the sender, so this is surfaced here (do not drop). The fix
       is for DISCOVERY to master discovered_devices (then it routes as a normal ORPHAN to the

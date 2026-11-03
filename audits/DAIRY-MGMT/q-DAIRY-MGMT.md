@@ -5,7 +5,7 @@ Run the operational record-keeping for a dairy herd, from individual cows throug
 
 ---
 
-q1: For lactation records, which actor verb should link them to users (the other seven masters already carry a users edge, and this is the only one without)?
+q1: For lactation records, which actor verb should relate them to users (the other seven masters already carry a relationship to `users`, and this is the only one without)?
 
 - a) "is recorded by" (treat it like milkings, attributed to the operator who records it).
 - b) "is opened by" (system attribution, since a lactation cycle opens from cow state rather than a discrete operator action).
@@ -59,12 +59,12 @@ a5:
 
 ---
 
-q6: Should you load the dairy regulations now (FDA Grade A Pasteurized Milk Ordinance, the FARM animal-care program, DHIA testing standards, and state agriculture dairy-inspection rules), given the domain currently has none linked?
+q6: Should you load the dairy regulations now (FDA Grade A Pasteurized Milk Ordinance, the FARM animal-care program, DHIA testing standards, and state agriculture dairy-inspection rules), given the domain currently has none related?
 
-- a) Load them now as new regulation rows plus domain links.
+- a) Load them now as new regulation rows plus domain relationships.
 - b) Defer until a specific capability needs them.
 
-Recommended: a. This is a heavily regulated market and the links are currently empty, so loading the headline rules closes a real gap; defer only if you would rather wait for the bulk-tank and somatic-cell-count entities to land first.
+Recommended: a. This is a heavily regulated market and the relationships are currently empty, so loading the headline rules closes a real gap; defer only if you would rather wait for the bulk-tank and somatic-cell-count entities to land first.
 
 a6:
 

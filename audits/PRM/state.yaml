@@ -40,7 +40,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live re-verify 2026-06-07: domain 96 has 0 domain_modules rows (M1 fail), 0 capability_domains, 0 masters, 0 solution_domains, so it is not deployable today. It must be built before any persona / RACI work applies. The catalog UX fields (tagline + description) are now populated; business_logic and the whole structural surface remain unbuilt."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Shape gated on b2 (B2-M1 module count + the four carve-out calls B2-T1 / B2-T2 / B2-S1 / B2-S2)."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Shape gated on b2 (B2-M1 module count + the four carve-out calls B2-T1 / B2-T2 / B2-S1 / B2-S2)."
     blocked_by:
       - {type: user_decision, ref: B2-M1}
       - {type: user_decision, ref: B2-T1}
@@ -105,7 +105,7 @@ b1b:
   - id: B1B-V1
     summary: "Author channel_partners master (data_objects + DMDO master + required on PRM-PARTNER-PORTAL or equivalent + lifecycle states + aliases + relationships)."
     finding: "B1 FAIL. PRM masters zero data_objects. channel_partners is the headline master across 6 of 6 flagship PRM vendors (Impartner, Zift, ZINFI, Salesforce Partner Cloud, Oracle PRM, Channeltivity). Apply Rule #9 naming arbitration (channel_partners vs partners): prefixed channel_partners is the safer choice because partners would collide with any future generic master."
-    action: "After B1B-M1 lands: INSERT data_objects row (channel_partners, plural_label='Channel Partners', singular_label='Channel Partner'), DMDO row (role=master, necessity=required) on the PRM-PARTNER-PORTAL module (or whichever module from B2-M1 owns partner orgs), lifecycle states (recruited, in_onboarding, active, suspended, terminated), data_object_aliases (resellers, distributors, alliance_partners, channel_partners_b2b), data_object_relationships (channel_partners has_many partner_users, channel_partners enrolled_in partner_programs, plus a users edge per Rule #10)."
+    action: "After B1B-M1 lands: INSERT data_objects row (channel_partners, plural_label='Channel Partners', singular_label='Channel Partner'), DMDO row (held_as=master, necessity=required) on the PRM-PARTNER-PORTAL module (or whichever module from B2-M1 owns partner orgs), lifecycle states (recruited, in_onboarding, active, suspended, terminated), data_object_aliases (resellers, distributors, alliance_partners, channel_partners_b2b), data_object_relationships (channel_partners has_many partner_users, channel_partners enrolled_in partner_programs, plus a relationship to users per Rule #10)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
     affected_entities:
@@ -126,7 +126,7 @@ b1b:
   - id: B1B-V2
     summary: "Author deal_registrations master (data_objects + DMDO + lifecycle + relationships + workflow-gate permissions)."
     finding: "B1 FAIL. deal_registrations is the operationally-load-bearing workflow across 6 of 6 flagship PRM vendors. Anchors the PRM-DEAL-REGISTRATION module."
-    action: "After B1B-M1 lands: INSERT data_objects row (deal_registrations), DMDO master + required on PRM-DEAL-REGISTRATION, lifecycle states (submitted, in_review, approved, rejected, expired, converted), trigger_events (deal_registration.submitted, deal_registration.approved, deal_registration.rejected, deal_registration.expired), workflow-gate permissions (submit_deal_registration, approve_deal_registration, reject_deal_registration), data_object_relationships (deal_registrations submitted_by channel_partners, deal_registrations spawns crm_opportunities as cross-domain edge to CRM)."
+    action: "After B1B-M1 lands: INSERT data_objects row (deal_registrations), DMDO master + required on PRM-DEAL-REGISTRATION, lifecycle states (submitted, in_review, approved, rejected, expired, converted), trigger_events (deal_registration.submitted, deal_registration.approved, deal_registration.rejected, deal_registration.expired), workflow-gate permissions (submit_deal_registration, approve_deal_registration, reject_deal_registration), data_object_relationships (deal_registrations submitted_by channel_partners, deal_registrations spawns crm_opportunities as cross-domain relationship to CRM)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
     affected_entities:

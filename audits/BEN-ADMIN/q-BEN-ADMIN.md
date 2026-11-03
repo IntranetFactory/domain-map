@@ -17,7 +17,7 @@ a1:
 
 ---
 
-q2: The enrollment module lists HR cases (owned by the HR service-desk domain) as a hard, required dependency, but nothing structurally connects them and the escalation handoff already captures the link. How should the dependency be set?
+q2: The enrollment module lists HR cases (owned by the HR service-desk domain) as a hard, required dependency, but nothing structurally relates them and the escalation handoff already captures the relationship. How should the dependency be set?
 
 - a) Downgrade it to optional, so the enrollment module still works without the HR service-desk domain deployed but can read cases when present.
 - b) Remove the dependency entirely and rely on the existing escalation handoff and relationship.

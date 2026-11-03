@@ -12,7 +12,7 @@
 - **Bucket 2 (surface-for-user, judgment):** 7 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 9 items.
 
-**Neighbor discovery** (ranked by edge weight: outbound + inbound + DMDO touch points + cross-relationships):
+**Neighbor discovery** (ranked by relationship weight: outbound + inbound + DMDO touch points + cross-relationships):
 
 | Neighbor | Out | In | DMDO touch | Weight | Pass shape |
 |---|---|---|---|---|---|
@@ -92,9 +92,9 @@ H1 is a single Bucket 1 item even though it proposes ~70 row inserts. Counts as 
 | 375 | HCM-CORE-WORKER → IGA | `employee.promoted` | Manage user access privileges (subprocess of 10566) | confident L4 |
 | 378 | HCM-CORE-WORKER → IGA | `employment_event.recorded` | Manage user access privileges (subprocess of 10566) | confident L4 |
 | 382 | HCM-CORE-WORKER → IGA | `employment_contract.expired` | Deprovision access (subprocess of 10566) | confident L4 |
-| 389 | HCM-ORG-POSITIONS → IGA | `org_unit.created` | Manage organisational changes (10519 L4) | medium |
-| 391 | HCM-ORG-POSITIONS → IGA | `org_unit.merged` | Manage organisational changes (10519 L4) | medium |
-| 392 | HCM-ORG-POSITIONS → IGA | `org_unit.disbanded` | Manage organisational changes (10519 L4) | medium |
+| 389 | HCM-ORG-POSITIONS → IGA | `org_unit.created` | Manage organizational changes (10519 L4) | medium |
+| 391 | HCM-ORG-POSITIONS → IGA | `org_unit.merged` | Manage organizational changes (10519 L4) | medium |
+| 392 | HCM-ORG-POSITIONS → IGA | `org_unit.disbanded` | Manage organizational changes (10519 L4) | medium |
 | 11 | HCM-CORE-WORKER → SWP | `headcount.actuals_updated` | Manage workforce planning (10532 L3) | confident L3 |
 | 21 | HCM-CORE-WORKER → PA | `employment_event.recorded` | Manage workforce metrics (10544 L3) | confident L3 |
 | 34 | HCM-CORE-WORKER → ITAM | `employee.terminated` | Manage IT assets (subprocess of 10720 Manage IT) | medium L4 |
@@ -128,9 +128,9 @@ H1 is a single Bucket 1 item even though it proposes ~70 row inserts. Counts as 
 | 1185 | HCM-ORG-POSITIONS → ATS | `job_profile.approved` | Recruit employees (10539 L3) | confident L3 |
 | 1186 | HCM-ORG-POSITIONS → ATS | `job_profile.activated` | Recruit employees (10539 L3) | confident L3 |
 | 1187 | HCM-ORG-POSITIONS → ATS | `job_profile.retired` | Recruit employees (10539 L3) | confident L3 |
-| 1188 | HCM-ORG-POSITIONS → ATS | `org_unit.activated` | Manage organisational changes (10519 L4) | medium |
-| 1189 | HCM-ORG-POSITIONS → ATS | `org_unit.reorganized` | Manage organisational changes (10519 L4) | medium |
-| 1190 | HCM-ORG-POSITIONS → ATS | `org_unit.closed` | Manage organisational changes (10519 L4) | medium |
+| 1188 | HCM-ORG-POSITIONS → ATS | `org_unit.activated` | Manage organizational changes (10519 L4) | medium |
+| 1189 | HCM-ORG-POSITIONS → ATS | `org_unit.reorganized` | Manage organizational changes (10519 L4) | medium |
+| 1190 | HCM-ORG-POSITIONS → ATS | `org_unit.closed` | Manage organizational changes (10519 L4) | medium |
 | 385 | HCM-ORG-POSITIONS → COMP-MGMT | `hcm_position.approved_for_creation` | Develop and manage rewards (10511 L3) | confident L3 |
 | 387 | HCM-ORG-POSITIONS → COMP-MGMT | `job_profile.published` | Develop and manage rewards (10511 L3) | confident L3 |
 | 388 | HCM-ORG-POSITIONS → SKILLS-MGMT | `job_profile.published` | Develop and manage skills and capabilities (10545 L3) | confident L3 |
@@ -180,7 +180,7 @@ H1 is a single Bucket 1 item even though it proposes ~70 row inserts. Counts as 
 | 448 | HRSD → HCM | `case_category.updated` | Manage HR service delivery (subprocess of 10550) | medium |
 | 454 | SWP → HCM-ORG-POSITIONS | `position_demand_forecast.updated` | Manage workforce planning (10532 L3) | confident L3 |
 | 457 | SWP → HCM-ORG-POSITIONS | `workforce_scenario.approved` | Manage workforce planning (10532 L3) | confident L3 |
-| 459 | SWP → HCM-ORG-POSITIONS | `org_design.published` | Manage organisational changes (10519 L4) | confident L4 |
+| 459 | SWP → HCM-ORG-POSITIONS | `org_design.published` | Manage organizational changes (10519 L4) | confident L4 |
 | 15 | SWP → HCM-ORG-POSITIONS | `hcm_position.approved_for_creation` | Manage workforce planning (10532 L3) | confident L3 |
 | 274 | MDM → HCM | `employee_golden_record.created` | Manage master data (subprocess of 11206 Manage master data) | medium L3 |
 | 718 | MDM → HCM | `source_record.merged_to_golden` | Manage master data (11206 L3) | medium L3 |
@@ -216,7 +216,7 @@ H1 is a single Bucket 1 item even though it proposes ~70 row inserts. Counts as 
 
 #### Boundary findings per neighbor (Pass 4 pairwise reconciliation)
 
-The 5-section pairwise diff produces these per-neighbor findings for the 14 heavy neighbors (edge weight ≥3). Section 1 (wired pairs) counts only. Section 2 (NULL FK candidates) routes to the respective domain audits per B10b asymmetry. Section 3 (missing handoffs) surfaces gaps the catalog implies. Section 4 (boundary integrity) surfaces masters / DMDOs imbalances. Section 5 (cross-relationship mirrors) sanity checks.
+The 5-section pairwise diff produces these per-neighbor findings for the 14 heavy neighbors (relationship weight ≥3). Section 1 (wired pairs) counts only. Section 2 (NULL FK candidates) routes to the respective domain audits per B10b asymmetry. Section 3 (missing handoffs) surfaces gaps the catalog implies. Section 4 (boundary integrity) surfaces masters / DMDOs imbalances. Section 5 (cross-relationship mirrors) sanity checks.
 
 **ATS ↔ HCM (weight 23).** Wired pairs: 22 (16 outbound + 6 inbound, plus the new ATS pre_employee.activated flow 1037). Section 2: many ATS-source rows have populated FKs (good); none of the 1176-1190 series has NULL target_domain_module_id on ATS side. Section 3: a likely missing handoff is HCM-CORE-WORKER → ATS on `employee.created` → `candidates` for internal-mobility candidates auto-promoted on hire (judgment call, surface as B2-S6). Section 4: ATS DMDOs (`candidates`, `candidate_assessments`, `job_offers`, `pre_employees`) all declared consumer on HCM-LIFECYCLE-WORKFLOWS, clean. `job_requisitions` declared consumer on HCM-ORG-POSITIONS, clean. Section 5: cross-relationships clean (`employees` represents `users`, `pre_employees` promotes to `employees`, `job_profiles` defines `hcm_positions`).
 
@@ -555,10 +555,10 @@ The trigger: B1A-PHASE-P had been parked as "deferred per Rule #21 persona polic
 
 ### Executed (additive/corrective, record_status='new')
 
-- **B1A-PHASE-P (Phase E persona/RACI, E1-E6):** authored the HCM persona/RACI layer fresh. Function-anchored on Human Resources (id 3); cross-functional reach accreted onto existing personas (read-before-create on role_code, never recreated).
-  - **4 NEW `domain_roles`** (function_id=3): HR-HRIS-ADMIN (#53), HR-PEOPLE-OPS-SPECIALIST (#54), HR-BUSINESS-PARTNER (#55), HR-ORG-DESIGN-ANALYST (#56).
-  - **16 `role_modules`** reach across modules 54/55/56 for the 4 new personas plus 2 accreted cross-functional ones (PEOPLE-MANAGER #26 -> 56 primary / 54+55 secondary; HIRING-MANAGER #10 -> 55 secondary). Every HCM persona now meets the 2-module floor (E2); all `interaction_level` set (E3).
-  - **10 `data_object_lifecycle_states.process_id` wirings** (the process-to-permission edge, all NULL before -> fill-empty, not overwrite): employees.active/.on_leave/.terminated -> 243 / 1058 / 239; employment_contracts.approved+signed -> 243; employment_events.approved -> 240; hcm_positions.approved + org_units.active -> 97; org_units.reorganized -> 92; job_profiles.approved -> 995. The 7 chosen PCF processes were verified clean (no existing RACI, no cross-domain lifecycle wiring) to avoid cross-domain gate contamination - process 222 was explicitly NOT reused because ATS already owns its RACI.
+- **B1A-PHASE-P (Phase E persona/RACI, E1-E6):** authored the HCM persona/RACI layer fresh. Function-anchored on Human Resources (id 3); cross-functional reach accreted onto existing personas (read-before-create on persona_code, never recreated).
+  - **4 NEW `personas`** (function_id=3): HR-HRIS-ADMIN (#53), HR-PEOPLE-OPS-SPECIALIST (#54), HR-BUSINESS-PARTNER (#55), HR-ORG-DESIGN-ANALYST (#56).
+  - **16 `persona_modules`** reach across modules 54/55/56 for the 4 new personas plus 2 accreted cross-functional ones (PEOPLE-MANAGER #26 -> 56 primary / 54+55 secondary; HIRING-MANAGER #10 -> 55 secondary). Every HCM persona now meets the 2-module floor (E2); all `interaction_level` set (E3).
+  - **10 `data_object_lifecycle_states.process_id` wirings** (the process-to-permission relationship, all NULL before -> fill-empty, not overwrite): employees.active/.on_leave/.terminated -> 243 / 1058 / 239; employment_contracts.approved+signed -> 243; employment_events.approved -> 240; hcm_positions.approved + org_units.active -> 97; org_units.reorganized -> 92; job_profiles.approved -> 995. The 7 chosen PCF processes were verified clean (no existing RACI, no cross-domain lifecycle wiring) to avoid cross-domain gate contamination - process 222 was explicitly NOT reused because ATS already owns its RACI.
   - **26 `process_raci`** rows across the 7 wired processes; each process carries >=1 Responsible and >=1 Accountable (E4). People-Ops Specialist is R on the worker-lifecycle processes, Org-Design Analyst is R on the org/position/job-profile processes, HRBP is the dominant Accountable, People-Manager carries manager-self-service Accountable on leave (1058) and transfers (240), one Consulted is blocking (HRBP on leave-of-absence for FMLA/sensitive). (`process_raci` has no `record_status` column.)
 - **B1B-S2 partial (B10b, 3 PATCH):** backfilled `target_domain_module_id` = 54 on inbound handoffs 1016 (project_assignment.confirmed), 1022 (project_resource_allocation.committed), 1026 (resource_skill_inventory.updated) - mechanically derivable now that module 54 carries the PSA consumer DMDOs (B1A-S7, 2026-06-06). Fresh re-derivation confirmed these are the ONLY mechanically-resolvable rows; the other 27 NULL-target inbound handoffs have payloads HCM does not model in any module, so the 54-vs-56 choice stays judgment gated by B2-S5r.
 
@@ -642,7 +642,7 @@ The user answered the regenerated q-file (2nd a-HCM.md). All six were decisions 
 - **a4 (B1A-SELF-CONTAIN, yes) - DESTRUCTIVE M9 fix, user-approved:** 7 domain_module_data_objects rows rewritten. pre_employees (749, module 56) consumer+required -> embedded_master+required (carries a local pre-hire shell so HCM onboards standalone when ATS is absent; canonical master is ATS, Rule #11 satisfied). The other 6 relaxed to necessity=optional: candidates (3), candidate_assessments (10), job_offers (11) on 56; job_requisitions (1) on 55; onboarding_document_collections (22) on 54; asset_lifecycle_events (55, contributor) on 56. M9 self-containment now clean for all of this domain's modules.
 - **a5 (B2-DEPENDENTS, a) - additive:** loaded employee_dependents (#1038) as master+optional on HCM-CORE-WORKER (operational_record, has_personal_content), employees-composes-dependents relationship, alias 'Dependents'. benefit_dependents (148, BEN-ADMIN) left UNTOUCHED and distinct (it is the plan-enrollment record; HCM now masters the person-level dependent that benefits reads). No destructive reconciliation.
 - **a1 (B2-S5r, a) - additive, REVERSED the prior baseline-only recommendation:** module 56 (HCM-LIFECYCLE-WORKFLOWS) now masters a self-service request object. The clean HCM-owned, missing one is worker_change_requests (#1039, operational_workflow, master+required): the ESS/MSS request to change worker data, routed through approval. 5-state lifecycle (draft -> submitted [open self-service] -> approved [gate, requires_permission, process_id=243 'Manage and maintain employee data' so the existing People-Ops R / HRBP A RACI grants the approve gate] -> applied/rejected terminal). employees-has and users-requests relationships, 2 aliases. NOTE: the other objects the research named (life_events, onboarding_tasks, change_requests) were NOT re-mastered - life_events is BEN-ADMIN's (handoff 418), onboarding_tasks (18) is ONBOARDING's, change_requests is taken; HCM consumes them. Mastering them would repeat the dependents/life_events duplicate-concept trap. Module 56 is no longer 'masters nothing'.
-- **a2 (B2-S6r, yes) - additive, REVERSED the prior skip:** new trigger_event employee.applied_internally (#1656, on employees, event_category=signal) + handoff HCM-CORE-WORKER (54) -> ATS-CANDIDATE-CRM (module 1, ATS domain 56) on candidates payload (api_call, friction medium - worker/candidate identity reconciliation), + employees-applies_as-candidates relationship (mirrors the existing candidates-becomes-employees edge in the reverse direction).
+- **a2 (B2-S6r, yes) - additive, REVERSED the prior skip:** new trigger_event employee.applied_internally (#1656, on employees, event_category=signal) + handoff HCM-CORE-WORKER (54) -> ATS-CANDIDATE-CRM (module 1, ATS domain 56) on candidates payload (api_call, friction medium - worker/candidate identity reconciliation), + employees-applies_as-candidates relationship (mirrors the existing candidates-becomes-employees relationship in the reverse direction).
 - **a3 (B2-S7r, yes):** confirmed HCM stays a consumer of WFM-mastered absence_requests (module-56 consumer DMDO on absence_requests 163 already covers handoff 135). No write.
 - **a6 (B3-NEIGHBOR-ROUTES, postpone):** neighbor-domain audits (PAYROLL/WFM/ONBOARDING/BEN-ADMIN) for the routed bank-accounts / medical-certs / I-9 / FMLA / I-9-E-Verify / HIPAA-BAA items are postponed (parked, non-blocking).
 
@@ -683,7 +683,7 @@ HCM does not model these as worker-lifecycle records; each is a cross-domain not
 ### Verification
 
 - NULL-target inbound handoffs: 27 -> 11; the remaining 11 match the intended signal set exactly (loader match: OK).
-- 15 consumer DMDOs confirmed present (2 on 54, 1 on 55, 12 on 56), all role=consumer necessity=optional. (Note: domain_module_data_objects has no record_status column, so these carry no per-row review flag; reviewed in the UI/relationship view.)
+- 15 consumer DMDOs confirmed present (2 on 54, 1 on 55, 12 on 56), all held_as=consumer necessity=optional. (Note: domain_module_data_objects has no record_status column, so these carry no per-row review flag; reviewed in the UI/relationship view.)
 - Outbound B10b clean: zero outbound HCM handoffs with NULL source_domain_module_id.
 - M9 unaffected: all new rows are consumer+optional (degrade gracefully, no self-containment violation); M7 unaffected (consumer rows, no master conflict).
 

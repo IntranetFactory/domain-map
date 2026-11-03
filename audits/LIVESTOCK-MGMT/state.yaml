@@ -33,7 +33,7 @@ b2:
       mapping, crop planning, planting/application, harvest, equipment telemetry, and yield analytics;
       none of these livestock pure-plays master crop fields, and none of the crop FMIS leaders master
       individual-animal records, mobs, breeding, treatment withholding periods, or EID/NLIS/840
-      traceability. The shared paddock / whole-farm substrate is real (hence the FMIS edge and the b3
+      traceability. The shared paddock / whole-farm substrate is real (hence the FMIS relationship and the b3
       below) but the animal-centric system of record is its own market. DAIRY-MGMT is a separate
       sibling: its workflows (milking, lactation, milk quality, Grade A regulation) are, per its own
       description, fundamentally different from beef / sheep. Recommended: (a) keep distinct.

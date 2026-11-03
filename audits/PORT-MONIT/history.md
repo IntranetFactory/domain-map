@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 7 masters + 1 embedded master (`funds`) across 4 full modules (`PORT-MONIT-PORTCO-DATA`, `PORT-MONIT-VALUATIONS`, `PORT-MONIT-FUND-PERF`, `PORT-MONIT-LP-REPORTING`); 6 capabilities; 10 solutions; **0 regulations**; 1 trigger event (`portco_valuation.final`); 1 outbound + 3 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 system skills; 0 roles; 11 `data_object_relationships` rows (mostly intra-domain composition edges); 3 lifecycle states (only on `portfolio_companies`); 2 aliases (only on `portfolio_companies`); **0 APQC handoff_processes rows on any of the 4 cross-domain handoffs.**
+- Current footprint: 7 masters + 1 embedded master (`funds`) across 4 full modules (`PORT-MONIT-PORTCO-DATA`, `PORT-MONIT-VALUATIONS`, `PORT-MONIT-FUND-PERF`, `PORT-MONIT-LP-REPORTING`); 6 capabilities; 10 solutions; **0 regulations**; 1 trigger event (`portco_valuation.final`); 1 outbound + 3 inbound cross-domain handoffs; 0 intra-domain handoffs; 0 system skills; 0 roles; 11 `data_object_relationships` rows (mostly intra-domain composition relationships); 3 lifecycle states (only on `portfolio_companies`); 2 aliases (only on `portfolio_companies`); **0 APQC handoff_processes rows on any of the 4 cross-domain handoffs.**
 - Vendor-surface basis: 6 flagship vendors enumerated covering PE/VC portfolio monitoring across GP-side (Chronograph, Allvue, Vestberry, eFront), VC-specialist (Standard Metrics, Visible.vc), and LP-analytics (Cobalt LP). All 10 catalog `solution_domains` rows fall inside this surface.
 - **Bucket 1 (in-scope, agent fixable):** 19 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
@@ -28,9 +28,9 @@ Compliance specialists implicit in the surface: eFront and Allvue anchor the EU-
 
 ### Pass 3 - Neighbor discovery (auto-derived)
 
-Auto-discovered from `handoffs` + cross-domain DMDO + `domain_module_data_objects` dependencies. Edge weight = handoff count + dependency count.
+Auto-discovered from `handoffs` + cross-domain DMDO + `domain_module_data_objects` dependencies. Relationship weight = handoff count + dependency count.
 
-| Neighbor | Outbound | Inbound | DMDO deps | Edge weight | Pass-4 depth |
+| Neighbor | Outbound | Inbound | DMDO deps | Relationship weight | Pass-4 depth |
 | --- | --- | --- | --- | --- | --- |
 | FUND-ADMIN (160) | 1 (1043, portco_valuation.final -> pcap_statements) | 1 (1042, fund_distribution.executed -> fund_performance_periods) | embedded_master `funds` (mastered in FUND-ADMIN-FUND-LEDGER) | 3 | full 5-section diff |
 | INV-CRM (159) | 0 | 1 (1039, vc_deal.closed -> portfolio_companies) | none | 1 | one-line summary |
@@ -39,7 +39,7 @@ Auto-discovered from `handoffs` + cross-domain DMDO + `domain_module_data_object
 
 ### Pass 4 - Pairwise handoff reconciliation per neighbor
 
-#### PORT-MONIT ↔ FUND-ADMIN (edge weight 3)
+#### PORT-MONIT ↔ FUND-ADMIN (relationship weight 3)
 
 **Section 1 - Existing handoffs, fully wired.**
 
@@ -60,11 +60,11 @@ Auto-discovered from `handoffs` + cross-domain DMDO + `domain_module_data_object
 - Outbound 1043: mirror rel 876 exists. PASS.
 - Inbound 1042: NO mirror `data_object_relationships` row exists in the direction `fund_distributions impacts fund_performance_periods` (source `fund_distributions` (368), target `fund_performance_periods` (768)). This is a B8 gap owed by FUND-ADMIN (the source domain owns the outbound rel side). Report-only.
 
-#### PORT-MONIT ↔ INV-CRM (edge weight 1)
+#### PORT-MONIT ↔ INV-CRM (relationship weight 1)
 
 Mirror rel 873 (`vc_deals becomes portfolio_companies`) exists, covering inbound handoff 1039. Both module FKs resolved on the handoff. Clean.
 
-#### PORT-MONIT ↔ CAP-TABLE (edge weight 1)
+#### PORT-MONIT ↔ CAP-TABLE (relationship weight 1)
 
 Inbound handoff 1045 (`exit_scenario.executed` -> `portfolio_companies`) has both module FKs resolved. NO mirror `data_object_relationships` row exists in the direction `exit_scenarios concludes portfolio_companies` (source 777, target 763). Report-only B8 gap owed by CAP-TABLE.
 
@@ -88,9 +88,9 @@ Inbound handoff 1045 (`exit_scenario.executed` -> `portfolio_companies`) has bot
 | --- | --- | --- | --- |
 | B1-S1 | A4 | `catalog_tagline` and `catalog_description` empty on `domains.id=161`. | Draft buyer-voice tagline + 1-3 paragraph description per Rule #20; surface to user BEFORE write. |
 | B1-S2 | F2 / F3 / F4 / F5 | Zero system skills exist on any of the 4 modules. `/skills?domain_module_id=in.(16,17,18,19)` returns `[]`; `/skills?domain_id=eq.161` also returns `[]`. Semantius score is uncomputable for every module. | Phase-S load: author 4 `skills` rows (`port_monit_portco_data_agent`, `port_monit_valuations_agent`, `port_monit_fund_perf_agent`, `port_monit_lp_reporting_agent`), each `skill_type='system'`, `domain_module_id` set; author ~5-12 `tools` + `skill_tools` rows per module (query / mutate per master, plus compute primitives for `compute_irr_moic_tvpi_dpi` on FUND-PERF, `compute_fair_value_mark` on VALUATIONS, `parse_kpi_packet` and `parse_esg_packet` on PORTCO-DATA, `render_lp_report` on LP-REPORTING, plus `notify_person` for share-with-LP intent). |
-| B1-S3 | E1 / E2 / E3 / E4 / E5 / E6 | Zero `roles` rows have `role_modules` rows on any of the 4 modules. `/role_modules?domain_module_id=in.(16,17,18,19)` returns `[]`. The domain has 4 modules (>= 2) so the 2-module floor for role authoring is met; the E-band is unsatisfied. | Author >= 3 roles function-scoped to Investment Management: `INVESTMENT-PORTFOLIO-ANALYST` (primary on PORTCO-DATA + VALUATIONS, secondary on FUND-PERF), `INVESTMENT-FUND-CONTROLLER` (primary on FUND-PERF + LP-REPORTING, secondary on VALUATIONS), `INVESTMENT-INVESTOR-RELATIONS` (primary on LP-REPORTING, secondary on FUND-PERF + PORTCO-DATA). Each carries 4-8 `role_permissions` rows. |
-| B1-S4 | A / regulations | Zero `domain_regulations` rows on PORT-MONIT despite explicit business-logic anchors to ASC 820 (in `domains.business_logic`) and SFDR for EU. None of ASC 820, SFDR, ILPA Quarterly Reporting Standards, AIFMD Annex IV, Form PF, or Investment Advisers Act exist in `regulations` at all. | Add 5 `regulations` rows + 5 `domain_regulations` links (applicability per regulation; scope to confirm in Bucket 2 #1). |
-| B1-S5 | B7 | 5 of 7 masters lack explicit `users` edges. Only `portfolio_companies` (rel 885) and `portco_valuations` (rel 886) have edges in the direction `users -> master`. Missing: `portco_kpi_periods` (uploader / submitter), `portco_esg_records` (uploader), `fund_position_returns` (computed by analyst), `fund_performance_periods` (period_owner), `lp_quarterly_reports` (report_author + report_approver). | Author 5 `data_object_relationships` rows per Rule #10 (users -> master, owner_side=target, relationship_kind=reference). |
+| B1-S3 | E1 / E2 / E3 / E4 / E5 / E6 | Zero `roles` rows have `persona_modules` rows on any of the 4 modules. `/persona_modules?domain_module_id=in.(16,17,18,19)` returns `[]`. The domain has 4 modules (>= 2) so the 2-module floor for role authoring is met; the E-band is unsatisfied. | Author >= 3 roles function-scoped to Investment Management: `INVESTMENT-PORTFOLIO-ANALYST` (primary on PORTCO-DATA + VALUATIONS, secondary on FUND-PERF), `INVESTMENT-FUND-CONTROLLER` (primary on FUND-PERF + LP-REPORTING, secondary on VALUATIONS), `INVESTMENT-INVESTOR-RELATIONS` (primary on LP-REPORTING, secondary on FUND-PERF + PORTCO-DATA). Each carries 4-8 `role_permissions` rows. |
+| B1-S4 | A / regulations | Zero `domain_regulations` rows on PORT-MONIT despite explicit business-logic anchors to ASC 820 (in `domains.business_logic`) and SFDR for EU. None of ASC 820, SFDR, ILPA Quarterly Reporting Standards, AIFMD Annex IV, Form PF, or Investment Advisers Act exist in `regulations` at all. | Add 5 `regulations` rows + 5 `domain_regulations` relationships (applicability per regulation; scope to confirm in Bucket 2 #1). |
+| B1-S5 | B7 | 5 of 7 masters lack explicit relationships to `users`. Only `portfolio_companies` (rel 885) and `portco_valuations` (rel 886) have relationships in the direction `users -> master`. Missing: `portco_kpi_periods` (uploader / submitter), `portco_esg_records` (uploader), `fund_position_returns` (computed by analyst), `fund_performance_periods` (period_owner), `lp_quarterly_reports` (report_author + report_approver). | Author 5 `data_object_relationships` rows per Rule #10 (users -> master, owner_side=target, relationship_kind=reference). |
 | B1-S6 | B11 | 6 of 7 masters lack any `data_object_aliases` row. Only `portfolio_companies` has 2 aliases (`portcos`, `investments`). | Draft >= 1 alias per non-self-explanatory master: `portco_kpi_periods` (`portco_metrics`, `kpi_packets`), `portco_esg_records` (`esg_packets`, `sustainability_reports`), `portco_valuations` (`fair_value_marks`, `quarterly_marks`), `fund_position_returns` (`position_returns`, `position_irr_records`), `fund_performance_periods` (`fund_quarterly_metrics`), `lp_quarterly_reports` (`lp_quarterly_packets`, `gp_reports`). |
 | B1-S7 | B12 | 6 of 7 masters lack lifecycle states. Only `portfolio_companies` has 3 (`active` / `exited` / `written_off` - all `requires_permission=false`, all `domain_module_id=null`). `portco_valuations` has `has_submit_lock=true` AND `has_single_approver=true` so an explicit workflow with `requires_permission=true` transitions is implied; `lp_quarterly_reports` has `has_submit_lock=true` so a `published` workflow gate is implied. | Author lifecycle states (initial + workflow gates + terminal) on `portco_kpi_periods` (draft / submitted / accepted), `portco_esg_records` (draft / submitted / accepted), `portco_valuations` (proposed / review / approved / locked), `fund_position_returns` (computed / locked), `fund_performance_periods` (computing / computed / locked), `lp_quarterly_reports` (draft / review / published / archived). Apply `requires_permission=true` to `submitted` / `accepted` / `approved` / `locked` / `published` states. Set `domain_module_id` per master's home module. |
 | B1-S8 | B9 | 1 of 7 masters has any `trigger_events` row (`portco_valuation.final` only). Missing events the lifecycle states above imply: `portco_kpi_period.submitted`, `portco_kpi_period.accepted`, `portco_esg_record.submitted`, `portco_valuation.proposed`, `portco_valuation.approved`, `fund_performance_period.computed`, `fund_performance_period.locked`, `lp_quarterly_report.published`, `portfolio_company.exited`, `portfolio_company.written_off`. | Author 10 `trigger_events` rows; for each, decide cross-domain vs intra-domain handoff via B1-S9 below. |
@@ -183,14 +183,14 @@ Deferred-to-Discover-Pass-3: none. All 4 handoffs have clean PCF matches at L3 o
 
 These items are NOT in PORT-MONIT's scope; they route to the named source domain's next audit.
 
-- **FUND-ADMIN B8 owes** `data_object_relationships` row: `fund_distributions impacts fund_performance_periods` (data_object_id=368, related_data_object_id=768, owner_side=source). Mirror of inbound handoff 1042. Without this, the relationship graph in the architect view leaves the inbound edge un-rendered.
+- **FUND-ADMIN B8 owes** `data_object_relationships` row: `fund_distributions impacts fund_performance_periods` (data_object_id=368, related_data_object_id=768, owner_side=source). Mirror of inbound handoff 1042. Without this, the relationship graph in the architect view leaves the inbound relationship un-rendered.
 - **FUND-ADMIN B9 candidate (unverified):** the proposed `pcap_statement.locked` event from FUND-ADMIN-LP-COMMITMENTS into PORT-MONIT-LP-REPORTING on `lp_quarterly_reports` (Pairwise Section 3 finding). Surfaces when FUND-ADMIN is next validated.
 - **FUND-ADMIN B9 candidate (unverified):** the proposed `fund_distribution.recorded` -> `fund_position_returns` routing variant of handoff 1042. Surfaces when FUND-ADMIN is next validated.
 - **FUND-ADMIN H1 owes** an `agent_curated` proposal for handoff 1042 (inbound from its side). The same B1-H1 proposal can be authored from either side; documenting it here so FUND-ADMIN's H1 pass picks it up rather than re-discovering.
 - **CAP-TABLE B8 owes** `data_object_relationships` row: `exit_scenarios concludes portfolio_companies` (data_object_id=777, related_data_object_id=763, owner_side=source). Mirror of inbound handoff 1045.
 - **CAP-TABLE H1 owes** an `agent_curated` proposal for handoff 1045 from its side (PCF id 354 or 491).
 - **INV-CRM H1 owes** an `agent_curated` proposal for handoff 1039 from its side (PCF id 491).
-- **ESG (21) latency:** no `handoffs` or DMDO edges exist between PORT-MONIT and ESG, despite `portco_esg_records` (765) being semantically ESG-scoped. Not a defect on either side, but worth a note when ESG is next validated: should the cross-domain edge exist?
+- **ESG (21) latency:** no `handoffs` or DMDO relationships exist between PORT-MONIT and ESG, despite `portco_esg_records` (765) being semantically ESG-scoped. Not a defect on either side, but worth a note when ESG is next validated: should the cross-domain relationship exist?
 
 ## 2026-05-31, Continuation: B1 technical fixes
 
@@ -198,7 +198,7 @@ Applied the strict technical subset of Bucket 1 via loader `.tmp_deploy/fix_port
 
 ### Applied (3)
 
-- **B1-S5 (B7 user-edges):** inserted 5 `data_object_relationships` rows per Rule #10. `data_object_id=748` (users) → master, `owner_side='target'`, `relationship_kind='reference'`, `relationship_type='one_to_many'`, mirroring the existing PORT-MONIT pattern on rels 885 + 886. New ids 1831–1835 covering `portco_kpi_periods` (submits), `portco_esg_records` (submits), `fund_position_returns` (computes), `fund_performance_periods` (owns), `lp_quarterly_reports` (authors). Verbs are short action prose consistent with the catalog's user-edge convention; user may PATCH if a different verb is preferred (treated as part of the open Bucket 2 #2 verb-correctness discussion).
+- **B1-S5 (B7 relationships to `users`):** inserted 5 `data_object_relationships` rows per Rule #10. `data_object_id=748` (users) → master, `owner_side='target'`, `relationship_kind='reference'`, `relationship_type='one_to_many'`, mirroring the existing PORT-MONIT pattern on rels 885 + 886. New ids 1831–1835 covering `portco_kpi_periods` (submits), `portco_esg_records` (submits), `fund_position_returns` (computes), `fund_performance_periods` (owns), `lp_quarterly_reports` (authors). Verbs are short action prose consistent with the catalog's relationship to `users` convention; user may PATCH if a different verb is preferred (treated as part of the open Bucket 2 #2 verb-correctness discussion).
 - **B1-S10 (M5 lifecycle states):** PATCHed `domain_module_id=16` (PORT-MONIT-PORTCO-DATA) on states 476 (`active`), 477 (`exited`), 478 (`written_off`). Workflow-gate permission prefixing will now resolve to the canonical module.
 - **B1-H1 (APQC PCF tagging):** inserted 3 of 4 audit-proposed `handoff_processes` rows. New ids 633 (handoff 1043 → process 1390), 634 (handoff 1042 → process 1401), 635 (handoff 1045 → process 354). Handoff 1039 was **NOT** loaded: it already carries `handoff_processes` row 572 with `process_id=409` (a PCF different from the audit's proposed 491). Whether to replace 409 with 491, keep 409, or add 491 as a second tag is a judgment call; surfacing for user decision rather than silently double-tagging.
 
@@ -228,15 +228,15 @@ No JWT errors during the run. UI: https://tests.semantius.app/domain_map/data_ob
 
 Structural Validate b1 re-pass after the 2026-05-31 Continuation fix-load. Goal: refresh the pending-items index against live catalog state. No new vendor-surface pass.
 
-- Current footprint: 7 domain-owned masters + 1 embedded master (`funds`, mastered by FUND-ADMIN-FUND-LEDGER) across 4 full modules (`PORT-MONIT-PORTCO-DATA` 16, `PORT-MONIT-VALUATIONS` 17, `PORT-MONIT-FUND-PERF` 18, `PORT-MONIT-LP-REPORTING` 19). 6 capabilities, all linked to a module via `domain_module_capabilities` (6 rows). 10 solutions (5 primary, 2 secondary, 3 other). 0 regulations.
+- Current footprint: 7 domain-owned masters + 1 embedded master (`funds`, mastered by FUND-ADMIN-FUND-LEDGER) across 4 full modules (`PORT-MONIT-PORTCO-DATA` 16, `PORT-MONIT-VALUATIONS` 17, `PORT-MONIT-FUND-PERF` 18, `PORT-MONIT-LP-REPORTING` 19). 6 capabilities, all related to a module via `domain_module_capabilities` (6 rows). 10 solutions (5 primary, 2 secondary, 3 other). 0 regulations.
 - 1 trigger event (`portco_valuation.final`, id 1188, module FK NULL). 4 cross-domain handoffs (1 outbound 1043 to FUND-ADMIN; inbound 1039 from INV-CRM, 1042 from FUND-ADMIN, 1045 from CAP-TABLE). 0 intra-domain handoffs.
-- 16 `data_object_relationships` rows touching PORT-MONIT masters: 7 intra-domain composition / reference edges (852-858), 3 cross-domain mirrors (873 INV-CRM, 876 outbound to FUND-ADMIN, 858 intra), 7 `users` edges (885, 886, 1831-1835) covering all 7 masters per Rule #10.
+- 16 `data_object_relationships` rows touching PORT-MONIT masters: 7 intra-domain composition / reference relationships (852-858), 3 cross-domain mirrors (873 INV-CRM, 876 outbound to FUND-ADMIN, 858 intra), 7 relationships to `users` (885, 886, 1831-1835) covering all 7 masters per Rule #10.
 - 3 lifecycle states, all on `portfolio_companies` (active / exited / written_off), all `domain_module_id=16` per Continuation. `requires_permission=false` on all 3.
 - 2 aliases, only on `portfolio_companies`.
 - 0 system skills on any module. 0 roles on any module. 0 permissions on any module.
 - 6 `handoff_processes` rows across the 4 handoffs (2 per 1042 and 1043, 1 each on 1039 and 1045), all `proposal_source='agent_curated'`, all `record_status='new'`.
 
-Headline pass / fail by band (B1 structural subset): A pass (domain row fully populated except A4 catalog_tagline / catalog_description). M pass for M5 (Continuation flipped the 3 states). M pass for M7 (no within-domain ownership conflicts). B5 pass (every embedded_master has a canonical owner). B7 pass (Continuation closed the 5 missing user-edges). B9 fail (1 of 7 masters has a trigger event; lifecycle implies ~10 more). B9b fail (0 of 4 modules wired via intra-domain handoffs). B10b pass (zero NULL handoff module FKs). B11 fail (6 of 7 masters lack aliases). B12 fail (6 of 7 masters lack lifecycle states). C pass (vendor-surface coverage is intact, see prior audit). D not in scope this pass. E1-E5 fail (no roles touch any PORT-MONIT module; the domain has 4 modules so >=3-role floor applies). F1-F5 fail (no system skills, no tools, no skill_tools, Semantius score uncomputable for every module). H1 partial (4 of 4 handoffs tagged at least once; sub-quality call on handoff 1039 still open from Continuation).
+Headline pass / fail by band (B1 structural subset): A pass (domain row fully populated except A4 catalog_tagline / catalog_description). M pass for M5 (Continuation flipped the 3 states). M pass for M7 (no within-domain ownership conflicts). B5 pass (every embedded_master has a canonical owner). B7 pass (Continuation closed the 5 missing relationships to `users`). B9 fail (1 of 7 masters has a trigger event; lifecycle implies ~10 more). B9b fail (0 of 4 modules wired via intra-domain handoffs). B10b pass (zero NULL handoff module FKs). B11 fail (6 of 7 masters lack aliases). B12 fail (6 of 7 masters lack lifecycle states). C pass (vendor-surface coverage is intact, see prior audit). D not in scope this pass. E1-E5 fail (no roles touch any PORT-MONIT module; the domain has 4 modules so >=3-role floor applies). F1-F5 fail (no system skills, no tools, no skill_tools, Semantius score uncomputable for every module). H1 partial (4 of 4 handoffs tagged at least once; sub-quality call on handoff 1039 still open from Continuation).
 
 ### Vendor surface basis
 
@@ -246,7 +246,7 @@ Reuse from 2026-05-30 audit. No fresh subagent pass this cycle; the prior 6-vend
 
 Closed by 2026-05-31 Continuation:
 
-- B1-S5 (B7 user-edges): CLOSED. Rels 1831-1835 exist on the 5 missing masters.
+- B1-S5 (B7 relationships to `users`): CLOSED. Rels 1831-1835 exist on the 5 missing masters.
 - B1-S10 (M5 lifecycle module FK): CLOSED. States 476-478 now point at module 16.
 - B1-H1 (APQC tagging): PARTIAL CLOSE. Rows 633 (handoff 1043 -> process 1390), 634 (handoff 1042 -> 1401), 635 (handoff 1045 -> 354) loaded. Rows 762 (1042 -> 1422) and 763 (1043 -> 56) appeared post-Continuation as additional curation. Handoff 1039 remains tagged only by row 572 (process 409 `Manage portfolio`), the 491 alternative is the open Bucket 2 question from Continuation.
 
@@ -307,7 +307,7 @@ No change vs. 2026-05-30. Re-listed in state.yaml for query parity.
 ### Per-bucket prompts
 
 - After b1a surface: *"Apply the 5 MISSING entities (B1-M1, B1-M2, B1-M6, B1-M7, B1-M8), the 4 STRUCTURAL items (B1-S2 skills + tools, B1-S3 roles, B1-S6 aliases queued as agent-solvable once you supply texts, B1-S7 lifecycle states)? Reply 'all', a subset, or 'skip'."*
-- After b2 surface: *"Eight judgment calls. Please answer each: (1) regulations scope; (2) verb correctness on 7 user-edges; (3) funds embedding shape; (4) LP-REPORTING modularization; (5) ESG-DIVERSITY-TRACKING promotion; (6) applicability wording per Rule #15; (7) handoff 1039 PCF tag (process 409 vs 491 vs both); (8) handoff 1042 and 1043 multi-tag review."*
+- After b2 surface: *"Eight judgment calls. Please answer each: (1) regulations scope; (2) verb correctness on 7 relationships to `users`; (3) funds embedding shape; (4) LP-REPORTING modularization; (5) ESG-DIVERSITY-TRACKING promotion; (6) applicability wording per Rule #15; (7) handoff 1039 PCF tag (process 409 vs 491 vs both); (8) handoff 1042 and 1043 multi-tag review."*
 - After b3 surface: *"Seven speculative candidates. Vet via Phase 0 vendor research, or eyeball-mode?"*
 
 ### Report-only follow-ups (owed by other domains)
@@ -324,7 +324,7 @@ Unchanged from 2026-05-30 audit:
 
 ### JWT errors
 
-None during this run. Two column-name probe errors against the catalog: `data_object_relationships.verb` does not exist, `trigger_events.source_data_object_id` does not exist (correct column is `data_object_id`), `permissions.permission_code` does not exist, `business_function_capabilities.responsibility` does not exist, `business_functions.business_function_code` does not exist, `tools.domain_module_id` does not exist, `role_modules.assignment_strength` does not exist. None of these blocked the audit; recovered by re-issuing the read with correct columns. Not JWT issues.
+None during this run. Two column-name probe errors against the catalog: `data_object_relationships.verb` does not exist, `trigger_events.source_data_object_id` does not exist (correct column is `data_object_id`), `permissions.permission_code` does not exist, `business_function_capabilities.responsibility` does not exist, `business_functions.business_function_code` does not exist, `tools.domain_module_id` does not exist, `persona_modules.assignment_strength` does not exist. None of these blocked the audit; recovered by re-issuing the read with correct columns. Not JWT issues.
 
 ---
 
@@ -378,13 +378,13 @@ Management, fn 85, already wired as owner in business_function_domains). Loader:
 
 ### Surfaced (for user)
 
-- **b2 (8 open judgment calls):** B2-1 regulations scope; B2-2 verb correctness on 7 user-edges
+- **b2 (8 open judgment calls):** B2-1 regulations scope; B2-2 verb correctness on 7 relationships to `users`
   (destructive overwrite); B2-3 funds embedding shape (destructive M9 if downgraded); B2-4
   LP-REPORTING modularization (destructive restructure if split/migrate); B2-5 ESG-DIVERSITY
   cross-cutting promotion (destructive rename); B2-6 applicability wording (Rule #15);
   B2-7 handoff 1039 PCF arbitration 409 vs 491 (destructive replace); B2-8 handoffs 1042/1043
   multi-tag review (destructive demote). All verified live this pass.
-- **Personas / RACI deferred (B1A-PHASE-P + B1A-S3-ROLES):** 4-module domain with 0 domain_roles
+- **Personas / RACI deferred (B1A-PHASE-P + B1A-S3-ROLES):** 4-module domain with 0 personas
   reaching it; persona/RACI layer DEFERRED per Rule #21 (not agent-authored). Candidate personas:
   INVESTMENT-PORTFOLIO-ANALYST, INVESTMENT-FUND-CONTROLLER, INVESTMENT-INVESTOR-RELATIONS.
 

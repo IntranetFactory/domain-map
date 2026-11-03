@@ -18,8 +18,8 @@
 //   B10b.1 — NULL source_domain_module_id (source domain has modules)
 //   B10b.2 — NULL target_domain_module_id (target domain has modules)
 //   B9      — trigger_event data_object NOT publishable from source
-//             (source must have role in {master, embedded_master, contributor, derived})
-//   B8-rev  — payload NOT touched by target (any role including derived)
+//             (source must have held_as in {master, embedded_master, contributor, derived})
+//   B8-rev  — payload NOT touched by target (any held_as including derived)
 //   Orphan  — trigger_event has no handoff AND data_object has no lifecycle_state
 //
 // B10b.1 / B10b.2 / B9 / Orphan run the shared health rules (scripts/lib/health/logic_b.ts:
@@ -120,9 +120,9 @@ if (q2.length > 0) {
 
 // Pull DMDO rows once; build per-domain row lists (q3) and per-domain consume sets (q4).
 const dmdoAll = await get(
-  "/domain_module_data_objects?select=data_object_id,role,domain_module:domain_modules(domain_id)"
+  "/domain_module_data_objects?select=data_object_id,held_as,domain_module:domain_modules(domain_id)"
 );
-const CONSUME_ROLES = new Set(["master", "embedded_master", "contributor", "consumer", "derived"]);
+const CONSUME_HELD_AS = new Set(["master", "embedded_master", "contributor", "consumer", "derived"]);
 const dmdoByDomain = new Map<number, any[]>();              // a domain's rows: who can publish events on a data_object
 const consumingByDomain = new Map<number, Set<number>>();   // who can consume a data_object as handoff target
 for (const r of dmdoAll) {
@@ -130,7 +130,7 @@ for (const r of dmdoAll) {
   if (dom == null) continue;
   if (!dmdoByDomain.has(dom)) dmdoByDomain.set(dom, []);
   dmdoByDomain.get(dom)!.push(r);
-  if (CONSUME_ROLES.has(r.role)) {
+  if (CONSUME_HELD_AS.has(r.held_as)) {
     if (!consumingByDomain.has(dom)) consumingByDomain.set(dom, new Set());
     consumingByDomain.get(dom)!.add(r.data_object_id);
   }
@@ -139,16 +139,16 @@ for (const r of dmdoAll) {
 const builtins = await get("/data_objects?kind=eq.platform_builtin&select=id");
 const builtinSet = new Set<number>(builtins.map((d: any) => d.id));
 
-// Query 3 (REFINED): trigger_event.data_object_id must have role IN (master, embedded_master, contributor, derived) on source.
+// Query 3 (REFINED): trigger_event.data_object_id must have held_as IN (master, embedded_master, contributor, derived) on source.
 // Consumer-only is excluded: you don't publish events about something you only read
-// (logic_b.ts PUBLISH_ROLES / isPublishableBy, the B9 event_not_publishable rule).
+// (logic_b.ts PUBLISH_HELD_AS / isPublishableBy, the B9 event_not_publishable rule).
 const q3 = crossHandoffs.filter((h: any) => {
   const tev = h.trigger_event;
   if (!tev?.data_object_id) return false;
   if (builtinSet.has(tev.data_object_id)) return false;
   return !isPublishableBy(dmdoByDomain.get(h.source_domain_id) ?? [], tev.data_object_id);
 });
-console.log(`\nB9 (refined) — trigger_event data_object NOT publishable from source (role in master/embedded_master/contributor/derived): ${q3.length} defects`);
+console.log(`\nB9 (refined) — trigger_event data_object NOT publishable from source (held_as in master/embedded_master/contributor/derived): ${q3.length} defects`);
 if (q3.length > 0) {
   const byDom = new Map<string, number>();
   for (const h of q3) byDom.set(h.source_domain.domain_code, (byDom.get(h.source_domain.domain_code) || 0) + 1);
@@ -156,14 +156,14 @@ if (q3.length > 0) {
   if (byDom.size > 15) console.log(`  ... and ${byDom.size - 15} more domains`);
 }
 
-// Query 4 (REFINED): handoff payload data_object_id must have ANY role (including derived) on target.
+// Query 4 (REFINED): handoff payload data_object_id must have ANY held_as (including derived) on target.
 const q4 = crossHandoffs.filter((h: any) => {
   if (h.data_object_id == null) return false;
   if (builtinSet.has(h.data_object_id)) return false;
   const tgt = consumingByDomain.get(h.target_domain_id);
   return !(tgt && tgt.has(h.data_object_id));
 });
-console.log(`\nB8-reverse (refined) — payload NOT touched by target (any role, including derived): ${q4.length} defects`);
+console.log(`\nB8-reverse (refined) — payload NOT touched by target (any held_as, including derived): ${q4.length} defects`);
 if (q4.length > 0) {
   const byDom = new Map<string, number>();
   for (const h of q4) byDom.set(h.target_domain.domain_code, (byDom.get(h.target_domain.domain_code) || 0) + 1);

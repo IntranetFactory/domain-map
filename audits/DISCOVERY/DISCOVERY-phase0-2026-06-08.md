@@ -11,7 +11,7 @@ Market confirmed from the live domain (id 5): **Discovery and Service Mapping** 
 | Lansweeper Discovery | lansweeper.com (docs) | All-in-one IT/OT/IoT/cloud inventory; active + passive + credential-free fingerprinting | Inventory leg; encrypted on-prem credential vault; 2025 RedJack acquisition added passive network discovery + ADM |
 | BMC Helix Discovery (ADDM lineage) | docs.bmc.com (DISCO 25.2) | Agentless network + cloud + Kubernetes discovery; pattern-driven; dependency mapping | The ADDM heritage product; credential-broker integration; "scan" is a first-class historized object (topology snapshot) |
 | runZero | runzero.com (help) | Unauthenticated active scanning + passive traffic sampling; cyber asset discovery | Passive/unauthenticated network-scan specialist; "scan task" + scan template are first-class; OT/IoT coverage |
-| Axonius (CAASM, boundary reference) | axonius.com / docs.axonius.com | Cyber-asset aggregation across 1,200+ adapters; reconciled asset model; coverage-gap detection | NOT a scanner — included as the boundary control: it CONSUMES discovery sources and masters the aggregated asset, defining the downstream edge |
+| Axonius (CAASM, boundary reference) | axonius.com / docs.axonius.com | Cyber-asset aggregation across 1,200+ adapters; reconciled asset model; coverage-gap detection | NOT a scanner — included as the boundary control: it CONSUMES discovery sources and masters the aggregated asset, defining the downstream relationship |
 
 ## Surface matrix
 

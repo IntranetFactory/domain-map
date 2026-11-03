@@ -1,0 +1,36 @@
+{
+ "taken_at": "2026-11-03T13:12:05.197Z",
+ "field": {
+  "id": "skills.skill_type",
+  "table_name": "skills",
+  "field_name": "skill_type",
+  "title": "Skill Type",
+  "description": "`system` skills mirror a Domain Map domain; `process` skills orchestrate cross-domain handoff clusters; `role` skills wrap a specific user role's day-to-day work.",
+  "format": "enum",
+  "is_pk": false,
+  "default_value": "domain",
+  "field_order": 1000019,
+  "input_type": "default",
+  "width": "default",
+  "ctype": "",
+  "searchable": false,
+  "enum_values": [
+   "process",
+   "role",
+   "domain"
+  ],
+  "precision": 2,
+  "reference_table": "",
+  "reference_delete_mode": "restrict",
+  "relationship_label": "has",
+  "singular_label_parent": "",
+  "plural_label_parent": "",
+  "unique_value": false,
+  "cube_type": "auto",
+  "input_type_rule": {},
+  "catalog_field_code": "",
+  "created_at": "2026-10-23T16:03:14.508483+00:00",
+  "updated_at": "2026-10-23T16:03:14.508483+00:00",
+  "search_vector": "'a':8B,23B 'clusters':19B 'cross':16B 'cross-domain':15B 'day':29B,31B 'day-to-day':28B 'domain':9B,11B,17B 'handoff':18B 'map':10B 'mirror':7B 'orchestrate':14B 'process':12B 'role':20B,26B 's':27B 'skill':1C,3A 'skills':6B,13B,21B 'specific':24B 'system':5B 'to':30B 'type':2C,4A 'user':25B 'work':32B 'wrap':22B"
+ }
+}

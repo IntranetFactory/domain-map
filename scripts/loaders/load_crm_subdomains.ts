@@ -94,7 +94,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Audience Segment",
     plural_label: "Audience Segments",
     display_label: "Audience Segment",
-    description: "Defined segments / cohorts (high-value-active, 90-day-churn-risk, holiday-shoppers, post-purchase-anchor). Computed from events + attributes; activated outbound to MA for campaign targeting, to B2C-COMM for personalized storefront, to SALES-ENG for outreach prioritisation.",
+    description: "Defined segments / cohorts (high-value-active, 90-day-churn-risk, holiday-shoppers, post-purchase-anchor). Computed from events + attributes; activated outbound to MA for campaign targeting, to B2C-COMM for personalized storefront, to SALES-ENG for outreach prioritization.",
     master_domain: "CDP",
   },
   {
@@ -151,7 +151,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Form",
     plural_label: "Forms",
     display_label: "Form",
-    description: "Lead-capture form definitions: fields, mapping to leads/contacts, hidden field rules, conditional logic, post-submit routing (lead score boost, nurture enrol, sales-rep notification).",
+    description: "Lead-capture form definitions: fields, mapping to leads/contacts, hidden field rules, conditional logic, post-submit routing (lead score boost, nurture enroll, sales-rep notification).",
     master_domain: "MA",
   },
   // ----- SALES-ENG -----
@@ -160,7 +160,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Cadence",
     plural_label: "Cadences",
     display_label: "Cadence",
-    description: "Multi-step outreach sequence — touchpoint definitions (call, email, social, video, voicemail-drop), timing, branching rules based on engagement. The Salesloft/Outreach core entity; enrolment can be manual (rep choice) or automated (CDP intent signal, CRM opportunity stage).",
+    description: "Multi-step outreach sequence — touchpoint definitions (call, email, social, video, voicemail-drop), timing, branching rules based on engagement. The Salesloft/Outreach core entity; enrollment can be manual (rep choice) or automated (CDP intent signal, CRM opportunity stage).",
     master_domain: "SALES-ENG",
   },
   {
@@ -199,9 +199,9 @@ const refObjects = await get(
 for (const r of refObjects) dataObjMap.set(String(r.data_object_name), Number(r.id));
 
 // =============================================================================
-// PHASE 2 — master links
+// PHASE 2 — master relationships
 // =============================================================================
-console.log("\n=== Phase 2: master links ===");
+console.log("\n=== Phase 2: master relationships ===");
 
 const allDDO = await get("/domain_data_objects?select=domain_id,data_object_id&limit=20000");
 const existingDDOKey = new Set(allDDO.map(r => `${r.domain_id}|${r.data_object_id}`));
@@ -210,16 +210,16 @@ const masterRows = allObjects
   .map(o => ({
     domain_id: did(o.master_domain),
     data_object_id: dataObjMap.get(o.data_object_name)!,
-    role: "master",
+    held_as: "master",
     notes: "",
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
 
 if (masterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${masterRows.length} master links`);
+  console.log(`  /domain_data_objects: inserting ${masterRows.length} master relationships`);
   await insertChunked("/domain_data_objects", masterRows);
 } else {
-  console.log(`  /domain_data_objects: all master links already present`);
+  console.log(`  /domain_data_objects: all master relationships already present`);
 }
 
 // =============================================================================
@@ -227,53 +227,53 @@ if (masterRows.length > 0) {
 // =============================================================================
 console.log("\n=== Phase 3: multi-master / contributor / consumer rows ===");
 
-type SignalRow = { data_object: string; domain: string; role: "master" | "contributor" | "consumer" | "derived"; notes: string };
+type SignalRow = { data_object: string; domain: string; held_as: "master" | "contributor" | "consumer" | "derived"; notes: string };
 
 const signals: SignalRow[] = [
   // customer_events — 5-domain fan-in
-  { data_object: "customer_events", domain: "MA", role: "contributor", notes: "Campaign delivery, open, click, bounce, unsubscribe events feed CDP's event stream." },
-  { data_object: "customer_events", domain: "B2C-COMM", role: "contributor", notes: "Storefront browse, cart, checkout, return events feed CDP." },
-  { data_object: "customer_events", domain: "CRM", role: "contributor", notes: "Sales activities (call, email, meeting, demo) and opportunity-stage transitions feed CDP as 'sales-touch' events." },
-  { data_object: "customer_events", domain: "CSM", role: "contributor", notes: "Case-creation, escalation, resolution, and CSAT events feed CDP for unified customer view." },
+  { data_object: "customer_events", domain: "MA", held_as: "contributor", notes: "Campaign delivery, open, click, bounce, unsubscribe events feed CDP's event stream." },
+  { data_object: "customer_events", domain: "B2C-COMM", held_as: "contributor", notes: "Storefront browse, cart, checkout, return events feed CDP." },
+  { data_object: "customer_events", domain: "CRM", held_as: "contributor", notes: "Sales activities (call, email, meeting, demo) and opportunity-stage transitions feed CDP as 'sales-touch' events." },
+  { data_object: "customer_events", domain: "CSM", held_as: "contributor", notes: "Case-creation, escalation, resolution, and CSAT events feed CDP for unified customer view." },
 
   // audience_segments — fan-out to multiple activation channels
-  { data_object: "audience_segments", domain: "MA", role: "consumer", notes: "Segments target campaigns and nurture journeys." },
-  { data_object: "audience_segments", domain: "CRM", role: "consumer", notes: "Account-level segment overlay (e.g. 'high-LTV', 'expansion-candidate') surfaces on account records." },
-  { data_object: "audience_segments", domain: "B2C-COMM", role: "consumer", notes: "Personalized storefront rendering driven by segment membership." },
+  { data_object: "audience_segments", domain: "MA", held_as: "consumer", notes: "Segments target campaigns and nurture journeys." },
+  { data_object: "audience_segments", domain: "CRM", held_as: "consumer", notes: "Account-level segment overlay (e.g. 'high-LTV', 'expansion-candidate') surfaces on account records." },
+  { data_object: "audience_segments", domain: "B2C-COMM", held_as: "consumer", notes: "Personalized storefront rendering driven by segment membership." },
 
   // customer_attributes — read by many
-  { data_object: "customer_attributes", domain: "CRM", role: "consumer", notes: "Account view surfaces CDP-derived attributes (LTV, churn-likelihood, preferred-channel) alongside operational CRM fields." },
-  { data_object: "customer_attributes", domain: "MA", role: "consumer", notes: "Segment criteria and personalization token resolution read from customer_attributes." },
+  { data_object: "customer_attributes", domain: "CRM", held_as: "consumer", notes: "Account view surfaces CDP-derived attributes (LTV, churn-likelihood, preferred-channel) alongside operational CRM fields." },
+  { data_object: "customer_attributes", domain: "MA", held_as: "consumer", notes: "Segment criteria and personalization token resolution read from customer_attributes." },
 
   // identity_graphs — IGA contributor (B2C employer scenario)
-  { data_object: "identity_graphs", domain: "IGA", role: "contributor", notes: "Employee identities that also exist as customer identities (B2C-employer overlap, self-service employee perk programs) contribute resolution edges. Edge case but real." },
+  { data_object: "identity_graphs", domain: "IGA", held_as: "contributor", notes: "Employee identities that also exist as customer identities (B2C-employer overlap, self-service employee perk programs) contribute resolution edges. Edge case but real." },
 
   // campaigns — CDP consumes for engagement
-  { data_object: "campaigns", domain: "CDP", role: "consumer", notes: "Reads campaign metadata to enrich campaign-event records with attribution context." },
+  { data_object: "campaigns", domain: "CDP", held_as: "consumer", notes: "Reads campaign metadata to enrich campaign-event records with attribution context." },
 
   // lead_scores — CRM consumer (routing), CDP consumer (profile enrichment)
-  { data_object: "lead_scores", domain: "CRM", role: "consumer", notes: "MQL threshold drives lead routing and rep assignment in CRM." },
-  { data_object: "lead_scores", domain: "CDP", role: "consumer", notes: "Lead scores enrich the resolved customer profile for use across channels." },
+  { data_object: "lead_scores", domain: "CRM", held_as: "consumer", notes: "MQL threshold drives lead routing and rep assignment in CRM." },
+  { data_object: "lead_scores", domain: "CDP", held_as: "consumer", notes: "Lead scores enrich the resolved customer profile for use across channels." },
 
   // call_recordings — PA consumer (manager coaching analytics)
-  { data_object: "call_recordings", domain: "PA", role: "consumer", notes: "Aggregated call quality, talk-ratio, and topic-coverage metrics feed sales-manager coaching analytics in people analytics." },
+  { data_object: "call_recordings", domain: "PA", held_as: "consumer", notes: "Aggregated call quality, talk-ratio, and topic-coverage metrics feed sales-manager coaching analytics in people analytics." },
 
   // conversation_intelligence_records — CRM consumer
-  { data_object: "conversation_intelligence_records", domain: "CRM", role: "consumer", notes: "Deal-context overlay: competitor mentions, sentiment shifts, commitments visible on the opportunity timeline." },
+  { data_object: "conversation_intelligence_records", domain: "CRM", held_as: "consumer", notes: "Deal-context overlay: competitor mentions, sentiment shifts, commitments visible on the opportunity timeline." },
 
   // sales_emails — CRM contributor, CDP consumer
-  { data_object: "sales_emails", domain: "CRM", role: "contributor", notes: "Rep-sent emails are logged into the account activity timeline; CRM is the longer-term system of record for the touchpoint history." },
-  { data_object: "sales_emails", domain: "CDP", role: "consumer", notes: "Open/reply/click events feed CDP as sales-touch engagement signals." },
+  { data_object: "sales_emails", domain: "CRM", held_as: "contributor", notes: "Rep-sent emails are logged into the account activity timeline; CRM is the longer-term system of record for the touchpoint history." },
+  { data_object: "sales_emails", domain: "CDP", held_as: "consumer", notes: "Open/reply/click events feed CDP as sales-touch engagement signals." },
 
   // contacts — CDP contributor (resolved profile enrichment)
-  { data_object: "contacts", domain: "CDP", role: "contributor", notes: "CDP-resolved attributes (identity match, behavioral score, lifecycle stage) enrich the operational contact record back in CRM." },
+  { data_object: "contacts", domain: "CDP", held_as: "contributor", notes: "CDP-resolved attributes (identity match, behavioral score, lifecycle stage) enrich the operational contact record back in CRM." },
 ];
 
 const signalRows = signals
   .map(s => {
     const objId = dataObjMap.get(s.data_object);
     if (!objId) { console.warn(`  ! data_object missing: ${s.data_object}`); return null; }
-    return { domain_id: did(s.domain), data_object_id: objId, role: s.role, notes: s.notes };
+    return { domain_id: did(s.domain), data_object_id: objId, held_as: s.held_as, notes: s.notes };
   })
   .filter((r): r is Row => r !== null)
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
@@ -338,7 +338,7 @@ const handoffs = [
     source_domain_id: did("CDP"), target_domain_id: did("SALES-ENG"),
     data_object_id: doid("cadences"), trigger_event: "high_intent_signal.detected",
     integration_pattern: "event_stream", friction_level: "high",
-    description: "CDP-detected high-intent signal (pricing-page revisits, integration-doc views, competitor-comparison engagement) triggers cadence enrolment in SALES-ENG so reps reach out at the right moment. High friction: the intent signal is probabilistic, the cadence enrolment rules are rep-team-specific, and the systems have very different data models. The marquee 'intent data → outreach' handoff that powers modern outbound.",
+    description: "CDP-detected high-intent signal (pricing-page revisits, integration-doc views, competitor-comparison engagement) triggers cadence enrollment in SALES-ENG so reps reach out at the right moment. High friction: the intent signal is probabilistic, the cadence enrollment rules are rep-team-specific, and the systems have very different data models. The marquee 'intent data → outreach' handoff that powers modern outbound.",
     notes: "",
   },
   {
@@ -353,7 +353,7 @@ const handoffs = [
     source_domain_id: did("CRM"), target_domain_id: did("SALES-ENG"),
     data_object_id: doid("cadences"), trigger_event: "opportunity.assigned",
     integration_pattern: "api_call", friction_level: "medium",
-    description: "New opportunity assignment in CRM auto-enrols the contact in the appropriate cadence in SALES-ENG. Friction sits in cadence-selection rules (which cadence for which deal type, region, segment) which drift faster than the integration code.",
+    description: "New opportunity assignment in CRM auto-enrolls the contact in the appropriate cadence in SALES-ENG. Friction sits in cadence-selection rules (which cadence for which deal type, region, segment) which drift faster than the integration code.",
     notes: "",
   },
   {
@@ -414,7 +414,7 @@ console.log(`  total domain_data_objects:    ${totalDDO}`);
 console.log(`  total cross_domain_handoffs:  ${totalHO}`);
 
 console.log("\nMulti-master leaderboard:");
-const allMasterRows = await get("/domain_data_objects?role=eq.master&select=data_object_id&limit=20000");
+const allMasterRows = await get("/domain_data_objects?held_as=eq.master&select=data_object_id&limit=20000");
 const masterCount = new Map<number, number>();
 for (const r of allMasterRows) {
   const id = Number(r.data_object_id);

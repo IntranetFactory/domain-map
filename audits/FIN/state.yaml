@@ -6,21 +6,21 @@ last_audit: "2026-06-13"
 # B9d reference-read (2026-06-13): "Cost Center" is reference/config data of FIN; it becomes ownable work only if FIN later runs a workflow on it.
 
 b1a:
-  - id: B1A-MASTER-MASTER-EDGES
-    summary: "B6/B8 master-to-master data_object_relationships still missing (~9-10 edges)."
+  - id: B1A-MASTER-MASTER-RELATIONSHIPS
+    summary: "B6/B8 master-to-master data_object_relationships still missing (~9-10 relationships)."
     finding: >
-      ~9-10 intra/cross-domain master-to-master edges are unauthored: journal_entries posted_against
+      ~9-10 intra/cross-domain master-to-master relationships are unauthored: journal_entries posted_against
       accounting_periods / general_ledger_accounts / cost_centers, journal_entries scoped_by legal_entities,
       cash_transactions reconciled_against bank_accounts, fixed_assets owned_by legal_entities, fixed_assets
       governed_by asset_depreciation_schedules, intercompany_transactions between legal_entities,
       revenue_recognition_records produces journal_entries, accounting_periods scoped_by legal_entities.
-      The modules now exist, so the edges can land; the 2026-05-31 Continuation licensed only user-edges.
+      The modules now exist, so the relationships can land; the 2026-05-31 Continuation licensed only relationships to users.
     action: >
-      INSERT 9-10 data_object_relationships rows after per-edge verb/cardinality/owner_side authoring.
+      INSERT 9-10 data_object_relationships rows after per-relationship verb/cardinality/owner_side authoring.
       one_to_many for most postings (parent on the targeted master); intercompany_transactions between
       legal_entities = many_to_many self-join-via-legal_entities.
     blocked_by:
-      - {type: user_decision, ref: B1A-MASTER-MASTER-EDGES, reason: "verb and owner_side authoring per edge"}
+      - {type: user_decision, ref: B1A-MASTER-MASTER-RELATIONSHIPS, reason: "verb and owner_side authoring per relationship"}
 
   - id: B1A-S3
     summary: "C1 sparse: only Accounting (owner) loaded; missing Finance / FP&A / Tax / Treasury business_function_domains rows."
@@ -84,10 +84,10 @@ b1a:
 
 b1b:
   - id: B1B-PERSONA-RACI
-    summary: "Phase P (personas, role_modules, process_raci, lifecycle.process_id) now applies: multi-module domain built."
+    summary: "Phase P (personas, persona_modules, process_raci, lifecycle.process_id) now applies: multi-module domain built."
     finding: >
       FIN is now a 4-module domain. Per the 2026-06-02 phase-P triage, a multi-module result triggers
-      Phase P after the module/skill/master work. No personas, role_modules, or process_raci rows exist for
+      Phase P after the module/skill/master work. No personas, persona_modules, or process_raci rows exist for
       the 4 new modules yet. The system-skill prerequisite (B1A-SYSTEM-SKILLS) is now satisfied (skills 298-301).
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS, reason: "system skills now landed (skills 298-301); Phase P authoring can proceed once the user opens it"}

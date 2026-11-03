@@ -13,7 +13,7 @@ q1: Should SCRM map its own supply-chain network (its own node records for indir
 - a) Master a `supply_chain_nodes` graph (including indirect / sub-tier entities you have no direct record of) and embed your SRM suppliers into it.
 - b) Only consume SRM `suppliers`; no separate network-node records.
 
-Recommended: a. Resilinc, Interos, Everstream, and Sayari all persist N-tier graph nodes that include sub-tier and indirect entities the buyer has no direct relationship with (the Interos network, Sayari Map, Resilinc multi-tier part-site map). Those sub-tier nodes have no SRM supplier record by definition, so option b cannot represent the graph these vendors sell. Option a masters a node entity distinct from the direct-supplier master and links the known direct suppliers back to SRM, so the SRM supplier master stays the single master for direct suppliers (Rule M7) while SCRM adds the indirect nodes.
+Recommended: a. Resilinc, Interos, Everstream, and Sayari all persist N-tier graph nodes that include sub-tier and indirect entities the buyer has no direct relationship with (the Interos network, Sayari Map, Resilinc multi-tier part-site map). Those sub-tier nodes have no SRM supplier record by definition, so option b cannot represent the graph these vendors sell. Option a masters a node entity distinct from the direct-supplier master and relates the known direct suppliers back to SRM, so the SRM supplier master stays the single master for direct suppliers (Rule M7) while SCRM adds the indirect nodes.
 
 a1:
 

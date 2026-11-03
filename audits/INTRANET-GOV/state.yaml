@@ -109,9 +109,9 @@ b2:
     summary: Add accessibility_conformance_records master + WCAG/EN 301 549/EAA regulations, keeping accessibility statute-anchored. User asked (2026-06-16) whether this would be an optional module.
     question: >-
       INTGOV-A11Y (Accessibility Governance) is realized only as a scan tool; there is no statute-
-      anchored conformance record (target, standard, level, pass/fail, finding linkage, statement
+      anchored conformance record (target, standard, level, pass/fail, finding relationship, statement
       reference). The EAA has been enforceable since June 2025. Add accessibility_conformance_records
-      and add WCAG 2.2 / EN 301 549 / EAA as regulations + domain_regulations links (ADA + Section 508
+      and add WCAG 2.2 / EN 301 549 / EAA as regulations + domain_regulations relationships (ADA + Section 508
       domain_regulations were already loaded in the 2026-06-10 pass)? Open sub-question from the user:
       should the conformance record ship as its own OPTIONAL module (deploy-time opt-in for orgs that
       need accessibility governance), or live in the base Inventory module alongside the existing
@@ -147,7 +147,7 @@ b3:
       embedded Work Management ALREADY exists today (this answers the user's 2026-06-16 a4 question).
       The build's own phase0 originally proposed a domain-typed intranet_improvement_items and dropped
       it in favor of that generic embed. A thin typed remediation/improvement master would back the
-      INTGOV-PLAN capability and link findings -> remediation -> attestation closure. Discretionary:
+      INTGOV-PLAN capability and relate findings -> remediation -> attestation closure. Discretionary:
       the generic work_item embed already works; add only if B2-S2 (findings) lands. Fits the existing
       Governance module; not a split.
     vendor_evidence:

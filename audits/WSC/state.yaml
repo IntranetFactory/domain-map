@@ -21,8 +21,8 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per the 2026-06-07 state-driven pass: personas/RACI (B1A-PHASE-P) are not authored automatically; user owns the persona model."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per the 2026-06-07 state-driven pass: personas/RACI (B1A-PHASE-P) are not authored automatically; user owns the persona model."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas:
       - "Collaboration end-user (posts in channels, starts huddles, follows threads)"
       - "Channel owner / moderator (creates and archives channels, manages membership)"
@@ -84,12 +84,12 @@ b2:
       - {data_object_id: 568, name: "channel_members", target_module_id: 115, workflow: "candidate flip: has_personal_content"}
 
   - id: B2-S5
-    summary: "Microsoft Viva Connections links to WSC at coverage_level=partial; possibly scope creep (DESTRUCTIVE: solution_domains DELETE)."
-    question: "Should the solution_domains row linking solution 466 (Microsoft Viva Connections) to WSC at coverage_level='partial' remain, or be deleted (Viva moves to INTRANET-only)?"
+    summary: "Microsoft Viva Connections relates to WSC at coverage_level=partial; possibly scope creep (DESTRUCTIVE: solution_domains DELETE)."
+    question: "Should the solution_domains row relating solution 466 (Microsoft Viva Connections) to WSC at coverage_level='partial' remain, or be deleted (Viva moves to INTRANET-only)?"
     options:
       - "DELETE the solution_domains row (the product becomes INTRANET-only)."
-      - "Leave as partial (the embedded chat surface inside the intranet product justifies the partial link)."
-    why: "The intranet product's chat is already linked as primary via the correct WSC vehicle (solution 360). The partial link reads as scope creep onto WSC from an INTRANET-shaped product."
+      - "Leave as partial (the embedded chat surface inside the intranet product justifies the partial relationship)."
+    why: "The intranet product's chat is already related as primary via the correct WSC vehicle (solution 360). The partial relationship reads as scope creep onto WSC from an INTRANET-shaped product."
     vendor_evidence:
       - {vendor: "Microsoft Viva Connections", evidence: "secondary"}
 
@@ -100,7 +100,7 @@ b2:
       - "ADD wsc-external-collab:read (or :manage) to EMPLOYEE-COLLAB-USER."
       - "Leave (guest invites admin-only by intent, huddles not the steward's surface)."
       - "Different mapping (user picks per-org)."
-    why: "Path A (role_modules) declares the surfaces each role touches; Path B (role_permissions via permissions.domain_module_id) declares actual granted access. The two should agree. Today the steward holds role_modules on 115 + 117 but role_permissions on 115 + 117 + nothing on 116, internally consistent. The employee role holds role_modules on 115 + 116 but role_permissions on 115 + 116 + nothing on 117, consistent. The question is whether the intent is correct or whether the missing row reflects an oversight."
+    why: "Path A (persona_modules) declares the surfaces each role touches; Path B (role_permissions via permissions.domain_module_id) declares actual granted access. The two should agree. Today the steward holds persona_modules on 115 + 117 but role_permissions on 115 + 117 + nothing on 116, internally consistent. The employee role holds persona_modules on 115 + 116 but role_permissions on 115 + 116 + nothing on 117, consistent. The question is whether the intent is correct or whether the missing row reflects an oversight."
 
   - id: B2-NOTE-C1
     summary: "WSC owner business_function is 'End-User Computing', not a canonical 20-function-spine name (NON-BLOCKING NOTE)."

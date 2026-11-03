@@ -18,7 +18,7 @@ re-implemented:
 - **Generic work/task/project management** stays in Work Management (WORK-MGMT): MRM consumes
   `work_items` and `work_projects` (mastered by WORK-MGMT-TASK-EXEC) and hands off scheduled plan lines.
 - **Brand/creative asset storage** stays in Digital Asset Management (DAM): MRM references
-  `digital_assets` via a `data_object_relationships` edge only (DAM is unbuilt at module grain, so no
+  `digital_assets` via a `data_object_relationships` row only (DAM is unbuilt at module grain, so no
   `consumer` DMDO / handoff was authored against it; a consumer row needs a canonical master to defer to).
 
 The fold-into-WORK-MGMT fallback is surfaced as the GATE question (B2-S1) in `q-MRM.md`, grounded in the
@@ -45,9 +45,9 @@ converging into WORK-MGMT and DAM-led suites.
 
 - Phase A: 1 domain (+ all 7 Rule #8 metadata fields + catalog_tagline + catalog_description),
   5 capabilities + 5 capability_domains, 2 full domain_modules + 5 domain_module_capabilities,
-  1 new vendor (Uptempo), 3 new solutions + 5 solution_domains (2 reused solutions linked).
+  1 new vendor (Uptempo), 3 new solutions + 5 solution_domains (2 reused solutions related).
 - Phase B: 7 data_objects (masters), 10 domain_module_data_objects (7 master + 3 cross-domain consumer),
-  18 data_object_relationships (9 intra-domain + 5 users edges per Rule #10 + 4 cross-domain incl. the
+  18 data_object_relationships (9 intra-domain + 5 relationships to `users` per Rule #10 + 4 cross-domain incl. the
   DAM digital_assets reference), 14 data_object_aliases, 17 data_object_lifecycle_states across the
   4 operational_workflow masters, 6 trigger_events, 4 handoffs (2 cross-domain to MA + WORK-MGMT with
   both module FKs populated, 2 intra-domain lifecycle_progression), 2 handoff_processes (PCF 3.3, 3.4.2.10).
@@ -56,7 +56,7 @@ converging into WORK-MGMT and DAM-led suites.
   reused), 16 domain_module_tools. Notifications use the notify_person/notify_team abstractions
   (Rule #17 default), not channel-specific primitives.
 - Phase E: 3 personas (MARKETING-MARKETING-OPS-MANAGER, MARKETING-MARKETING-PLANNER cross-functional
-  MARKETING-BUDGET-OWNER), each with >=2 role_modules (6 total); 9 process_raci across PCF 3.3 / 3.3.2 /
+  MARKETING-BUDGET-OWNER), each with >=2 persona_modules (6 total); 9 process_raci across PCF 3.3 / 3.3.2 /
   3.3.2.3, each carrying >=1 Responsible + >=1 Accountable; 4 gated lifecycle states wired to PCF
   process_id (plans.approved -> 23, budgets.approved -> 134, allocations.approved -> 647,
   spend.reconciled -> 134).
@@ -72,7 +72,7 @@ converging into WORK-MGMT and DAM-led suites.
 - B1: 7 masters. B2: all have singular/plural labels. B3: all prefixed (`marketing_*`), no bare-word.
   B4: pattern flags considered and set (marketing_plans/budgets/allocations has_single_approver,
   marketing_spend_records has_submit_lock). B5: no orphan embedded_master. B6/B7: intra-domain + users
-  edges present. B8: 4 outbound cross-domain edges mirror the handoffs. B11: 14 aliases. B12: every
+  relationships present. B8: 4 outbound cross-domain relationships mirror the handoffs. B11: 14 aliases. B12: every
   operational_workflow master has one initial + >=1 terminal + monotonic unique state_order. B13: zero
   unclassified masters. B14: no statute-prefixed masters (none apply). B15: no pattern flag on
   catalog/junction/computed. PASS.
@@ -82,7 +82,7 @@ converging into WORK-MGMT and DAM-led suites.
   Semantius score computable - strict 13/14 (~0.93), the single non-platform tool is notify_team
   (coverage_tier external). PASS.
 - E1: 3 personas on a multi-module domain. E2: every persona reaches >=2 modules. E3: interaction_level
-  set on every role_modules row. E4: each gated process carries >=1 R + >=1 A. E6: every gated lifecycle
+  set on every persona_modules row. E4: each gated process carries >=1 R + >=1 A. E6: every gated lifecycle
   state has its process_id wired. PASS.
 
 ### Naming note (Rule #9)

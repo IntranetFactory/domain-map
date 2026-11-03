@@ -57,8 +57,8 @@ Vacuous (zero masters; B1 fails for a non-leadership-tier sub-domain).
 #### A-band
 
 - **A1, domains metadata.** Mostly pass. `crud_percentage=92`, `min_org_size='30 m <2500'`, `cost_band='$$'`, `certification_required=false`, `usa_market_size_usd_m=700`, `market_size_source_year=2025`. Subtle issue: `business_logic` is an empty string; the Rule #8 contract is `business_logic` non-empty unless `crud_percentage >= 95`. PRM is at 92, below the threshold, so `business_logic` should carry the non-JsonLogic-expressible work. See Bucket 1 `B1-A2`.
-- **A2, capabilities linked.** FAIL. Zero `capability_domains` rows. See Bucket 1 `B1-A3`.
-- **A3, solutions linked.** FAIL. Zero `solution_domains` rows. See Bucket 1 `B1-A4`.
+- **A2, capabilities related.** FAIL. Zero `capability_domains` rows. See Bucket 1 `B1-A3`.
+- **A3, solutions related.** FAIL. Zero `solution_domains` rows. See Bucket 1 `B1-A4`.
 - **A4, catalog UX fields.** FAIL. Both `catalog_tagline` and `catalog_description` are empty. See Bucket 1 `B1-A1`.
 - **A5, vendor ownership refresh.** Skipped (opt-in, not requested). Notable potential refresh once vendors land: Salesforce Communities was rebranded to Experience Cloud in 2021, and the Salesforce PRM SKU was repositioned as Partner Cloud; Impartner acquired TCMA capabilities; Channeltivity was acquired by Magnitude Software. Surface to user if vendor-ownership pass is requested.
 
@@ -183,27 +183,27 @@ Partner training and certification (`partner_training_enrollments`, `partner_cer
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges with other domains, ranked by edge weight (handoff count plus DMDO dependency count). Two outbound handoffs to CRM today; everything else is semantic-only.
+Cross-domain relationships with other domains, ranked by relationship weight (handoff count plus DMDO dependency count). Two outbound handoffs to CRM today; everything else is semantic-only.
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Edge weight | Notes |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Relationship weight | Notes |
 |---|---|---|---|---|---|
-| CRM | 2 (211, 212) | 0 | n/a (no DMDO surface on PRM side) | 2 today, semantic 6+ | Largest edge. Joint opportunities and partner-sourced referrals already wired outbound. Once PRM masters `channel_partners`, CRM accounts should carry a `partner_channel_partner_id` consumer link; co-sell signals from `PRM-PARTNER-CO-SELL` (if kept in PRM) feed CRM as `account.partner_co_sell_signal`. The two NULL-source-module handoffs are a fix once `B1-M1` resolves. |
-| MA | 0 | 0 | n/a | 0 today, semantic 4+ | TCMA tier overlap: partner-led campaigns, co-branded asset distribution, partner-email syndication. If TCMA stays in PRM, MA receives partner-campaign runs as ingest. If TCMA promotes as its own domain, the edge becomes TCMA-MA. |
+| CRM | 2 (211, 212) | 0 | n/a (no DMDO surface on PRM side) | 2 today, semantic 6+ | Largest relationship. Joint opportunities and partner-sourced referrals already wired outbound. Once PRM masters `channel_partners`, CRM accounts should carry a `partner_channel_partner_id` consumer relationship; co-sell signals from `PRM-PARTNER-CO-SELL` (if kept in PRM) feed CRM as `account.partner_co_sell_signal`. The two NULL-source-module handoffs are a fix once `B1-M1` resolves. |
+| MA | 0 | 0 | n/a | 0 today, semantic 4+ | TCMA tier overlap: partner-led campaigns, co-branded asset distribution, partner-email syndication. If TCMA stays in PRM, MA receives partner-campaign runs as ingest. If TCMA promotes as its own domain, the relationship becomes TCMA-MA. |
 | LMS | 0 | 0 | n/a | 0 today, semantic 3+ | Partner training and certification side: LMS should master `enrollments` and `certifications` if PRM consumes them per B2-T1; otherwise PRM masters its own training enrollment shell. |
 | CPQ | 0 | 0 | n/a | 0 today, semantic 3+ | Deal-protection lookup at quote time: CPQ should query PRM for active deal registrations before allowing a partner-resold quote at non-protected pricing. |
 | SALES-PERF | 0 | 0 | n/a | 0 today, semantic 2+ | Partner-channel commission accruals: when partners are commission-eligible (typical for SaaS partner programs), commission events flow PRM (deal closed-with-partner) to SALES-PERF (accrual record). |
 | S2P | 0 | 0 | n/a | 0 today, semantic 2+ | MDF and commission payouts settle through procurement / AP. `mdf_claim.approved` flows to S2P for vendor-payment processing. |
-| SUB-MGMT | 0 | 0 | n/a | 0 today, semantic 2+ | Partner-resold subscriptions: indirect billing through partner-of-record carries SUB-MGMT subscription records with `partner_channel_partner_id` consumer link. |
+| SUB-MGMT | 0 | 0 | n/a | 0 today, semantic 2+ | Partner-resold subscriptions: indirect billing through partner-of-record carries SUB-MGMT subscription records with `partner_channel_partner_id` consumer relationship. |
 | LOYALTY | 0 | 0 | n/a | 0 today, semantic 1+ | Adjacent for affiliate / influencer programs if AFFILIATE-MGMT is not split out. Same engagement-vs-financial split as the GTM-PLAN / ABM-PLATFORM cut. |
-| SPM | 0 | 0 | n/a | 0 today, semantic 1+ | Partner-program strategy at the portfolio level (which partner segments, which markets, which investments). Light edge. |
+| SPM | 0 | 0 | n/a | 0 today, semantic 1+ | Partner-program strategy at the portfolio level (which partner segments, which markets, which investments). Light relationship. |
 
-Default deep-dive threshold (edge weight at least 3) is met by CRM today; MA, LMS, and CPQ are at semantic-3+ but zero on the wire. Pairwise reconciliation against CRM in Pass 4 below; the others are blocked on `B1-M1` and on the corresponding domain audits.
+Default deep-dive threshold (relationship weight at least 3) is met by CRM today; MA, LMS, and CPQ are at semantic-3+ but zero on the wire. Pairwise reconciliation against CRM in Pass 4 below; the others are blocked on `B1-M1` and on the corresponding domain audits.
 
 ### Pass 4, Pairwise reconciliation per neighbor
 
-Run for CRM (edge weight 2 today, semantic 6+). All others (MA, LMS, CPQ, SALES-PERF, S2P, SUB-MGMT, LOYALTY, SPM) are deferred to a re-run once `B1-M1` lands; their semantic edges are real but unactionable until PRM has modules.
+Run for CRM (relationship weight 2 today, semantic 6+). All others (MA, LMS, CPQ, SALES-PERF, S2P, SUB-MGMT, LOYALTY, SPM) are deferred to a re-run once `B1-M1` lands; their semantic relationships are real but unactionable until PRM has modules.
 
-#### PRM to CRM (edge weight 2 today, semantic 6+)
+#### PRM to CRM (relationship weight 2 today, semantic 6+)
 
 1. **Existing handoffs, fully wired.** None. Both 211 and 212 have `source_domain_module_id` NULL.
 
@@ -362,7 +362,7 @@ Both fixes are deferred to land after `B1-M1`. No notes additions on these rows 
 
 ### Report-only follow-ups (owed by other domains)
 
-- **CRM B9 owes outbound on `account.linked_to_partner` and `opportunity.closed_won_with_partner` to PRM.** Cannot author from this side; surfaces when CRM is next validated, blocked on PRM mastering `channel_partners`. Today: CRM has no edge to PRM in either direction.
+- **CRM B9 owes outbound on `account.linked_to_partner` and `opportunity.closed_won_with_partner` to PRM.** Cannot author from this side; surfaces when CRM is next validated, blocked on PRM mastering `channel_partners`. Today: CRM has no relationship to PRM in either direction.
 - **LMS B9 owes outbound on `enrollment.completed` and `certification.issued` to PRM** (if `B2-T1` resolves to LMS-mastered). Cannot author until LMS has an "external learner" mode for partner training. Surfaces when LMS is next validated.
 - **CPQ B9 owes consumer reference to PRM's `deal_registrations` for protected-pricing lookup at quote time.** Today CPQ doesn't model the partner-resold case. Surfaces in the next CPQ audit.
 - **SALES-PERF B9 owes either inbound consumer of PRM `partner_channel_commission_runs` (if `B2-T2` resolves to PRM-owned) or outbound `commission_accrual.created` to PRM for scorecard inputs (if `B2-T2` resolves to SALES-PERF-owned).** Surfaces in the next SALES-PERF audit.
@@ -425,7 +425,7 @@ Net: 0 fixes applied, 12 deferred. No loader file created.
 
 **B-band (B5, B7, B9, B9b, B10b, B11, B12 as scoped).**
 - B5 vacuous (zero `embedded_master` rows on PRM).
-- B7 vacuous (zero PRM masters from which user-edges would emanate).
+- B7 vacuous (zero PRM masters from which relationships to `users` would emanate).
 - B9 partial: 2 outbound handoffs exist (211, 212) sourced via CRM-owned trigger_events 171 (`co_sell.opportunity_created` on `crm_opportunities` 100) and 172 (`partner_referral.qualified` on `crm_leads` 99). Both trigger_events are CRM-mastered, not PRM-mastered. PRM authors zero of its own trigger_events. The outbound events PRM should publish (`channel_partner.created`, `deal_registration.approved`, `mdf_request.approved`, `mdf_claim.approved`, `partner_scorecard.finalized`) are unmodeled and gated on B1-M1 plus the PRM masters landing.
 - B9b vacuous (zero PRM modules; intra-domain cross-module surface is empty).
 - B10b FAIL on the source side for both 211 and 212: `source_domain_module_id=NULL`. Target side correctly populated (48 = CRM-PIPELINE-MGT for 211, 47 = CRM-LEAD-MGT for 212). The source-side fix requires PRM modules first.

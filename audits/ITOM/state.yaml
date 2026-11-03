@@ -18,14 +18,14 @@ b1a:
     finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-ROLE-MODULES
-    summary: "Zero role_modules for ITOM; SKIPPED 2026-06-06 (action's persona-to-module mapping violates the 2-module floor; full Phase E needs reach + lifecycle wiring)."
+    summary: "Zero persona_modules for ITOM; SKIPPED 2026-06-06 (action's persona-to-module mapping violates the 2-module floor; full Phase E needs reach + lifecycle wiring)."
     finding: >
-      No role_modules rows bundle a persona against any ITOM module. With ITOM-INFRA-MON (267),
+      No persona_modules rows bundle a persona against any ITOM module. With ITOM-INFRA-MON (267),
       ITOM-CAPACITY-PLAN (268), ITOM-OPS-AUTOMATION (269) live, routine ITOM personas can be
       bundled. SKIPPED on the 2026-06-06 b1a pass: the action's literal mapping pins each persona
       to a SINGLE module (NOC Engineer -> 267, SRE -> 267, Capacity Planner -> 268, Automation/Ops
-      -> 269), which violates the hard 2-module floor (E2: every domain_roles persona needs >=2
-      role_modules entries; a single-module persona is a permission tier, not a persona). Authoring
+      -> 269), which violates the hard 2-module floor (E2: every personas persona needs >=2
+      persona_modules entries; a single-module persona is a permission tier, not a persona). Authoring
       valid personas requires deciding each persona's full multi-module reach (primary/secondary)
       plus process_raci responsibility and data_object_lifecycle_states.process_id wiring. ITOM has
       ZERO lifecycle states (B1B-S11, user_decision-blocked), so no gated process exists for R/A
@@ -33,7 +33,7 @@ b1a:
       reach topology and depends on lifecycle authoring that is user-decision-gated. Per the b1a
       contract (skip items needing judgment beyond their action text), deferred.
     action: >
-      Author personas (domain_roles, function-scoped naming) with >=2-module role_modules reach
+      Author personas (personas, function-scoped naming) with >=2-module persona_modules reach
       each, then their process_raci assignments, once the persona reach topology is settled and the
       lifecycle state machines (B1B-S11) land to provide gated processes. Needs a Phase E judgment
       pass; not executable from the current action text without violating the 2-module floor.
@@ -44,7 +44,7 @@ b1b:
     finding: >
       At the domain_module_data_objects (module-junction) layer the master pre-check is clean:
       ITOM masters 85 and 86 exactly once catalog-wide. But the legacy domain_data_objects rollup
-      still carries RMM (id 130) role='master' rows on 85 and 86 alongside ITOM. RMM has zero
+      still carries RMM (id 130) held_as='master' rows on 85 and 86 alongside ITOM. RMM has zero
       domain_modules, so the conflict is rollup-only and does not affect the ITOM module set, but
       RMM owes a demotion (embedded_master or consumer) once B2-S1 sets ITOM canonical.
     blocked_by:
@@ -52,10 +52,10 @@ b1b:
       - {type: domain_audit, blocking_domain: RMM, milestone: rollup_master_demotion}
 
   - id: B1B-S5
-    summary: "B6 zero intra-domain master-master data_object_relationships; 5 edges still unauthored (verb/cardinality tuples not pre-specified)."
+    summary: "B6 zero intra-domain master-master data_object_relationships; 5 relationships still unauthored (verb/cardinality tuples not pre-specified)."
     finding: >
       No data_object_relationships rows exist where both ends are ITOM masters (84/85/86/87). Five
-      implied edges per the 2026-05-30 B6 finding: monitoring_events spawns monitoring_alerts;
+      implied relationships per the 2026-05-30 B6 finding: monitoring_events spawns monitoring_alerts;
       monitoring_policies governs monitoring_events; monitoring_policies governs monitoring_alerts;
       capacity_records produces monitoring_events; monitoring_policies governs capacity_records.
       Out of modularization scope (creates relationships). The full (relationship_verb, inverse_verb,
@@ -104,7 +104,7 @@ b2:
   - id: B2-S1
     summary: "M7 catalog rollup conflict: ITOM and RMM both master monitoring_alerts (85) and monitoring_policies (86) in legacy domain_data_objects; pick canonical owner."
     question: >
-      Both ITOM (id 2) and RMM (id 130) have role='master' rows in legacy domain_data_objects for
+      Both ITOM (id 2) and RMM (id 130) have held_as='master' rows in legacy domain_data_objects for
       data_object 85 (monitoring_alerts) and 86 (monitoring_policies). At the module-junction layer
       ITOM now masters both cleanly (single master each catalog-wide); the rollup-level duplication
       remains. RMM has zero domain_modules. Who is canonical?

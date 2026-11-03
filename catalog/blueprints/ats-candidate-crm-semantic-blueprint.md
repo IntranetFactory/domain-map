@@ -40,7 +40,7 @@ The candidate-relationship backbone of an ATS, masters candidates (including the
 | Outreach Sequence Steps | `outreach_sequence_steps` | Ordered steps within an outreach sequence, each defining the channel, day offset, message template, and whether the step is automated or needs a recruiter action. |
 | Outreach Sequences | `outreach_sequences` | Named multi-step sourcing cadences that automate candidate outreach across channels, holding the sequence name, owner, channel mix, and active status. |
 | Recruiter Interactions | `recruiter_interactions` | Free-text recruiter notes attached to a candidate, application, or talent pool, time-stamped and authored by a user. |
-| Recruiting Event Attendances | `recruiting_event_attendances` | Links between candidates and recruiting events, recording registration, check-in, attendance, and conversion outcome. |
+| Recruiting Event Attendances | `recruiting_event_attendances` | Relationships between candidates and recruiting events, recording registration, check-in, attendance, and conversion outcome. |
 | Recruitment Agencies | `recruitment_agencies` | Third-party recruiters and staffing firms supplying candidates, with contract terms, contacts, performance, and submitted candidates. |
 | Recruitment Events | `recruitment_events` | Career fairs, campus events, hackathons, and meetups used as sourcing channels, tracking attendees, captured leads, and event return. |
 | Recruitment Sources | `recruitment_sources` | Channels a candidate came from, such as job board, referral, agency, campaign, or inbound, used for source-of-hire and channel analytics. |
@@ -131,7 +131,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | catalog code | singular | plural | role | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `agency_submissions` | `agency_submissions` | Agency Submission | Agency Submissions | master | - | - | - | - | operational_record | `:manage` | - |
 | 2 | `candidate_consents` | `candidate_consents` | Candidate Consent | Candidate Consents | master | - | - | yes | yes | operational_workflow | `:manage` | - |
@@ -160,7 +160,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 _`field_required` applies only when both entities are installed. It never makes an entity required._
 
-### 5.1 Links between entities in this blueprint
+### 5.1 Relationships between entities in this blueprint
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -183,7 +183,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `candidates` | submitted_via | `agency_submissions` | one_to_many | reference | no | source | clear | reference | - |
 | `outreach_sequences` | contains | `outreach_sequence_steps` | one_to_many | composition | yes | source | cascade | parent | - |
 
-### 5.2 Links to platform built-ins (`users`)
+### 5.2 Relationships to platform built-ins (`users`)
 
 | from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -203,11 +203,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | owns | `agency_submissions` | one_to_many | no | source | clear | reference | - |
 | `users` | owns | `outreach_sequences` | one_to_many | no | source | clear | reference | - |
 
-### 5.3 Links to entities outside this blueprint
+### 5.3 Relationships to entities outside this blueprint
 
-_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-#### 5.3a Outgoing links: this blueprint's entity points to the external entity
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -216,7 +216,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `dlp_incidents` | triggers_privacy_review | `data_subject_requests` | one_to_many | no | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
-#### 5.3b Incoming links: the external entity points to this blueprint's entity
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -231,7 +231,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |
@@ -240,9 +240,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._
+_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
 
-| data_object | other module / domain | role | install_optional | notes |
+| data_object | other module / domain | held_as | install_optional | notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | ATS-INTERVIEWS (Candidate Interviews) - ATS | embedded_master | - | - |
 | `candidates` | ATS-OFFERS (Job Offers) - ATS | embedded_master | - | - |
@@ -276,7 +276,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | install_optional | catalog owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `internal_opportunities` | embedded_master | yes | TLNT-INTEL-MARKETPLACE (TLNT-INTEL) | - |
 | `talent_pools` | embedded_master | yes | ATS-TALENT-POOLS (ATS) | - |

@@ -8,7 +8,7 @@ b1a:
   - id: B1A-W1
     summary: Missing master entity_filings on EM-FUND-FORMATION; state-level + IRS filings (Delaware certificate of formation, EIN, blue-sky) as a master separate from fund_formations
     finding: entity_filings is universal across Sydecar, AngelList Stack, Allocations; the formation workflow produces durable per-jurisdiction filing artifacts that need their own status and approver lifecycle, not folded onto fund_formations.
-    action: Author entity_filings data_object + domain_module_data_objects row (role=master, necessity=required, domain_module_id=26) + lifecycle states + intra-domain relationship to fund_formations + at least one state-change trigger event.
+    action: Author entity_filings data_object + domain_module_data_objects row (held_as=master, necessity=required, domain_module_id=26) + lifecycle states + intra-domain relationship to fund_formations + at least one state-change trigger event.
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack, Allocations]
     note: New-entity authoring; not in the mechanical-execute allow-list. Open.
@@ -16,7 +16,7 @@ b1a:
   - id: B1A-W2
     summary: Missing master banking_onboardings on EM-FUND-FORMATION; Mercury / Brex / SVB banking-application case with KYC sub-status
     finding: Banking onboarding is a separately-tracked case in Sydecar + AngelList Stack GP dashboards; KYC checks, approver, and status differ from fund_formations.
-    action: Author banking_onboardings data_object + DMDO row (master, required, module 26) + lifecycle states + relationship to fund_formations + user actor edge (applies).
+    action: Author banking_onboardings data_object + DMDO row (master, required, module 26) + lifecycle states + relationship to fund_formations + user actor relationship (applies).
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack]
     note: New-entity authoring; not in the mechanical-execute allow-list. Open.
@@ -24,7 +24,7 @@ b1a:
   - id: B1A-W4
     summary: Missing master spv_kyc_records on EM-FUND-SPV; per-subscription KYC distinct from spv_subscriptions and from lp_kyc_records
     finding: Sydecar / Allocations / AngelList all run KYC per SPV subscription separately from fund-level KYC; SPV-subscriber pool is wider and looser than fund LP base.
-    action: Author spv_kyc_records data_object + DMDO (master, required, module 27) + lifecycle states + relationship to spv_subscriptions + user actor edge (verifies).
+    action: Author spv_kyc_records data_object + DMDO (master, required, module 27) + lifecycle states + relationship to spv_subscriptions + user actor relationship (verifies).
     proposed_module: EM-FUND-SPV
     vendor_evidence: [Sydecar, Allocations, AngelList Stack]
     note: New-entity authoring; not in the mechanical-execute allow-list. Open.
@@ -89,8 +89,8 @@ b1b:
 
   - id: B1B-S7
     summary: Personas / RACI layer absent; E1-E5 fail across the multi-module domain
-    finding: 4 modules but no domain_roles + role_modules + process_raci. Operator personas (solo GP, fund-ops lead, LP-portal-only viewer) are real per 2026-05-30 audit. This is the persona layer (E-band, references/roles.md), superseding the old _core roles/role_permissions model. Tracked here AND as B1A-PHASE-P; both are DEFERRED (do not auto-author personas).
-    action: After Bucket 2 #3 and lifecycle states land, author domain_roles + role_modules reach + process_raci responsibilities + wire data_object_lifecycle_states.process_id. ATS pilot is the worked reference.
+    finding: 4 modules but no personas + persona_modules + process_raci. Operator personas (solo GP, fund-ops lead, LP-portal-only viewer) are real per 2026-05-30 audit. This is the persona layer (E-band, references/personas.md), superseding the old _core roles/role_permissions model. Tracked here AND as B1A-PHASE-P; both are DEFERRED (do not auto-author personas).
+    action: After Bucket 2 #3 and lifecycle states land, author personas + persona_modules reach + process_raci responsibilities + wire data_object_lifecycle_states.process_id. ATS pilot is the worked reference.
     blocked_by:
       - {type: user_decision, ref: B2-3, reason: "permission materialization scope shifts between full and starter"}
       - {type: depends_on, ref: B1B-L1, reason: "workflow-gate reach needs lifecycle states with requires_permission=true"}
@@ -107,13 +107,13 @@ b1b:
     affected_entities: [spv_subscriptions, fund_formations, spvs]
 
   - id: B1B-S3
-    summary: B9 spv_subscriptions has has_personal_content=true but zero user actor edges
-    finding: lp_subscriptions has 2 user edges (onboarded by / reviewed by, rows 1900/1901). spv_subscriptions has 0 user edges despite identical personal-content shape. After B1A-W2 + B1A-W4 land, additional user edges follow on banking_onboardings (applies) and spv_kyc_records (verifies).
-    action: After user supplies verb choice (subscribes_via / invests_through / reviewed_by) in a Bucket 2-style prompt, author 1-2 user actor edges on spv_subscriptions; then user edges on B1A-W2 / B1A-W4 once those entities exist.
+    summary: B9 spv_subscriptions has has_personal_content=true but zero user actor relationships
+    finding: lp_subscriptions has 2 relationships to users (onboarded by / reviewed by, rows 1900/1901). spv_subscriptions has 0 relationships to users despite identical personal-content shape. After B1A-W2 + B1A-W4 land, additional relationships to users follow on banking_onboardings (applies) and spv_kyc_records (verifies).
+    action: After user supplies verb choice (subscribes_via / invests_through / reviewed_by) in a Bucket 2-style prompt, author 1-2 user actor relationships on spv_subscriptions; then relationships to users on B1A-W2 / B1A-W4 once those entities exist.
     blocked_by:
       - {type: user_decision, ref: null, reason: "verb choice needs user pick; not auto-pickable from catalog state"}
-      - {type: prerequisite_entity, ref: B1A-W2, reason: "banking_onboardings user edge gated on entity creation"}
-      - {type: prerequisite_entity, ref: B1A-W4, reason: "spv_kyc_records user edge gated on entity creation"}
+      - {type: prerequisite_entity, ref: B1A-W2, reason: "banking_onboardings relationship to users gated on entity creation"}
+      - {type: prerequisite_entity, ref: B1A-W4, reason: "spv_kyc_records relationship to users gated on entity creation"}
 
   - id: B1B-H1a
     summary: Cross-domain handoff 1046 (fund_formation.operational -> funds) deferred to Discover Pass 3 custom-process authoring
@@ -124,8 +124,8 @@ b1b:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas (E1 fail): author the persona / RACI layer. DEFERRED."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona authoring is DEFER per the Validate persona policy (do not auto-author)."
-    action: "DEFER. When taken up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona authoring is DEFER per the Validate persona policy (do not auto-author)."
+    action: "DEFER. When taken up: author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas: [solo GP / general partner, fund operations lead, LP-portal-only viewer (limited partner)]
     deferred: true
 

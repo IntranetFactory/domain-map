@@ -90,7 +90,7 @@ a8:
 
 ---
 
-q9: Two work-order and calibration handoffs into ITSM carry an "incident" payload, but the related links point at "service request" instead. Which is correct?
+q9: Two work-order and calibration handoffs into ITSM carry an "incident" payload, but the related relationships point at "service request" instead. Which is correct?
 
 - a) Re-target the two handoffs to service requests (treat clinical-engineering work as a service-desk request).
 - b) Re-target the two relationship rows to service incidents (treat the work as an incident).

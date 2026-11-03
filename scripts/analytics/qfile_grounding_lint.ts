@@ -27,7 +27,7 @@ const FORBIDDEN: RegExp[] = [
   /small enough to own/i,
   /what(?:'s| is) already built/i,
   /\balready built\b/i,
-  /keeps? (each )?(area|the edge|it) (small|clean)/i,
+  /keeps? (each )?(area|the relationship|it) (small|clean)/i,
 ];
 
 // A question is "market-shape" if its text is about module/master/domain shape.
@@ -42,7 +42,7 @@ const MARKET_SHAPE: RegExp[] = [
 
 // High-precision exclusions: a flagged question matching ANY of these is NOT a
 // market-shape decision (it is event/handoff attribution, naming, notes/copy, pattern
-// flags, RACI/role authoring, regulation tagging, lifecycle/entity_type classification,
+// flags, RACI/persona authoring, regulation tagging, lifecycle/entity_type classification,
 // self-containment, process-tag, or additive-entity research). Build-convenience
 // rationale is legitimate there, so the gate must not flag it. Derived from the
 // 2026-06-14 classification pass (audits/_qfile-grounding-worklist.md): ~2/3 of the
@@ -113,7 +113,7 @@ function lintFile(code: string): Finding[] {
       // MARKET_SHAPE reads the full text (an option body may carry the "module" signal).
       // NON_MARKET reads ONLY the question STEM: the subject of the question lives there.
       // It must NOT read the options (a module-split question's options describe each
-      // module's master/embedded_master/consumer/necessity roles) nor the Recommended line
+      // module's master/embedded_master/consumer/necessity held_as values) nor the Recommended line
       // (which describes downstream consequences like "drives the lifecycle attribution and
       // the module FK on every handoff"). Both legitimately use exclusion words while still
       // being genuine market-shape questions; only the stem reliably names the decision.

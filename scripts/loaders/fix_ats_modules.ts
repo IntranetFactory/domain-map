@@ -68,7 +68,7 @@ async function upsertDataObjects(rows: DataObjectSpec[]): Promise<Map<string, nu
 
 type DMDOSpec = {
   data_object_id: number;
-  role: string;
+  held_as: string;
   is_install_optional: boolean;
 };
 
@@ -201,11 +201,11 @@ async function fixCandidateCRM() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("candidate_engagements")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("candidate_nurture_campaigns")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("recruiting_event_attendances")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("recruiter_interactions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("candidate_consents")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_engagements")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_nurture_campaigns")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiting_event_attendances")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiter_interactions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_consents")!, held_as: "master", is_install_optional: false },
   ]);
 
   await upsertLifecycleStates([
@@ -276,9 +276,9 @@ async function fixTalentPools() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("talent_pool_memberships")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("talent_segments")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("recruiter_saved_searches")!, role: "master", is_install_optional: true },
+    { data_object_id: idMap.get("talent_pool_memberships")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("talent_segments")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiter_saved_searches")!, held_as: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -332,9 +332,9 @@ async function fixReferrals() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("referral_rewards")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("referral_payouts")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("referral_campaigns")!, role: "master", is_install_optional: true },
+    { data_object_id: idMap.get("referral_rewards")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("referral_payouts")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("referral_campaigns")!, held_as: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -384,7 +384,7 @@ async function fixBackgroundChecks() {
       data_object_name: "fcra_disclosures",
       singular_label: "FCRA Disclosure",
       plural_label: "FCRA Disclosures",
-      description: "Pre-check legally required disclosure form presented to the candidate before any consumer report is requested. Carries the disclosure text version, candidate acknowledgement signature, timestamp, and jurisdiction-specific addenda (CA, NY, etc.).",
+      description: "Pre-check legally required disclosure form presented to the candidate before any consumer report is requested. Carries the disclosure text version, candidate acknowledgment signature, timestamp, and jurisdiction-specific addenda (CA, NY, etc.).",
       has_personal_content: true,
     },
     {
@@ -411,12 +411,12 @@ async function fixBackgroundChecks() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("background_check_packages")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("background_check_components")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("fcra_disclosures")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("background_check_adjudications")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("adverse_action_notices")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("background_check_disputes")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_packages")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_components")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("fcra_disclosures")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_adjudications")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("adverse_action_notices")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_disputes")!, held_as: "master", is_install_optional: false },
   ]);
 
   await upsertLifecycleStates([
@@ -426,8 +426,8 @@ async function fixBackgroundChecks() {
     { data_object_id: idMap.get("background_check_components")!, state_name: "completed_flagged", state_order: 4, is_terminal: true, description: "Component returned with findings requiring adjudication." },
     { data_object_id: idMap.get("background_check_components")!, state_name: "unable_to_verify", state_order: 5, is_terminal: true, description: "Provider could not verify; component closed without result." },
 
-    { data_object_id: idMap.get("fcra_disclosures")!, state_name: "presented", state_order: 1, is_initial: true, description: "Disclosure shown to candidate; awaiting acknowledgement." },
-    { data_object_id: idMap.get("fcra_disclosures")!, state_name: "acknowledged", state_order: 2, description: "Candidate signed acknowledgement; check may proceed." },
+    { data_object_id: idMap.get("fcra_disclosures")!, state_name: "presented", state_order: 1, is_initial: true, description: "Disclosure shown to candidate; awaiting acknowledgment." },
+    { data_object_id: idMap.get("fcra_disclosures")!, state_name: "acknowledged", state_order: 2, description: "Candidate signed acknowledgment; check may proceed." },
     { data_object_id: idMap.get("fcra_disclosures")!, state_name: "refused", state_order: 3, is_terminal: true, description: "Candidate declined to sign; cannot run check." },
     { data_object_id: idMap.get("fcra_disclosures")!, state_name: "expired", state_order: 4, is_terminal: true, description: "Authorization aged out of validity window." },
 
@@ -517,13 +517,13 @@ async function fixRecruitmentPipeline() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("application_stages")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("application_stage_transitions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("requisition_approvals")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("job_posting_distributions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("application_screening_questions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("application_screening_answers")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("eeo_responses")!, role: "master", is_install_optional: true },
+    { data_object_id: idMap.get("application_stages")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_stage_transitions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("requisition_approvals")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("job_posting_distributions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_screening_questions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_screening_answers")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("eeo_responses")!, held_as: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -616,11 +616,11 @@ async function fixInterviews() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("interview_kits")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("interview_panels")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("candidate_assessment_templates")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("interview_questions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("interviewer_availability_slots")!, role: "master", is_install_optional: true },
+    { data_object_id: idMap.get("interview_kits")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interview_panels")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_assessment_templates")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interview_questions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interviewer_availability_slots")!, held_as: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -631,7 +631,7 @@ async function fixInterviews() {
     { data_object_id: idMap.get("interview_panels")!, state_name: "forming", state_order: 1, is_initial: true, description: "Recruiter assembling the panel." },
     { data_object_id: idMap.get("interview_panels")!, state_name: "assembled", state_order: 2, description: "All panel members confirmed; interview can proceed." },
     { data_object_id: idMap.get("interview_panels")!, state_name: "completed", state_order: 3, is_terminal: true, description: "Interview held; consolidated debrief done." },
-    { data_object_id: idMap.get("interview_panels")!, state_name: "cancelled", state_order: 4, is_terminal: true, description: "Panel disbanded before interview." },
+    { data_object_id: idMap.get("interview_panels")!, state_name: "canceled", state_order: 4, is_terminal: true, description: "Panel disbanded before interview." },
 
     { data_object_id: idMap.get("candidate_assessment_templates")!, state_name: "draft", state_order: 1, is_initial: true, description: "Template being authored / validated." },
     { data_object_id: idMap.get("candidate_assessment_templates")!, state_name: "active", state_order: 2, description: "Template assignable to candidates." },
@@ -639,7 +639,7 @@ async function fixInterviews() {
 
     { data_object_id: idMap.get("interviewer_availability_slots")!, state_name: "available", state_order: 1, is_initial: true, description: "Slot bookable." },
     { data_object_id: idMap.get("interviewer_availability_slots")!, state_name: "booked", state_order: 2, description: "Slot reserved for an interview." },
-    { data_object_id: idMap.get("interviewer_availability_slots")!, state_name: "released", state_order: 3, is_terminal: true, description: "Booking cancelled; slot freed." },
+    { data_object_id: idMap.get("interviewer_availability_slots")!, state_name: "released", state_order: 3, is_terminal: true, description: "Booking canceled; slot freed." },
     { data_object_id: idMap.get("interviewer_availability_slots")!, state_name: "past", state_order: 4, is_terminal: true, description: "Slot expired without booking." },
   ]);
 
@@ -689,11 +689,11 @@ async function fixOffers() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("offer_versions")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("offer_approvals")!, role: "master", is_install_optional: false },
-    { data_object_id: idMap.get("offer_letter_documents")!, role: "master", is_install_optional: false },
-    // Link existing equity_grants as embedded_master (canonical lives in COMP-INCENTIVES / CAP-TABLE-GRANTS)
-    { data_object_id: await getDataObjectId("equity_grants"), role: "embedded_master", is_install_optional: true },
+    { data_object_id: idMap.get("offer_versions")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("offer_approvals")!, held_as: "master", is_install_optional: false },
+    { data_object_id: idMap.get("offer_letter_documents")!, held_as: "master", is_install_optional: false },
+    // Relate existing equity_grants as embedded_master (canonical lives in COMP-INCENTIVES / CAP-TABLE-GRANTS)
+    { data_object_id: await getDataObjectId("equity_grants"), held_as: "embedded_master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([

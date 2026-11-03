@@ -55,7 +55,7 @@ b1b:
   - id: B1B-HANDOFFS
     summary: "Author outbound + intra-domain handoffs into and out of BGV."
     finding: |
-      The promotion re-homes the screening master; the cross-domain edges should be modeled as
+      The promotion re-homes the screening master; the cross-domain relationships should be modeled as
       handoffs. Candidates: ATS offer.accepted -> BGV screening ordered; BGV check.cleared ->
       PAYROLL / ONBOARDING; BGV adjudication.adverse -> the adverse-action chain; BGV
       monitoring.alert_raised -> HRSD case. Intra-domain: order.completed -> adjudication;
@@ -63,18 +63,18 @@ b1b:
       module FK columns. Additive.
 
   - id: B1B-PERSONAS-RACI
-    summary: "Phase E: BGV personas (domain_roles), role_modules reach, process_raci."
+    summary: "Phase E: BGV personas (personas), persona_modules reach, process_raci."
     finding: |
       No personas authored yet. Likely set: a screening administrator / requester, an
       adjudicator / compliance reviewer, and a candidate-facing coordinator, each with >=2
-      role_modules across the 3 modules, plus process_raci once processes are linked. Additive,
+      persona_modules across the 3 modules, plus process_raci once processes are related. Additive,
       Phase E.
 
   - id: B1B-HANDOFF-MODULE-FK-BACKFILL
     summary: "Backfill source/target module FKs on the PAYROLL/HRSD consumer-driven handoffs touching background_checks."
     finding: |
       The pre-existing PAYROLL-RUN / HRSD-CASE-MGMT consumer relationships on background_checks
-      predate the BGV master. Any legacy handoff rows referencing those edges should be backfilled
+      predate the BGV master. Any legacy handoff rows referencing those relationships should be backfilled
       with the now-correct BGV module FKs per the B10b backfill convention. Additive.
 
 # All b2 decisions resolved this pass and moved to history.md (B2-GATE, B2-MODULES,

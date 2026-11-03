@@ -32,7 +32,7 @@ Renewal pipeline tracking, vendor relationship management, contract coordination
 | Vendor Negotiations | `smp_vendor_negotiations` | Quote, counter-quote, and discount records tied to a renewal, documenting how the final commercial terms were reached. |
 | Vendor Risk Assessments | `smp_vendor_risk_assessments` | SaaS vendor risk scorecards covering attestation status, data-processing review, subprocessors, breach history, and posture score. |
 | Contracts | `legal_contracts` | Contracts with counterparties or suppliers, covering type, value, key dates, governing law, and lifecycle from draft to terminated. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 | SaaS Applications | `saas_applications` | SaaS applications in the company portfolio, with vendor, category, criticality, owner, and whether each is sanctioned or shadow IT. |
 
 ```mermaid
@@ -88,7 +88,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `smp_renewal_engagements` | `smp_renewal_engagements` | Renewal Engagement | Renewal Engagements | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `smp_renewal_tasks` | `smp_renewal_tasks` | Renewal Task | Renewal Tasks | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -106,7 +106,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -120,7 +120,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `saas_applications` | has | `saas_subscriptions` | one_to_many | reference | optional | source | clear | reference | - |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -136,7 +136,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | manages | `saas_subscriptions` | one_to_many | required | target | restrict | reference | - |
 | `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -149,7 +149,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_subscriptions` | grants | `smp_license_seat_assignments` | one_to_many | optional | none | n/a | - |
 | `enterprise_applications` | is delivered via | `saas_subscriptions` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -219,7 +219,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `saas_subscriptions` | EXPENSE-CAPTURE-AND-REPORTING (Expense Capture and Reporting) - EXPENSE | consumer | required | - |
 | `saas_subscriptions` | IT-OPS-STARTER (IT Operations Starter) - IT-OPS-STARTER | embedded_master | required | - |
@@ -268,7 +268,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `legal_contracts` | embedded_master | optional | CLM-REPOSITORY (CLM) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
@@ -301,7 +301,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `smp-renewal-vendor:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `smp-renewal-vendor:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `smp-renewal-vendor:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `smp-renewal-vendor:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 

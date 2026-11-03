@@ -51,18 +51,18 @@ b2:
     question: >-
       The reimbursement capability (SPEND-REIMBURSEMENT 315) and EXPENSE-CAPTURE
       (72) are currently co-located in SPEND-MGMT-POLICY-APPROVAL (305) as
-      master-less links backed by EXPENSE masters, deliberately avoiding a
+      master-less relationships backed by EXPENSE masters, deliberately avoiding a
       separate master-less module. Should SPEND-MGMT instead own a distinct
       reimbursement module, leave it folded into 305, or have EXPENSE realize
       these capabilities entirely?
     options:
       - "(a) leave folded in SPEND-MGMT-POLICY-APPROVAL (current state); EXPENSE remains the master"
       - "(b) carve a thin SPEND-MGMT-owned reimbursement module distinct from EXPENSE (user specifies scope and any new master)"
-      - "(c) drop the links from SPEND-MGMT; EXPENSE realizes the reimbursement + capture capabilities"
+      - "(c) drop the relationships from SPEND-MGMT; EXPENSE realizes the reimbursement + capture capabilities"
     why: >-
       Architectural / market-definition question. Modularization chose (a) as the
       reuse-only default; (b) and (c) require either a new master or a capability
-      re-link the user must authorize.
+      re-relate the user must authorize.
     evidence: >-
       Brex, Ramp, and Airbase (now BILL Spend & Expense) bundle out-of-pocket
       reimbursement into their expense product rather than mastering a separate
@@ -210,7 +210,7 @@ b3:
       CORP-CARD (reconciliation) sits in SPEND-MGMT-CARDS (303) and EXPENSE-POLICY
       (enforcement) sits in SPEND-MGMT-POLICY-APPROVAL (305); both are realized off
       EXPENSE-domain masters (corporate_cards 212, card_transactions 213,
-      expense_policies 214). These may be intentional cross-domain capability links
+      expense_policies 214). These may be intentional cross-domain capability relationships
       rather than gaps to fill; flagged for review, not for filling.
     vendor_evidence: [Brex, Ramp, BILL Spend & Expense]
     proposed_module: "various (303 / 305)"

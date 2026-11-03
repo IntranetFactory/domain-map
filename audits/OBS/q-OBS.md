@@ -73,7 +73,7 @@ a7:
 
 ---
 
-q8: Two outgoing links from OBS to the software delivery domain (one fired when a new error signature appears, one when a regression is detected) are still untagged with a standard process category. Should we tag them, and how? Plain version: a new or regressed error should map to a software change or release on the delivery side.
+q8: Two outgoing relationships from OBS to the software delivery domain (one fired when a new error signature appears, one when a regression is detected) are still untagged with a standard process category. Should we tag them, and how? Plain version: a new or regressed error should map to a software change or release on the delivery side.
 
 - a) Tag both to the standard process "Implement software change/release" (a new signature or regression triggers a hotfix change-release on the delivery side). Recommended.
 - b) Defer both until we can confirm a cleaner process match.

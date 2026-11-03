@@ -58,7 +58,7 @@ b2:
       - "B10b backfill: source_domain_module_id on 14 outbound + target_domain_module_id on 8 inbound OBS cross-domain handoffs"
       - "intra-domain + users + outbound cross-domain data_object_relationships"
       - "domain-grain system skill toolset via domain_module_tools (NOT per-module skills; see supersession header)"
-      - "Phase P personas + role_modules + process_raci if multi-module (DEFERRED; do not author until build)"
+      - "Phase P personas + persona_modules + process_raci if multi-module (DEFERRED; do not author until build)"
     extra_phase_p_triage: "2026-06-02"
 
   - id: B2-S2
@@ -171,6 +171,6 @@ extra_blocked_by_other_domains:
   - {id: RO-1, owing: AIOPS, finding: "6 OBS->AIOPS handoffs (608,609,610,612,613) + inbound 606; AIOPS target_domain_module_id NULL", routed: "AIOPS b1 B10b target side"}
   - {id: RO-2, owing: ITSM, finding: "5 OBS->ITSM handoffs (55,611,614,615,618); inbound rels 194/195 are ITSM's B8 outbound (already correct)", routed: "ITSM b1"}
   - {id: RO-3, owing: VSDP, finding: "2 OBS->VSDP handoffs (616,617) + inbound 773; VSDP target_domain_module_id NULL", routed: "VSDP b1 B10b + B8"}
-  - {id: RO-4, owing: ITOM, finding: "OBS handoff 54 -> ITOM target FK NULL; OBS contributor edge on monitoring_events (ITOM-mastered)", routed: "ITOM b1 B10b + DMDO"}
+  - {id: RO-4, owing: ITOM, finding: "OBS handoff 54 -> ITOM target FK NULL; OBS contributor relationship on monitoring_events (ITOM-mastered)", routed: "ITOM b1 B10b + DMDO"}
   - {id: RO-5, owing: "NPMD/DEM/APIM/APP-PAAS/KUBE-PLAT/IPAAS", finding: "each has 1 inbound handoff into OBS (651,666,749,756,760,766) with NULL source_domain_module_id", routed: "each domain's b1 B10b source side"}
   - {id: RO-6, owing: CMDB, finding: "OBS consumes service_maps (CMDB-mastered); consumer row migrates to domain_module_data_objects once OBS modules exist", routed: "CMDB b1 M7 within-domain (informational)"}

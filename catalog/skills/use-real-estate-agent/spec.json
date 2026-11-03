@@ -63,56 +63,56 @@
       "name": "crm_contacts",
       "singular_label": "Contact",
       "plural_label": "Contacts",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CRM"
     },
     {
       "name": "crm_leads",
       "singular_label": "Lead",
       "plural_label": "Leads",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CRM"
     },
     {
       "name": "disclosure_documents",
       "singular_label": "Disclosure Document",
       "plural_label": "Disclosure Documents",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "RE-BROKERAGE"
     },
     {
       "name": "legal_contracts",
       "singular_label": "Contract",
       "plural_label": "Contracts",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "CLM"
     },
     {
       "name": "real_estate_listings",
       "singular_label": "Real Estate Listing",
       "plural_label": "Real Estate Listings",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "RE-BROKERAGE"
     },
     {
       "name": "real_estate_transactions",
       "singular_label": "Real Estate Transaction",
       "plural_label": "Real Estate Transactions",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "RE-BROKERAGE"
     },
     {
       "name": "tour_appointments",
       "singular_label": "Tour Appointment",
       "plural_label": "Tour Appointments",
-      "role": "embedded_master",
+      "held_as": "embedded_master",
       "owning_domain": "RE-BROKERAGE"
     },
     {
       "name": "users",
       "singular_label": "User",
       "plural_label": "Users",
-      "role": "consumer",
+      "held_as": "consumer",
       "owning_domain": null
     }
   ],
@@ -245,7 +245,7 @@
       }
     ]
   },
-  "roles": [],
+  "personas": [],
   "enums": {
     "trigger_event_category": [
       "lifecycle",
@@ -266,7 +266,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

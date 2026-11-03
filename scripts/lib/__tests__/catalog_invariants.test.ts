@@ -10,10 +10,13 @@ import {
   checkGatedStatesWired,
   checkProcessRaci,
   checkRelationshipShape,
-  checkUserEdges,
+  checkUserRelationships,
+  preflightAuthoredText,
   preflightHandoffs,
+  preflightLifecycleStates,
   preflightProcessRaci,
   preflightRelationships,
+  preflightTriggerEvents,
   type InvariantFinding,
   type RelationshipRow,
 } from "../catalog_invariants.ts";
@@ -39,7 +42,7 @@ describe("B6b relationship shape", () => {
   test("empty inverse_verb warns (m4b)", () => {
     expect(rules(checkRelationshipShape([rel({ id: 2, inverse_verb: " " })]))).toEqual(["B6b:inverse_verb_empty:warn:2"]);
   });
-  test("one_to_many with owner_side=target warns (m5), e.g. ATS edge 810", () => {
+  test("one_to_many with owner_side=target warns (m5), e.g. ATS relationship 810", () => {
     expect(rules(checkRelationshipShape([rel({ id: 810, owner_side: "target" })]))).toEqual(["B6b:owner_side_not_parent:warn:810"]);
   });
   test("many_to_one names the target as parent", () => {
@@ -73,26 +76,26 @@ describe("B6b relationship shape", () => {
   });
 });
 
-describe("B7b users edges", () => {
+describe("B7b relationships to users", () => {
   test("many_to_many reference to users fails (ATS 822)", () => {
     const r = rel({ id: 822, related_data_object_id: USERS, relationship_type: "many_to_many", relationship_verb: "has owning recruiter" });
-    expect(rules(checkUserEdges([r], USERS))).toEqual(["B7b:many_to_many_reference:fail:822"]);
+    expect(rules(checkUserRelationships([r], USERS))).toEqual(["B7b:many_to_many_reference:fail:822"]);
   });
   test("users as the source side is checked too", () => {
     const r = rel({ id: 30, data_object_id: USERS, related_data_object_id: 5, relationship_type: "many_to_many" });
-    expect(rules(checkUserEdges([r], USERS))).toEqual(["B7b:many_to_many_reference:fail:30"]);
+    expect(rules(checkUserRelationships([r], USERS))).toEqual(["B7b:many_to_many_reference:fail:30"]);
   });
   test("many_to_many association and one_to_many reference to users pass", () => {
     const a = rel({ id: 31, related_data_object_id: USERS, relationship_type: "many_to_many", relationship_kind: "association" });
     const b = rel({ id: 32, related_data_object_id: USERS, relationship_verb: "has owner" });
-    expect(checkUserEdges([a, b], USERS)).toEqual([]);
+    expect(checkUserRelationships([a, b], USERS)).toEqual([]);
   });
-  test("a verb naming two roles warns (ATS 823), once per row", () => {
+  test("a verb naming two kinds of person warns (ATS 823), once per row", () => {
     const r = rel({ id: 823, related_data_object_id: USERS, relationship_verb: "has coordinator and panelists", inverse_verb: "coordinates or sits on" });
-    expect(rules(checkUserEdges([r], USERS))).toEqual(["B7b:two_role_verb:warn:823"]);
+    expect(rules(checkUserRelationships([r], USERS))).toEqual(["B7b:two_person_verb:warn:823"]);
   });
-  test("edges that do not touch users are ignored", () => {
-    expect(checkUserEdges([rel({ id: 33, relationship_type: "many_to_many", relationship_verb: "links and tags" })], USERS)).toEqual([]);
+  test("relationships that do not touch users are ignored", () => {
+    expect(checkUserRelationships([rel({ id: 33, relationship_type: "many_to_many", relationship_verb: "relates and tags" })], USERS)).toEqual([]);
   });
 });
 
@@ -133,13 +136,13 @@ describe("B9f duplicate handoffs", () => {
 
 describe("E4 RACI on gated processes", () => {
   const raci = [
-    { id: 1, process_id: 100, raci: "responsible", actor_role_id: 1 },
-    { id: 2, process_id: 100, raci: "accountable", actor_role_id: 2 },
-    { id: 3, process_id: 200, raci: "accountable", actor_role_id: 2 },
-    { id: 4, process_id: 300, raci: "responsible", actor_role_id: 1 },
-    { id: 5, process_id: 400, raci: "R", actor_role_id: 1 },
-    { id: 6, process_id: 400, raci: "A", actor_role_id: 2 },
-    { id: 7, process_id: 400, raci: "A", actor_role_id: 3 },
+    { id: 1, process_id: 100, raci: "responsible", persona_id: 1 },
+    { id: 2, process_id: 100, raci: "accountable", persona_id: 2 },
+    { id: 3, process_id: 200, raci: "accountable", persona_id: 2 },
+    { id: 4, process_id: 300, raci: "responsible", persona_id: 1 },
+    { id: 5, process_id: 400, raci: "R", persona_id: 1 },
+    { id: 6, process_id: 400, raci: "A", persona_id: 2 },
+    { id: 7, process_id: 400, raci: "A", persona_id: 3 },
   ];
   test(">= 1 R and exactly 1 A passes", () => {
     expect(checkProcessRaci([100], raci)).toEqual([]);
@@ -169,10 +172,10 @@ describe("E4b gated states wire a process", () => {
 describe("E4c Accountable is not also Responsible", () => {
   test("the same persona as A and R warns; separated personas pass", () => {
     const raci = [
-      { process_id: 1, raci: "responsible", actor_role_id: 9 },
-      { process_id: 1, raci: "accountable", actor_role_id: 9 },
-      { process_id: 2, raci: "responsible", actor_role_id: 9 },
-      { process_id: 2, raci: "accountable", actor_role_id: 10 },
+      { process_id: 1, raci: "responsible", persona_id: 9 },
+      { process_id: 1, raci: "accountable", persona_id: 9 },
+      { process_id: 2, raci: "responsible", persona_id: 9 },
+      { process_id: 2, raci: "accountable", persona_id: 10 },
     ];
     expect(rules(checkAccountableAlsoResponsible([1, 2], raci))).toEqual(["E4c:accountable_is_responsible:warn:1"]);
   });
@@ -192,7 +195,7 @@ describe("E4d author-action gates", () => {
 });
 
 describe("loader pre-flight", () => {
-  test("relationships: B7b many_to_many reference users edge is an error; B6b and two-role verbs only warn", () => {
+  test("relationships: B7b many_to_many reference relationship to users is an error; B6b and two-person verbs only warn", () => {
     const res = preflightRelationships(
       [
         rel({ id: "a", related_data_object_id: USERS, relationship_type: "many_to_many", relationship_verb: "has panelists" }),
@@ -203,28 +206,28 @@ describe("loader pre-flight", () => {
     );
     expect(res.errors.length).toBe(1);
     expect(res.errors[0]).toContain("B7b many_to_many_reference [a]");
-    expect(res.warnings.map((w) => w.split(" [")[0]).sort()).toEqual(["B6b inverse_verb_empty", "B6b owner_side_not_parent", "B7b two_role_verb"]);
+    expect(res.warnings.map((w) => w.split(" [")[0]).sort()).toEqual(["B6b inverse_verb_empty", "B6b owner_side_not_parent", "B7b two_person_verb"]);
   });
   test("process_raci: a new Accountable on a process that already has one is an error", () => {
-    const res = preflightProcessRaci([{ process_id: 1, raci: "accountable", actor_role_id: 5 }], [{ process_id: 1, raci: "accountable", actor_role_id: 4 }, { process_id: 1, raci: "responsible", actor_role_id: 3 }]);
+    const res = preflightProcessRaci([{ process_id: 1, raci: "accountable", persona_id: 5 }], [{ process_id: 1, raci: "accountable", persona_id: 4 }, { process_id: 1, raci: "responsible", persona_id: 3 }]);
     expect(res.errors.length).toBe(1);
     expect(res.errors[0]).toContain("E4 multiple_accountable [1]");
   });
   test("process_raci: two new Accountable rows for one process are an error", () => {
-    const res = preflightProcessRaci([{ process_id: 2, raci: "A", actor_role_id: 5 }, { process_id: 2, raci: "A", actor_role_id: 6 }, { process_id: 2, raci: "R", actor_role_id: 7 }], []);
+    const res = preflightProcessRaci([{ process_id: 2, raci: "A", persona_id: 5 }, { process_id: 2, raci: "A", persona_id: 6 }, { process_id: 2, raci: "R", persona_id: 7 }], []);
     expect(res.errors.length).toBe(1);
   });
   test("process_raci: re-posting the existing Accountable row is idempotent, not a second A", () => {
-    const res = preflightProcessRaci([{ process_id: 1, raci: "accountable", actor_role_id: 4 }], [{ process_id: 1, raci: "accountable", actor_role_id: 4 }, { process_id: 1, raci: "responsible", actor_role_id: 3 }]);
+    const res = preflightProcessRaci([{ process_id: 1, raci: "accountable", persona_id: 4 }], [{ process_id: 1, raci: "accountable", persona_id: 4 }, { process_id: 1, raci: "responsible", persona_id: 3 }]);
     expect(res.errors).toEqual([]);
     expect(res.warnings).toEqual([]);
   });
   test("process_raci: zero Accountable after the batch only warns (Responsible may load first); A also R warns", () => {
-    const r1 = preflightProcessRaci([{ process_id: 3, raci: "responsible", actor_role_id: 1 }], []);
+    const r1 = preflightProcessRaci([{ process_id: 3, raci: "responsible", persona_id: 1 }], []);
     expect(r1.errors).toEqual([]);
     expect(r1.warnings.length).toBe(1);
     expect(r1.warnings[0]).toContain("E4 no_accountable [3]");
-    const r2 = preflightProcessRaci([{ process_id: 4, raci: "accountable", actor_role_id: 1 }, { process_id: 4, raci: "responsible", actor_role_id: 1 }], []);
+    const r2 = preflightProcessRaci([{ process_id: 4, raci: "accountable", persona_id: 1 }, { process_id: 4, raci: "responsible", persona_id: 1 }], []);
     expect(r2.errors).toEqual([]);
     expect(r2.warnings.some((w) => w.startsWith("E4c accountable_is_responsible [4]"))).toBe(true);
   });
@@ -235,5 +238,36 @@ describe("loader pre-flight", () => {
     expect(res.warnings.length).toBe(1);
     expect(res.warnings[0]).toContain("B9f same_event_same_modules [incoming0, 121]");
     expect(preflightHandoffs([{ ...base, trigger_event_id: 99 }], [{ ...base, id: 121 }, { ...base, id: 398 }]).warnings).toEqual([]);
+  });
+});
+
+describe("preflightAuthoredText", () => {
+  test("refuses a British spelling in prose and in an identifier", () => {
+    const pre = preflightAuthoredText([{ description: "The colour of the lead", event_name: "booking.cancelled", solution_url: "https://colour.example" }], { table: "trigger_events" });
+    expect(pre.errors).toEqual([
+      "B16 british_prose [incoming0]: trigger_events.description: colour->color",
+      "B16 british_identifier [incoming0]: trigger_events.event_name: cancelled->canceled",
+    ]);
+    expect(pre.warnings).toEqual([]);
+  });
+  test("a British word inside a snake_case token in prose is an error too", () => {
+    const pre = preflightAuthoredText([{ id: 9, notes: "Reads retail_labour_schedules from WFM" }]);
+    expect(pre.errors).toEqual(["B16 british_identifier [9]: (batch).notes: labour->labor"]);
+  });
+  test("American text, a real brand and a computed label pass", () => {
+    const pre = preflightAuthoredText([{ description: "Enterprise exercise analyses", solution_name: "Fulfil", vendor_name: "Fulfil.IO", handoff_label: "x : booking.cancelled" }]);
+    expect(pre.errors).toEqual([]);
+  });
+  test("every loader pre-flight helper refuses British spellings in its incoming rows", () => {
+    const relationship = preflightRelationships([rel({ id: "r1", relationship_verb: "dialled_call" })], { usersId: USERS });
+    expect(relationship.errors).toEqual(["B16 british_identifier [r1]: data_object_relationships.relationship_verb: dialled->dialed"]);
+    const events = preflightTriggerEvents([{ id: "e1", event_name: "booking.cancelled", data_object_id: 1 }], []);
+    expect(events.errors).toEqual(["B16 british_identifier [e1]: trigger_events.event_name: cancelled->canceled"]);
+    const handoffs = preflightHandoffs([{ id: "h1", description: "Forwards the colour", trigger_event_id: 1, source_domain_module_id: 1, target_domain_module_id: 2 } as any], []);
+    expect(handoffs.errors).toEqual(["B16 british_prose [h1]: handoffs.description: colour->color"]);
+    const states = preflightLifecycleStates([{ id: "s1", data_object_id: 1, state_name: "cancelled" } as any]);
+    expect(states.errors).toEqual(["B16 british_identifier [s1]: data_object_lifecycle_states.state_name: cancelled->canceled"]);
+    const raci = preflightProcessRaci([{ id: "x1", process_id: 1, raci: "R", persona_id: 2, notes: "Organise the review" } as any], []);
+    expect(raci.errors).toContain("B16 british_prose [x1]: process_raci.notes: Organise->Organize");
   });
 });

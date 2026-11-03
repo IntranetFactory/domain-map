@@ -16,14 +16,14 @@
 //                      processes additionally includes domain-seam handoff payloads that no module
 //                      anchors, ~94% of which are realized nowhere (B9d orphans) and ~6% realized in
 //                      a neighbor domain across the seam.
-//   personas.json    — every catalog persona (domain_roles), with its business function and
-//                      the modules / domains its role_modules reach touches.
+//   personas.json    — every catalog persona (personas), with its business function and
+//                      the modules / domains its persona_modules reach touches.
 //   processes.json    — only the processes USED somewhere in the catalog (the business_processes table is
 //                      the full ~2k-row APQC PCF framework; we emit just the in-use subset).
 //   business-functions.json - the function-centric inverse of domain-map.json's business_functions[]:
 //                      every business_functions row with the domains it owns/contributes-to/consumes
 //                      (business_function_domains), the personas that belong to it
-//                      (domain_roles.business_function_id, LITERAL membership), and a raci[] reveal: the
+//                      (personas.business_function_id, LITERAL membership), and a raci[] reveal: the
 //                      per-market (persona, process, RACI-letter) triples for that function. raci[] rows
 //                      cover the function's OWN personas, its descendant sub-functions' personas
 //                      (parent_business_function_id roll-up), and owner-anchored cross-functional "seam"
@@ -44,10 +44,10 @@
 // topology (every domain, like the pre-gate behavior). catalog_release is the public web-site-catalog
 // go-live date, so "released" == "live on the public catalog".
 //
-// related_domains = (other domains touching one of this domain's data_objects, any role)
+// related_domains = (other domains touching one of this domain's data_objects, any held_as)
 //                 ∪ (handoff neighbors, either direction), minus self.
 //
-// Personas attach to a module via the role_modules REACH edge (persona <-> module, with
+// Personas attach to a module via the persona_modules REACH relationship (persona <-> module, with
 // interaction_level); a domain's personas are the union across its hosted modules.
 //
 // Processes attach two structurally different ways, and each nested entry is TAGGED with `via`:
@@ -56,7 +56,7 @@
 //   via="handoff" — the process implements one of the domain's handoffs
 //                   (handoff_processes -> handoffs endpoints). "Happens at this domain's seam."
 // A process attached both ways to the same unit is listed once with via="gate" (the ownership signal wins).
-// The "USED" set in processes.json is the broader union: gate ∪ raci ∪ handoff ∪ tool edges.
+// The "USED" set in processes.json is the broader union: gate ∪ raci ∪ handoff ∪ tool relationships.
 //
 // All catalog reads go through scripts/lib/catalog.ts so this script and the per-module
 // blueprint emitter (generate_blueprints.ts) share one source for the underlying tables.
@@ -116,7 +116,7 @@ type BusinessFunctionRef = {
   responsibility: string;
 };
 
-// Persona <-> process responsibility edge (process_raci), carried on both cross-reference files.
+// Persona <-> process responsibility relationship (process_raci), carried on both cross-reference files.
 // raci is the full enum word: "responsible" | "accountable" | "consulted" | "informed".
 type RaciPersonaRef = {
   code: string;
@@ -197,7 +197,7 @@ type DomainRespRef = {
 type FunctionRaciRef = {
   domain: string; // a market the function declares (or "(undeclared)" for own/descendant work outside it)
   responsibility: string; // the strongest responsibility over the function's subtree on that domain: owner | contributor | consumer
-  persona: string; // role_code of the actor
+  persona: string; // persona_code of the actor
   persona_via: string; // own | descendant | seam
   process_code: string | null; // APQC PCF dotted code, e.g. "1.2.5"
   process_key: string;
@@ -312,7 +312,7 @@ for (const [did, dataObjs] of dataObjectsByDomain) {
 // rule: D is related to D' iff one of them masters a data_object the other touches.
 const masterDomainsByDataObject = new Map<number, Set<number>>();
 for (const r of all.dmdo) {
-  if (r.role !== "master") continue;
+  if (r.held_as !== "master") continue;
   const dids = domainsByModule.get(r.domain_module_id as number);
   if (!dids) continue;
   const oid = r.data_object_id as number;
@@ -320,7 +320,7 @@ for (const r of all.dmdo) {
   for (const did of dids) masterDomainsByDataObject.get(oid)!.add(did);
 }
 for (const r of all.ddo) {
-  if (r.role !== "master") continue;
+  if (r.held_as !== "master") continue;
   const oid = r.data_object_id as number;
   if (!masterDomainsByDataObject.has(oid)) masterDomainsByDataObject.set(oid, new Set());
   masterDomainsByDataObject.get(oid)!.add(r.domain_id as number);
@@ -339,7 +339,7 @@ for (const h of all.handoffs) {
 
 // Module-level neighbors: ownership-mediated co-touch on data_objects ∪ module-level handoffs.
 // "Ownership-mediated" = M is related to M' iff one of them masters a data_object the other touches.
-// Two non-masters that both embed the same data_object are NOT related (the link, if any, runs through
+// Two non-masters that both embed the same data_object are NOT related (the relationship, if any, runs through
 // the master, not between them).
 const modulesByDataObject = new Map<number, Set<number>>();
 const masterModulesByDataObject = new Map<number, Set<number>>();
@@ -348,7 +348,7 @@ for (const r of all.dmdo) {
   const mid = r.domain_module_id as number;
   if (!modulesByDataObject.has(oid)) modulesByDataObject.set(oid, new Set());
   modulesByDataObject.get(oid)!.add(mid);
-  if (r.role === "master") {
+  if (r.held_as === "master") {
     if (!masterModulesByDataObject.has(oid)) masterModulesByDataObject.set(oid, new Set());
     masterModulesByDataObject.get(oid)!.add(mid);
   }
@@ -371,10 +371,10 @@ for (const h of all.handoffs) {
 }
 
 // ---------------------------------------------------------------------------
-// Personas (role_modules reach) and processes (gate + handoff edges) attribution.
+// Personas (persona_modules reach) and processes (gate + handoff relationships) attribution.
 // ---------------------------------------------------------------------------
 
-const personaById = all.domainRolesById; // Map<roleId, domain_roles row>
+const personaById = all.personasById; // Map<personaId, personas row>
 const functionById = all.businessFunctionsById; // Map<id, business_functions row>
 
 // Business functions per domain via business_function_domains (the function<->domain "market RACI":
@@ -414,17 +414,17 @@ function strongerInteraction(a: string, b: string): string {
   return (INTERACTION_RANK[a] ?? 9) <= (INTERACTION_RANK[b] ?? 9) ? a : b;
 }
 
-// personas per module: moduleId -> Map<roleId, strongest interaction_level>
+// personas per module: moduleId -> Map<personaId, strongest interaction_level>
 const personaLevelByModule = new Map<number, Map<number, string>>();
 for (const m of index.modules) personaLevelByModule.set(m.id, new Map());
-for (const rm of all.roleModules) {
-  const rid = rm.role_id as number;
+for (const rm of all.personaModules) {
+  const personaId = rm.persona_id as number;
   const mid = rm.domain_module_id as number;
-  if (!personaById.has(rid)) continue; // dangling reach row, skip
+  if (!personaById.has(personaId)) continue; // dangling reach row, skip
   const bucket = personaLevelByModule.get(mid);
   if (!bucket) continue; // reach row to a module not in the index
   const lvl = (rm.interaction_level as string) ?? "secondary";
-  bucket.set(rid, bucket.has(rid) ? strongerInteraction(bucket.get(rid)!, lvl) : lvl);
+  bucket.set(personaId, bucket.has(personaId) ? strongerInteraction(bucket.get(personaId)!, lvl) : lvl);
 }
 
 // personas per domain: union across the domain's hosted modules, strongest interaction wins.
@@ -434,24 +434,24 @@ for (const [did, mods] of modulesByDomain) {
   const dbucket = personaLevelByDomain.get(did);
   if (!dbucket) continue;
   for (const m of mods) {
-    for (const [rid, lvl] of personaLevelByModule.get(m.id) ?? []) {
-      dbucket.set(rid, dbucket.has(rid) ? strongerInteraction(dbucket.get(rid)!, lvl) : lvl);
+    for (const [personaId, lvl] of personaLevelByModule.get(m.id) ?? []) {
+      dbucket.set(personaId, dbucket.has(personaId) ? strongerInteraction(dbucket.get(personaId)!, lvl) : lvl);
     }
   }
 }
 
 function personaRefs(bucket: Map<number, string>): PersonaRef[] {
   return [...bucket.entries()]
-    .map(([rid, lvl]) => {
-      const p = personaById.get(rid);
+    .map(([personaId, lvl]) => {
+      const p = personaById.get(personaId);
       if (!p) return null;
-      return { code: p.role_code as string, name: (p.role_name as string) ?? "", interaction_level: lvl };
+      return { code: p.persona_code as string, name: (p.persona_name as string) ?? "", interaction_level: lvl };
     })
     .filter((x): x is PersonaRef => x !== null)
     .sort((a, b) => a.code.localeCompare(b.code));
 }
 
-// Gate edge: a lifecycle state with process_id + domain_module_id realizes that process in that module.
+// Gate relationship: a lifecycle state with process_id + domain_module_id realizes that process in that module.
 // (A NULL domain_module_id gate is master-level and reachable wherever the master installs; none exist
 // today, so we attribute only the module-scoped gates and roll those up to the domain.)
 const gateProcsByModule = new Map<number, Set<number>>();
@@ -463,7 +463,7 @@ for (const ls of all.lifecycle) {
   gateProcsByModule.get(mid)?.add(pid);
 }
 
-// Handoff edge: a handoff_processes row ties a process to a handoff; attribute it to BOTH endpoints.
+// Handoff relationship: a handoff_processes row ties a process to a handoff; attribute it to BOTH endpoints.
 // Module endpoints can be NULL (domain-grain handoff) so module attribution skips nulls; domain
 // endpoints are always set, making the domain-grain handoff list the more complete one.
 const handoffProcsByModule = new Map<number, Set<number>>();
@@ -556,7 +556,7 @@ for (const d of index.domains) {
       // d only touches → include only the master(s).
       for (const m of masters) if (m !== d.id) related.add(m);
     }
-    // If no master exists for this data_object (rare; orphan), no relatedness edge from it.
+    // If no master exists for this data_object (rare; orphan), no relatedness relationship from it.
   }
   for (const other of handoffNeighbors.get(d.id) ?? []) {
     if (other !== d.id) related.add(other);
@@ -645,32 +645,32 @@ console.error(
 // ---------------------------------------------------------------------------
 // Persona <-> process responsibility (process_raci): both cross-reference directions.
 // personas[] per process (processes.json) and processes[] per persona (personas.json).
-// Skill actors (actor_skill_id) are excluded; only persona actors carry a role_code.
+// Skill actors (skill_id) are excluded; only persona actors carry a persona_code.
 // ---------------------------------------------------------------------------
 const raciPersonasByProcess = new Map<number, RaciPersonaRef[]>();
 const raciProcessesByPersona = new Map<number, RaciProcessRef[]>();
-// Same process_raci facts keyed by role_id but carrying the process_id (the B9e reveal needs the pid to
+// Same process_raci facts keyed by persona_id but carrying the process_id (the B9e reveal needs the pid to
 // look up a process's domain attribution; RaciProcessRef carries only the process_key).
 const raciPidsByPersona = new Map<number, { pid: number; letter: string }[]>();
 {
   const seen = new Set<string>(); // dedup (process, persona, letter)
   for (const r of all.processRaci) {
-    const rid = r.actor_role_id as number | null;
+    const personaId = r.persona_id as number | null;
     const pid = r.process_id as number | null;
-    if (rid == null || pid == null) continue;
-    const persona = personaById.get(rid);
+    if (personaId == null || pid == null) continue;
+    const persona = personaById.get(personaId);
     const proc = all.processesById.get(pid);
     if (!persona || !proc) continue;
     const letter = (r.raci as string) ?? "";
-    const key = `${pid}:${rid}:${letter}`;
+    const key = `${pid}:${personaId}:${letter}`;
     if (seen.has(key)) continue;
     seen.add(key);
     if (!raciPersonasByProcess.has(pid)) raciPersonasByProcess.set(pid, []);
-    raciPersonasByProcess.get(pid)!.push({ code: persona.role_code, name: persona.role_name ?? "", raci: letter });
-    if (!raciProcessesByPersona.has(rid)) raciProcessesByPersona.set(rid, []);
-    raciProcessesByPersona.get(rid)!.push({ key: proc.process_key, name: proc.process_name ?? "", raci: letter });
-    if (!raciPidsByPersona.has(rid)) raciPidsByPersona.set(rid, []);
-    raciPidsByPersona.get(rid)!.push({ pid, letter });
+    raciPersonasByProcess.get(pid)!.push({ code: persona.persona_code, name: persona.persona_name ?? "", raci: letter });
+    if (!raciProcessesByPersona.has(personaId)) raciProcessesByPersona.set(personaId, []);
+    raciProcessesByPersona.get(personaId)!.push({ key: proc.process_key, name: proc.process_name ?? "", raci: letter });
+    if (!raciPidsByPersona.has(personaId)) raciPidsByPersona.set(personaId, []);
+    raciPidsByPersona.get(personaId)!.push({ pid, letter });
   }
   const byCode = (a: RaciPersonaRef, b: RaciPersonaRef) => a.code.localeCompare(b.code) || a.raci.localeCompare(b.raci);
   const byKey = (a: RaciProcessRef, b: RaciProcessRef) => a.key.localeCompare(b.key) || a.raci.localeCompare(b.raci);
@@ -697,14 +697,14 @@ for (const did of gateDomainIds) {
 // gated domain are dropped. (processes[] is the persona's full RACI list and is not domain-pruned.)
 // ---------------------------------------------------------------------------
 const modulesByPersona = new Map<number, Set<number>>();
-for (const rm of all.roleModules) {
-  const rid = rm.role_id as number;
+for (const rm of all.personaModules) {
+  const personaId = rm.persona_id as number;
   const mid = rm.domain_module_id as number;
-  if (!personaById.has(rid)) continue;
-  if (!modulesByPersona.has(rid)) modulesByPersona.set(rid, new Set());
-  modulesByPersona.get(rid)!.add(mid);
+  if (!personaById.has(personaId)) continue;
+  if (!modulesByPersona.has(personaId)) modulesByPersona.set(personaId, new Set());
+  modulesByPersona.get(personaId)!.add(mid);
 }
-const personasOut: PersonaOut[] = (all.domainRoles as any[])
+const personasOut: PersonaOut[] = (all.personas as any[])
   .map((p): PersonaOut => {
     // Prune reach to GATED domains only: keep a reached module only if one of its domains is
     // gated, and keep only those gated domains. A persona that reaches no gated domain ends up
@@ -731,8 +731,8 @@ const personasOut: PersonaOut[] = (all.domainRoles as any[])
       .sort((a, b) => a.localeCompare(b));
     const fn = p.business_function_id != null ? functionById.get(p.business_function_id) : null;
     return {
-      code: p.role_code,
-      name: p.role_name ?? "",
+      code: p.persona_code,
+      name: p.persona_name ?? "",
       description: p.description ?? "",
       business_function_id: p.business_function_id ?? null,
       business_function: fn?.business_function_name ?? null,
@@ -754,14 +754,14 @@ const personasOut: PersonaOut[] = (all.domainRoles as any[])
 // framework; emit just the in-use subset.
 // ---------------------------------------------------------------------------
 const usage = new Map<number, ProcessUsage>();
-const markUsed = (pid: number | null | undefined, edge: keyof ProcessUsage) => {
+const markUsed = (pid: number | null | undefined, key: keyof ProcessUsage) => {
   if (pid == null) return;
   let u = usage.get(pid);
   if (!u) {
     u = { gate: false, raci: false, handoff: false, tool: false };
     usage.set(pid, u);
   }
-  u[edge] = true;
+  u[key] = true;
 };
 for (const ls of all.lifecycle) markUsed(ls.process_id as number | null, "gate");
 for (const r of all.processRaci) markUsed(r.process_id as number | null, "raci");
@@ -791,10 +791,10 @@ const processesOut: ProcessOut[] = [...usage.entries()]
 // business-functions.json: the function-centric inverse of domain-map.json's per-domain
 // business_functions[]. Every business_functions row, with the domains it owns/contributes-to/
 // consumes (business_function_domains) and the personas that belong to it
-// (domain_roles.business_function_id). GATED like the other three: domains[] is pruned to gated
+// (personas.business_function_id). GATED like the other three: domains[] is pruned to gated
 // domains (released-only by default, every domain under --all) and personas[] to those reaching a
 // gated domain (the same persona set as personas.json); a function left with no gated domain AND no
-// gated persona is dropped. Links are LITERAL per function: personas and domains are NOT rolled up
+// gated persona is dropped. Relationships are LITERAL per function: personas and domains are NOT rolled up
 // through the parent_business_function_id hierarchy; `parent` is emitted so a consumer can navigate
 // the tree. RESPONSIBILITY_RANK / strongerResponsibility are reused from the domain-grain
 // business_functions attribution above.
@@ -812,11 +812,11 @@ for (const r of all.businessFunctionDomains) {
   bucket.set(did, bucket.has(did) ? strongerResponsibility(bucket.get(did)!, resp) : resp);
 }
 const personaCodesByFunction = new Map<number, string[]>();
-for (const p of all.domainRoles as any[]) {
+for (const p of all.personas as any[]) {
   const fid = p.business_function_id as number | null;
   if (fid == null) continue;
   if (!personaCodesByFunction.has(fid)) personaCodesByFunction.set(fid, []);
-  personaCodesByFunction.get(fid)!.push(p.role_code as string);
+  personaCodesByFunction.get(fid)!.push(p.persona_code as string);
 }
 
 // --- B9e per-function RACI reveal: helper indices --------------------------------------------------
@@ -837,10 +837,10 @@ function subtreeOf(fid: number): Set<number> {
   }
   return acc;
 }
-// Personas keyed by role_id per OWN function (role_id reaches the RACI map); cross-functional ones split out.
+// Personas keyed by persona_id per OWN function (persona_id reaches the RACI map); cross-functional ones split out.
 const personaIdsByFunction = new Map<number, number[]>();
 const crossFunctionalPersonaIds: number[] = [];
-for (const p of all.domainRoles as any[]) {
+for (const p of all.personas as any[]) {
   const fid = p.business_function_id as number | null;
   if (fid == null) {
     crossFunctionalPersonaIds.push(p.id as number);
@@ -906,32 +906,32 @@ const functionsOut: BusinessFunctionOut[] = (all.businessFunctions as any[])
     const seenActor = new Set<number>();
     const pushActor = (roleId: number, via: Actor["via"]) => {
       const pr = personaById.get(roleId);
-      if (!pr || !gatePersonaCodes.has(pr.role_code as string)) return; // released reach only
+      if (!pr || !gatePersonaCodes.has(pr.persona_code as string)) return; // released reach only
       if (seenActor.has(roleId)) return;
       seenActor.add(roleId);
       actors.push({ roleId, via });
     };
-    for (const rid of personaIdsByFunction.get(fn.id) ?? []) pushActor(rid, "own");
+    for (const personaId of personaIdsByFunction.get(fn.id) ?? []) pushActor(personaId, "own");
     for (const sfid of subtree) {
       if (sfid === fn.id) continue;
-      for (const rid of personaIdsByFunction.get(sfid) ?? []) pushActor(rid, "descendant");
+      for (const personaId of personaIdsByFunction.get(sfid) ?? []) pushActor(personaId, "descendant");
     }
     // Owner-anchored seam: a cross-functional persona attaches ONLY to the function whose subtree owns a
     // domain its RACI work is attributed to (never to that domain's consumers/contributors).
     if (ownedDomainIds.size > 0) {
-      for (const rid of crossFunctionalPersonaIds) {
-        const touchesOwned = (raciPidsByPersona.get(rid) ?? []).some(({ pid }) => {
+      for (const personaId of crossFunctionalPersonaIds) {
+        const touchesOwned = (raciPidsByPersona.get(personaId) ?? []).some(({ pid }) => {
           for (const did of attribDomainsByProcess.get(pid) ?? []) if (ownedDomainIds.has(did)) return true;
           return false;
         });
-        if (touchesOwned) pushActor(rid, "seam");
+        if (touchesOwned) pushActor(personaId, "seam");
       }
     }
     const raci: FunctionRaciRef[] = [];
     const seenRaciRow = new Set<string>();
     for (const a of actors) {
       const pr = personaById.get(a.roleId)!;
-      const pcode = pr.role_code as string;
+      const pcode = pr.persona_code as string;
       const scope = a.via === "seam" ? ownedDomainIds : new Set<number>(declaredResp.keys());
       for (const { pid, letter } of raciPidsByPersona.get(a.roleId) ?? []) {
         const proc = all.processesById.get(pid);
@@ -1049,7 +1049,7 @@ const domainMapJson =
 const personasJson =
   collapseStringArrays(JSON.stringify({ personas: personasOut }, null, 2), ["modules", "domains"]) + "\n";
 const processesJson = JSON.stringify({ processes: processesOut }, null, 2) + "\n";
-// Only `personas` (a role_code string[]) is collapsed; `domains` is an object array (untouched).
+// Only `personas` (a persona_code string[]) is collapsed; `domains` is an object array (untouched).
 const functionsJson =
   collapseStringArrays(JSON.stringify({ business_functions: functionsOut }, null, 2), ["personas", "actor_personas"]) + "\n";
 

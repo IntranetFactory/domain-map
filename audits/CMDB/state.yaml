@@ -8,7 +8,7 @@ last_audit: "2026-06-13"
 # The per-module `system` skill grain is RETIRED. Any item that says
 # "author/split a per-module system skill", "skill_tools", or "<module>_agent"
 # is CANCELED. Separately, Plan 3 (2026-06-02) DELETED catalog-stored per-module
-# `permissions` (domain_module_id set) and `permission_hierarchy` edges; workflow
+# `permissions` (domain_module_id set) and `permission_hierarchy` relationships; workflow
 # gates and the hierarchy are now DERIVED by the fact-sheet emitter
 # (deriveGate / derivePermissionHierarchy) from data_object_lifecycle_states
 # .requires_permission + entity_type. No loader writes those tables. This RETIRES
@@ -23,26 +23,26 @@ b1a:
   - id: B1A-M1
     summary: "Add missing master `ci_reconciliation_rules` to CMDB-CORE."
     finding: "MISSING - `ci_reconciliation_rules` not in catalog. Universal across the reconciliation engines of the flagship discovery/CMDB suites. Reconciliation logic is the load-bearing differentiator across all flagships and is unmodeled in the current footprint."
-    action: "Phase B insert: new `data_objects` row (singular `CI Reconciliation Rule`, plural `CI Reconciliation Rules`, kind=domain_owned, entity_type=catalog [rule definition]), DMDO row role=master+necessity=required under CMDB-CORE (108), lifecycle states (proposed: `draft`, `active`, `superseded`, `retired`), intra-domain relationships to configuration_items (76) and ci_relationships (77)."
+    action: "Phase B insert: new `data_objects` row (singular `CI Reconciliation Rule`, plural `CI Reconciliation Rules`, kind=domain_owned, entity_type=catalog [rule definition]), DMDO row held_as=master+necessity=required under CMDB-CORE (108), lifecycle states (proposed: `draft`, `active`, `superseded`, `retired`), intra-domain relationships to configuration_items (76) and ci_relationships (77)."
     affected_modules: [108]
     vendor_evidence: ["ServiceNow CMDB Identification and Reconciliation Engine", "BMC Helix Discovery", "Device42"]
   - id: B1A-M2
     summary: "Add missing master `ci_attestations` to CMDB-CORE."
     finding: "MISSING - `ci_attestations` not in catalog. CI owner periodic attestation is a primary data-quality control across the flagship CMDB data-foundations / data-steward review cycles."
-    action: "Phase B insert: new `data_objects` row (`CI Attestation`/`CI Attestations`, entity_type=operational_workflow), DMDO master under CMDB-CORE, lifecycle states (proposed: `requested`, `responded`, `accepted`, `expired`), users edge for attester."
+    action: "Phase B insert: new `data_objects` row (`CI Attestation`/`CI Attestations`, entity_type=operational_workflow), DMDO master under CMDB-CORE, lifecycle states (proposed: `requested`, `responded`, `accepted`, `expired`), relationship to users for attester."
     affected_modules: [108]
     vendor_evidence: ["ServiceNow CMDB Data Foundations", "BMC Helix Discovery", "Device42"]
   - id: B1A-M4
     summary: "Add missing master `ci_audit_log` to CMDB-CORE."
     finding: "MISSING - `ci_audit_log` not in catalog. Universal: every flagship exposes a CI history audit table separate from generic record-history. SOX-ITGC evidence depends on it."
-    action: "Phase B insert: new `data_objects` row (`CI Audit Log Entry`/`CI Audit Log`, kind=domain_owned, entity_type=operational_record [append-only trail]), DMDO master under CMDB-CORE, append-only (no workflow), users edge for actor."
+    action: "Phase B insert: new `data_objects` row (`CI Audit Log Entry`/`CI Audit Log`, kind=domain_owned, entity_type=operational_record [append-only trail]), DMDO master under CMDB-CORE, append-only (no workflow), relationship to users for actor."
     affected_modules: [108]
     vendor_evidence: ["ServiceNow CMDB CI history", "BMC Helix Discovery", "Device42"]
 
 b1b:
   - id: B1B-M3
     summary: "Add `discovery_credentials` as consumer in CMDB-CORE (canonical master deferred until DISCOVERY modularizes)."
-    finding: "MISSING - `discovery_credentials` not in catalog. All 5 flagships ship credential vaults for discovery scans (vCenter / cloud-tenant / AD / SSH). Even if the canonical master lives in DISCOVERY when modularized, CMDB needs the consumer link."
+    finding: "MISSING - `discovery_credentials` not in catalog. All 5 flagships ship credential vaults for discovery scans (vCenter / cloud-tenant / AD / SSH). Even if the canonical master lives in DISCOVERY when modularized, CMDB needs the consumer relationship."
     blocked_by:
       - {type: domain_audit, blocking_domain: DISCOVERY, milestone: M1-modularization}
     affected_modules: [108]
@@ -132,7 +132,7 @@ b2:
     summary: "Relationship row 220 vs 232 duplication on `enterprise_applications -> configuration_items`."
     question: "Keep both rows (different verbs: mapped_to vs onboards_into), collapse to row 220, or drop row 232 only?"
     options:
-      - "(a) Keep both (encode distinct edges)."
+      - "(a) Keep both (encode distinct relationships)."
       - "(b) Collapse to 220 (mapping is persistent; onboarding is a one-time transition captured by trigger event 208 already)."
       - "(c) Drop 232 only."
     why: "Same FK pair triggers ambiguity in label rendering. Collapse/drop = destructive (DELETE/overwrite); needs sign-off. Independent."
@@ -143,7 +143,7 @@ b2:
       - "(a) Keep current names (CMDB-specific personas, easier to find in UI)."
       - "(b) Rename to drop the CMDB infix (cleaner function-scoping)."
       - "(c) Demote to per-module tier permissions and delete the cross-module roles."
-    why: "Hard-invariant requires `<FUNCTION-CODE>-<ROLE-NAME>` format; current codes have an additional `CMDB-` infix. Rename/demote = overwrite/delete on existing rows = destructive. NOTE: these may be legacy `roles`-grain rows; under Plan 3 personas live in `domain_roles`. Confirm grain before acting."
+    why: "Hard-invariant requires `<FUNCTION-CODE>-<ROLE-NAME>` format; current codes have an additional `CMDB-` infix. Rename/demote = overwrite/delete on existing rows = destructive. NOTE: these may be legacy `roles`-grain rows; under Plan 3 personas live in `personas`. Confirm grain before acting."
   - id: B2-6
     summary: "B9 fan-out target for `ci.unauthorized_change_detected`."
     question: "Beyond ITSM (current sole subscriber), should the event also fan out to GRC (SOX-ITGC evidence) and SECOPS (potential indicator of compromise)?"
@@ -176,16 +176,16 @@ b2:
     options:
       - "(a) Convert each to embedded_master (carry a local shell) OR set necessity=optional, per references/modules.md section 5. Recommended: hardware_assets -> necessity=optional (presence-conditional consumer reference); service_changes -> necessity=optional (read of ITSM-mastered change record)."
       - "(b) Leave as-is."
-    why: "DESTRUCTIVE (rewrite role/necessity on existing DMDO rows; explicit SURFACE per Rule #21). Verified live 2026-06-07: dmdo id 549 (data_object_id 56 hardware_assets, mastered by HAM, role=contributor, necessity=required, module 108) and dmdo id 548 (data_object_id 50 service_changes, mastered by ITSM, role=contributor, necessity=required, module 108) each point at another domain's entity, not embedded here -> M9 violation. Do not document the dependency; embed or relax. Never auto-applied."
+    why: "DESTRUCTIVE (rewrite role/necessity on existing DMDO rows; explicit SURFACE per Rule #21). Verified live 2026-06-07: dmdo id 549 (data_object_id 56 hardware_assets, mastered by HAM, held_as=contributor, necessity=required, module 108) and dmdo id 548 (data_object_id 50 service_changes, mastered by ITSM, held_as=contributor, necessity=required, module 108) each point at another domain's entity, not embedded here -> M9 violation. Do not document the dependency; embed or relax. Never auto-applied."
 
   # ---- Personas / RACI deferred (do NOT author) ----
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer DEFERRED."
-    question: "Author the CMDB persona / RACI layer (domain_roles + role_modules reach + process_raci + lifecycle.process_id wiring)?"
+    question: "Author the CMDB persona / RACI layer (personas + persona_modules reach + process_raci + lifecycle.process_id wiring)?"
     options:
       - "(a) Author now (worked reference: scripts/loaders/load_ats_personas_pilot.ts)."
       - "(b) Defer to the standing per-domain Phase P sweep."
-    why: "DEFERRED per the 2026-06-07 state-driven run (personas not auto-authored). E1 fires: 3 domain_modules and 0 domain_roles reach this domain via role_modules (Plan 3 deleted the old _core personas). Candidate personas: IT-INFRA-CONFIG-MANAGER (CI lifecycle owner across 108/109/110), IT-INFRA-CONFIG-DATA-STEWARD (attestation + data quality on 108), IT-INFRA-SERVICE-MAP-OWNER (109), IT-INFRA-BASELINE-ANALYST (110). Resolve B2-5 (role naming/grain) before authoring."
+    why: "DEFERRED per the 2026-06-07 state-driven run (personas not auto-authored). E1 fires: 3 domain_modules and 0 personas reach this domain via persona_modules (Plan 3 deleted the old _core personas). Candidate personas: IT-INFRA-CONFIG-MANAGER (CI lifecycle owner across 108/109/110), IT-INFRA-CONFIG-DATA-STEWARD (attestation + data quality on 108), IT-INFRA-SERVICE-MAP-OWNER (109), IT-INFRA-BASELINE-ANALYST (110). Resolve B2-5 (role naming/grain) before authoring."
     extra_phase_p_triage: "2026-06-02"
   - id: B2-B9D-OWN-1190
     summary: "Configuration Management Database: name an owner for \"Implement and enforce change control procedures\" (no one is responsible for it today)"
@@ -283,9 +283,9 @@ b3:
 
 # RETIRED items (superseded; kept as a note, not actionable):
 # - B1A-S3 (materialize 3 workflow-gate permissions cmdb-core:register_ci/
-#   retire_ci/archive_ci + permission_hierarchy edges): RETIRED 2026-06-07 under
+#   retire_ci/archive_ci + permission_hierarchy relationships): RETIRED 2026-06-07 under
 #   Plan 3. The catalog no longer stores per-module `permissions` (domain_module_id
-#   set) or `permission_hierarchy` edges; both were deleted 2026-06-02. Workflow
+#   set) or `permission_hierarchy` relationships; both were deleted 2026-06-02. Workflow
 #   gates and their hierarchy are DERIVED by the fact-sheet emitter (deriveGate /
 #   derivePermissionHierarchy) from data_object_lifecycle_states.requires_permission
 #   + entity_type. The configuration_items states 272/274/275 already carry

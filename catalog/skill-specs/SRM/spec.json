@@ -454,7 +454,7 @@
           "permission_verb_override": "close_information_request"
         },
         {
-          "name": "cancelled",
+          "name": "canceled",
           "order": 50,
           "is_terminal": true
         }
@@ -716,7 +716,7 @@
       "name": "supplier_relationships",
       "singular_label": "Supplier Relationship",
       "plural_label": "Supplier Relationships",
-      "description": "Parent/child and affiliate hierarchy links between supplier records, with relationship type.",
+      "description": "Parent/child and affiliate hierarchy relationships between supplier records, with relationship type.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -861,7 +861,7 @@
           "is_terminal": true
         },
         {
-          "name": "cancelled",
+          "name": "canceled",
           "order": 40,
           "is_terminal": true
         }
@@ -1147,7 +1147,7 @@
       ]
     }
   ],
-  "roles": [],
+  "personas": [],
   "enums": {
     "trigger_event_category": [
       "lifecycle",
@@ -1168,7 +1168,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

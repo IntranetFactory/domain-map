@@ -8,7 +8,7 @@
  * the table. Then drop `skill_tools` (retired per the target model). Descriptions are preserved in
  * the Step-0 snapshot.
  *
- * Verifies: process_raci.actor_skill_id still 0 non-null; the ONLY remaining domain_module_id-not-null
+ * Verifies: process_raci.skill_id still 0 non-null; the ONLY remaining domain_module_id-not-null
  * system skills are the 5 starters; skill_tools holds 0 rows; then the entity is dropped.
  *
  * Run from project root: bun run scripts/loaders/skill_grain_07_delete_full_skills.ts
@@ -31,10 +31,10 @@ const del = (path: string) => semCall("postgrestRequest", { method: "DELETE", pa
 
 const LIMIT = 200000;
 
-// 1. Re-assert actor_skill_id still 0 non-null (deleting actor skills would orphan RACI otherwise).
-const praci = await get(`/process_raci?actor_skill_id=not.is.null&select=id&limit=${LIMIT}`);
-if (praci.length !== 0) throw new Error(`process_raci.actor_skill_id has ${praci.length} non-null - ABORT (cascade would orphan)`);
-console.log(`process_raci.actor_skill_id non-null: 0 (safe)`);
+// 1. Re-assert skill_id still 0 non-null (deleting actor skills would orphan RACI otherwise).
+const praci = await get(`/process_raci?skill_id=not.is.null&select=id&limit=${LIMIT}`);
+if (praci.length !== 0) throw new Error(`process_raci.skill_id has ${praci.length} non-null - ABORT (cascade would orphan)`);
+console.log(`process_raci.skill_id non-null: 0 (safe)`);
 
 // 2. Identify the predicate target (244 full-module system skills).
 const modules = await get(`/domain_modules?select=id,module_kind&limit=${LIMIT}`);

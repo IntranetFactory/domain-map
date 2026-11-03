@@ -28,7 +28,7 @@ Learner data privacy substrate that compliance training depends on: GDPR Article
 | Data Deletion Requests | `data_deletion_requests` | Right-to-erasure requests under GDPR Article 17, covering scope, anonymization policy, regulator deadline, and fulfillment status. |
 | GDPR Consent Records | `gdpr_consent_records` | Consent records for learner training data under GDPR, capturing purpose, lawful basis, and grant and withdrawal timestamps. |
 | Subject Access Requests | `subject_access_requests` | Subject access request tickets under GDPR Article 15, tracking requester, scope, fulfillment status, and regulator deadline. |
-| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit. |
+| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit. |
 | Records Retention Policies | `records_retention_policies` | Legal hold and disposition rules per document class, with regulatory retention periods and scheduled destruction dates. |
 | Users | `users` | Platform users referenced as assignees, authors, approvers, and creators across records. |
 
@@ -48,7 +48,7 @@ flowchart TD
   users -->|"grants_consent_in"| gdpr_consent_records
   users -->|"files_sar"| subject_access_requests
   users -->|"files_deletion_request"| data_deletion_requests
-  employees -->|"is_linked_to"| users
+  employees -->|"is_related_to"| users
   users -->|"maintains"| records_retention_policies
   class subject_access_requests master;
   class data_deletion_requests master;
@@ -62,7 +62,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `data_deletion_requests` | `data_deletion_requests` | Data Deletion Request | Data Deletion Requests | master | - | - | required | yes | operational_workflow | `:manage` | - |
 | 2 | `gdpr_consent_records` | `gdpr_consent_records` | GDPR Consent Record | GDPR Consent Records | master | - | - | optional | yes | operational_workflow | `:manage` | - |
@@ -77,32 +77,32 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `subject_access_requests` | discloses | `gdpr_consent_records` | many_to_many | association | optional | source | clear | reference | - |
 | `data_deletion_requests` | voids | `gdpr_consent_records` | many_to_many | association | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | grants_consent_in | `gdpr_consent_records` | one_to_many | required | source | restrict | reference | - |
 | `users` | files_sar | `subject_access_requests` | one_to_many | required | source | restrict | reference | - |
 | `users` | files_deletion_request | `data_deletion_requests` | one_to_many | required | source | restrict | reference | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
 | `users` | maintains | `records_retention_policies` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(none: no outbound cross-scope edges from this scope's masters or contributors)_
+_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -190,14 +190,14 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
 | LMS-CT-GDPR | HCM | _(domain-level)_ | `data_deletion_request.fulfilled` | _(lifecycle)_ | `data_deletion_requests` | api_call | medium | - |
 | LMS-CT-GDPR | HCM | _(domain-level)_ | `gdpr_consent_record.withdrawn` | _(state_change)_ | `gdpr_consent_records` | event_stream | medium | - |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
 | HCM-CORE-WORKER | LMS | LMS-COURSE-DELIVERY | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
 | LMS-CT-GDPR | LMS | LMS-COURSE-DELIVERY | `data_deletion_request.fulfilled` | _(lifecycle)_ | `data_deletion_requests` | lifecycle_progression | medium | - |
 | LMS-CT-GDPR | LMS | LMS-COURSE-DELIVERY | `gdpr_consent_record.withdrawn` | _(state_change)_ | `gdpr_consent_records` | lifecycle_progression | medium | - |
 | LMS-CT-GDPR | LMS | LMS-COMPLIANCE-TRAINING | `gdpr_consent_record.withdrawn` | _(state_change)_ | `gdpr_consent_records` | lifecycle_progression | medium | - |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
@@ -219,11 +219,11 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
 | HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `employees` | embedded_master | required | HCM-CORE-WORKER (HCM) | - |
 | `records_retention_policies` | consumer | optional | ECM-RECORDS-GOV (ECM) | - |

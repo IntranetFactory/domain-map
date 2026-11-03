@@ -39,9 +39,9 @@ b1a:
     extra_proposed_module_codes: [OMS-ORDER-ORCHESTRATION, OMS-RETURNS, OMS-STORE-PICKUP, OMS-LOCATIONS]
 
   - id: B1A-S2
-    summary: "Link 5-8 capabilities to OMS via capability_domains; A2 hard fail (zero rows). Part of THE BUILD."
+    summary: "Relationship 5-8 capabilities to OMS via capability_domains; A2 hard fail (zero rows). Part of THE BUILD."
     finding: "Zero capability_domains rows for OMS (domain_id=32, confirmed live 2026-06-07). The market has 5-8 standard capability shapes: order capture, distributed order orchestration, sourcing and rate-shop, available-to-promise (ATP) computation, returns and reverse logistics, omnichannel fulfillment (BOPIS / ship-from-store / curbside), post-purchase order status."
-    action: "Author 6-8 capabilities rows plus capability_domains linking each to OMS. Apply Cross-cutting capability convention for capabilities that span >=3 domains: order-capture shared with B2C-COMM; available-to-promise shared with INV-MGMT; returns adjacent to CSM. Bundle into Phase A loader alongside B1A-S1 once B2-S4 lands the capability-count target."
+    action: "Author 6-8 capabilities rows plus capability_domains relating each to OMS. Apply Cross-cutting capability convention for capabilities that span >=3 domains: order-capture shared with B2C-COMM; available-to-promise shared with INV-MGMT; returns adjacent to CSM. Bundle into Phase A loader alongside B1A-S1 once B2-S4 lands the capability-count target."
     blocked_by:
       - {type: user_decision, ref: B2-S4}
       - {type: prerequisite_entity, ref: B1A-S1}
@@ -49,15 +49,15 @@ b1a:
 
   - id: B1A-S4
     summary: "Author 5 intra-OMS + 3-4 cross-domain data_object_relationships rows; B6 hard fail + B8 partial."
-    finding: "Zero intra-OMS data_object_relationships rows among the 5 masters. Only 3 catalog rows touch OMS masters: 454 return_authorizations opens customer_cases, 455 order_allocations opens customer_cases, 971 inv_stock_balances informs_atp_of order_allocations. Workflow-shape implies 5 intra-domain edges (sourcing_decisions relates_to order_allocations, order_allocations stages_pickup_for store_pickup_orders, inventory_locations sources_for order_allocations, return_authorizations originates_from order_allocations, store_pickup_orders staged_at inventory_locations) and 3-4 cross-domain edges (order_allocations triggers_credit_memo_for credit_memos in FIN, sourcing_decisions informs_promise_for commerce_orders in B2C-COMM, store_pickup_orders fulfills commerce_orders in B2C-COMM, return_authorizations refunds commerce_orders in B2C-COMM)."
-    action: "Pre-specify the full per-row tuple (data_object_id, related_data_object_id, relationship_verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) for each edge, then load. Cross-domain edges into B2C-COMM point at masters (commerce_orders 381, order_lines 382) that B2C-COMM has not yet canonically DMDO-mastered; flag the dependency in B2C-COMM's audit. NOT in the state-driven execute allow-list (data_object_relationships); carried for the build/fix-loop."
+    finding: "Zero intra-OMS data_object_relationships rows among the 5 masters. Only 3 catalog rows touch OMS masters: 454 return_authorizations opens customer_cases, 455 order_allocations opens customer_cases, 971 inv_stock_balances informs_atp_of order_allocations. Workflow-shape implies 5 intra-domain relationships (sourcing_decisions relates_to order_allocations, order_allocations stages_pickup_for store_pickup_orders, inventory_locations sources_for order_allocations, return_authorizations originates_from order_allocations, store_pickup_orders staged_at inventory_locations) and 3-4 cross-domain relationships (order_allocations triggers_credit_memo_for credit_memos in FIN, sourcing_decisions informs_promise_for commerce_orders in B2C-COMM, store_pickup_orders fulfills commerce_orders in B2C-COMM, return_authorizations refunds commerce_orders in B2C-COMM)."
+    action: "Pre-specify the full per-row tuple (data_object_id, related_data_object_id, relationship_verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) for each relationship, then load. Cross-domain relationships into B2C-COMM point at masters (commerce_orders 381, order_lines 382) that B2C-COMM has not yet canonically DMDO-mastered; flag the dependency in B2C-COMM's audit. NOT in the state-driven execute allow-list (data_object_relationships); carried for the build/fix-loop."
     blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: "cross-domain edges to B2C-COMM masters are stronger once OMS modules exist"}
+      - {type: depends_on, ref: B1A-S1, reason: "cross-domain relationships to B2C-COMM masters are stronger once OMS modules exist"}
       - {type: domain_audit, blocking_domain: B2C-COMM, milestone: "DMDO master rows for commerce_orders and order_lines"}
 
   - id: B1A-S5
-    summary: "Load 4-6 Rule #10 users edges against OMS masters; B7 hard fail."
-    finding: "Zero data_object_relationships rows linking any OMS master to the platform_builtin users row. Expected minimum: order_allocations (allocator / operator), return_authorizations (approver per the approve_return permission_verb_override and intake clerk on received), sourcing_decisions (operator override per the sourcing_decision.overridden event already loaded), store_pickup_orders (picker, customer-service contact on expiration)."
+    summary: "Load 4-6 Rule #10 relationships to users against OMS masters; B7 hard fail."
+    finding: "Zero data_object_relationships rows relating any OMS master to the platform_builtin users row. Expected minimum: order_allocations (allocator / operator), return_authorizations (approver per the approve_return permission_verb_override and intake clerk on received), sourcing_decisions (operator override per the sourcing_decision.overridden event already loaded), store_pickup_orders (picker, customer-service contact on expiration)."
     action: "Pre-specify verb / inverse_verb tuples per master per role (allocator/allocated_by, approver/approved_by, intake_clerk/received_by, picker/picked_by, etc.), then INSERT 4-6 rows pointing to the kind='platform_builtin' users row. NOT in the state-driven execute allow-list (data_object_relationships, verb tuples not pre-specified); bundle into the same loader as B1A-S4."
     affected_masters:
       - {data_object_id: 424, name: order_allocations, target_module_id: null, workflow: allocator-or-operator}
@@ -98,7 +98,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Module-independent additive work (entity_type, catalog UX, aliases) was executed 2026-06-07; the cascade left."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill (NOT per-module skills, per the 2026-06-06 supersession). If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on the B2-S4 capability-count / module-count call."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill (NOT per-module skills, per the 2026-06-06 supersession). If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Gated on the B2-S4 capability-count / module-count call."
     extra_phase_p_triage: "2026-06-07"
     blocked_by:
       - {type: user_decision, ref: B2-S4}

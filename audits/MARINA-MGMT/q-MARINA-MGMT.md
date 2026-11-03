@@ -74,9 +74,9 @@ a6:
 
 ---
 
-q7: Can the agent confirm the entity-type classifications, so the right entities get workflow state machines and the rest stay as plain records, config, or links?
+q7: Can the agent confirm the entity-type classifications, so the right entities get workflow state machines and the rest stay as plain records, config, or relationships?
 
-- a) Confirm: the 9 workflow entities (slips, reservations, waitlist, contracts, dockage invoices, work orders, estimates, haul-outs, dry-stack launches) carry lifecycle states; meters, readings, boaters, vessels, registrations, and fuel/store records stay records; slip-size classes are config; slip assignments are a link table.
+- a) Confirm: the 9 workflow entities (slips, reservations, waitlist, contracts, dockage invoices, work orders, estimates, haul-outs, dry-stack launches) carry lifecycle states; meters, readings, boaters, vessels, registrations, and fuel/store records stay records; slip-size classes are config; slip assignments are a junction table.
 - b) Change one or more, and name which.
 
 Recommended: a. Each of the nine carries an observable workflow (a reservation moves inquiry to confirmed to checked-in to checked-out; a contract goes draft to active to expired), while meters, registrations, and fuel tickets are static records. As part of this build the shared "utility meters" entity was reclassified from a workflow to a record (it had been mis-set as a workflow with no states, a gap predating this load); say so if you would rather meters carry a lifecycle.
@@ -104,7 +104,7 @@ q9: Phase 0 surfaced several vendor-common entities trimmed from the initial bui
 - Gate access control: gate credentials and access-event logs (Molo, DockMaster, Marina Master, MarinaOffice), which would seed the optional Access module if you pick q1 option c.
 - Compliance docs: SPCC spill-prevention plans, liveaboard permits, and voluntary Clean Marina certifications (jurisdiction-conditional).
 - Boatyard depth: service technicians, parts inventory, and labor time entries (Molo, DockMaster, MarinaOffice).
-- E-signature records on contracts (the build links a sign-document tool but stores no signature record).
+- E-signature records on contracts (the build relates a sign-document tool but stores no signature record).
 - Dock-walk logs and vessel-movement audit trails (DockMaster, Marina Master, MarinaOffice).
 - Peripheral records: ship-store product catalog, individual fuel dispensers, and a boater messaging inbox.
 

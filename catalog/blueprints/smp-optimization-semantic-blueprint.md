@@ -57,7 +57,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `smp_optimization_recommendations` | `smp_optimization_recommendations` | Optimization Recommendation | Optimization Recommendations | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `smp_reclamation_actions` | `smp_reclamation_actions` | Reclamation Action | Reclamation Actions | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -71,13 +71,13 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `smp_license_seat_assignments` | reclaims_seat | `smp_reclamation_actions` | one_to_one | reference | required | source | restrict | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -86,7 +86,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | granted | `smp_license_seat_assignments` | one_to_many | required | target | restrict | reference | - |
 | `users` | generates | `saas_usage_metrics` | one_to_many | required | target | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -102,11 +102,11 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `saas_subscriptions` | grants | `smp_license_seat_assignments` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 

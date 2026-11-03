@@ -37,7 +37,7 @@ b1b:
       `asset_renditions` is universal across the brand-led and enterprise DAM surface. Per-format derivative outputs (thumbnails, web-res, print-res, video bitrates) of a master `digital_assets` row.
       DAM currently has zero `domain_modules` and zero DAM-side `domain_module_data_objects` master rows. No row exists in `data_objects` for `asset_renditions`.
     action: |
-      Phase B insert after the module set ships: create `data_objects` row `asset_renditions` (kind=domain_owned), then INSERT a DMDO row at role=master, necessity=required against the chosen asset-library module (target range: DAM-ASSET-LIB).
+      Phase B insert after the module set ships: create `data_objects` row `asset_renditions` (kind=domain_owned), then INSERT a DMDO row at held_as=master, necessity=required against the chosen asset-library module (target range: DAM-ASSET-LIB).
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB]
@@ -47,7 +47,7 @@ b1b:
     finding: |
       `asset_versions` represents the version history of a single `digital_assets` row (re-edits, revisions, supersedes). Universal across the flagship DAM surface. Distinct from `asset_renditions`. Not present in catalog today.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against the asset-library module from B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB]
@@ -57,7 +57,7 @@ b1b:
     finding: |
       `asset_collections` are user-curated groupings, distinct from `asset_categories` taxonomy. Not present in catalog today.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against the asset-library module from B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB]
@@ -67,7 +67,7 @@ b1b:
     finding: |
       `asset_categories` is the hierarchical taxonomy / folder tree on assets. Universal across every flagship DAM. Distinct from `asset_collections` (user-curated, flat) and from `asset_rights` (rights metadata). Not present in catalog today.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against the asset-library module from B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB]
@@ -77,7 +77,7 @@ b1b:
     finding: |
       `asset_rights` holds license terms, usage rights, territory, expiry. Drives downstream policy gates. Not present in catalog today. In a 4-module split it masters to DAM-RIGHTS-MGMT; in 2-module / 3-module splits it lives in DAM-ASSET-LIB.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB, DAM-RIGHTS-MGMT]
@@ -87,7 +87,7 @@ b1b:
     finding: |
       `model_releases` are signed release forms (talent, property, location) attached to a `digital_assets` row. Not present in catalog today.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-ASSET-LIB, DAM-RIGHTS-MGMT]
@@ -97,7 +97,7 @@ b1b:
     finding: |
       `share_links` are external-share URLs with expiry, watermark, password, view-count tracking. Dominant DAM distribution primitive. Not present in catalog today.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against DAM-DISTRIBUTION from B2-1.
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against DAM-DISTRIBUTION from B2-1.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-DISTRIBUTION]
@@ -107,7 +107,7 @@ b1b:
     finding: |
       `asset_publications` is the state-machine entity behind the `digital_asset.published` trigger event (id 46). Outbound delivery to channels (web, social, partner CDN, PIM). Not present in catalog today; the trigger event currently fires off the bare `digital_assets` row.
     action: |
-      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against DAM-DISTRIBUTION from B2-1. Re-target trigger_event 46 if appropriate (judgment call: keep on digital_assets vs move to asset_publications).
+      Phase B insert: `data_objects` row + DMDO row at held_as=master, necessity=required against DAM-DISTRIBUTION from B2-1. Re-target trigger_event 46 if appropriate (judgment call: keep on digital_assets vs move to asset_publications).
     blocked_by:
       - {type: user_decision, ref: B2-1}
     extra_proposed_module_range: [DAM-DISTRIBUTION]
@@ -124,7 +124,7 @@ b1b:
     extra_gates: [B1B-S3, B1B-S7, B1B-S8, B1B-B1, B1B-B2, B1B-B3, B1B-M1, B1B-M2, B1B-M3, B1B-M4, B1B-M5, B1B-M6, B1B-M7, B1B-M8]
 
   - id: B1B-S3
-    summary: "Link CREATIVE-REVIEW (capability 446) to a realizing DAM module via domain_module_capabilities."
+    summary: "Relationship CREATIVE-REVIEW (capability 446) to a realizing DAM module via domain_module_capabilities."
     finding: |
       Capability 446 (CREATIVE-REVIEW) is bound to DAM via capability_domains but has zero domain_module_capabilities rows because no DAM module exists. M4 fails.
     action: |
@@ -133,9 +133,9 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S7
-    summary: "Author symmetric outbound digital_assets to users edges; exact verbs require user pre-specification (see B2-7)."
+    summary: "Author symmetric outbound digital_assets to relationships to users; exact verbs require user pre-specification (see B2-7)."
     finding: |
-      data_object_relationships on digital_assets (137): 3 inbound from users (641 uploaded, 642 owns, 643 approves) but 0 outbound. Rule #10 says built-in edges should be symmetric. The exact relationship_verb / inverse_verb / owner_side / label tuples were never pre-specified.
+      data_object_relationships on digital_assets (137): 3 inbound from users (641 uploaded, 642 owns, 643 approves) but 0 outbound. Rule #10 says built-in relationships should be symmetric. The exact relationship_verb / inverse_verb / owner_side / label tuples were never pre-specified.
     action: |
       Surface the proposed exact tuple per outbound row (B2-7) before inserting. Deferred until tuples are confirmed (audit-procedure rule: do not load relationship rows the audit does not pre-specify).
     blocked_by:
@@ -252,7 +252,7 @@ b2:
       - domain-prefixed: DAM-ASSET-LIB, DAM-ASSET-TAXONOMY, DAM-BRAND-PORTAL, DAM-ASSET-DISTRIBUTION, DAM-DYNAMIC-DELIVERY
       - other (user names)
     why: |
-      DAM has only 1 capability today (floor 3). Cross-cutting capabilities link to multiple domains; domain-prefixed are DAM-only. The decision affects which capabilities can be reused by HCMS, PIM, MRM, AGENCY-MGMT, and raises DAM's count to clear A2.
+      DAM has only 1 capability today (floor 3). Cross-cutting capabilities relate to multiple domains; domain-prefixed are DAM-only. The decision affects which capabilities can be reused by HCMS, PIM, MRM, AGENCY-MGMT, and raises DAM's count to clear A2.
 
   - id: B2-6
     summary: "Personas/RACI for the Brand and Creative function: DEFER (Phase P, owner already set). Author now versus defer until modules ship."
@@ -262,14 +262,14 @@ b2:
       - author-now
       - defer-until-modules
     why: |
-      Roles/personas depend on modules (E-band role_modules junction). Authoring now without modules creates orphans; deferring is the cleaner sequence. Personas are a Phase-P deferral regardless. The owner/contributor business_function_domains rows already exist (function 55 owner, function 25 contributor).
+      Roles/personas depend on modules (E-band persona_modules junction). Authoring now without modules creates orphans; deferring is the cleaner sequence. Personas are a Phase-P deferral regardless. The owner/contributor business_function_domains rows already exist (function 55 owner, function 25 contributor).
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
   - id: B2-7
     summary: "Pre-specify exact tuples for the 3 outbound digital_assets -> users relationship rows (gates B1B-S7)."
     question: |
-      Rule #10 wants symmetric edges. For each of the 3 inbound user-edges (641 uploaded, 642 owns, 643 approves), supply the exact tuple for the outbound row: (relationship_verb, inverse_verb, owner_side, data_object_relationship_label, cardinality if applicable).
+      Rule #10 wants symmetric relationships. For each of the 3 inbound relationships to users (641 uploaded, 642 owns, 643 approves), supply the exact tuple for the outbound row: (relationship_verb, inverse_verb, owner_side, data_object_relationship_label, cardinality if applicable).
     options:
       - "Mirror the inbound: e.g. (was_uploaded_by, uploaded, target, was_uploaded_by)"
       - "Provide explicit alternatives"
@@ -316,7 +316,7 @@ b2:
     question: |
       Handoff 98 (digital_asset.published, DAM -> HCMS, payload digital_assets) carries APQC
       tag 1763 ("Publish approved content", L4 21681). B9d classified this payload UNOWNED:
-      digital_assets (137) has no role=master row in any domain_module_data_objects across the
+      digital_assets (137) has no held_as=master row in any domain_module_data_objects across the
       catalog, because DAM is unbuilt (0 modules). So the published-content process cannot be
       realized (no owning module, no persona) until DAM ships its module set.
     options:

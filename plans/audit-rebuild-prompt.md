@@ -45,12 +45,12 @@ CONTEXT FILES (read these first):
 TASK
 
 1. Run a fresh structural Validate b1 audit per the recipe in domain-audit-procedure.md:
-   - A-band: domain metadata (A1-A4 + regulations linkage)
+   - A-band: domain metadata (A1-A4 + regulations relationship)
    - M-band: modularization (M1-M7)
-   - B-band: boundary integrity (B5, B7 user-edges, B9 trigger fan-out, B9b intra-domain handoffs, B10b own-side FK backfill, B11 aliases, B12 lifecycle states)
+   - B-band: boundary integrity (B5, B7 relationships to `users`, B9 trigger fan-out, B9b intra-domain handoffs, B10b own-side FK backfill, B11 aliases, B12 lifecycle states)
    - C-band: lifecycle states
    - D-band: data objects
-   - E-band: RBAC (E1-E5 — roles, role_modules, permissions, role_permissions, Path A == Path B)
+   - E-band: RBAC (E1-E5 — roles, persona_modules, permissions, role_permissions, Path A == Path B)
    - F-band: skills (F1-F5 — exactly one system skill per module, skill_tools, Semantius score)
    - H-band: APQC coverage (handoff_processes per cross-domain handoff)
 

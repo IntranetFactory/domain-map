@@ -96,7 +96,7 @@ Domain: SaaS Management Platforms (domain_id=85, domain_code=SMP). Read-only mar
 2. **smp_access_grants** (AUTOMATION, compliance) — Entitlement-state object (user x app x role currently provisioned). Distinct from smp_license_seat_assignments (commercial seat). It is the subject every access review certifies; without it there is no who-has-access-to-what fact.
 3. **smp_deprovisioning_logs** (AUTOMATION, compliance) — Immutable per-app data-deprovisioning/data-deletion evidence (account deactivated, data exported/deleted, license reclaimed, actor, timestamp). Required for GDPR erasure proof and SOX.
 4. **smp_offboarding_runs** (AUTOMATION, compliance) — Per-departing-user offboarding execution record with per-app revocation steps + outcome. Every flagship models it; smp_workflow_runs is too generic to serve as the leaver-evidence artifact.
-5. **smp_discovery_sources** (DISCOVERY, core) — Discovery-method/connector registry (SSO, finance feed, browser/desktop agent, HRIS, direct API). Zluri markets 9 discovery methods as configured, coverage-tracked sources; smp_app_integrations covers app-to-app links, not the discovery channels feeding the inventory.
+5. **smp_discovery_sources** (DISCOVERY, core) — Discovery-method/connector registry (SSO, finance feed, browser/desktop agent, HRIS, direct API). Zluri markets 9 discovery methods as configured, coverage-tracked sources; smp_app_integrations covers app-to-app relationships, not the discovery channels feeding the inventory.
 
 ## Modularization verdict
 

@@ -7,7 +7,7 @@ Manage one trusted record for every product (attributes, variants, categories, t
 
 q1: (answer this first) Four sibling product objects (products, translations, digital assets) are both mastered in one PIM module and re-consumed in its sibling modules, which is not allowed. How should this be resolved?
 
-- a) Delete the 4 duplicate consumer links, so the other modules read the canonical product, translation, and asset records by reference.
+- a) Delete the 4 duplicate consumer relationships, so the other modules read the canonical product, translation, and asset records by reference.
 - b) Promote each of the 4 to its own embedded copy, so each module can be installed and run standalone without its sibling.
 - c) Mixed: delete some and promote others (specify which).
 
@@ -45,10 +45,10 @@ a4:
 
 ---
 
-q5: Which domain should own the product-regulation links (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU Digital Product Passport)?
+q5: Which domain should own the product-regulation relationships (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU Digital Product Passport)?
 
 - a) PLM (the PLM Compliance module) owns them; PIM consumes them through the existing compliance-declaration handoff.
-- b) PIM links the same regulation records itself; overlap with PLM is acceptable.
+- b) PIM relates the same regulation records itself; overlap with PLM is acceptable.
 - c) Split: REACH, RoHS, and Prop 65 to PLM (engineering side); GS1 GDSN, EU GPSR, and EU DPP to PIM (merchandising channel side).
 
 Recommended: c. The engineering-substance rules sit naturally with PLM while the channel and datapool rules (GDSN, GPSR, DPP) are merchandising-side truth PIM publishes, so a split matches where each regulation actually applies. Your answer also decides whether the regulation records get created at all.
@@ -59,7 +59,7 @@ a5:
 
 q6: Should the Product Content module publish a "product discontinued" signal back to PLM, so engineering can clear active-merchandising flags on its parts? (yes/no)
 
-Recommended: yes, if PLM acts on the signal in practice. The trigger already exists; only the handoff link is missing. Skip it if PLM does not need the signal.
+Recommended: yes, if PLM acts on the signal in practice. The trigger already exists; only the handoff relationship is missing. Skip it if PLM does not need the signal.
 
 a6:
 

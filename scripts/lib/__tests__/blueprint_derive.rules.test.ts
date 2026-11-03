@@ -4,7 +4,7 @@
 // scenario that combines them lives in blueprint_derive.starter.test.ts.
 
 import { describe, expect, test } from "bun:test";
-import { deriveDeleteMode, deriveModuleModel, entityPluralToken, entitySingularToken, isIncomingLink, type BlueprintModel } from "../blueprint_derive";
+import { deriveDeleteMode, deriveModuleModel, entityPluralToken, entitySingularToken, isIncomingRelationship, type BlueprintModel } from "../blueprint_derive";
 import {
   buildFixture,
   dataObject,
@@ -51,7 +51,7 @@ function helpDesk(opts: HelpDeskOpts = {}) {
     dataObjects,
     dmdo,
     lifecycle: opts.lifecycle ?? [],
-    domainRoles: [{ id: AGENT, role_code: "SUPPORT-AGENT" }, { id: LEAD, role_code: "SUPPORT-LEAD" }, { id: WATCHER, role_code: "SUPPORT-WATCHER" }],
+    personas: [{ id: AGENT, persona_code: "SUPPORT-AGENT" }, { id: LEAD, persona_code: "SUPPORT-LEAD" }, { id: WATCHER, persona_code: "SUPPORT-WATCHER" }],
     processRaci: opts.processRaci ?? [],
     processes: opts.processes ?? [],
     triggerEvents: opts.triggerEvents ?? [],
@@ -318,7 +318,7 @@ describe("rule 7: embedded-entity handoffs", () => {
   });
 
   test("a boundary-crossing event on an embedded payload, published by a played module that is not its owner, is shown", () => {
-    const model = fixture([h(6, KB, FOREIGN, CASE, "cases", "article.linked_to_case")]);
+    const model = fixture([h(6, KB, FOREIGN, CASE, "cases", "article.related_to_case")]);
     expect(show(model.handoffs.outbound)).toEqual(["6 SUPPORT-STARTER -> OTHER-SINK"]);
   });
 });
@@ -382,11 +382,11 @@ describe("rule 12: §7 is per master", () => {
     lifecycleState({ id: 2, data_object_id: CONTRACTS, state_name: "approved", state_order: 2, requires_permission: true, domain_module_id: realizer }),
     lifecycleState({ id: 3, data_object_id: CONTRACTS, state_name: "signed", state_order: 3, is_terminal: true, requires_permission: true, domain_module_id: OWNER }),
   ];
-  const fixture = (role: string, realizer: number | null) =>
+  const fixture = (heldAs: string, realizer: number | null) =>
     buildFixture({
       modules: [module({ id: OWNER, domain_module_code: "CLM-REPOSITORY" }), module({ id: U, domain_module_code: "CLM-NEGOTIATION" })],
       dataObjects: [dataObject({ id: CONTRACTS, data_object_name: "contracts", singular_label: "Contract", plural_label: "Contracts", entity_type: "operational_workflow" })],
-      dmdo: [dmdoRow(OWNER, CONTRACTS, "master"), dmdoRow(U, CONTRACTS, role)],
+      dmdo: [dmdoRow(OWNER, CONTRACTS, "master"), dmdoRow(U, CONTRACTS, heldAs)],
       lifecycle: contractStates(realizer),
     });
 
@@ -411,39 +411,39 @@ describe("rule 12: §7 is per master", () => {
   });
 });
 
-describe("§5: link values and §5.3 grouping", () => {
-  const edge = (over: Record<string, unknown>) => ({ data_object_id: 1, related_data_object_id: 2, relationship_type: "one_to_many", owner_side: "source", ...over });
+describe("§5: relationship values and §5.3 grouping", () => {
+  const relationship = (over: Record<string, unknown>) => ({ data_object_id: 1, related_data_object_id: 2, relationship_type: "one_to_many", owner_side: "source", ...over });
   const scope = (entries: [number, string][]) => new Map<number, string>(entries);
 
-  test("a one_to_many or one_to_one link resolves from kind and is_required", () => {
+  test("a one_to_many or one_to_one relationship resolves from kind and is_required", () => {
     expect(deriveDeleteMode("reference", true, "one_to_many")).toEqual({ mode: "restrict", fkFormat: "reference" });
     expect(deriveDeleteMode("reference", false, "one_to_many")).toEqual({ mode: "clear", fkFormat: "reference" });
     expect(deriveDeleteMode("composition", false, "one_to_one")).toEqual({ mode: "cascade", fkFormat: "parent" });
   });
-  test("a many_to_many link describes its junction legs, whatever the kind", () => {
+  test("a many_to_many relationship describes its junction legs, whatever the kind", () => {
     expect(deriveDeleteMode("reference", true, "many_to_many")).toEqual({ mode: "cascade", fkFormat: "parent" });
     expect(deriveDeleteMode("association", false, "many_to_many")).toEqual({ mode: "cascade", fkFormat: "parent" });
   });
   test("a field on the external entity is incoming", () => {
     // one_to_many from 1 to 2: the field sits on 2, which is outside the blueprint.
-    expect(isIncomingLink(edge({}), scope([[1, "embedded_master"]]))).toBe(true);
+    expect(isIncomingRelationship(relationship({}), scope([[1, "embedded_master"]]))).toBe(true);
   });
-  test("a field on any entity listed in the blueprint is outgoing, whatever its role", () => {
-    for (const role of ["master", "embedded_master", "consumer", "contributor", "derived"]) {
-      expect(isIncomingLink(edge({}), scope([[2, role]]))).toBe(false);
+  test("a field on any entity listed in the blueprint is outgoing, whatever its held_as", () => {
+    for (const heldAs of ["master", "embedded_master", "consumer", "contributor", "derived"]) {
+      expect(isIncomingRelationship(relationship({}), scope([[2, heldAs]]))).toBe(false);
     }
   });
-  test("a many_to_many link is outgoing, because its new junction table points out", () => {
-    expect(isIncomingLink(edge({ relationship_type: "many_to_many" }), scope([[1, "embedded_master"]]))).toBe(false);
-    expect(isIncomingLink(edge({ relationship_type: "many_to_many" }), scope([[2, "embedded_master"]]))).toBe(false);
+  test("a many_to_many relationship is outgoing, because its new junction table points out", () => {
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_many" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_many" }), scope([[2, "embedded_master"]]))).toBe(false);
   });
   test("direction follows the field, not the from and to columns", () => {
     // many_to_one from 1 to 2: the field sits on 1, the from column, so it is outgoing when 1 is listed.
-    expect(isIncomingLink(edge({ relationship_type: "many_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
-    expect(isIncomingLink(edge({ relationship_type: "many_to_one", owner_side: "target" }), scope([[2, "embedded_master"]]))).toBe(true);
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one", owner_side: "target" }), scope([[2, "embedded_master"]]))).toBe(true);
   });
   test("a one_to_one field sits opposite the owner_side", () => {
-    expect(isIncomingLink(edge({ relationship_type: "one_to_one", owner_side: "source" }), scope([[1, "embedded_master"]]))).toBe(true);
-    expect(isIncomingLink(edge({ relationship_type: "one_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one", owner_side: "source" }), scope([[1, "embedded_master"]]))).toBe(true);
+    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
   });
 });

@@ -60,12 +60,12 @@ a5:
 
 ---
 
-q6: Why is the "sign document" capability linked to the legacy maintenance skill, and what should happen to it?
+q6: Why is the "sign document" capability related to the legacy maintenance skill, and what should happen to it?
 
 - a) Customer signature on shop completion: keep it and move it to the work-order module's skill.
 - b) OEM warranty-claim attestation: keep it and move it to the parts module's skill.
 - c) Both are real workflows: keep it on both modules' skills.
-- d) Vestigial: delete the link.
+- d) Vestigial: delete the relationship.
 
 Recommended: c, if both signatures are genuinely used; otherwise pick the single real workflow. Option (d), and the related removal of the retired legacy maintenance skill, is a delete, so it needs your sign-off before anything is removed.
 
@@ -99,7 +99,7 @@ a8:
 
 q9: How should repair shops be modeled?
 
-- a) Fleet Maintenance masters a shops entity (bay capacity, mechanic roster, certification scope) with a link to locations.
+- a) Fleet Maintenance masters a shops entity (bay capacity, mechanic roster, certification scope) with a relationship to locations.
 - b) Leave shop attributes on the generic locations entity and skip a shops master.
 - c) Let the workplace-management domain master shops and have Fleet Maintenance consume it.
 
@@ -109,7 +109,7 @@ a9:
 
 ---
 
-q10: The "a defect triggers a revision of a preventive-maintenance schedule" link cannot be stored as written because the relationship type many-to-one is not an allowed value. How should it be encoded?
+q10: The "a defect triggers a revision of a preventive-maintenance schedule" relationship cannot be stored as written because the relationship type many-to-one is not an allowed value. How should it be encoded?
 
 - a) Flip the direction so the schedule is the source (one schedule revised via many defects, one-to-many, verb "revised via").
 - b) Keep the original verb direction but store it as one-to-many anyway (logically inverted from the intent).

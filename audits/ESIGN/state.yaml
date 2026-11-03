@@ -28,13 +28,13 @@ b1b:
     finding: "Live 2026-06-13: ESIGN has 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 solution_domains (A3 fail). The domains row is fully populated (Rule #8 metadata, em-dash now stripped, catalog UX authored on the domain grain) and the single master (envelopes 251, entity_type=operational_workflow) carries 8 lifecycle states + 2 gates + 3 aliases, but the domain is not deployable. The build is expansive net-new market structure (Rule #21), so it is surfaced in q-ESIGN.md and written only after the user approves the module shape; it must not be auto-executed."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
-    action: "Once B2-S2 resolves: run Phase A then M then B then S to author the module set, capabilities, solution links, and the ONE domain-grain system skill (domain_id=94, domain_module_id=null) deriving its toolset from domain_module_tools. If multi-module, run Phase P afterward. The whole cascade below lands as part of this build."
+    action: "Once B2-S2 resolves: run Phase A then M then B then S to author the module set, capabilities, solution relationships, and the ONE domain-grain system skill (domain_id=94, domain_module_id=null) deriving its toolset from domain_module_tools. If multi-module, run Phase P afterward. The whole cascade below lands as part of this build."
   - id: B1A-S1
     summary: "Author ESIGN module(s) + master DMDO (M1 cure)"
     finding: "M1 hard fail: ESIGN has 0 domain_modules rows. Domain exists with full metadata but is not deployable."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
-    action: "Once B2-S2 resolves: POST domain_modules (single ESIGN-SIGNATURE-OPS or the two-module split), domain_id=94, module_kind='full', analyst-voice description. Same load: POST domain_module_data_objects (domain_module_id=<new>, data_object_id=251, role='master', necessity='required')."
+    action: "Once B2-S2 resolves: POST domain_modules (single ESIGN-SIGNATURE-OPS or the two-module split), domain_id=94, module_kind='full', analyst-voice description. Same load: POST domain_module_data_objects (domain_module_id=<new>, data_object_id=251, held_as='master', necessity='required')."
     affected_masters:
       - {data_object_id: 251, name: envelopes, target_module_id: null, workflow: "envelope draft to completion with operator gates on sent + voided"}
   - id: B1A-S2
@@ -42,10 +42,10 @@ b1b:
     finding: "A2 hard fail: 0 capability_domains rows. Candidates: ESIGN-ENVELOPE-PREP, ESIGN-IDENTITY-VERIFY, ESIGN-AUDIT-TRAIL, ESIGN-SIGNING-WORKFLOW."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
-    action: "POST 4 capabilities, 4 capability_domains rows linking each to ESIGN (94), 4 domain_module_capabilities rows linking each to the new module. Closes M4 + M6."
+    action: "POST 4 capabilities, 4 capability_domains rows relating each to ESIGN (94), 4 domain_module_capabilities rows relating each to the new module. Closes M4 + M6."
   - id: B1A-S3
-    summary: "Link DocuSign eSignature (638) + Adobe Acrobat Sign (639) to ESIGN with coverage_level=primary"
-    finding: "A3 hard fail: 0 solution_domains rows for ESIGN (94). Solutions 638 (vendor 75) and 639 (vendor 195) exist in the catalog but are not linked. This is a Phase-A market-shape link; surface alongside the build rather than auto-executing the link without the module substrate. Additional flagship solutions (Dropbox Sign, PandaDoc, SignNow, OneSpan Sign) remain user-judgment (see B2)."
+    summary: "Relationship DocuSign eSignature (638) + Adobe Acrobat Sign (639) to ESIGN with coverage_level=primary"
+    finding: "A3 hard fail: 0 solution_domains rows for ESIGN (94). Solutions 638 (vendor 75) and 639 (vendor 195) exist in the catalog but are not related. This is a Phase-A market-shape relationship; surface alongside the build rather than auto-executing the relationship without the module substrate. Additional flagship solutions (Dropbox Sign, PandaDoc, SignNow, OneSpan Sign) remain user-judgment (see B2)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
     action: "Insert two solution_domains rows: (94, 638, primary) and (94, 639, primary), as part of the build's Phase A. Decide on the additional flagship solutions then."
@@ -106,8 +106,8 @@ b2:
       - {id: 440, event_name: "envelopes.declined (lifecycle state)", current_category: "no_gate", proposed_category: "user_decision"}
       - {id: 442, event_name: "envelopes.expired (lifecycle state)", current_category: "no_gate", proposed_category: "user_decision"}
   - id: B2-S5
-    summary: "B7 user-edge scope beyond sender + signer"
-    question: "Currently 2 edges loaded (users sends envelopes 1886, users signs envelopes 1887). Should witness / cc_viewer / verifier be added?"
+    summary: "B7 users relationship scope beyond sender + signer"
+    question: "Currently 2 relationships loaded (users sends envelopes 1886, users signs envelopes 1887). Should witness / cc_viewer / verifier be added?"
     options:
       - "Status quo (sender + signer only)"
       - "Add witness (notarization flows)"
@@ -158,9 +158,9 @@ b3:
     extra_class: "capability_or_candidate_domain"
   - id: B3-S5
     candidate: "ESIGN Act and UETA regulations"
-    rationale: "Not yet in catalog as regulations rows. US statutory anchors for legal-binding e-signature in non-EU jurisdictions (federal ESIGN Act 2000 / 15 USC ch. 96; state-level UETA 1999). FDA 21 CFR Part 11 + eIDAS already linked via domain_regulations; ESIGN Act + UETA cover the rest of the US."
+    rationale: "Not yet in catalog as regulations rows. US statutory anchors for legal-binding e-signature in non-EU jurisdictions (federal ESIGN Act 2000 / 15 USC ch. 96; state-level UETA 1999). FDA 21 CFR Part 11 + eIDAS already related via domain_regulations; ESIGN Act + UETA cover the rest of the US."
     vendor_evidence: ["statutory"]
-    proposed_module: "regulations master (then link to ESIGN via domain_regulations)"
+    proposed_module: "regulations master (then relate to ESIGN via domain_regulations)"
   - id: B3-S6
     candidate: "Inbound cross-domain handoffs ESIGN does not currently consume"
     rationale: "Flagship usage implies inbound handoffs from CRM (crm_opportunity.closed_won), ATS (job_offer.extended), LEGAL-PRACT-MGMT (engagement_letter.drafted), ACCT-PRACT-MGMT (engagement_letter.signed), S2P (purchase_order.issued), HCM (onboarding_doc.assigned), RE-CRE (commercial_lease.drafted), SUB-MGMT (customer_subscription.contract_drafted). None currently wired; inverse data_object_relationships rows also missing. Authored on each source domain's B9 / B8 outbound pass, not ESIGN's load."

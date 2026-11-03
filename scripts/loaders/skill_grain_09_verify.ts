@@ -31,7 +31,7 @@ const [ents, skills, modules, dmt, pt, praci] = await Promise.all([
   pg(`/domain_modules?select=id,domain_id,module_kind&limit=${L}`),
   pg(`/domain_module_tools?select=domain_module_id&limit=${L}`),
   pg(`/process_tools?select=process_id&limit=${L}`),
-  pg(`/process_raci?actor_skill_id=not.is.null&select=id&limit=${L}`),
+  pg(`/process_raci?skill_id=not.is.null&select=id&limit=${L}`),
 ]);
 
 const entNames = new Set(ents.map(e => e.table_name));
@@ -86,13 +86,13 @@ check("every full-module domain has >=1 domain-grain system skill", missing === 
 check("no full-module domain has >1 domain-grain system skill", dup === 0, `${dup} dup`);
 check("full-module domains span 71", fullModuleDomains.size === 71, `${fullModuleDomains.size}`);
 
-console.log("\n== Process skills linked ==");
+console.log("\n== Process skills related ==");
 const proc = processSkills.filter(s => [124, 125, 126].includes(s.id));
 check("skills 124/125/126 all have process_id set", proc.length === 3 && proc.every(s => s.process_id != null),
   proc.map(s => `${s.id}->${s.process_id}`).join(", "));
 
 console.log("\n== process_raci ==");
-check("process_raci.actor_skill_id still 0 non-null", praci.length === 0, `${praci.length}`);
+check("process_raci.skill_id still 0 non-null", praci.length === 0, `${praci.length}`);
 
 console.log(`\n${failures === 0 ? "ALL POST-MIGRATION INVARIANTS HOLD" : `${failures} INVARIANT(S) FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);

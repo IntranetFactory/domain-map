@@ -9,10 +9,10 @@ Run a residential portfolio (single-family rentals, multifamily buildings, condo
 
 q1: (answer this first) How should state landlord-tenant law be modeled? Each state has its own act (California, New York, Texas, Florida and the rest) with different security-deposit holding periods, eviction notice timing, and required disclosures.
 
-- a) Add one umbrella regulation (state landlord-tenant statutes) and link it to this domain now.
+- a) Add one umbrella regulation (state landlord-tenant statutes) and relate it to this domain now.
 - b) Defer to per-jurisdiction modeling once a jurisdictions rollup exists.
 
-Recommended: a. A single umbrella regulation is the minimal step that lets the security-deposit and eviction entities link to a regulation today, without waiting on a jurisdictions rollup. This choice shapes how those compliance entities attach, so it unlocks the rest of that work.
+Recommended: a. A single umbrella regulation is the minimal step that lets the security-deposit and eviction entities relate to a regulation today, without waiting on a jurisdictions rollup. This choice shapes how those compliance entities attach, so it unlocks the rest of that work.
 
 a1:
 
@@ -70,10 +70,10 @@ a6:
 
 q7: An existing relationship row says a rental unit "opens" a customer case, but that looks mis-pointed: a unit comes under management from a closed sale, so the target should be the real-estate transaction. How should it be handled?
 
-- a) Repoint it to the real-estate transaction (keep it as the property-handover edge from a closed sale).
-- b) Delete the row (drop the property-handover edge).
+- a) Repoint it to the real-estate transaction (keep it as the property-handover relationship from a closed sale).
+- b) Delete the row (drop the property-handover relationship).
 
-Recommended: a. Repointing preserves the intended "unit comes under management from a closed sale" edge. This overwrites or deletes a master-data relationship row, so it needs your sign-off.
+Recommended: a. Repointing preserves the intended "unit comes under management from a closed sale" relationship. This overwrites or deletes a master-data relationship row, so it needs your sign-off.
 
 a7:
 

@@ -35,10 +35,10 @@ b1b:
       (Phase 0 2026-06-19 recommends a 4-module split: S2P-SOURCING / S2P-REQ-TO-PO (absorbs
       goods_receipts) / S2P-INVOICE-CAPTURE / S2P-CATALOG-MGMT, with optional 5th S2P-RECEIVING and
       optional S2P-SPEND-ANALYTICS; or an alternative), the catalog cannot author domain_modules, cannot anchor
-      domain_module_data_objects, cannot resolve lifecycle_states domain_module_id (M5), cannot link
+      domain_module_data_objects, cannot resolve lifecycle_states domain_module_id (M5), cannot relate
       capabilities to modules (M4 / M6), cannot author the domain-grain system skill / domain_module_tools,
       cannot PATCH the 12 outbound + 14 inbound handoffs that carry NULL source / target domain_module_id
-      (B10b), and cannot author roles or role_modules / role_permissions (E1 to E5). The 3 catalog
+      (B10b), and cannot author roles or persona_modules / role_permissions (E1 to E5). The 3 catalog
       Procurement-function roles (PROCUREMENT-NEGOTIATOR / PROCUREMENT-PIM-SUPPLIER-LIAISON /
       PROCUREMENT-SAAS-RENEWAL-OWNER) touch CLM, MDM, SMP modules; none touch S2P because no S2P modules exist.
       Module-level catalog UX (M8) and module catalog text are also blocked until modules exist.
@@ -106,7 +106,7 @@ b1b:
       capability_domains has 1 row (APPROVAL-WORKFLOW, cross-cutting). Rule #14 expects 5 to 8 market-specific
       capabilities. Proposed set (mirrors the proposed module split): S2P-STRATEGIC-SOURCING, S2P-REQUISITION-TO-PO,
       S2P-GOODS-RECEIPT, S2P-INVOICE-CAPTURE, S2P-CATALOG-MGMT, S2P-SAVINGS-TRACKING, S2P-SPEND-ANALYTICS. Each
-      capability needs a realizing module under M4 / M6; until modules exist the link cannot be authored coherently.
+      capability needs a realizing module under M4 / M6; until modules exist the relationship cannot be authored coherently.
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
     affected_entities:
@@ -134,7 +134,7 @@ b1b:
     summary: "DELETE duplicate Jaggaer ONE solution row blocked on user-pick survivor (b2 B2-JAGGAER)."
     finding: >-
       Two solutions rows differ only in casing: id 129 'Jaggaer ONE' (older, mixed-case) and id 518 'JAGGAER ONE'
-      (newer, ALL-CAPS matching the vendor's marketing). Both currently linked at coverage_level='primary' on
+      (newer, ALL-CAPS matching the vendor's marketing). Both currently related at coverage_level='primary' on
       solution_domains.domain_id=27. The catalog needs one row; the survivor decision is the user's (destructive DELETE).
     blocked_by:
       - {type: user_decision, ref: B2-JAGGAER}
@@ -191,7 +191,7 @@ b2:
     question: >-
       The buyer-side invoice/match/pay chain spans S2P and the separate AP-AUTO domain. Live catalog
       state already draws the line: supplier_invoices (id 75) has S2P as its ONLY master anywhere
-      (AP-AUTO holds it at role=contributor), while invoice_matches (id 204) and payment_runs (id 205)
+      (AP-AUTO holds it at held_as=contributor), while invoice_matches (id 204) and payment_runs (id 205)
       are mastered by AP-AUTO. Confirm S2P masters the supplier-invoice RECORD (capture, ingestion,
       e-invoicing compliance) and CONSUMES match + pay from AP-AUTO, handing off at
       supplier_invoice.captured / .approved; OR decide S2P should own invoice matching too (which would
@@ -279,7 +279,7 @@ b2:
   - id: B2-SEND-EMAIL
     summary: "Channel-vs-capability decision for S2P's tooling after the module split (F7)."
     question: >-
-      The legacy skill 22 links send_email (tool 37, side_effect, coverage_tier=platform) without a
+      The legacy skill 22 relationships send_email (tool 37, side_effect, coverage_tier=platform) without a
       workflow-specific justification. When module tooling is authored after the module split, the
       default replacement is notify_person. But S2P-REQ-TO-PO has a candidate workflow-specific
       justification (supplier-facing PO dispatch email IS the contract in many B2B flows); similar
@@ -289,7 +289,7 @@ b2:
     options:
       - "keep send_email on S2P-REQ-TO-PO (PO dispatch); keep on S2P-INVOICE-CAPTURE (receipt confirmation); notify_person everywhere else"
       - "keep send_email on S2P-REQ-TO-PO only; notify_person on all other modules"
-      - "notify_person across all S2P modules; no channel-specific links"
+      - "notify_person across all S2P modules; no channel-specific relationships"
     why: >-
       Gated on B2-MODULE-SPLIT because the module tooling targets must exist before the decision binds.
   - id: B2-EINVOICE-PII
@@ -306,7 +306,7 @@ b2:
   - id: B2-PAIRWISE-TIMING
     summary: "Schedule pairwise reconciliation against SUP-LIFE / AP-AUTO / CLM / SMP inline after M1 or as separate runs?"
     question: >-
-      The four neighbors with edge weight >= 3 (SUP-LIFE 5, AP-AUTO 4, CLM 4, SMP 3) all have
+      The four neighbors with relationship weight >= 3 (SUP-LIFE 5, AP-AUTO 4, CLM 4, SMP 3) all have
       structural reconciliation work blocked on M1. After the module-split fix lands, run pairwise
       reconciliation inline as the next audit step, or schedule four separate Validate runs against
       each neighbor in turn.

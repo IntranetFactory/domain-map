@@ -20,7 +20,7 @@ b1b:
     action: |
       Confirm scope per B2-3 (minimum vs extended set, GS1 EPCIS handling, Codex
       Alimentarius inclusion). Pre-flight against `/regulations?regulation_name=ilike.*FSMA*`
-      and similar; load missing `regulations` rows first, then link `domain_regulations`
+      and similar; load missing `regulations` rows first, then relate `domain_regulations`
       with `applicability` set per junction qualifier.
     blocked_by:
       - {type: user_decision, ref: B2-3}
@@ -35,8 +35,7 @@ b1b:
       Per-row user-approved PATCH. Likely-true flips: `recall_events.has_submit_lock=true`
       (recall locks on initiation), `recall_events.has_single_approver=true` (Class I
       sign-off), `traceability_lots.has_submit_lock=true` (lot identity immutable
-      post-creation), `supplier_certifications.has_submit_lock=true` (cert validity
-      locks). No `notes` annotation per Rule #15.
+      post-creation). No `notes` annotation per Rule #15.
     blocked_by:
       - {type: user_decision, ref: B2-pattern-flag-review}
     affected_masters:
@@ -44,14 +43,13 @@ b1b:
       - {data_object_id: 495, name: critical_tracking_events, target_module_id: 256, workflow: cte-event-amendment}
       - {data_object_id: 496, name: key_data_elements, target_module_id: 256, workflow: kde-validation}
       - {data_object_id: 497, name: recall_events, target_module_id: 257, workflow: recall-lock-and-signoff}
-      - {data_object_id: 498, name: supplier_certifications, target_module_id: 258, workflow: cert-validity-lock}
 
   - id: B1B-S7
-    summary: B8 outbound, 7 of 8 outbound cross-domain handoffs lack a mirror `data_object_relationships` row
+    summary: B8 outbound, the 7 outbound cross-domain handoffs imply mirror `data_object_relationships` rows
     finding: |
-      Only 1 outbound cross-domain DOR row exists from FOOD-TRACE masters (id 569,
-      `supplier_certifications updates suppliers`). The 8 outbound handoffs (ids 359, 360,
-      361, 362, 971, 972, 973, 974) imply additional payload-to-target mirror edges per
+      Relationship 569 (`supplier_certifications updates supplier_qualifications`) no longer counts
+      here: that entity moved to SRM on 2026-11-03. The 7 outbound handoffs (ids 359, 360,
+      361, 971, 972, 973, 974) imply additional payload-to-target mirror relationships per
       § B8. Identifying the correct payload owner per neighbor is judgment work.
     action: |
       Per outbound handoff, draft the corresponding `data_object_relationships` row
@@ -67,7 +65,6 @@ b1b:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
       - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
       - {handoff_id: 361, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: null}
-      - {handoff_id: 362, direction: outbound, source_domain: FOOD-TRACE, target_domain: SUP-LIFE, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: null}
       - {handoff_id: 971, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: null}
       - {handoff_id: 972, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: critical_tracking_event.recorded, payload: critical_tracking_events, null_field: null}
       - {handoff_id: 973, direction: outbound, source_domain: FOOD-TRACE, target_domain: AUDIT, trigger_event: key_data_element.captured, payload: key_data_elements, null_field: null}
@@ -109,9 +106,9 @@ b1b:
       - {type: user_decision, ref: B2-4}
 
   - id: B1B-B10b
-    summary: B10b fail, 19 of 20 cross-domain handoffs carry NULL module FKs; source side now backfillable
+    summary: B10b fail, 18 of 19 cross-domain handoffs carry NULL module FKs; source side now backfillable
     finding: |
-      Every outbound row (359, 360, 361, 362, 971, 972, 973, 974) has NULL
+      Every outbound row (359, 360, 361, 971, 972, 973, 974) has NULL
       `source_domain_module_id` (cascade of the prior M1 gap). Every inbound row except 963
       has NULL `target_domain_module_id`. Handoff 963 has FDS source module 123 attributed
       but target NULL. Now that FOOD-TRACE has modules (256/257/258), the source side of
@@ -129,7 +126,6 @@ b1b:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
       - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
       - {handoff_id: 361, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: both}
-      - {handoff_id: 362, direction: outbound, source_domain: FOOD-TRACE, target_domain: SUP-LIFE, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: both}
       - {handoff_id: 971, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: both}
       - {handoff_id: 972, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: critical_tracking_event.recorded, payload: critical_tracking_events, null_field: both}
       - {handoff_id: 973, direction: outbound, source_domain: FOOD-TRACE, target_domain: AUDIT, trigger_event: key_data_element.captured, payload: key_data_elements, null_field: both}
@@ -148,29 +144,10 @@ b1b:
       - {handoff_id: 978, direction: inbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: environmental_monitoring_sample.positive, payload: environmental_monitoring_samples, null_field: both}
 
 b2:
-  - id: B2-2
-    summary: "`supplier_certifications` forward-looking mastership reconciliation with SUP-LIFE"
-    question: |
-      M7 is satisfied today: data_object 498 has exactly one master DMDO row
-      (FOOD-TRACE module 258 FOOD-TRACE-SUPPLIER-PROVENANCE) plus one contributor row in
-      FSQM (module 264). SUP-LIFE has no DMDO row for 498 yet (unmodularized). When
-      SUP-LIFE modularizes, which side keeps catalog mastership?
-    options:
-      - FOOD-TRACE keeps master (current state); SUP-LIFE consumes or embeds 498 when it modularizes (recommended, avoids a re-home)
-      - SUP-LIFE takes master on modularization; FOOD-TRACE demotes 498 to embedded_master
-      - Split into two data_objects, `supplier_certifications` (SUP-LIFE master, procurement shape) and a food-safety-shaped variant (FOOD-TRACE master)
-    why: |
-      Vendor evidence is split. Procurement-shape vendors (Coupa, SAP Ariba, Ivalua) master
-      cert from the procurement angle; food-trace vendors (Trustwell, TraceGains, FoodLogiQ)
-      master cert because it governs lot-level traceability under FSMA 204. This is no
-      longer a hard fail (the legacy claim was based on legacy domain_data_objects, not the
-      authoritative DMDO junction), but the SUP-LIFE audit must honor the decision to avoid
-      a second master appearing.
-
   - id: B2-3
-    summary: Regulations scope and depth for `domain_regulations` link
+    summary: Regulations scope and depth for `domain_regulations` relationship
     question: |
-      Which regulations to link via `domain_regulations`? Most underlying `regulations`
+      Which regulations to relate via `domain_regulations`? Most underlying `regulations`
       rows likely also missing and need creating first.
     options:
       - Minimum set, FSMA 204, FSMA Preventive Controls, EU 1169/2011, Canada SFCR, USDA FSIS COOL, FDA Bioterrorism Act
@@ -298,7 +275,7 @@ b3:
     candidate: chain_of_custody_records
     rationale: |
       IBM Food Trust, Wholechain, Provenance model chain of custody as the
-      cross-organization edge with attestation. GS1 EPCIS encodes CoC natively. Not in
+      cross-organization relationship with attestation. GS1 EPCIS encodes CoC natively. Not in
       catalog.
     vendor_evidence: [IBM Food Trust, Wholechain, Provenance Platform]
     proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
@@ -388,3 +365,71 @@ b3:
       - {vendor: SafetyChain, evidence: 1st_class}
       - {vendor: Safefood 360, evidence: 1st_class}
     proposed_module: FOOD-TRACE-SUPPLIER-PROVENANCE
+checks:
+  # generated by scripts/analytics/domain_health.ts --record; do not hand-edit
+  checklist_version: 3
+  run_at: "2026-11-03T15:36:26.905Z"
+  results:
+    - {id: S1, result: warn, rows: ["domain_regulations.domain_id"]}
+    - {id: S2, result: pass, rows: []}
+    - {id: S3, result: pass, rows: []}
+    - {id: A1, result: pass, rows: []}
+    - {id: A2, result: pass, rows: []}
+    - {id: A3, result: pass, rows: []}
+    - {id: A4, result: agent, rows: []}
+    - {id: A5, result: agent, rows: []}
+    - {id: M1, result: pass, rows: []}
+    - {id: M2, result: pass, rows: []}
+    - {id: M4, result: pass, rows: []}
+    - {id: M5, result: pass, rows: []}
+    - {id: M6, result: pass, rows: []}
+    - {id: M7, result: pass, rows: []}
+    - {id: M8, result: agent, rows: []}
+    - {id: M9, result: fail, rows: ["dmdo:1375", "dmdo:1376", "dmdo:1380", "rel:2044", "rel:2047", "rel:2055", "rel:664"]}
+    - {id: M10, result: agent, rows: []}
+    - {id: B1, result: pass, rows: []}
+    - {id: B2, result: pass, rows: []}
+    - {id: B3, result: pass, rows: []}
+    - {id: B4, result: agent, rows: []}
+    - {id: B5, result: fail, rows: [287]}
+    - {id: B6, result: agent, rows: []}
+    - {id: B6b, result: pass, rows: []}
+    - {id: B7, result: agent, rows: []}
+    - {id: B7b, result: pass, rows: []}
+    - {id: B7c, result: agent, rows: []}
+    - {id: B8, result: pass, rows: []}
+    - {id: B9, result: fail, rows: ["event:1505", "event:1506", "event:1507", "event:1508", "event:1509", "event:1510", "event:1511", "event:1512", "event:1513", "event:1514", "event:1515", "event:1516", "event:1517", "state:1753", "state:1757", "state:1759", "state:1763"]}
+    - {id: B9b, result: fail, rows: ["event:1505", "event:1506", "event:1507", "event:1508", "event:1509", "event:1510", "event:1511", "event:1512", "event:1513", "event:1514", "event:1515", "event:1516", "event:1517", "rel:2086"]}
+    - {id: B9c, result: warn, rows: [1117, 1118, 1119]}
+    - {id: B9d, result: delegated, rows: []}
+    - {id: B9e, result: delegated, rows: []}
+    - {id: B9f, result: pass, rows: []}
+    - {id: B10, result: warn, rows: [206, 498]}
+    - {id: B10b, result: fail, rows: [349, 351, 353, 356, 359, 360, 361, 954, 955, 959, 963, 965, 969, 971, 972, 973, 974, 976, 978, 1464, 1465]}
+    - {id: B11, result: warn, rows: [494, 495, 496, 497]}
+    - {id: B12, result: pass, rows: []}
+    - {id: B13, result: pass, rows: []}
+    - {id: B14, result: agent, rows: []}
+    - {id: B15, result: pass, rows: []}
+    - {id: B16, result: pass, rows: []}
+    - {id: C1, result: pass, rows: []}
+    - {id: C2, result: agent, rows: []}
+    - {id: D1, result: agent, rows: []}
+    - {id: E1, result: fail, rows: []}
+    - {id: E2, result: pass, rows: []}
+    - {id: E3, result: pass, rows: []}
+    - {id: E4, result: pass, rows: []}
+    - {id: E4b, result: warn, rows: [1750, 1751, 1752, 1753, 1757, 1758, 1761, 1763, 1764, 1765, 1769, 1770]}
+    - {id: E4c, result: pass, rows: []}
+    - {id: E4d, result: pass, rows: []}
+    - {id: E5, result: skipped, rows: []}
+    - {id: E6, result: warn, rows: ["R6:349", "R6:353", "R6:971", "R6:972", "R6:973", "R6:974"]}
+    - {id: F1, result: pass, rows: []}
+    - {id: F2, result: pass, rows: []}
+    - {id: F3, result: pass, rows: []}
+    - {id: F4, result: pass, rows: []}
+    - {id: F5, result: pass, rows: []}
+    - {id: F6, result: skipped, rows: []}
+    - {id: F7, result: agent, rows: []}
+    - {id: F8, result: fail, rows: [448]}
+    - {id: H1, result: fail, rows: [963, 1464, 1465]}

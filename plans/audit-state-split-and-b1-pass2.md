@@ -49,7 +49,7 @@ b1:
   open:                         # technical items not yet attempted
     - id: B1-S1
       band: B7
-      title: "Seven masters lack users-edges"
+      title: "Seven masters lack relationships to `users`"
       action: "INSERT 7 data_object_relationships rows per Rule #10"
   deferred:                     # tried but parked, with a reason. Pass 2 will analyze and either retry, resolve, or reclassify as b2.open.
     - id: B1-T1
@@ -212,7 +212,7 @@ Open the four dry-run files. Validate:
 For ATS:
 
 - Every B1-* item from the legacy audit is in exactly one of `b1.open`, `b1.deferred`, or `b1.resolved`.
-- B1-S2 false-positive (HIRING-MANAGER role_modules) captured as `b1.resolved` with the decision text and loader path from the Continuation section.
+- B1-S2 false-positive (HIRING-MANAGER persona_modules) captured as `b1.resolved` with the decision text and loader path from the Continuation section.
 - B9 fan-out deferred items (interview.scheduled, recruitment_agency.engaged) captured as `b1.deferred` with `reason:` carrying the Continuation's deferral text verbatim ("target-domain ambiguity, see CCAAS/S2P/CLM next audit"). They are NOT reclassified to b2 during migration — pass 2 will decide.
 - Bucket 2 items 1-6 all in `b2.resolved` with their decisions.
 - Bucket 3: 7 items in `b3.resolved` with verdicts (LOAD x4, MERGE x2, DEFER x1) + 1 SKIP, plus the structurally-implied `candidate_tag_assignments` row added in Bucket 3 fixes.

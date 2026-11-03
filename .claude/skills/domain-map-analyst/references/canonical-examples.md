@@ -1,6 +1,6 @@
 # Canonical multi-master examples
 
-Landmark rows in `domain_data_objects` that other research should reason about by analogy. Each entry shows the slice each domain masters or contributes: used as authoring reference for the *`role` / `is_install_optional` decision*, not as content to paste into a notes column (see SKILL.md Rule #15: notes are empty by default).
+Landmark rows in `domain_data_objects` that other research should reason about by analogy. Each entry shows the slice each domain masters or contributes: used as authoring reference for the *`held_as` / `is_install_optional` decision*, not as content to paste into a notes column (see SKILL.md Rule #15: notes are empty by default).
 
 When you encounter a new data_object that "feels like one of these", lean on the analogous decomposition rather than reinventing.
 
@@ -12,7 +12,7 @@ These are the structural anchors of their cluster. When you start work on a new 
 
 ### `employees` — HR cluster flagship (3 masters)
 
-| domain | role | slice owned |
+| domain | held_as | slice owned |
 |---|---|---|
 | HCM | master | Canonical HR record: legal name, contact, employment metadata, position/job/org assignment, life-event history |
 | Payroll | master | Comp / withholding / payable slice: gross-to-net rules, deductions, tax setup, bank account, pay history |
@@ -23,7 +23,7 @@ These are the structural anchors of their cluster. When you start work on a new 
 
 ### `customers` — Customer-facing cluster flagship (4 masters)
 
-| domain | role | slice owned |
+| domain | held_as | slice owned |
 |---|---|---|
 | CRM | master | Sales view: account hierarchy, opportunities, pipeline, sales activities |
 | CSM | master | Service view: cases, entitlements, SLAs, CSAT |
@@ -38,7 +38,7 @@ These are the structural anchors of their cluster. When you start work on a new 
 
 Different shape from the others: CMDB is the single canonical master, but the *physical thing* is observed by every IT tool. Total degree of 7 (1 master + 4 contributors + 2 consumers) makes this the most cross-cut row.
 
-| domain | role | slice owned |
+| domain | held_as | slice owned |
 |---|---|---|
 | CMDB | master | Canonical CI record + relationships + classes + baselines |
 | DISCOVERY | contributor | Auto-discovered candidates feed CMDB |
@@ -54,18 +54,18 @@ Different shape from the others: CMDB is the single canonical master, but the *p
 
 ### `job_requisitions` — Intent vs Execution split
 
-| domain | role | slice owned |
+| domain | held_as | slice owned |
 |---|---|---|
 | ATS | master | Recruiting execution: pipeline stages, candidates, interviews, offers, acceptance |
 | SWP | master | Headcount intent: position approval, budget alignment, plan-to-actual reconciliation |
 
-The "intent vs execution" pattern recurs anywhere an upstream domain authorises and a downstream domain executes. Look for it in:
+The "intent vs execution" pattern recurs anywhere an upstream domain authorizes and a downstream domain executes. Look for it in:
 - `purchase_requisitions` (S2P intent) → `purchase_orders` (S2P execution) — happens to be same-domain here, but cross-domain in some enterprise stacks
 - Future: `change_requests` (intent, CAB) → `changes` (execution, ITSM)
 
 ### `saas_app_assignments` — Cost vs Identity split
 
-| domain | role | slice owned |
+| domain | held_as | slice owned |
 |---|---|---|
 | SMP | master | Cost / seat slice: which plan, which seat, last used, paid-for |
 | IGA | master | Identity / access slice: SSO account, group membership, actual access |
@@ -82,7 +82,7 @@ Data objects in this shape are the unified event stream of their cluster — one
 
 ### `events` (ITOM) — IT-ops firehose
 
-| domain | role |
+| domain | held_as |
 |---|---|
 | ITOM | master |
 | OBS | contributor (alerts from app instrumentation feed back) |
@@ -91,7 +91,7 @@ Data objects in this shape are the unified event stream of their cluster — one
 
 ### `customer_events` (CDP) — Customer-facing firehose
 
-| domain | role |
+| domain | held_as |
 |---|---|
 | CDP | master |
 | MA | contributor (campaign delivery/open/click/bounce) |
@@ -117,4 +117,4 @@ With this object: explicit ownership on the SWP side, explicit consumption on th
 Future candidates worth looking for:
 - A boundary object between HCM and Talent-Mgmt for skills/competency catalogs (HCM masters operational job profiles, Talent-Mgmt contributes skills — but the *unified-skills-catalog* itself could be a boundary object)
 - A boundary object between SUB-MGMT and Finance/GL for revenue recognition (`revenue_recognition_records` exists but Finance/GL isn't in catalog yet)
-- A boundary object between VULN-MGMT and ITSM for remediation prioritisation
+- A boundary object between VULN-MGMT and ITSM for remediation prioritization

@@ -20,7 +20,7 @@ fall out of its `embedded_master` rows automatically. Nothing to author beyond t
 
 **Rendering consequence:** a starter does NOT appear in a host market's module grid. A starter that
 embeds CLM's `legal_contracts` renders only on its own (bundle) domain page; CLM's cross-market
-link to it is carried by `related_domains` (the master/touch relatedness rule), not by listing the
+relationship to it is carried by `related_domains` (the master/touch relatedness rule), not by listing the
 starter as a CLM module. This fixed the long-standing "why is REAL-ESTATE-AGENT a CLM module" bug.
 
 **What it was:** a junction declaring "additional domains a module is hosted on" beyond
@@ -34,12 +34,12 @@ multiple domains' deployments.
   (mod 43), `HRSD-KNOWLEDGE` (77), `CSM-KNOWLEDGE` (114), that all share the SAME entity,
   `knowledge_articles` (id 51). They are NOT different shapes: the catalog deliberately unifies the
   entity (see the "audience filtering, not duplicated-per-audience" rule in SKILL.md). They differ
-  by (a) ROLE on `knowledge_articles`: ITSM `master`, HRSD `embedded_master`, CSM `contributor`; and
+  by (a) `held_as` on `knowledge_articles`: ITSM `master`, HRSD `embedded_master`, CSM `contributor`; and
   (b) domain-specific companions: HRSD adds `case_categories`, CSM adds `customer_cases`. A single
-  `host_domains`-spanning module CANNOT express a different role, or different companions, per host
+  `host_domains`-spanning module CANNOT express a different `held_as`, or different companions, per host
   domain (a module has ONE fixed `domain_module_data_objects` set), so separate per-domain modules
   are structurally required. THIS is the core reason `host_domains` is the wrong tool: it assumes an
-  identical module replicated across domains, but real cross-domain reuse needs a per-domain role +
+  identical module replicated across domains, but real cross-domain reuse needs a per-domain `held_as` +
   per-domain neighbors. ("KNOWLEDGE-MGMT spans ITSM/CSM/HRSD/LSD" is a CAPABILITY via
   `capability_domains`, not a module.)
 - Every live row is either derivable or noise:

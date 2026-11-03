@@ -4,7 +4,7 @@ Domain: Conversational AI (domain id 34, no parent). Live state UNBUILT: 5 maste
 (`bot_definitions`, `intent_definitions`, `conversation_flows` as operational_workflow;
 `conversation_transcripts`, `intent_detections` as operational_record) plus 1 consumer
 (`ai_agents`, id 231, mastered by DATA-AI-PLAT). Zero modules, zero capabilities, zero
-solution masters of its own. 7 linked solutions (Salesforce Agentforce, ServiceNow Virtual
+solution masters of its own. 7 related solutions (Salesforce Agentforce, ServiceNow Virtual
 Agent, Ada, Kore.ai XO, Cognigy.AI primary; Leena AI, Intercom secondary).
 
 Live-domain confirmation: `domain_name='Conversational AI'`, description "Virtual agents,

@@ -10,13 +10,13 @@ Current footprint:
 - 0 capabilities (A2 hard fail).
 - 0 `domain_modules` rows (M1 hard fail, cascades into M2, M4, M6, F2, B10b, E1).
 - 4 solutions all `coverage_level='primary'`: ServiceNow Telecommunications Workflows, Amdocs CES, Netcracker Digital BSS, Blue Planet (A3 passes).
-- 7 regulations linked (mandatory): Enhanced 911, GDPR, ISO/IEC 27001, NIS2, CSRD, EU Cyber Resilience Act, EU VAT Directive.
-- 7 `domain_data_objects` rows, all `role=master, necessity=required, kind=domain_owned`: `telco_service_catalog`, `telco_service_orders`, `telco_subscriptions`, `service_provisioning_workflows`, `network_inventory_records`, `telco_customer_bills`, `service_trouble_tickets`. All sit in the legacy `domain_data_objects` rollup only, none in `domain_module_data_objects` (because no modules exist).
+- 7 regulations related (mandatory): Enhanced 911, GDPR, ISO/IEC 27001, NIS2, CSRD, EU Cyber Resilience Act, EU VAT Directive.
+- 7 `domain_data_objects` rows, all `held_as=master, necessity=required, kind=domain_owned`: `telco_service_catalog`, `telco_service_orders`, `telco_subscriptions`, `service_provisioning_workflows`, `network_inventory_records`, `telco_customer_bills`, `service_trouble_tickets`. All sit in the legacy `domain_data_objects` rollup only, none in `domain_module_data_objects` (because no modules exist).
 - 7 outbound `handoffs` rows, 0 inbound. All 7 outbound have `source_domain_module_id=NULL` (B10b fail). Targets: CSM (2 rows, both NULL `target_domain_module_id`), FIN (2 rows, both NULL target FK), ITSM (3 rows, `target_domain_module_id=38`).
 - 9 `trigger_events` rows on the 7 masters. All 9 have `event_category=''` (empty string, B9 sub-defect). Two events (`telco_service_order.submitted`, `telco_service_catalog.updated`) have NO `handoffs` row at all.
 - 0 `data_object_lifecycle_states` rows on any of the 7 masters (B12 hard fail).
 - 0 `data_object_aliases` rows on any of the 7 masters (B11 fail).
-- 2 `data_object_relationships` rows: `telco_subscriptions opens customer_cases` and `telco_service_orders opens customer_cases`. Zero intra-domain edges between the 7 masters (B6 fail). Zero `users` edges (B7 fail).
+- 2 `data_object_relationships` rows: `telco_subscriptions opens customer_cases` and `telco_service_orders opens customer_cases`. Zero intra-domain relationships between the 7 masters (B6 fail). Zero relationships to `users` (B7 fail).
 - 1 legacy `skills` row, `id=111, skill_name='telco-bss-system', skill_type='system', domain_id=42, domain_module_id=NULL`. 8 `skill_tools` rows, all `coverage_tier='platform'` (7 `query_*` + `send_email`). Strict score = 8/8 = 100% on the legacy skill, but uncomputable per module under Rule #17 (F2/F3 fail). Naming uses kebab `telco-bss-system` vs. the snake `_agent` convention.
 - 0 `domain_aliases` rows.
 - 0 `handoff_processes` rows on any of the 7 outbound handoffs (H1 hard fail).
@@ -81,7 +81,7 @@ M-band:
 - M1 HARD FAIL. Zero `domain_modules` rows; zero cross-cutting hosts. This blocks every downstream concern (B / C-band partial / E / F / H all degrade because there is no module surface to anchor against).
 - M2, M4, M6: vacuously cascading. With zero modules and zero capabilities, neither the capability-to-module nor the module-to-capability bipartite check can run.
 - M5: vacuous (no lifecycle states, no `requires_permission`).
-- M7 (single-master integrity catalog-wide for the 7 masters): pulled, no conflicts. Each of the 7 masters is mastered only here at the legacy `domain_data_objects` level; no other domain claims `role=master` on them.
+- M7 (single-master integrity catalog-wide for the 7 masters): pulled, no conflicts. Each of the 7 masters is mastered only here at the legacy `domain_data_objects` level; no other domain claims `held_as=master` on them.
 
 B-band:
 
@@ -90,15 +90,15 @@ B-band:
 - B3 partial: every master uses a `telco_*` or `service_*` / `network_*` prefix, no bare-word collisions. `is_canonical_bare_word=false` on all 7; no rationale needed since names are prefixed.
 - B4 partial: all 3 pattern flags are default false on all 7 masters. Audit MUST positively re-evaluate (Rule #12). Surface candidates: `telco_customer_bills` is a candidate for `has_submit_lock=true` (an issued bill is immutable once delivered to the customer); `service_trouble_tickets` plausibly has `has_personal_content=true` (customer narratives in ticket descriptions). Flagged as Bucket 2 in B2-2 modularization step (consider as part of the load).
 - B5 vacuous (no embedded_master rows yet).
-- B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. Expected edges: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`.
-- B7 FAIL. Zero edges from any master to `users`. Each of the 7 masters carries at least one user-typed actor (order agent, billing specialist, network engineer, care agent, provisioning specialist).
+- B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. Expected relationships: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`.
+- B7 FAIL. Zero relationships from any master to `users`. Each of the 7 masters carries at least one user-typed actor (order agent, billing specialist, network engineer, care agent, provisioning specialist).
 - B8 partial: 2 outbound cross-domain `data_object_relationships` rows exist (both to `customer_cases` in CSM). Outbound handoffs to FIN, ITSM have no mirror rows in `data_object_relationships`.
 - B9 partial: 9 trigger_events exist; 7 handoffs cover 7 of the 9 events. Two events have no handoff: `telco_service_order.submitted` (id 1060) and `telco_service_catalog.updated` (id 1068). Also: every trigger_event row has `event_category=''` (empty), violating the enum check (allowed: `lifecycle`, `state_change`, `threshold`, `signal`). Fix routes to a small PATCH loader.
 - B9b vacuous (zero modules ⇒ no intra-domain cross-module surface).
 - B10 (report-only): zero inbound handoffs from any source domain. Discovery: zero `embedded_master` / `contributor` / `consumer` rows in this domain mean no canonical-owner-elsewhere expectation. Inbound surface is genuinely empty at the catalog level. Likely real gap: TPM / HCM / FIN / CRM should be publishing events into TELCO-BSS (new customer ⇒ account-create; tariff change ⇒ catalog-update; employee-departure ⇒ subscription-cancel). Listed as report-only follow-ups by owing domain below.
 - B10b HARD FAIL. 7 of 7 outbound handoffs have `source_domain_module_id=NULL`. Of those 7, 4 also have `target_domain_module_id=NULL` (2 CSM, 2 FIN); 3 have `target_domain_module_id=38` (ITSM module `ITSM-INCIDENT-MGMT`). Fix on this side requires M1 first (no source module exists to attribute to). The 4 NULL target FKs route as report-only to CSM and FIN.
 - B11 FAIL. Zero aliases on any of 7 masters. Candidates: `telco_service_catalog` ⇔ "Product Offering Catalog" (TM Forum SID), `telco_subscriptions` ⇔ "Customer Bill Inquiry" / "Service Instance" (TM Forum), `telco_customer_bills` ⇔ "Customer Invoice" (TM Forum), `service_trouble_tickets` ⇔ "Trouble Report" (TM Forum SID), `network_inventory_records` ⇔ "Resource Inventory" (TM Forum).
-- B12 HARD FAIL. Zero lifecycle states on any of 7 masters. None of these are config-shaped (each has real workflow: orders accepted/provisioned/completed, subscriptions activated/suspended/cancelled, bills issued/paid/disputed, tickets opened/triaged/resolved/closed).
+- B12 HARD FAIL. Zero lifecycle states on any of 7 masters. None of these are config-shaped (each has real workflow: orders accepted/provisioned/completed, subscriptions activated/suspended/canceled, bills issued/paid/disputed, tickets opened/triaged/resolved/closed).
 
 C-band:
 
@@ -111,7 +111,7 @@ D-band:
 
 E-band:
 
-- E1 vacuously passes (no modules ⇒ no `role_modules` floor to satisfy ⇒ no role authoring possible). Will become a real check after Bucket 1 modularization lands; expected personas listed in Bucket 2 item B2-4.
+- E1 vacuously passes (no modules ⇒ no `persona_modules` floor to satisfy ⇒ no role authoring possible). Will become a real check after Bucket 1 modularization lands; expected personas listed in Bucket 2 item B2-4.
 - E2 to E6 all vacuous.
 
 F-band:
@@ -151,9 +151,9 @@ MODULARIZATION ISSUES: M1 itself is the modularization issue. TELCO-BSS needs a 
 
 ### Pass 3, Neighbor discovery
 
-Edges discovered via outbound handoffs (no inbound, no cross-domain DMDO yet):
+Relationships discovered via outbound handoffs (no inbound, no cross-domain DMDO yet):
 
-| Neighbor | Edge weight | Direction | Notes |
+| Neighbor | Relationship weight | Direction | Notes |
 | --- | --- | --- | --- |
 | ITSM (id 1) | 3 | outbound to module 38 | `service_provisioning.failed`, `service_trouble_ticket.opened`, `network_inventory.updated` all route to `service_incidents` in ITSM-INCIDENT-MGMT. |
 | CSM (id 30) | 2 | outbound, both NULL target module | `telco_subscription.suspended`, `telco_service_order.completed`. |
@@ -176,7 +176,7 @@ Section 5 (cross-domain `data_object_relationships`): no rows tying TELCO-BSS ma
 - `service_provisioning_workflows raises service_incidents`
 - `service_trouble_tickets escalates_as service_incidents`
 
-CSM (weight 2 summary): `telco_subscriptions` and `telco_service_orders` both already have `opens customer_cases` edges in `data_object_relationships` (the only 2 non-legacy DOR rows that exist). Handoffs are loaded but both have NULL target module attribution (CSM B10b owes the fix). No reverse cross-domain edges from CSM into TELCO-BSS exist.
+CSM (weight 2 summary): `telco_subscriptions` and `telco_service_orders` both already have `opens customer_cases` relationships in `data_object_relationships` (the only 2 non-legacy DOR rows that exist). Handoffs are loaded but both have NULL target module attribution (CSM B10b owes the fix). No reverse cross-domain relationships from CSM into TELCO-BSS exist.
 
 FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telco_customer_bill.issued`) carry `data_object_id` pointing at TELCO-BSS masters (the payload is the publisher's master, which is the unusual case noted in B10b's sub-case 2 diagnostic: payload and trigger_event data_object match exactly). No `data_object_relationships` row mirrors these handoffs. FIN must hold a `consumer` row on `telco_subscriptions` and `telco_customer_bills` in whichever FIN module realizes AR / billing ingest. Both NULL target_domain_module_id values route as report-only to FIN.
 
@@ -191,11 +191,11 @@ FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telco_cu
 | B1-S3 | F2, F3 | Zero per-module system skills (Rule #17). | After B1-S2 lands, author one `skill_type='system'` row per module with `domain_module_id` set and `skill_name='<module_code_lower>_agent'`; each gets 5 to 12 `skill_tools` rows including the existing 7 query tools (re-pointed), plus the existing `send_email` row, plus `notify_person` / `notify_team` for generic notifications, plus mutate tools per master, plus workflow gates per Bucket 1 item B1-S4 lifecycle states. |
 | B1-S4 | F1 | Retire legacy `skills` row id 111 (`telco-bss-system`, kebab) after per-module skills land. | DELETE row 111 (also retires its 8 `skill_tools` rows via cascade). Order: B1-S3 first, then B1-S4. |
 | B1-S5 | A4 | `catalog_tagline` and `catalog_description` are empty strings (Rule #20). | Draft both fields in buyer voice (workflow + value), surface to user for review BEFORE writing per Rule #20. Do NOT auto-write; backfill is allowed only with explicit per-row user approval of the exact wording. |
-| B1-S6 | B12 | Zero lifecycle states on the 7 masters. | Author state machines for each: `telco_service_orders` (submitted, validated, in_provisioning, completed, cancelled), `telco_subscriptions` (pending, active, suspended, cancelled), `service_provisioning_workflows` (queued, executing, completed, failed), `service_trouble_tickets` (opened, triaged, in_repair, resolved, closed), `telco_customer_bills` (draft, issued, paid, disputed, written_off), `network_inventory_records` (planned, deployed, decommissioned), `telco_service_catalog` (draft, published, retired). Mark workflow gates with `requires_permission=true` and set `domain_module_id` per B1-S2's module assignment. |
-| B1-S7 | B6 | Zero intra-domain edges between the 7 masters. | Author 7 edges per the list in Pass 1 B6 finding: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`. Load via standard relationship loader; each carries `relationship_verb`, `inverse_verb`, `relationship_type`, `relationship_kind`, `is_required`, `owner_side`. |
-| B1-S8 | B7 | Zero `users` edges on the 7 masters (Rule #10). | Author 7 edges from `users` to each master: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian. Use existing `users` data_object row (`kind='platform_builtin'`). |
+| B1-S6 | B12 | Zero lifecycle states on the 7 masters. | Author state machines for each: `telco_service_orders` (submitted, validated, in_provisioning, completed, canceled), `telco_subscriptions` (pending, active, suspended, canceled), `service_provisioning_workflows` (queued, executing, completed, failed), `service_trouble_tickets` (opened, triaged, in_repair, resolved, closed), `telco_customer_bills` (draft, issued, paid, disputed, written_off), `network_inventory_records` (planned, deployed, decommissioned), `telco_service_catalog` (draft, published, retired). Mark workflow gates with `requires_permission=true` and set `domain_module_id` per B1-S2's module assignment. |
+| B1-S7 | B6 | Zero intra-domain relationships between the 7 masters. | Author 7 relationships per the list in Pass 1 B6 finding: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`. Load via standard relationship loader; each carries `relationship_verb`, `inverse_verb`, `relationship_type`, `relationship_kind`, `is_required`, `owner_side`. |
+| B1-S8 | B7 | Zero relationships to `users` on the 7 masters (Rule #10). | Author 7 relationships from `users` to each master: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian. Use existing `users` data_object row (`kind='platform_builtin'`). |
 | B1-S9 | B11 | Zero aliases on the 7 masters. | Author 5 to 7 aliases per the TM Forum SID mappings listed in B11 finding above. Surface to user for review before loading (some are buyer-facing labels marketing may care about). |
-| B1-S10 | B10b | All 7 outbound `handoffs` have `source_domain_module_id=NULL`. | After B1-S2 modules land, derive per the rule (module that holds the trigger event's data_object with strongest role). Patch via a small loader; modelled on `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`. Also: 4 of the 7 still need `target_domain_module_id` (2 to CSM modules, 2 to FIN modules), but those PATCHes belong to CSM / FIN audits (report-only here). |
+| B1-S10 | B10b | All 7 outbound `handoffs` have `source_domain_module_id=NULL`. | After B1-S2 modules land, derive per the rule (module that holds the trigger event's data_object with strongest role). Patch via a small loader; modeled on `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`. Also: 4 of the 7 still need `target_domain_module_id` (2 to CSM modules, 2 to FIN modules), but those PATCHes belong to CSM / FIN audits (report-only here). |
 | B1-S11 | B9 | Two trigger events have no handoff row: `telco_service_order.submitted` (1060), `telco_service_catalog.updated` (1068). Also: all 9 trigger_events have `event_category=''` (empty string violates the enum). | (a) Author missing handoffs OR explicitly justify as leaf (`order.submitted` plausibly fires only the internal provisioning workflow, not a cross-domain handoff; `catalog.updated` may fire CSM agent-training and CRM offer-sync handoffs). (b) Patch `event_category` on all 9 rows to one of `lifecycle`, `state_change`, `threshold`, `signal`. Most should be `state_change`. |
 | B1-S12 | B11 / domain_aliases | Zero `domain_aliases` rows on the domain itself. | Author 3 to 5 aliases that feed catalog search and agent triggers per Rule #20: "telco BSS", "telecom billing systems", "OSS BSS", "communications service provider platform", "convergent charging". Surface to user before loading. |
 
@@ -287,7 +287,7 @@ Candidates queued to `audits/_missing-domains.md`:
 - B1-S6 (lifecycle states) requires Bucket 2 item B2-2 (modularization shape) to be answered, because `domain_module_id` on each lifecycle state must point at the realizing module.
 - B1-S10 (B10b backfill `source_domain_module_id`) is gated by B1-S2 (modules must land first).
 - Bucket 2 item B2-1 (em-dash rewrites in `domains.description` / `business_logic`) is independent of every other item; can be resolved first.
-- Bucket 2 item B2-3 (regulation scope) may add 3 to 5 new `regulations` rows + `domain_regulations` links; independent of modularization.
+- Bucket 2 item B2-3 (regulation scope) may add 3 to 5 new `regulations` rows + `domain_regulations` relationships; independent of modularization.
 - Bucket 3 items B3-1 through B3-13 are speculative; deciding the modularization shape (B2-2) determines which module each candidate lands in, so resolve B2-2 before vetting Bucket 3.
 - If user promotes candidate TELCO-RAFM and / or TELCO-NMS, several Bucket 3 candidates (B3-12, B3-13) route there instead of TELCO-BSS; this re-shapes the modularization plan in B2-2.
 
@@ -327,8 +327,8 @@ Total writes: 9 PATCHes + 7 INSERTs = 16 rows touched.
 - **B1-S4** (retire legacy skill 111): gated on B1-S3; deleting the only system skill before per-module skills exist would hollow the domain's agent surface (F2 hard fail).
 - **B1-S5** (catalog UX A4): Rule #20 (`catalog_tagline` / `catalog_description`), surface to user; never auto-write.
 - **B1-S6** (lifecycle states, B12): gated on B1-S2 (`data_object_lifecycle_states.domain_module_id` FK is required per state).
-- **B1-S7** (intra-domain DOR edges, B6): not user-edges; the technical-fix scope for DOR is "user-edges Rule #10 audit pre-specifies" only.
-- **B1-S8** (users DOR edges, Rule #10): audit names the actor labels (order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian) but does not pre-specify the exact `(relationship_verb, inverse_verb, relationship_type, relationship_kind, owner_side, is_required)` tuples per master. Defer per the precedent set by other 2026-05-31 B1 fix loaders.
+- **B1-S7** (intra-domain DOR relationships, B6): not relationships to `users`; the technical-fix scope for DOR is "relationships to `users` Rule #10 audit pre-specifies" only.
+- **B1-S8** (users DOR relationships, Rule #10): audit names the actor labels (order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian) but does not pre-specify the exact `(relationship_verb, inverse_verb, relationship_type, relationship_kind, owner_side, is_required)` tuples per master. Defer per the precedent set by other 2026-05-31 B1 fix loaders.
 - **B1-S9** (data_object_aliases bulk, B11): Bucket 2 wording approval (B2-6); the rule forbids bulk `data_object_aliases` inserts unless the audit pre-specifies exact tuples.
 - **B1-S10** (B10b backfill `source_domain_module_id`): gated on B1-S2 (no source module exists to attribute to; not derivable today).
 - **B1-S11(a)** (2 missing handoffs on events 1060 / 1068): authoring NEW handoffs is surface-for-user judgment (audit asks whether to treat as leaf or add new handoff rows).
@@ -354,14 +354,14 @@ Structural Validate b1 pass against live state. Re-runs all bands (A, M, B [B5/B
 - 0 capabilities (A2 hard fail, unchanged).
 - 0 `domain_modules` rows, 0 `domain_module_host_domains` rows (M1 hard fail, cascades into M2, M4, M5, M6, M8, B9b vacuous, B10b half-fixable, E1-E5 vacuous, F2/F3 fail).
 - 4 solutions all `coverage_level='primary'` (A3 pass).
-- 7 mandatory regulations linked.
-- 7 `domain_data_objects` rows, all `role=master, necessity=required, kind=domain_owned` (B1 pass). No `embedded_master` / `contributor` / `consumer` rows (B5 vacuous, B10 discovery returns nothing owed).
+- 7 mandatory regulations related.
+- 7 `domain_data_objects` rows, all `held_as=master, necessity=required, kind=domain_owned` (B1 pass). No `embedded_master` / `contributor` / `consumer` rows (B5 vacuous, B10 discovery returns nothing owed).
 - 7 outbound `handoffs`, 0 inbound. All 7 outbound carry `source_domain_module_id=NULL` (B10b fail, gated on M1). 3 target ITSM module 38; 2 target CSM (NULL target_domain_module_id, owed by CSM); 2 target FIN (NULL target_domain_module_id, owed by FIN).
 - 9 `trigger_events` on the 7 masters, all `event_category='state_change'` (B1-S11b applied 2026-05-31). 2 events still lack `handoffs` rows (1060 `telco_service_order.submitted`, 1068 `telco_service_catalog.updated`), B1-S11a still pending.
 - 0 lifecycle states on any master (B12 hard fail, unchanged).
 - 0 aliases on any master (B11 fail, unchanged).
 - 0 `domain_aliases` rows on the domain (Rule #20).
-- 2 `data_object_relationships` rows (`telco_subscriptions opens customer_cases`, `telco_service_orders opens customer_cases`). Zero intra-domain master-to-master edges (B6 fail). Zero `users` edges (B7 fail).
+- 2 `data_object_relationships` rows (`telco_subscriptions opens customer_cases`, `telco_service_orders opens customer_cases`). Zero intra-domain master-to-master relationships (B6 fail). Zero relationships to `users` (B7 fail).
 - 1 legacy `skills` row id 111 (`telco-bss-system`, `domain_module_id=NULL`, kebab name). 8 `skill_tools` rows (7 `query_*` + `send_email`). F1 fail (legacy), F2/F3 fail (no module-level skill). F4 pass on existing rows. F5 strict_score uncomputable per module (F5 reports the F2/F3 gap).
 - 7 `handoff_processes` rows on the 7 outbound handoffs, all `proposal_source='agent_curated', record_status='new'` (B1-H1 applied 2026-05-31). H1 coverage = 7/7 = 100% rows tagged; **approved count = 0** (review pending). H1 itself passes coverage; quality measure pending reviewer sign-off.
 - C-band: 2 `business_function_domains` rows (`Business Operations` owner, `Finance` contributor). C1 pass.
@@ -419,8 +419,8 @@ B-band:
 - B3 partial: every master uses prefix or descriptive form; no canonical bare-word claim needed. Pass.
 - B4 partial: all 3 pattern flags default-false on all 7. Audit MUST positively re-evaluate (Rule #12). Carried forward as Bucket 2 B2-5 (3 candidates: `telco_customer_bills.has_submit_lock`, `service_trouble_tickets.has_personal_content`, `telco_service_orders.has_submit_lock`).
 - B5 vacuous (no embedded_master).
-- B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. 7 expected edges (per the 2026-05-30 list).
-- B7 FAIL. Zero edges to `users` (data_object id 748). 7 expected edges per the 7 actor roles enumerated in B1-S8.
+- B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. 7 expected relationships (per the 2026-05-30 list).
+- B7 FAIL. Zero relationships to `users` (data_object id 748). 7 expected relationships per the 7 actor roles enumerated in B1-S8.
 - B8 partial. 2 outbound DOR rows to CSM `customer_cases` (id 103). ITSM, FIN have no DOR mirrors of their handoffs. Outbound-direction DOR rows owed: `service_trouble_tickets escalates_as service_incidents`, `service_provisioning_workflows raises service_incidents`, `network_inventory_records triggers service_incidents` (all to ITSM `service_incidents` id 47); `telco_customer_bills posts_to <FIN AR object>`, `telco_subscriptions provisions_billable_to <FIN AR object>` (target masters TBD on FIN side).
 - B9 partial. 9 trigger_events exist; 7 of 9 carry ≥1 handoff. 2 events still have no handoff: 1060 `telco_service_order.submitted` and 1068 `telco_service_catalog.updated` (B1-S11a still pending; carried). All 9 carry valid `event_category='state_change'` (B1-S11b applied; PASS on the enum sub-defect).
 - B9b vacuous (0 modules; no cross-module surface).
@@ -468,9 +468,9 @@ MODULARIZATION ISSUES: M1 itself.
 
 ### Pass 3, Neighbor discovery
 
-Edges via outbound handoffs (unchanged from 2026-05-30):
+Relationships via outbound handoffs (unchanged from 2026-05-30):
 
-| Neighbor | Edge weight | Notes |
+| Neighbor | Relationship weight | Notes |
 | --- | --- | --- |
 | ITSM (id 1) | 3 | outbound to module 38 (ITSM-INCIDENT-MGMT) |
 | CSM (id 30) | 2 | outbound, both NULL target module |
@@ -505,8 +505,8 @@ FIN (weight 2 summary): 2 outbound on `telco_customer_bills` (id 658, handoff 92
 | B1-S4 | F1 | Retire legacy `skills` id 111 (`telco-bss-system`, kebab). | DELETE row 111 + cascade its 8 `skill_tools` rows. Gated on B1-S3. |
 | B1-S5 | A4 | `catalog_tagline` + `catalog_description` empty (Rule #20). | Draft both, surface to user BEFORE writing. Do NOT auto-write. |
 | B1-S6 | B12 | Zero lifecycle states on the 7 masters. | Author state machines per the 2026-05-30 list; mark workflow gates `requires_permission=true` and set `domain_module_id`. Gated on B1-S2. |
-| B1-S7 | B6 | Zero intra-domain master-to-master edges. | Author 7 edges per the 2026-05-30 list (`telco_service_orders fulfills_via service_provisioning_workflows` etc.). Standard relationship loader. |
-| B1-S8 | B7 | Zero `users` edges on the 7 masters (Rule #10). | Author 7 user edges (order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian). |
+| B1-S7 | B6 | Zero intra-domain master-to-master relationships. | Author 7 relationships per the 2026-05-30 list (`telco_service_orders fulfills_via service_provisioning_workflows` etc.). Standard relationship loader. |
+| B1-S8 | B7 | Zero relationships to `users` on the 7 masters (Rule #10). | Author 7 relationships to `users` (order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian). |
 | B1-S9 | B11 | Zero aliases on the 7 masters. | Author 5 to 7 TM Forum SID aliases; wording approval in B2-6. |
 | B1-S10 | B10b | 7/7 outbound have NULL `source_domain_module_id`. | After B1-S2, derive per the rule (module holding the trigger event's data_object with strongest role). PATCH loader. Gated on B1-S2. |
 | B1-S11a | B9 | 2 trigger_events lack `handoffs` (1060 `telco_service_order.submitted`, 1068 `telco_service_catalog.updated`). | Decide: leaf (justify) or author cross-domain handoff(s). Surface-for-user (B2-7 candidate). |
@@ -594,7 +594,7 @@ Total writes: 8 PATCHes + 10 INSERTs = 18 rows touched. No JWT errors.
 ### Surfaced (user decision / destructive / deferred)
 
 - **B1A-H2 (destructive: approve)**: 7 `handoff_processes` rows (458-464) sit at `record_status='new'`. Flipping to `approved` is a destructive PATCH only the user may authorize per row. Not applied.
-- **B1A-BUILD / B2-2 (build)**: the modularization shape is the gating decision; 3 candidate splits (7-module eTOM, 5-module, 3-module starter). The build, capabilities (B1B-S1), modules (B1B-S2), lifecycle states (B1B-S6), intra-domain DOR (B1B-S7), users edges (B1B-S8), source-module backfill (B1B-S10) all wait on it.
+- **B1A-BUILD / B2-2 (build)**: the modularization shape is the gating decision; 3 candidate splits (7-module eTOM, 5-module, 3-module starter). The build, capabilities (B1B-S1), modules (B1B-S2), lifecycle states (B1B-S6), intra-domain DOR (B1B-S7), relationships to `users` (B1B-S8), source-module backfill (B1B-S10) all wait on it.
 - **B2-1 (destructive: overwrite non-empty)**: em-dash (U+2014) in `domains.business_logic`. Recommended replacement supplied in state.yaml (colon for the em-dash); overwriting a populated field needs sign-off, not applied.
 - **B2-3**: US-side regulations (FCC CPNI, FCC LNP, STIR/SHAKEN, CALEA, TCPA, SOX); new `regulations` rows are Phase-A market-shape additions, not created unprompted (scope discipline).
 - **B2-5 (destructive: flag flip)**: 3 candidate pattern-flag flips on populated workflow masters (bills `has_submit_lock`, tickets `has_personal_content`, orders `has_submit_lock`). Judgment; not auto-applied.
@@ -633,7 +633,7 @@ Ran the B9d resolver (`scripts/analytics/b9d_resolver.ts TELCO-BSS`) in both dir
 - Added `b1b` item `B1B-B9D-REALIZE` (the 3 build-blocked payload realizations above).
 - Relabeled the build item `B1A-BUILD` -> `b1b` item `B1B-BUILD` (it is user-decision-blocked on B2-2, not agent-executable, so it does not belong in `b1a`).
 - `b1a` now holds only `B1A-H2` (the destructive `record_status='approved'` sign-off on the 7 handoff_processes rows, surfaced as q8 in the existing q-file).
-- Flipped `next_action_by: agent -> user`. No agent-executable work remains: every open item is either a pending user decision (q-file q1-q10) or a destructive sign-off (B1A-H2 / q8). The build cascade (capabilities, modules, lifecycle, intra-domain + user edges, source-module backfill, per-module skills) all wait on q1 (B2-2).
+- Flipped `next_action_by: agent -> user`. No agent-executable work remains: every open item is either a pending user decision (q-file q1-q10) or a destructive sign-off (B1A-H2 / q8). The build cascade (capabilities, modules, lifecycle, intra-domain + relationships to `users`, source-module backfill, per-module skills) all wait on q1 (B2-2).
 
 ### Files touched (no catalog/database writes)
 

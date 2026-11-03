@@ -1,0 +1,137 @@
+# Draft: `persona_id` on relationships to `users`
+
+For approval. Nothing here has been written to the catalog. Read on 2026-11-03, before the schema rename, so the queries used the old table names.
+
+**What this fills:** `data_object_relationships.persona_id`, the new optional column that says which kind of person fills a relationship to `users` (data object 748). Check B7c reads it.
+
+**Scope:** 112 relationships to `users` on the 113 entities that have RACI, meaning `data_object_lifecycle_states.process_id` joins to `process_raci`. 15 of those entities have no relationship to `users`, listed at the end.
+
+**Summary:** 89 proposals (56 high, 24 medium, 9 low confidence), 23 left blank.
+
+**How each proposal was made:**
+
+- The R, A, C and I columns list the personas on that entity's processes.
+- A proposal comes only from the RACI row and the verb. No persona was invented, so a blank means no existing persona fits, for example no interviewer or learner persona exists.
+- An approver maps to the Accountable persona holding the matching gate.
+- `high`: the RACI row and the verb agree. `medium`: one reading is clearly better, but another persona is possible. `low`: a best guess, so check it first.
+
+The number after each proposed persona is its `personas.id`.
+
+| rel | entity | verb / inverse | R | A | C | I | proposed persona | confidence | why |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 20 | `absence_requests` | users requests / is_requested_by | `HR-PEOPLE-OPS-SPECIALIST` | `PEOPLE-MANAGER` | `HR-BUSINESS-PARTNER` | `HR-HRIS-ADMIN` |  | - | the requester is any employee; no such persona exists |
+| 21 | `absence_requests` | users approves / is_approved_by | `HR-PEOPLE-OPS-SPECIALIST` | `PEOPLE-MANAGER` | `HR-BUSINESS-PARTNER` | `HR-HRIS-ADMIN` | `PEOPLE-MANAGER` (26) | high | Accountable, holds the `approved` gate |
+| 2550 | `advocacy_content` | users curates / is curated by | `MKT-ADVOCACY-CONTENT-CURATOR` | `MKT-ADVOCACY-PROGRAM-MANAGER` | - | - | `MKT-ADVOCACY-CONTENT-CURATOR` (109) | high | Responsible, and the verb names the job |
+| 1410 | `assessment_attempts` | users attempts / attempted_by | `LD-INSTRUCTIONAL-DESIGNER` | `LD-LEARNING-ADMIN` | `LD-INSTRUCTOR` | - |  | - | the learner; no such persona exists |
+| 1347 | `background_checks` | users requests / has requester | `LEGAL-COMPLIANCE-SPECIALIST`, `RECRUITING-RECRUITER` | `RECRUITING-MANAGER` | `RECRUITING-COORDINATOR` | - | `RECRUITING-RECRUITER` (6) | medium | one of two Responsible; a recruiter orders the check, compliance adjudicates it |
+| 2610 | `beta_programs` | users owns / owned by | `PRODUCT-MANAGER` | `PRODUCT-HEAD` | `SW-ENG-LEAD` | `PRODUCT-OPS-ANALYST` | `PRODUCT-MANAGER` (57) | medium | Responsible; `owns` could also mean Accountable PRODUCT-HEAD |
+| 2871 | `bills_of_lading` | users issues bill of lading / is issued by | `LOG-FREIGHT-PLANNER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `LOG-FREIGHT-PLANNER` (126) | high | Responsible for the process that issues it |
+| 1766 | `business_process_models` | users owns_business_process_model / owned by user | `BUSINESS-OPS-PROCESS-ARCHITECT` | `PROCESS-OWNER` | `BUSINESS-OPS-PROCESS-ANALYST` | - | `PROCESS-OWNER` (79) | high | Accountable, and the verb names the job |
+| 826 | `candidate_referrals` | users submits / has referring employee | `RECRUITING-RECRUITER` | `RECRUITING-MANAGER` | - | - |  | - | the referrer is any employee; no such persona exists |
+| 1343 | `candidates` | users owns as recruiter / has owning recruiter | `RECRUITING-RECRUITER` | `HIRING-MANAGER` | - | `LEGAL-COMPLIANCE-SPECIALIST` | `RECRUITING-RECRUITER` (6) | high | the verb names the job |
+| 2877 | `cargo_claims` | users handles claim / is handled by | `AR-FREIGHT-BILLING-CLERK` | `LOG-CARRIER-OPS-MANAGER` | - | - | `AR-FREIGHT-BILLING-CLERK` (133) | medium | the only Responsible; a claims handler is not a named persona |
+| 2859 | `carrier_freight_invoices` | users issues invoice / is issued by user | `AR-FREIGHT-BILLING-CLERK` | `LOG-CARRIER-OPS-MANAGER` | - | - | `AR-FREIGHT-BILLING-CLERK` (133) | high | Responsible for issuing invoices |
+| 2878 | `carrier_settlements` | users approves carrier settlement / is approved by | `LOG-CARRIER-SALES-REP` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-CARRIER-OPS-MANAGER` (130) | high | Accountable, holds the `approved` gate |
+| 1417 | `ceu_records` | users earns_credit / credited_to | `LD-LEARNING-ADMIN` | `GRC-COMPLIANCE-TRAINING-MANAGER` | `LD-INSTRUCTOR` | - |  | - | the learner; no such persona exists |
+| 1974 | `coaching_sessions` | users conducts coaching / is_conducted_by | `ENABLEMENT-COACH` | `SALES-MANAGER` | - | - | `ENABLEMENT-COACH` (5) | high | Responsible, and the verb names the job |
+| 101 | `compliance_assignments` | users must complete / is_assigned_to | `GRC-COMPLIANCE-TRAINING-MANAGER` | `GRC-COMPLIANCE-TRAINING-MANAGER` | `PEOPLE-MANAGER` | `LEGAL-COMPLIANCE-SPECIALIST` |  | - | the assigned employee; no such persona exists |
+| 102 | `compliance_assignments` | users owns / is_owned_by | `GRC-COMPLIANCE-TRAINING-MANAGER` | `GRC-COMPLIANCE-TRAINING-MANAGER` | `PEOPLE-MANAGER` | `LEGAL-COMPLIANCE-SPECIALIST` | `GRC-COMPLIANCE-TRAINING-MANAGER` (25) | high | Responsible and Accountable |
+| 2872 | `consignment_notes` | users issues consignment note / is issued by | `LOG-FREIGHT-PLANNER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `LOG-FREIGHT-PLANNER` (126) | high | Responsible for the process that issues it |
+| 501 | `contract_clauses` | users approved / is_approved_by | `LEGAL-COUNSEL` | `CONTRACT-OPS-MANAGER` | - | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` (31) | high | Accountable, holds the `approved` gate |
+| 499 | `contract_obligations` | users is obligation owner for / is_assigned_to | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` | - | `LEGAL-COUNSEL` | `CONTRACT-OPS-SPECIALIST` (32) | medium | Responsible; an obligation owner can also be a business person |
+| 497 | `contract_templates` | users owns / is_owned_by | `LEGAL-COUNSEL` | `CONTRACT-OPS-MANAGER` | - | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` (31) | low | `owns` fits Accountable, but Responsible LEGAL-COUNSEL writes templates |
+| 498 | `contract_templates` | users approved / is_approved_by | `LEGAL-COUNSEL` | `CONTRACT-OPS-MANAGER` | - | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` (31) | high | Accountable, holds the `approved` gate |
+| 2418 | `corrective_actions` | users owns / is owned by | `FACILITIES-EHS-SAFETY-MANAGER` | `EHS-SITE-MANAGER` | - | - | `FACILITIES-EHS-SAFETY-MANAGER` (86) | medium | Responsible; `owns` could also mean Accountable EHS-SITE-MANAGER |
+| 98 | `course_enrollments` | users enrolls in / is_enrolled_by | `LD-INSTRUCTIONAL-DESIGNER` | `LD-LEARNING-ADMIN` | `LD-INSTRUCTOR` | `PEOPLE-MANAGER` |  | - | the learner; no such persona exists |
+| 99 | `course_enrollments` | users assigns / is_assigned_by | `LD-INSTRUCTIONAL-DESIGNER` | `LD-LEARNING-ADMIN` | `LD-INSTRUCTOR` | `PEOPLE-MANAGER` | `PEOPLE-MANAGER` (26) | medium | Informed on the RACI, and its persona description says it assigns learning; LD-LEARNING-ADMIN is also possible |
+| 96 | `courses` | users authors / is_authored_by | `LD-INSTRUCTIONAL-DESIGNER` | `LD-LEARNING-ADMIN` | `LD-INSTRUCTOR` | `PEOPLE-MANAGER` | `LD-INSTRUCTIONAL-DESIGNER` (23) | high | Responsible, and authoring is its job |
+| 97 | `courses` | users owns / is_owned_by | `LD-INSTRUCTIONAL-DESIGNER` | `LD-LEARNING-ADMIN` | `LD-INSTRUCTOR` | `PEOPLE-MANAGER` | `LD-LEARNING-ADMIN` (22) | medium | Accountable; `owns` fits it best |
+| 2293 | `data_access_policies` | users approves access policy / is approved by | `DATA-GOVERNANCE-LEAD` | `DATA-OWNER` | `DATA-STEWARD` | - | `DATA-OWNER` (70) | high | Accountable, holds the `approved` gate |
+| 2290 | `data_assets` | users owns / is owned by | `DATA-STEWARD` | `DATA-OWNER` | - | - | `DATA-OWNER` (70) | high | Accountable, and the verb names the job |
+| 2292 | `data_certifications` | users certifies / is certified by | `DATA-STEWARD` | `DATA-OWNER` | - | - | `DATA-OWNER` (70) | low | Accountable holds the `granted` gate, which is the certifying step; Responsible DATA-STEWARD could also certify |
+| 2294 | `data_classifications` | users approves classification / classification approved by | `DATA-STEWARD` | `DATA-GOVERNANCE-LEAD` | - | - | `DATA-GOVERNANCE-LEAD` (72) | high | Accountable, holds the `approved` gate |
+| 2291 | `data_stewardship_assignments` | users is steward in / assigns steward | `DATA-STEWARD` | `DATA-OWNER` | `DATA-GOVERNANCE-LEAD` | - | `DATA-STEWARD` (69) | high | the verb names the job |
+| 1979 | `deal_warnings` | users acknowledges warnings / is_acknowledged_by | `SALES-MANAGER` | `SALES-MANAGER` | `SALES-OPS-REVOPS-ANALYST` | - | `SALES-MANAGER` (2) | high | Responsible and Accountable |
+| 2794 | `dock_appointments` | users confirms appointment / is confirmed by | `WH-DOCK-SCHEDULER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `WH-DOCK-SCHEDULER` (129) | medium | Responsible for confirming appointments; Accountable LOG-TRANSPORTATION-MANAGER holds the `confirmed` gate |
+| 2860 | `driver_settlements` | users approves settlement / is approved by | `ACCT-DRIVER-SETTLEMENT-SPECIALIST` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-CARRIER-OPS-MANAGER` (130) | high | Accountable, holds the `approved` gate |
+| 2420 | `ehs_audits` | users conducts / is conducted by | `FACILITIES-EHS-SAFETY-MANAGER` | `EHS-SITE-MANAGER` | - | - | `FACILITIES-EHS-SAFETY-MANAGER` (86) | high | Responsible for conducting audits |
+| 2421 | `ehs_risk_assessments` | users approves / is approved by | `FACILITIES-EHS-SAFETY-MANAGER` | `EHS-SITE-MANAGER` | `FACILITIES-EHS-INDUSTRIAL-HYGIENIST` | - | `EHS-SITE-MANAGER` (89) | high | Accountable, holds the `approved` gate |
+| 15 | `employees` | is_linked_to / represents users | `HR-PEOPLE-OPS-SPECIALIST` | `HR-BUSINESS-PARTNER`, `PEOPLE-MANAGER` | `HR-HRIS-ADMIN`, `HR-BUSINESS-PARTNER`, `PEOPLE-MANAGER` | `PEOPLE-MANAGER`, `HR-HRIS-ADMIN` |  | - | the employee's own user account, not a job type |
+| 18 | `employment_contracts` | users approves / is_approved_by | `HR-PEOPLE-OPS-SPECIALIST` | `HR-BUSINESS-PARTNER` | `HR-HRIS-ADMIN` | `PEOPLE-MANAGER` | `HR-BUSINESS-PARTNER` (55) | high | Accountable, holds the `approved` gate |
+| 19 | `employment_events` | users records / is_recorded_by | `HR-PEOPLE-OPS-SPECIALIST` | `PEOPLE-MANAGER` | `HR-BUSINESS-PARTNER` | `HR-HRIS-ADMIN` | `HR-PEOPLE-OPS-SPECIALIST` (54) | high | Responsible for recording events |
+| 2422 | `environmental_permits` | users approves / is approved by | `FACILITIES-EHS-ENV-COMPLIANCE-MANAGER` | `EHS-SITE-MANAGER` | - | - | `EHS-SITE-MANAGER` (89) | medium | Accountable, holds the gate on `active`, the state an approved permit reaches |
+| 2607 | `feature_requests` | users submits / submitted by | `PRODUCT-MANAGER` | `PRODUCT-HEAD` | `SW-ENG-LEAD` | `PRODUCT-OPS-ANALYST` |  | - | a submitter can be anyone, including a customer; no such persona exists |
+| 1973 | `forecast_submissions` | users submits forecasts / is_submitted_by | `SALES-REP` | `SALES-MANAGER` | `SALES-OPS-REVOPS-ANALYST` | - | `SALES-REP` (4) | high | Responsible, and it submits forecasts |
+| 2793 | `freight_bid_events` | users runs bid event / is run by | `PROC-FREIGHT-SOURCING-MANAGER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `PROC-FREIGHT-SOURCING-MANAGER` (127) | high | Responsible for running bids |
+| 2792 | `freight_claims` | users files claim / is filed by | `AP-FREIGHT-AUDITOR` | `LOG-TRANSPORTATION-MANAGER` | - | - | `AP-FREIGHT-AUDITOR` (128) | medium | the only Responsible on the claim process |
+| 2873 | `freight_invoice_disputes` | users raises dispute / is raised by | `AP-FREIGHT-AUDITOR` | `LOG-TRANSPORTATION-MANAGER` | - | - | `AP-FREIGHT-AUDITOR` (128) | high | Responsible for the invoice audit that raises disputes |
+| 2791 | `freight_invoices` | users approves invoice / is approved by | `AP-FREIGHT-AUDITOR` | `LOG-TRANSPORTATION-MANAGER` | - | - | `LOG-TRANSPORTATION-MANAGER` (125) | high | Accountable, holds the `approved` gate |
+| 2858 | `freight_loads` | users books load / is booked by | `LOG-TRUCK-DISPATCHER` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-TRUCK-DISPATCHER` (131) | high | Responsible for booking loads |
+| 2790 | `freight_shipments` | users plans shipment / is planned by user | `LOG-FREIGHT-PLANNER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `LOG-FREIGHT-PLANNER` (126) | high | Responsible, and the verb names the job |
+| 2870 | `freight_tenders` | users offers tender / is offered by | `LOG-FREIGHT-PLANNER` | `LOG-TRANSPORTATION-MANAGER` | - | - | `LOG-FREIGHT-PLANNER` (126) | high | Responsible for tendering |
+| 2857 | `freight_trips` | users dispatches trip / is dispatched by | `LOG-TRUCK-DISPATCHER` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-TRUCK-DISPATCHER` (131) | high | Responsible, and the verb names the job |
+| 2524 | `frontline_broadcasts` | users publishes / is published by | `FRONTLINE-COMMS-ADMIN` | `FRONTLINE-MANAGER` | - | `FRONTLINE-WORKER` | `FRONTLINE-COMMS-ADMIN` (105) | medium | Responsible for publishing; Accountable FRONTLINE-MANAGER holds the `published` gate |
+| 2295 | `glossary_terms` | users authors / is authored by | `DATA-STEWARD` | `DATA-GOVERNANCE-LEAD` | - | - | `DATA-STEWARD` (69) | high | Responsible for authoring terms |
+| 16 | `hcm_positions` | users manages / is_managed_by | `HR-ORG-DESIGN-ANALYST` | `HR-BUSINESS-PARTNER` | `PEOPLE-MANAGER` | `HR-HRIS-ADMIN` | `PEOPLE-MANAGER` (26) | medium | Consulted on the RACI, and the verb names its job |
+| 169 | `hr_cases` | users raises / is_raised_by | `HRSD-CASE-AGENT` | `HRSD-SERVICE-MANAGER` | - | `HRSD-KNOWLEDGE-MANAGER` |  | - | the employee raising the case; no such persona exists |
+| 170 | `hr_cases` | users works on / is_assigned_to | `HRSD-CASE-AGENT` | `HRSD-SERVICE-MANAGER` | - | `HRSD-KNOWLEDGE-MANAGER` | `HRSD-CASE-AGENT` (63) | high | Responsible, and it works cases |
+| 171 | `hr_cases` | users owns / is_owned_by | `HRSD-CASE-AGENT` | `HRSD-SERVICE-MANAGER` | - | `HRSD-KNOWLEDGE-MANAGER` | `HRSD-SERVICE-MANAGER` (64) | low | Accountable; `owns` could also mean the case agent |
+| 172 | `hr_cases` | users approves / is_approved_by | `HRSD-CASE-AGENT` | `HRSD-SERVICE-MANAGER` | - | `HRSD-KNOWLEDGE-MANAGER` | `HRSD-SERVICE-MANAGER` (64) | high | Accountable, holds the `pending_approval` gate |
+| 824 | `interview_scorecards` | users authors / has interviewer as author | `HIRING-MANAGER` | `RECRUITING-MANAGER` | `RECRUITING-RECRUITER` | `RECRUITING-COORDINATOR` |  | - | the interviewer; no interviewer persona exists |
+| 2279 | `intranet_content_attestations` | users attests / is attested by | `CONTENT-OWNER` | `DIGITAL-WORKPLACE-GOV-LEAD` | `ITOPS-INTRANET-ADMIN` | - | `CONTENT-OWNER` (67) | high | Responsible, and it attests its own content |
+| 822 | `job_applications` | users owns as recruiter / has owning recruiter | `RECRUITING-RECRUITER` | `HIRING-MANAGER` | - | `LEGAL-COMPLIANCE-SPECIALIST` | `RECRUITING-RECRUITER` (6) | high | the verb names the job |
+| 825 | `job_offers` | users approves / has approver | `RECRUITING-RECRUITER` | `HIRING-MANAGER` | `RECRUITING-MANAGER` | - | `HIRING-MANAGER` (10) | high | Accountable, holds the `approved` gate |
+| 1344 | `job_postings` | users publishes / has publisher | `RECRUITING-SOURCER`, `RECRUITING-RECRUITER` | `RECRUITING-MANAGER` | - | `HIRING-MANAGER` | `RECRUITING-RECRUITER` (6) | low | one of two Responsible, with RECRUITING-SOURCER; Accountable RECRUITING-MANAGER holds the `published` gate |
+| 23 | `job_profiles` | users owns / is_owned_by | `HR-ORG-DESIGN-ANALYST` | `HR-HRIS-ADMIN` | `HR-BUSINESS-PARTNER` | - | `HR-ORG-DESIGN-ANALYST` (56) | medium | Responsible; `owns` could also mean Accountable HR-HRIS-ADMIN |
+| 821 | `job_requisitions` | users is recruiter for / has recruiter | `RECRUITING-RECRUITER` | `RECRUITING-MANAGER` | - | - | `RECRUITING-RECRUITER` (6) | high | the verb names the job |
+| 2739 | `job_requisitions` | users is hiring manager for / has hiring manager | `RECRUITING-RECRUITER` | `RECRUITING-MANAGER` | - | - | `HIRING-MANAGER` (10) | medium | the verb names the job, but this persona is not on this entity's RACI |
+| 103 | `learner_certifications` | users holds / is_held_by | `LD-LEARNING-ADMIN` | `GRC-COMPLIANCE-TRAINING-MANAGER` | `LD-INSTRUCTOR` | - |  | - | the learner; no such persona exists |
+| 1429 | `learning_path_assignments` | users assigned_path / assigned_to | `LD-LEARNING-ADMIN` | `PEOPLE-MANAGER` | `LD-INSTRUCTIONAL-DESIGNER` | - |  | - | the learner; no such persona exists |
+| 104 | `learning_paths` | users curates / is_owned_by | `LD-LEARNING-ADMIN` | `PEOPLE-MANAGER` | `LD-INSTRUCTIONAL-DESIGNER` | - | `LD-LEARNING-ADMIN` (22) | high | Responsible for curating paths |
+| 1430 | `learning_plans` | users owns_plan / owned_by | `PEOPLE-MANAGER` | `LD-LEARNING-ADMIN` | - | - |  | - | a plan belongs to the learner; no such persona exists |
+| 494 | `legal_contracts` | users owns / is_owned_by | `LEGAL-COUNSEL`, `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` | `PROCUREMENT-CONTRACT-LIAISON`, `LEGAL-COUNSEL` | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` (31) | low | `owns` fits Accountable, but a contract owner is often a business person |
+| 495 | `legal_contracts` | users approved / is_approved_by | `LEGAL-COUNSEL`, `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` | `PROCUREMENT-CONTRACT-LIAISON`, `LEGAL-COUNSEL` | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` (31) | high | Accountable, holds the `approved` gate |
+| 496 | `legal_contracts` | users drafted / is_created_by | `LEGAL-COUNSEL`, `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` | `PROCUREMENT-CONTRACT-LIAISON`, `LEGAL-COUNSEL` | `CONTRACT-OPS-SPECIALIST` | `LEGAL-COUNSEL` (33) | medium | one of two Responsible, and drafting is its job |
+| 2876 | `load_tenders` | users answers tender / is answered by | `LOG-TRUCK-DISPATCHER` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-TRUCK-DISPATCHER` (131) | medium | Responsible for answering tenders; Accountable LOG-CARRIER-OPS-MANAGER holds the `accepted` and `declined` gates |
+| 2394 | `marketing_budget_allocations` | users approves / is approved by | `MARKETING-BUDGET-OWNER` | `MARKETING-MARKETING-OPS-MANAGER` | `MARKETING-MARKETING-PLANNER` | - | `MARKETING-MARKETING-OPS-MANAGER` (83) | high | Accountable, holds the `approved` gate |
+| 2393 | `marketing_budgets` | users approves / is approved by | `MARKETING-BUDGET-OWNER`, `MARKETING-PAID-SOCIAL-MANAGER` | `MARKETING-MARKETING-OPS-MANAGER` | `MARKETING-PERFORMANCE-MARKETER` | `MARKETING-MARKETING-PLANNER` | `MARKETING-MARKETING-OPS-MANAGER` (83) | high | Accountable, holds the `approved` gate |
+| 2392 | `marketing_plans` | users owns / is owned by | `MARKETING-MARKETING-PLANNER`, `MARKETING-PERFORMANCE-MARKETER` | `MARKETING-MARKETING-OPS-MANAGER`, `MARKETING-PAID-SOCIAL-MANAGER` | `MARKETING-BUDGET-OWNER` | - | `MARKETING-MARKETING-PLANNER` (84) | low | one of two Responsible; the entity also has two Accountable personas across its processes |
+| 2395 | `marketing_spend_records` | users submits / is submitted by | `MARKETING-BUDGET-OWNER`, `MARKETING-PAID-SOCIAL-MANAGER` | `MARKETING-MARKETING-OPS-MANAGER` | `MARKETING-PERFORMANCE-MARKETER` | `MARKETING-MARKETING-PLANNER` | `MARKETING-BUDGET-OWNER` (85) | low | one of two Responsible |
+| 743 | `okr_objectives` | users owns OKR / is_owned_by | `OKR-OWNER` | `OKR-OWNER` | - | - | `OKR-OWNER` (15) | high | Responsible and Accountable, and the verb names the job |
+| 17 | `org_units` | users leads / is_led_by | `HR-ORG-DESIGN-ANALYST` | `HR-BUSINESS-PARTNER` | `PEOPLE-MANAGER` | `HR-HRIS-ADMIN` | `PEOPLE-MANAGER` (26) | medium | Consulted on the RACI; a unit lead is a people leader |
+| 980 | `org_units` | has members / belongs_to users | `HR-ORG-DESIGN-ANALYST` | `HR-BUSINESS-PARTNER` | `PEOPLE-MANAGER` | `HR-HRIS-ADMIN` |  | - | membership of any employee, not a job type |
+| 2867 | `owner_operator_leases` | users owns lease / is owned by | `ACCT-DRIVER-SETTLEMENT-SPECIALIST` | `LOG-CARRIER-OPS-MANAGER` | - | - |  | - | the owner-operator driver; no such persona exists |
+| 2861 | `partner_carriers` | users vets carrier / is vetted by | `LOG-CARRIER-SALES-REP` | `LOG-CARRIER-OPS-MANAGER` | - | - | `LOG-CARRIER-SALES-REP` (132) | medium | Responsible for vetting; Accountable LOG-CARRIER-OPS-MANAGER holds the `approved` gate |
+| 2604 | `product_features` | users assigned / assigned to | `PRODUCT-MANAGER` | `PRODUCT-HEAD` | `SW-ENG-LEAD` | `PRODUCT-OPS-ANALYST` | `PRODUCT-MANAGER` (57) | medium | Responsible; a feature can also be assigned to Consulted SW-ENG-LEAD |
+| 2603 | `product_lines` | users owns / owned by | `PRODUCT-MANAGER` | `PRODUCT-HEAD` | `SW-ENG-LEAD` | `PRODUCT-OPS-ANALYST` | `PRODUCT-MANAGER` (57) | medium | Responsible; `owns` could also mean Accountable PRODUCT-HEAD |
+| 2605 | `product_releases` | users owns / owned by | `SW-ENG-LEAD` | `PRODUCT-MANAGER` | `PRODUCT-OPS-ANALYST` | `PRODUCT-HEAD`, `PRODUCT-OPS-ANALYST` | `PRODUCT-MANAGER` (57) | low | `owns` fits Accountable, but Responsible SW-ENG-LEAD ships the release |
+| 2606 | `product_roadmaps` | users owns / owned by | `PRODUCT-MANAGER` | `PRODUCT-HEAD` | `SW-ENG-LEAD` | `PRODUCT-OPS-ANALYST` | `PRODUCT-MANAGER` (57) | medium | Responsible; `owns` could also mean Accountable PRODUCT-HEAD |
+| 1075 | `project_assignments` | users staffed_on / staffed_resource | `BUSINESS-OPS-RESOURCE-MANAGER` | `BUSINESS-OPS-RESOURCE-MANAGER` | `BUSINESS-OPS-DELIVERY-MANAGER` | - |  | - | the staffed worker; BUSINESS-OPS-CONSULTANT would fit, but it is not on this entity's RACI |
+| 1076 | `project_billing_milestones` | users approves / approved_by | `FINANCE-PROJECT-CONTROLLER` | `FINANCE-PROJECT-CONTROLLER` | `BUSINESS-OPS-DELIVERY-MANAGER` | - | `FINANCE-PROJECT-CONTROLLER` (30) | high | Responsible and Accountable |
+| 1078 | `project_resource_allocations` | users allocates / allocated_by | `BUSINESS-OPS-RESOURCE-MANAGER` | `BUSINESS-OPS-RESOURCE-MANAGER` | `BUSINESS-OPS-DELIVERY-MANAGER` | - | `BUSINESS-OPS-RESOURCE-MANAGER` (28) | high | Responsible and Accountable |
+| 1074 | `project_tasks` | users assigned_to / assignee | `BUSINESS-OPS-DELIVERY-MANAGER`, `BUSINESS-OPS-CONSULTANT` | `BUSINESS-OPS-DELIVERY-MANAGER` | - | `FINANCE-PROJECT-CONTROLLER` | `BUSINESS-OPS-CONSULTANT` (29) | medium | one of two Responsible, and its persona description says it executes assigned tasks |
+| 906 | `saas_applications` | users owns / owned_by | `ITAM-SAAS-PORTFOLIO-MANAGER`, `IT-SAAS-ADMIN` | `ITAM-SAAS-PORTFOLIO-MANAGER`, `IT-SAAS-ADMIN` | - | - | `ITAM-SAAS-PORTFOLIO-MANAGER` (18) | medium | one of two Responsible and Accountable personas, and `owns` fits the portfolio side |
+| 909 | `saas_subscriptions` | users manages / managed_by | `PROCUREMENT-SAAS-RENEWAL-OWNER` | `PROCUREMENT-SAAS-RENEWAL-OWNER` | - | - | `PROCUREMENT-SAAS-RENEWAL-OWNER` (17) | high | Responsible and Accountable |
+| 2416 | `safety_incidents` | users reports / is reported by | `FACILITIES-EHS-SAFETY-MANAGER` | `EHS-SITE-MANAGER` | - | - |  | - | a reporter can be any employee; no such persona exists |
+| 2417 | `safety_incidents` | users investigates / is investigated by | `FACILITIES-EHS-SAFETY-MANAGER` | `EHS-SITE-MANAGER` | - | - | `FACILITIES-EHS-SAFETY-MANAGER` (86) | high | Responsible for investigating |
+| 1073 | `service_projects` | users project_manager_of / managed_by | `BUSINESS-OPS-RESOURCE-MANAGER`, `BUSINESS-OPS-DELIVERY-MANAGER`, `BUSINESS-OPS-CONSULTANT` | `BUSINESS-OPS-DELIVERY-MANAGER` | - | `BUSINESS-OPS-CONSULTANT`, `FINANCE-PROJECT-CONTROLLER` | `BUSINESS-OPS-DELIVERY-MANAGER` (27) | high | Responsible and Accountable, and it is the project manager |
+| 910 | `shadow_it_apps` | users triggered / triggered_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - |  | - | the end user whose usage triggered detection; no such persona exists |
+| 500 | `signature_records` | users signed / is_created_by | `CONTRACT-OPS-SPECIALIST` | `CONTRACT-OPS-MANAGER` | `LEGAL-COUNSEL` | - |  | - | a signer can be anyone, and no such persona exists |
+| 2008 | `smp_alerts` | users triages / triaged_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - | `IT-SAAS-ADMIN` (16) | high | Responsible and Accountable |
+| 2007 | `smp_app_catalog_listings` | users curates / curated_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - | `IT-SAAS-ADMIN` (16) | high | Responsible and Accountable |
+| 2006 | `smp_app_integrations` | users configures / configured_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - | `IT-SAAS-ADMIN` (16) | high | Responsible and Accountable |
+| 1474 | `smp_app_owners` | users assigned_owner / owner_of | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - |  | - | a named owner of one application; no app-owner persona exists |
+| 1493 | `smp_app_requests` | users requested / requested_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - |  | - | the requester is any employee; no such persona exists |
+| 2014 | `smp_automation_workflows` | users authors / authored_by | `IT-SAAS-ADMIN` | `IT-SAAS-ADMIN` | - | - | `IT-SAAS-ADMIN` (16) | high | Responsible and Accountable |
+| 907 | `smp_license_seat_assignments` | users granted / granted_to | `ITAM-SAAS-PORTFOLIO-MANAGER` | `ITAM-SAAS-PORTFOLIO-MANAGER` | - | - |  | - | the seat holder is any employee; no such persona exists |
+| 2009 | `smp_optimization_recommendations` | users reviews / reviewed_by | `ITAM-SAAS-PORTFOLIO-MANAGER` | `ITAM-SAAS-PORTFOLIO-MANAGER` | - | - | `ITAM-SAAS-PORTFOLIO-MANAGER` (18) | high | Responsible and Accountable |
+| 2010 | `smp_reclamation_actions` | users executes / executed_by | `ITAM-SAAS-PORTFOLIO-MANAGER` | `ITAM-SAAS-PORTFOLIO-MANAGER` | - | - | `ITAM-SAAS-PORTFOLIO-MANAGER` (18) | high | Responsible and Accountable |
+| 1767 | `value_streams` | users owns_value_stream / owned by user | `BUSINESS-OPS-PROCESS-ANALYST` | `BUSINESS-OPS-PROCESS-ARCHITECT` | - | - | `BUSINESS-OPS-PROCESS-ARCHITECT` (77) | medium | Accountable; `owns` could also mean Responsible BUSINESS-OPS-PROCESS-ANALYST |
+| 740 | `work_items` | users assigned items / is_assigned_to | `OPERATIONS-WORK-CONTRIBUTOR` | `OPERATIONS-WORK-PROGRAM-LEAD` | - | - | `OPERATIONS-WORK-CONTRIBUTOR` (13) | high | Responsible, and it does assigned work |
+| 741 | `work_items` | users created items / is_created_by | `OPERATIONS-WORK-CONTRIBUTOR` | `OPERATIONS-WORK-PROGRAM-LEAD` | - | - | `OPERATIONS-WORK-CONTRIBUTOR` (13) | low | Responsible; a creator can be any user |
+| 742 | `work_projects` | users owns projects / is_owned_by | `OPERATIONS-WORK-CONTRIBUTOR` | `OPERATIONS-WORK-PROGRAM-LEAD` | - | - | `OPERATIONS-WORK-PROGRAM-LEAD` (12) | high | Accountable, and `owns` fits it |
+| 2265 | `worker_change_requests` | users requests / requested_by | `HR-PEOPLE-OPS-SPECIALIST` | `HR-BUSINESS-PARTNER` | `HR-HRIS-ADMIN` | `PEOPLE-MANAGER` |  | - | the requester is a manager or the employee; no persona on the RACI fits |
+
+## Entities with RACI and no relationship to `users`
+
+Nothing to fill on these 15 entities: `advocacy_campaigns`, `advocacy_leaderboards`, `certification_definitions`, `compliance_training_campaigns`, `course_assessments`, `course_offerings`, `course_sessions`, `freight_agreements`, `freight_carriers`, `regulator_filing_exports`, `smp_app_lifecycle_stages`, `smp_spend_allocations`, `smp_workflow_runs`, `training_evidence_records`, `transportation_orders`.

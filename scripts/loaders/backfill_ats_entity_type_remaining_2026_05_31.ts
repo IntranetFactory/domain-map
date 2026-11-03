@@ -42,7 +42,7 @@ const BACKFILL: Array<{ id: number; name: string; entity_type: string }> = [
   { id: 892, name: "candidate_assessment_templates", entity_type: "catalog" },
   { id: 1004, name: "offer_letter_templates", entity_type: "catalog" },
 
-  // junction (3) — N:M link with qualifier
+  // junction (3) — N:M relationship with qualifier
   { id: 868, name: "recruiting_event_attendances", entity_type: "junction" },
   { id: 871, name: "talent_pool_memberships", entity_type: "junction" },
   { id: 891, name: "interview_panels", entity_type: "junction" },
@@ -87,7 +87,7 @@ console.log(`\nBackfilled ${patched} rows.\n`);
 // Verify: all 60 ATS masters now classified, zero unclassified.
 const allAtsMasters = (await semantius(
   "GET",
-  "/domain_module_data_objects?role=eq.master&domain_module_id=in.(1,2,3,4,5,6,7,8,154)&select=data_objects(id,entity_type)&limit=200",
+  "/domain_module_data_objects?held_as=eq.master&domain_module_id=in.(1,2,3,4,5,6,7,8,154)&select=data_objects(id,entity_type)&limit=200",
 )) as Array<{ data_objects: { id: number; entity_type: string } | null }>;
 
 const counts: Record<string, number> = {};

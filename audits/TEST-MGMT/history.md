@@ -20,22 +20,22 @@ Pure-play test management specialists chosen, anchored against schemas these ven
 
 ### Pass 3, Neighbor discovery
 
-| Neighbor | Edge weight | Edge basis |
+| Neighbor | Relationship weight | Relationship basis |
 |---|---|---|
 | VSDP (id 80) | 3 | 2 outbound (`test_run.completed`, `test_run.failed`) + 1 inbound (`ci_pipeline_run.failed`). Both directions touch `test_runs` and `ci_pipeline_runs`. |
 | WORK-MGMT (id 135) | 1 | 1 outbound (`test_defect.created` to module 149) + `data_object_relationships` row 402 (`test_defects spawns work_items`). |
 | ITSM (id 1) | 1 | 1 outbound (`test_defect.created` to module 38) + relationship row 401 (`test_defects escalates_to service_incidents`). |
 | GRC (id 15) | 1 | 1 outbound (`test_run.completed` feeds `compliance_evidence`, relationship row 403). |
-| PROD-MGMT (id 101) | 1 | 1 outbound (`requirements_to_test_traceability.linked` to module 131). |
+| PROD-MGMT (id 101) | 1 | 1 outbound (`requirements_to_test_traceability.related` to module 131). |
 | APIM (id 79) | 1 | 1 inbound (`api_specification.updated`, relationship row 408 reverse direction). |
 | IPAAS (id 36) | 1 | 1 inbound (`integration_data_mapping.updated`, relationship row 407 reverse direction). |
 | RMM (id 130) | 1 | Shared master `automation_scripts` (id 225), no handoff row. M7 catalog-wide conflict (see B1-M4). |
 
 Only VSDP clears the weight `>=3` threshold for the full 5-section pairwise diff (Pass 4). Lighter neighbors get a one-line summary in Bucket 1.
 
-### Pass 4, Pairwise reconciliation with VSDP (edge weight 3)
+### Pass 4, Pairwise reconciliation with VSDP (relationship weight 3)
 
-VSDP itself is not yet modularized either (the `target_domain_module_id` is NULL on every VSDP-bound TEST-MGMT handoff). Most legs cannot be patched from this domain's audit, the reconciliation only catalogues what each side will owe once both sides cross the modularization line.
+VSDP itself is not yet modularized either (the `target_domain_module_id` is NULL on every VSDP-bound TEST-MGMT handoff). Most legs cannot be patched from this domain's audit, the reconciliation only catalogs what each side will owe once both sides cross the modularization line.
 
 1. **Existing handoffs, fully wired:** none. All three (782 `test_run.failed`, 778 `test_run.completed`, 771 `ci_pipeline_run.failed`) carry both module FKs NULL.
 2. **Existing handoffs with NULL module FK:** all three. PATCH candidates become available the moment TEST-MGMT and VSDP each ship `domain_modules` rows.
@@ -62,7 +62,7 @@ VSDP itself is not yet modularized either (the `target_domain_module_id` is NULL
 |---|---|---|---|
 | B1-M1 | `domain_modules` rows | Multiple (see Bucket 2 #1 for the proposed split) | TEST-MGMT has 8 masters and zero modules; M1 is the structural gate that blocks every downstream band. Resolve before B / E / F fixes load. |
 | B1-M2 | `source_domain_module_id` backfill on 6 outbound handoffs + `target_domain_module_id` on 3 inbound handoffs (B10b) | n/a, derives from M1 | All 9 cross-domain handoffs leave `source_domain_module_id IS NULL`; 7 of 9 also leave `target_domain_module_id IS NULL`. Patch via the reference loader pattern (see `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`) after both sides modularize. Sub-cases: 3 partner domains (WORK-MGMT, ITSM, PROD-MGMT) are already partially modularized so `target_domain_module_id` is already non-NULL on those rows; the source side is the consistent gap. |
-| B1-M3 | Legacy `domain_data_objects` to `domain_module_data_objects` migration on 8 rows | Per the proposed split | TEST-MGMT pre-dates the modularization layer. The 8 `domain_data_objects.role='master'` rows need re-issuing as `domain_module_data_objects.role='master'` on the right module, then the legacy rollup becomes derived. Same shape as the SMM cluster migration. |
+| B1-M3 | Legacy `domain_data_objects` to `domain_module_data_objects` migration on 8 rows | Per the proposed split | TEST-MGMT pre-dates the modularization layer. The 8 `domain_data_objects.held_as='master'` rows need re-issuing as `domain_module_data_objects.held_as='master'` on the right module, then the legacy rollup becomes derived. Same shape as the SMM cluster migration. |
 | B1-M4 | Catalog-wide M7 conflict on `automation_scripts` (id 225) | Decision needed in Bucket 2 #2 | The legacy `domain_data_objects` table has `automation_scripts` mastered by both TEST-MGMT and RMM. These are architecturally distinct concepts (CI / QA automation scripts vs RMM endpoint scripts) that collided on the data_object name. Once modularized, the catalog-wide single-master rule applies to `domain_module_data_objects` and one side has to demote, OR one side renames the data_object. User decides. |
 
 #### APQC TAGGING
@@ -76,7 +76,7 @@ VSDP itself is not yet modularized either (the `target_domain_module_id` is NULL
 | 780 | TEST-MGMT to WORK-MGMT | `test_defect.created` | `test_defects` | Eliminate quality and reliability problems | 10089 | confident L4 |
 | 802 | TEST-MGMT to GRC | `test_run.completed` | `test_runs` | Monitor and test regulatory compliance position and existing controls | 16469 | confident L4 |
 | 779 | TEST-MGMT to ITSM | `test_defect.created` | `service_incidents` (payload retargets to ITSM master) | Eliminate quality and reliability problems | 10089 | confident L4 |
-| 781 | TEST-MGMT to PROD-MGMT | `requirements_to_test_traceability.linked` | `requirements_to_test_traceability` | Evaluate performance to requirements | 17482 | confident L3 |
+| 781 | TEST-MGMT to PROD-MGMT | `requirements_to_test_traceability.related` | `requirements_to_test_traceability` | Evaluate performance to requirements | 17482 | confident L3 |
 | 752 | APIM to TEST-MGMT | `api_specification.updated` | `api_specifications` | Test against quality plan | 17483 | medium L4 |
 | 768 | IPAAS to TEST-MGMT | `integration_data_mapping.updated` | `integration_data_mappings` | Test against quality plan | 17483 | medium L4 |
 | 771 | VSDP to TEST-MGMT | `ci_pipeline_run.failed` | `ci_pipeline_runs` | Perform quality testing | 10369 | medium L3 |
@@ -118,7 +118,7 @@ Universal or near-universal vendor entities surfaced from market knowledge that 
 ### Cross-bucket dependencies
 
 - B1-M1 (module split) is the structural gate for B1-M2, B1-M3, B1-S4 (lifecycle states are anchored to modules via `domain_module_id`), B1-S5 (F1 retirement), and B2-1 (the chosen split shape determines all of the above). Resolve B1-M1 first or schedule it inside the same fix-load as B2-1.
-- B2-1 (module split shape) is the human decision that unblocks the entire downstream load. B1-S1 (capabilities) and B2-1 should be drafted together so that A2 capabilities and module-realization links are loaded in one pass.
+- B2-1 (module split shape) is the human decision that unblocks the entire downstream load. B1-S1 (capabilities) and B2-1 should be drafted together so that A2 capabilities and module-realization relationships are loaded in one pass.
 - B2-2 (`automation_scripts` canonical) is independent of the TEST-MGMT module split but blocks any embedded_master decision in B1-M3.
 - B3-3, B3-6, B3-7 are correlated: vetting TEST-AUTOMATION-PLATFORM as a separate domain re-routes B3-3 (`visual_test_baselines`) out of TEST-MGMT. Phase 0 on either of those candidates should run before B1-M1 finalizes if the user wants the TEST-MGMT module split to know whether automation-platform-shaped entities belong in TEST-MGMT or in the new domain.
 - Buckets 1 and 2 cannot proceed without M-band decisions; Bucket 3 is independent of Bucket 1's fix-loads but informs Bucket 3's own resolution path.
@@ -149,9 +149,9 @@ Subagent pass applying the truly-technical, pre-specified subset of Bucket 1. Lo
 
 ### Applied (2 of 11 B1 items)
 
-- **B1-S6 (12 PATCHes on `trigger_events.event_category`)**: backfilled all 12 TEST-MGMT-master trigger events from empty to the enum vocabulary per Rule #13. Classification follows the audit's "*.created is lifecycle; most fall into state_change" guidance and the established catalog precedent (`digital_asset.published`, `content_locale.added`, `pay_run.cancelled` are all `lifecycle`):
+- **B1-S6 (12 PATCHes on `trigger_events.event_category`)**: backfilled all 12 TEST-MGMT-master trigger events from empty to the enum vocabulary per Rule #13. Classification follows the audit's "*.created is lifecycle; most fall into state_change" guidance and the established catalog precedent (`digital_asset.published`, `content_locale.added`, `pay_run.canceled` are all `lifecycle`):
   - `lifecycle` (4): `test_case.created` (857), `test_suite.published` (859), `test_defect.created` (863), `test_environment.provisioned` (865).
-  - `state_change` (8): `test_case.updated` (858), `test_plan.approved` (860), `test_run.completed` (861), `test_run.failed` (862), `test_defect.closed` (864), `requirements_to_test_traceability.linked` (866), `automation_script.executed` (651), `automation_script.failed` (652).
+  - `state_change` (8): `test_case.updated` (858), `test_plan.approved` (860), `test_run.completed` (861), `test_run.failed` (862), `test_defect.closed` (864), `requirements_to_test_traceability.related` (866), `automation_script.executed` (651), `automation_script.failed` (652).
 - **B1-H1 (9 INSERTs into `handoff_processes`)**: APQC PCF tagging on all 9 TEST-MGMT cross-domain handoffs. Each row carries `role='implements'`, `proposal_source='agent_curated'`, `record_status` omitted (defaults `new`), `notes` omitted (empty per Rule #15). The audit's 5-digit PCF codes (10369, 10089, 16469, 17482, 17483) are reference labels, not table IDs; resolved to live `processes.id` values 170 / 579 / 1605 / 413 / 1670 by activity name. Inserted pairs (handoff_id → process_id, PCF name): 782→170 (Perform quality testing), 778→170, 780→579 (Eliminate quality and reliability problems), 802→1605 (Monitor and test regulatory compliance position and existing controls), 779→579, 781→413 (Evaluate performance to requirements), 752→1670 (Test against quality plan), 768→1670, 771→170.
 
 ### Deferred (9 of 11 B1 items)
@@ -204,14 +204,14 @@ Counts:
 | A4, catalog UX | FAIL | `catalog_tagline=''`, `catalog_description=''`. |
 | M1, modules | FAIL | Zero `domain_modules` on this domain; zero `domain_module_host_domains` rows targeting it. Structural gate. |
 | M2 to M8 | BLOCKED | All gated on M1. |
-| M7, cross-domain master collision | FAIL | `automation_scripts` (id 225) carries `role='master'` in BOTH RMM (130) and TEST-MGMT (8) via the legacy `domain_data_objects` table. Once both sides modularize, the catalog-wide single-master rule applies. |
+| M7, cross-domain master collision | FAIL | `automation_scripts` (id 225) carries `held_as='master'` in BOTH RMM (130) and TEST-MGMT (8) via the legacy `domain_data_objects` table. Once both sides modularize, the catalog-wide single-master rule applies. |
 | B1, masters present | PASS | 8 masters: test_cases (572), test_suites (573), test_plans (574), test_runs (575), test_defects (576), test_environments (577), requirements_to_test_traceability (578), automation_scripts (225). |
 | B2, labels | PASS | `singular_label` and `plural_label` populated on all 8. |
 | B3, naming arbitration | PASS | All 8 use prefixed or compound names; `is_canonical_bare_word=false` on all 8 is consistent with no canonical claim. |
 | B4, pattern flags | FAIL | All 8 masters at default `false` across the 3 pattern flags with no positive consideration record. |
 | B5, embedded_master integrity | n/a | Zero `embedded_master` rows from this domain (no modules to embed onto). |
-| B6, intra-domain relationships | PASS | 8 intra-domain edges (rows 385 to 392) cover plans / suites / cases / runs / defects / automation_scripts / environments / traceability. |
-| B7, users edges | PASS | 8 user-edge rows from `users` (748): rows 393 to 400 cover plans, cases, runs, defects, automation_scripts, suites, environments, traceability with explicit role verbs. |
+| B6, intra-domain relationships | PASS | 8 intra-domain relationships (rows 385 to 392) cover plans / suites / cases / runs / defects / automation_scripts / environments / traceability. |
+| B7, relationships to `users` | PASS | 8 `users` relationship rows from `users` (748): rows 393 to 400 cover plans, cases, runs, defects, automation_scripts, suites, environments, traceability with explicit role verbs. |
 | B9, outbound events + handoffs | PASS | 12 `trigger_events` cover the published transitions; 6 outbound handoffs cover the 4 active outbound publishers. |
 | B9b, intra-domain cross-module handoffs | n/a | Pre-check: zero modules. B9b vacuous; routes to M1. |
 | B10b, per-module FK on handoffs | FAIL | All 6 outbound rows carry `source_domain_module_id IS NULL`; 3 outbound rows already have `target_domain_module_id` set (780 to 149, 779 to 38, 781 to 131); 3 outbound NULL on target (782 / 778 to VSDP, 802 to GRC). All 3 inbound rows carry both module FKs NULL (752 / 768 / 771; source FK owed by APIM / IPAAS / VSDP, target FK by TEST-MGMT M1). |
@@ -220,14 +220,14 @@ Counts:
 | C1, owner function | PASS | 1 owner row (Quality Engineering, id 62). |
 | C2, capability overrides | n/a | A2 fails first; no capabilities to evaluate. |
 | D1, UI spot-check | not run | Audit is read-only; spot-check is an explicit user-triggered step. |
-| E1 to E5 | BLOCKED | All gated on M1 (zero modules ⇒ no `role_modules` surface; 2-module floor unreachable). |
+| E1 to E5 | BLOCKED | All gated on M1 (zero modules ⇒ no `persona_modules` surface; 2-module floor unreachable). |
 | F1, legacy domain skill | TRANSITIONAL PASS | skill 113 is the only system skill; flips to retire-and-replace once M1 lands. |
 | F2 to F5 | BLOCKED | All gated on M1 (no modules ⇒ no module-level skills to score). |
 | H1, APQC tagging | PASS | All 9 cross-domain handoffs carry agent_curated `handoff_processes` rows at `record_status='new'`. Catalog-quality (approved count) is 0 across all 9, expected for a fresh load awaiting user sign-off; provenance (agent_curated count) is 9 (plus 1 extra row on handoff 771 mapping to process 1939). |
 
 ### Pass 3 and Pass 4
 
-Not re-run in this structural-only Validate b1 audit. The 2026-05-30 neighbor map (VSDP edge weight 3, then WORK-MGMT / ITSM / GRC / PROD-MGMT / APIM / IPAAS / RMM at weight 1) is unchanged because the B1-S6 / B1-H1 fixes added no new cross-domain edges. Pairwise reconciliation with VSDP also unchanged: VSDP itself is still unmodularized, so all 3 VSDP-touching handoffs (782 / 778 / 771) remain with `target_domain_module_id IS NULL` pending VSDP's own M-band.
+Not re-run in this structural-only Validate b1 audit. The 2026-05-30 neighbor map (VSDP relationship weight 3, then WORK-MGMT / ITSM / GRC / PROD-MGMT / APIM / IPAAS / RMM at weight 1) is unchanged because the B1-S6 / B1-H1 fixes added no new cross-domain relationships. Pairwise reconciliation with VSDP also unchanged: VSDP itself is still unmodularized, so all 3 VSDP-touching handoffs (782 / 778 / 771) remain with `target_domain_module_id IS NULL` pending VSDP's own M-band.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -247,7 +247,7 @@ Not re-run in this structural-only Validate b1 audit. The 2026-05-30 neighbor ma
 |---|---|---|---|
 | B1-M1 | `domain_modules` rows | Multiple (see Bucket 2 #1 for the split) | Structural gate. Resolve before B / E / F fixes load. |
 | B1-M2 | `source_domain_module_id` backfill on 6 outbound + `target_domain_module_id` on 3 inbound + 3 outbound; B10b | n/a, derives from M1 | All 6 outbound rows carry `source_domain_module_id IS NULL`; 3 inbound + 3 outbound rows carry `target_domain_module_id IS NULL`. Patch via the reference backfill loader after both sides modularize. Sub-cases: WORK-MGMT (149), ITSM (38), PROD-MGMT (131) already have `target_domain_module_id` set on the rows they receive; VSDP and GRC do not. |
-| B1-M3 | Legacy `domain_data_objects` to `domain_module_data_objects` migration on 8 rows | Per the chosen split | TEST-MGMT pre-dates the modularization layer; the 8 `role='master'` legacy rows need re-issuing on the right module, then the rollup becomes derived. |
+| B1-M3 | Legacy `domain_data_objects` to `domain_module_data_objects` migration on 8 rows | Per the chosen split | TEST-MGMT pre-dates the modularization layer; the 8 `held_as='master'` legacy rows need re-issuing on the right module, then the rollup becomes derived. |
 | B1-M4 | Catalog-wide M7 conflict on `automation_scripts` (id 225) | Decision in Bucket 2 #2 | Legacy `domain_data_objects` shows `automation_scripts` mastered by BOTH RMM (130) and TEST-MGMT (8). Architecturally distinct (CI / QA automation vs endpoint scripts). Once modularized, single-master rule applies; one side renames or demotes. |
 
 #### APQC TAGGING
@@ -280,7 +280,7 @@ All 7 candidates carried unchanged from the 2026-05-30 audit:
 ### Cross-bucket dependencies
 
 - B1-M1 is the structural gate for B1-M2, B1-M3, B1-S4 (lifecycle state `domain_module_id` anchoring), B1-S5 (F1 retirement), and B2-1 (the chosen split shape determines all of the above).
-- B2-1 unblocks the entire downstream load; B1-S1 (capabilities) should be drafted in the same pass so A2 capabilities and module-realization links land together.
+- B2-1 unblocks the entire downstream load; B1-S1 (capabilities) should be drafted in the same pass so A2 capabilities and module-realization relationships land together.
 - B2-2 is independent of TEST-MGMT module split but blocks any embedded_master decision in B1-M3.
 - B3-3, B3-6, B3-7 are correlated; vetting TEST-AUTOMATION-PLATFORM as a separate domain re-routes B3-3 out of TEST-MGMT.
 - Buckets 1 and 2 cannot proceed without M-band decisions; Bucket 3 is independent of Bucket 1's fix-loads.

@@ -10,7 +10,7 @@ last_audit: "2026-06-14"
 # 5 capabilities, 2 full modules (BROADCAST-ENGAGEMENT 366, TASK-EXECUTION 367), 5 vendors + 5
 # solutions, 10 masters, 13 DMDO, 14 lifecycle states, 6 trigger_events, 4 outbound handoffs,
 # 1 handoff_processes tag, 4 business_function_domains, 1 system skill, 16 tools + 20
-# domain_module_tools, 3 personas + 6 role_modules + 3 process_raci. Notes verified clean
+# domain_module_tools, 3 personas + 6 persona_modules + 3 process_raci. Notes verified clean
 # (Rule #15). The build is done; the two b2 below are confirmations the user must sign off on
 # (the promote-vs-fold market-shape call and the destructive WorkJam re-shelving). b3 is a
 # non-blocking research idea.
@@ -39,12 +39,12 @@ b2:
       collapsing it.
   - id: B2-S2
     summary: "Approve re-shelving WorkJam (solution 256) onto FRONTLINE-COMMS as primary coverage."
-    question: "Should the existing WorkJam solution row (256), currently linked primary to WFM and RET-STORE, gain a primary solution_domains edge to FRONTLINE-COMMS (keeping its existing WFM / RET-STORE edges)?"
+    question: "Should the existing WorkJam solution row (256), currently related primary to WFM and RET-STORE, gain a primary solution_domains relationship to FRONTLINE-COMMS (keeping its existing WFM / RET-STORE relationships)?"
     options:
-      - "(a) Add a primary FRONTLINE-COMMS edge, keep existing WFM / RET-STORE edges"
-      - "(b) Add a primary FRONTLINE-COMMS edge and downgrade WFM / RET-STORE edges to secondary"
+      - "(a) Add a primary FRONTLINE-COMMS relationship, keep existing WFM / RET-STORE relationships"
+      - "(b) Add a primary FRONTLINE-COMMS relationship and downgrade WFM / RET-STORE relationships to secondary"
       - "(c) Leave WorkJam where it is"
-    why: "WorkJam's flagship is the frontline digital workplace; its primary market is FRONTLINE-COMMS. Adding the edge is additive (no overwrite); option (b) re-points existing edges and is the only destructive variant."
+    why: "WorkJam's flagship is the frontline digital workplace; its primary market is FRONTLINE-COMMS. Adding the relationship is additive (no overwrite); option (b) re-points existing relationships and is the only destructive variant."
     evidence: >-
       WorkJam (vendor 165, solution 256, catalog description "Frontline digital workplace,
       communications, and WFM") is THE category leader of FRONTLINE-COMMS (~$167M raised, retail /

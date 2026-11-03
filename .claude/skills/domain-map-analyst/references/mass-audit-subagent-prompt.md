@@ -182,7 +182,9 @@ bun run "C:/dev/domain-map/scripts/analytics/append_missing_domain.ts" \
 
 The helper is idempotent: re-running with the same `--code` bumps the
 mention counter and appends to the surfacing history. Run it for every
-candidate, even if you suspect it might be a duplicate.
+candidate, even if you suspect it might be a duplicate. It refuses a `--code`
+already held by a differently named candidate: repeat the existing name if it
+is the same market, otherwise pick a different code.
 
 Do NOT list candidates in your audit's Bucket 3 as a substitute for
 running the helper. The queue file is the canonical record; Bucket 3
@@ -190,20 +192,20 @@ is for entity / capability / regulation gaps within the current domain.
 
 ### Pass 3 — Neighbor discovery
 
-Determine which other domains this domain has cross-edges with:
+Determine which other domains this domain has cross-domain relationships with:
 
 - `/handoffs?source_domain_id=eq.<id>&target_domain_id=neq.<id>&select=target_domain_id`
 - `/handoffs?target_domain_id=eq.<id>&source_domain_id=neq.<id>&select=source_domain_id`
-- DMDO cross-references: `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=data_object_id,role&role=in.(consumer,contributor,embedded_master)`
+- DMDO cross-references: `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=data_object_id,held_as&held_as=in.(consumer,contributor,embedded_master)`
   then for each `data_object_id`, find the canonical owner:
-  `/domain_module_data_objects?data_object_id=in.(<deps>)&role=eq.master&select=domain_module:domain_modules(domain_id,domains(domain_code))`
+  `/domain_module_data_objects?data_object_id=in.(<deps>)&held_as=eq.master&select=domain_module:domain_modules(domain_id,domains(domain_code))`
 
-Rank by edge weight. Surface as a table in the audit's "Pass 3 — Neighbor
+Rank by relationship weight. Surface as a table in the audit's "Pass 3 — Neighbor
 discovery" subsection.
 
-### Pass 4 — Pairwise reconciliation per neighbor (edge weight >= 3)
+### Pass 4 — Pairwise reconciliation per neighbor (relationship weight >= 3)
 
-For each neighbor at edge weight >= 3, run the 5-section diff from
+For each neighbor at relationship weight >= 3, run the 5-section diff from
 SKILL.md § "Pairwise handoff reconciliation":
 
 1. Existing handoffs, fully wired

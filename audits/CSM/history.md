@@ -4,8 +4,8 @@
 
 ### Summary
 
-- Current footprint: 3 full modules (CSM-CASE-MGMT id 112, CSM-ENTITLEMENTS id 113, CSM-KNOWLEDGE id 114); 3 catalog masters (customer_cases, customer_entitlements, csat_responses); 14 DMDO rows total; 3 capabilities (all cross-cutting: AI-TRIAGE-CLASSIFICATION, SLA-MGMT, KNOWLEDGE-MGMT); 6 solutions (4 primary + 1 secondary + 1 partial); 3 regulations (DSA, TCPA, ADA); 6 trigger events on CSM masters; 10 outbound + 53 inbound cross-domain handoffs (63 total); 0 intra-domain handoffs; 4 roles (3 Customer-Service-scoped + 1 cross-functional Customer-Success); 3 system skills + 25 skill_tools links.
-- Vendor-surface basis: Zendesk, Salesforce Service Cloud, ServiceNow CSM, Freshdesk, Intercom (5 pure-plays / suite-aligned leaders). All currently linked in `solution_domains`.
+- Current footprint: 3 full modules (CSM-CASE-MGMT id 112, CSM-ENTITLEMENTS id 113, CSM-KNOWLEDGE id 114); 3 catalog masters (customer_cases, customer_entitlements, csat_responses); 14 DMDO rows total; 3 capabilities (all cross-cutting: AI-TRIAGE-CLASSIFICATION, SLA-MGMT, KNOWLEDGE-MGMT); 6 solutions (4 primary + 1 secondary + 1 partial); 3 regulations (DSA, TCPA, ADA); 6 trigger events on CSM masters; 10 outbound + 53 inbound cross-domain handoffs (63 total); 0 intra-domain handoffs; 4 roles (3 Customer-Service-scoped + 1 cross-functional Customer-Success); 3 system skills + 25 skill_tools relationships.
+- Vendor-surface basis: Zendesk, Salesforce Service Cloud, ServiceNow CSM, Freshdesk, Intercom (5 pure-plays / suite-aligned leaders). All currently related in `solution_domains`.
 - **Bucket 1 (in-scope, agent fixable):** 9 items.
 - **Bucket 2 (surface-for-user, judgment):** 7 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 11 items.
@@ -20,7 +20,7 @@ Pure-play and suite-aligned leaders chosen to cover the full case-management lif
 
 Auto-derived from `handoffs` rows on either side (source or target = CSM) and cross-domain DMDOs.
 
-| Neighbor | Outbound | Inbound | Edge weight | Pairwise depth |
+| Neighbor | Outbound | Inbound | Relationship weight | Pairwise depth |
 |---|---:|---:|---:|---|
 | SUB-MGMT | 5 | 7 | 12 | full 5-section diff |
 | CRM | 4 | 2 | 6 | full 5-section diff |
@@ -64,7 +64,7 @@ CSM's cross-domain handoff set is large (63 total: 10 outbound + 53 inbound). Ex
 
 #### Boundary findings per neighbor (pairwise reconciliation)
 
-##### SUB-MGMT (edge weight 12, full 5-section diff)
+##### SUB-MGMT (relationship weight 12, full 5-section diff)
 
 CSM masters: customer_cases (103), customer_entitlements (104), csat_responses (105). SUB-MGMT masters customer_subscriptions (106), customer_invoices (107), usage_records (108), dunning_events (110). CSM consumes customer_subscriptions (required, both CSM-CASE-MGMT and CSM-ENTITLEMENTS); SUB-MGMT consumes customer_entitlements via handoff payload on row 489.
 
@@ -78,7 +78,7 @@ CSM masters: customer_cases (103), customer_entitlements (104), csat_responses (
 
 Verdict: 1 ambiguous B10b case (customers-payload outbound) needs user pick; 2 missing-handoff candidates; 1 missing-relationship candidate.
 
-##### CRM (edge weight 6, full 5-section diff)
+##### CRM (relationship weight 6, full 5-section diff)
 
 CRM masters customers (97), crm_opportunities (100), customer_attributes (114). CSM consumes customers in 2 modules; CRM is also a target for CSM-published events (4 outbound rows targeting CRM).
 
@@ -115,11 +115,11 @@ Verdict: 1 B5 boundary gap (handoff 470), 1 missing-handoff candidate, plus the 
 
 4. **APQC tagging scope.** Bucket 1 H1 lists 28 candidate `agent_curated` rows (SUB-MGMT + CRM + outbound) as the recommended default. Options: (a) tag those 28 rows now, (b) tag the full 48-row gap (every untagged cross-domain handoff touching CSM), (c) defer to Discover. The default fit's the per-audit volume target (0.5N to 0.8N of N=63).
 
-5. **CSM-KNOWLEDGE module has no master.** CSM-KNOWLEDGE (114) holds knowledge_articles as `contributor + required` and customer_cases as `consumer + optional`. No DMDO with `role=master`. Per Rule #14 the module-without-master is allowed only for leadership-tier domains; CSM is not leadership-tier. Options: (a) accept as-is and document the rationale (CSM-KNOWLEDGE is editorial / authoring view onto ITSM-mastered knowledge_articles, a thin module by design), (b) demote CSM-KNOWLEDGE to `module_kind='starter'` so it's not counted toward the M-band floor (lossy: capability KNOWLEDGE-MGMT would lose its sole realizing module), (c) introduce a CSM-specific master like `customer_knowledge_articles` (audience-filtered editions of ITSM articles) and re-anchor the module. Note: M-band passes today on a structural read, but the semantic shape is unusual.
+5. **CSM-KNOWLEDGE module has no master.** CSM-KNOWLEDGE (114) holds knowledge_articles as `contributor + required` and customer_cases as `consumer + optional`. No DMDO with `held_as=master`. Per Rule #14 the module-without-master is allowed only for leadership-tier domains; CSM is not leadership-tier. Options: (a) accept as-is and document the rationale (CSM-KNOWLEDGE is editorial / authoring view onto ITSM-mastered knowledge_articles, a thin module by design), (b) demote CSM-KNOWLEDGE to `module_kind='starter'` so it's not counted toward the M-band floor (lossy: capability KNOWLEDGE-MGMT would lose its sole realizing module), (c) introduce a CSM-specific master like `customer_knowledge_articles` (audience-filtered editions of ITSM articles) and re-anchor the module. Note: M-band passes today on a structural read, but the semantic shape is unusual.
 
 6. **Pattern flag re-evaluation outcomes (B4).** Working set: customer_entitlements (104), csat_responses (105), customer_events (111). Likely answers: (a) 104 has `has_single_approver=true` for activation/upgrade (specific support ops persona signs off) — flip to true; (b) 105 has `has_submit_lock=true` (responses are immutable once captured) — flip to true; (c) 111 has all three `false` — accept as-is. User to confirm before B1-S2 PATCH lands.
 
-7. **Pairwise reconciliation scheduling.** Five neighbors at edge weight ≥3 (SUB-MGMT, CRM, PROD-MGMT, SMM, OMS, FSM, INS-CLAIMS) were summarized inline (the heaviest two with the full 5-section diff). Options: (a) accept the inline summary, (b) schedule full reconciliation passes on SUB-MGMT and CRM as separate Validate runs with corresponding audit-section appends on those domains' files.
+7. **Pairwise reconciliation scheduling.** Five neighbors at relationship weight ≥3 (SUB-MGMT, CRM, PROD-MGMT, SMM, OMS, FSM, INS-CLAIMS) were summarized inline (the heaviest two with the full 5-section diff). Options: (a) accept the inline summary, (b) schedule full reconciliation passes on SUB-MGMT and CRM as separate Validate runs with corresponding audit-section appends on those domains' files.
 
 ### Bucket 3 — Phase 0 pending (speculative; vendor-research vetting needed)
 
@@ -141,7 +141,7 @@ Verdict: 1 B5 boundary gap (handoff 470), 1 missing-handoff candidate, plus the 
 
 - **Bucket 2 #1 (customers source-module ambiguity)** depends on Bucket 3 #11 (omnichannel_sessions). Choosing option (c) on Bucket 2 #1 (introduce `customer_health_signals` as a CSM master) would change the source-module derivation for the affected rows; this overlaps modeling territory with omnichannel_sessions consumer. Resolve Bucket 3 #11 first if going down that path.
 - **Bucket 2 #2 (B5 integrity)** is partially resolved if Bucket 3 #11 lands (CSM consumer DMDO on support_sessions closes handoff 226). Bucket 3 #11 should be resolved before Bucket 2 #2 final disposition.
-- **Bucket 2 #3 (capability shape)** is independent of Bucket 3 but affects M6's coverage breadth: adding `OMNICHANNEL-ENGAGEMENT` as a cross-cutting capability would surface CCAAS-CSM-CRM linkage at the capability layer.
+- **Bucket 2 #3 (capability shape)** is independent of Bucket 3 but affects M6's coverage breadth: adding `OMNICHANNEL-ENGAGEMENT` as a cross-cutting capability would surface CCAAS-CSM-CRM relationship at the capability layer.
 - **Bucket 2 #5 (CSM-KNOWLEDGE master)** depends on Bucket 3 #1, #6, #8 (case_comments, macros, support_queues could re-anchor CSM-CASE-MGMT and indirectly free CSM-KNOWLEDGE to demote without losing capability coverage).
 - **Bucket 2 #4 (APQC scope)** is independent of Bucket 3; orthogonal to entity work.
 - Bucket 1 items are independent of Buckets 2 and 3 except B1-B1 (trigger_event 94 fix), which the Bucket 2 #1 decision may inform if the user picks option (c).
@@ -247,8 +247,8 @@ The B10b deterministic rule leaves a NULL whenever the candidate set is empty or
 | B3 | pass | All 3 catalog masters are prefixed (no bare-word arbitration owed). |
 | B4 | OPEN | Pattern-flag re-evaluation owed on customer_entitlements (104), csat_responses (105), customer_events (111). Reasoning carried forward in Bucket 2 #6; no flips applied. |
 | B5 | pass | Embedded_master rows (org_units id 34 on module 112) point at canonical owners. |
-| B6 | pass | 2 intra-domain edges (customer_cases generates csat_responses; customer_entitlements consumed_by customer_cases). |
-| B7 | pass | users-edges (data_object 748) cover customer_cases assignee and creator, customer_entitlements owner, csat_responses submitter. |
+| B6 | pass | 2 intra-domain relationships (customer_cases generates csat_responses; customer_entitlements consumed_by customer_cases). |
+| B7 | pass | relationships to `users` (data_object 748) cover customer_cases assignee and creator, customer_entitlements owner, csat_responses submitter. |
 | B8 | pass | Outbound cross-domain relationships present (customer_cases emits customer_events, customer_cases references knowledge_articles; broader cross-domain coverage already documented in prior audit). |
 | B9 | OPEN | trigger_event 94 (payment.failed bound to customer_cases) still mis-attributed; carry-over B1-B1 with Bucket 2 #1 dependency. Other CSM-master events (487 to 491) correctly keyed. |
 | B9b | n/a | No intra-domain handoffs expected (0 found); domain has 3 modules but no cross-module event chain implied by relationships or lifecycle states. |
@@ -259,7 +259,7 @@ The B10b deterministic rule leaves a NULL whenever the candidate set is empty or
 | D1 | n/a | No new writes this pass. |
 | E1 | pass | 4 roles touching CSM modules (Customer Service Agent 10058, Supervisor 10059, Admin 10060, Customer Success Manager 10061). |
 | E2 | pass | Every role spans >=2 modules. |
-| E3 | pass | interaction_level set on every role_modules row. |
+| E3 | pass | interaction_level set on every persona_modules row. |
 | E4 | pass | role_permissions populated (5 / 3 / 3 / 2 rows per role). |
 | E5 | pass | Path A vs Path B reachable domain sets agree. |
 | F1 | pass | No legacy domain-only system skills on CSM. |
@@ -267,7 +267,7 @@ The B10b deterministic rule leaves a NULL whenever the candidate set is empty or
 | F3 | pass | skill_tools counts 14 / 6 / 5; floors met. |
 | F4 | pass | Zero operation_kind vs data_object_id pairing violations across 25 rows. |
 | F5 | pass | Strict score 23/25 = 92% (gap: 2 external compute tools classify_text, detect_sentiment on csm_case_mgmt_agent). |
-| F7 | pass | Zero channel primitives (send_email, send_sms, etc.) linked; abstraction tools used throughout. |
+| F7 | pass | Zero channel primitives (send_email, send_sms, etc.) related; abstraction tools used throughout. |
 | H1 | partial | 33 of 63 cross-domain handoffs carry handoff_processes rows (52%), up from 24% at prior audit (likely from interim Discover or earlier tag passes). 25 are agent_curated, 6 discovery_override, 2 discovery_substring. 0 approved. 30 untagged. Volume target 0.5N to 0.8N (32 to 50) just met on the low end but coverage still below 100%. Carry-over B1-H1. |
 
 ### Bucket 1, in-scope confirmed gaps
@@ -477,7 +477,7 @@ Ran `b9d_resolver CSM`. Classification (60 boundary tags -> 38 (process,owner) f
   on handoff 72 (SUB-MGMT->CSM payment.failed). This is the SAME defect as B1B-B1 (mis-attributed
   trigger_event 94). CSM does not distribute payments; the fix is a re-key + re-label as a
   case-opening process, not an owner assignment. Recorded as B2-B9D-OWN-1422 (b2) and surfaced
-  as q-CSM.md q12, cross-linked to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
+  as q-CSM.md q12, cross-related to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
 - **CSM-source RE-TAGs (4, destructive):** coarse->specific re-points on handoff_processes rows
   CSM authored (233, 224/209/234/488/486, 70/470). Awaiting sign-off (B1A-B9D-RETAG).
 - **Neighbor-authored source edits:** RE-TAG 65/487 -> SUB-MGMT; MIS-TAG 1003 -> PROD-MGMT.

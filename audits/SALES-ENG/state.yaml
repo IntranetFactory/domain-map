@@ -113,7 +113,7 @@ b1b:
   - id: B1B-B-INTRA-RELS
     summary: "Insert 3 intra-domain `data_object_relationships` among SE masters."
     finding: >-
-      Zero relationship rows among the 4 SE masters (121, 122, 123, 124). Required edges per
+      Zero relationship rows among the 4 SE masters (121, 122, 123, 124). Required relationships per
       cadence-shaped vendor surface: `sales_cadences` produces_cadence_emails `sales_emails`
       (one_to_many), `sales_cadences` produces_cadence_calls `call_recordings` (one_to_many),
       `call_recordings` produces_conversation_insights `conversation_intelligence_records`
@@ -123,7 +123,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: "B1 scope approval"}
     affected_entities: [sales_cadences, sales_emails, call_recordings, conversation_intelligence_records]
-    extra_proposed_edges:
+    extra_proposed_relationships:
       - {source: sales_cadences, verb: produces_cadence_emails, target: sales_emails, cardinality: one_to_many}
       - {source: sales_cadences, verb: produces_cadence_calls, target: call_recordings, cardinality: one_to_many}
       - {source: call_recordings, verb: produces_conversation_insights, target: conversation_intelligence_records, cardinality: one_to_many}
@@ -149,7 +149,7 @@ b1b:
       Zero alias rows on any of the 4 masters. None is self-explanatory across vendor taxonomies
       (Outreach uses Sequence, Salesloft uses Cadence, Apollo uses Sequence, Gong uses Call
       Insight, Clari uses Deal Signal, etc.).
-    action: Insert ~10 alias rows. Sales_cadences gets Sequence, Flow, Touchpoint Series; call_recordings gets Dialler Call, Voice Touch; sales_emails gets Cadence Email, Tracked Email, Sequence Email; conversation_intelligence_records gets Call Insight, Deal Signal, Conversation Snapshot.
+    action: Insert ~10 alias rows. Sales_cadences gets Sequence, Flow, Touchpoint Series; call_recordings gets Dialer Call, Voice Touch; sales_emails gets Cadence Email, Tracked Email, Sequence Email; conversation_intelligence_records gets Call Insight, Deal Signal, Conversation Snapshot.
     blocked_by:
       - {type: user_decision, ref: "B1 scope approval"}
     affected_entities: [sales_cadences, call_recordings, sales_emails, conversation_intelligence_records]
@@ -220,10 +220,10 @@ b2:
     why: "B9 requires events to publish on the master they describe. The structural fix changes which domain owns these handoffs."
 
   - id: B2-CHANNEL-NOTES
-    summary: "`skill_tools.notes` wording for `send_email` channel-link justification."
+    summary: "`skill_tools.notes` wording for `send_email` channel-relationship justification."
     question: "Supply the exact text for `skill_tools.notes` on the `send_email` row (Rule #15: agent cannot draft `notes` wording)."
     options: [supply_exact_text, skip_the_notes]
-    why: "F7 asks for workflow-specific justification when a channel primitive is linked instead of `notify_person`. The cadence-step send IS the workflow, so the link stays; the audit-trail surface is the only outstanding piece. Rule #15 requires user-supplied wording."
+    why: "F7 asks for workflow-specific justification when a channel primitive is related instead of `notify_person`. The cadence-step send IS the workflow, so the relationship stays; the audit-trail surface is the only outstanding piece. Rule #15 requires user-supplied wording."
 
   - id: B2-APQC-L3-PROMOTION
     summary: "Promote handoff 206 PCF tag from L4 to L3 parent."
@@ -274,7 +274,7 @@ b3:
 
   - id: B3-DIALER-INFRA
     candidate: dialer_phone_numbers and dialer_sessions
-    rationale: "Voice dialler features need per-rep phone number pools (often per-region) and per-session state (live, paused, recording). None loaded. Dialling lives in the cadence/outreach module (296, capability SE-AUTO-DIALER)."
+    rationale: "Voice dialer features need per-rep phone number pools (often per-region) and per-session state (live, paused, recording). None loaded. Dialing lives in the cadence/outreach module (296, capability SE-AUTO-DIALER)."
     vendor_evidence: ["Outreach Voice", "Apollo Dialer", "Salesloft Dialer"]
     proposed_module: SALES-ENG-CADENCE-OUTREACH
 
@@ -298,6 +298,6 @@ b3:
 
   - id: B3-TCPA-CONSENT
     candidate: TCPA / CAN-SPAM / GDPR consent compliance entities
-    rationale: "Sales engagement that includes dialler must comply with TCPA (US), GDPR (EU), CASL (Canada). Currently zero `domain_regulations` rows on SALES-ENG; none of TCPA, CAN-SPAM, CASL are linked even though the workflow has clear regulatory exposure."
+    rationale: "Sales engagement that includes dialer must comply with TCPA (US), GDPR (EU), CASL (Canada). Currently zero `domain_regulations` rows on SALES-ENG; none of TCPA, CAN-SPAM, CASL are related even though the workflow has clear regulatory exposure."
     vendor_evidence: []
     proposed_module: cross_module_compliance_layer

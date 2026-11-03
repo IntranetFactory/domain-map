@@ -44,11 +44,11 @@ HC-PATIENT (45). No standalone EHS / occupational-health-and-safety domain exist
   contractor_safety_records); universal workflow masters ship master+required (safety_incidents,
   hazards, ehs_risk_assessments, corrective_actions, chemical_inventory, ehs_inspections, ehs_audits,
   ehs_training_records). M7 single-master integrity verified.
-- 25 `data_object_relationships`: intra-domain edges (incidents->corrective_actions,
+- 25 `data_object_relationships`: intra-domain relationships (incidents->corrective_actions,
   hazards<->risk_assessments, inspections/audits->corrective_actions, chemicals->SDS, IH
-  samples->chemicals, incidents->OSHA logs/reports, etc.) + 10 `users` edges (Rule #10: reporter,
+  samples->chemicals, incidents->OSHA logs/reports, etc.) + 10 relationships to `users` (Rule #10: reporter,
   investigator, action owner, inspector, auditor, approver, IH collector, trainee, contractor contact)
-  + 2 cross-domain edges (safety_incidents feeds esg_metrics, environmental_permits governs
+  + 2 cross-domain relationships (safety_incidents feeds esg_metrics, environmental_permits governs
   emissions_records).
 - 16 `data_object_aliases` (industry/vendor synonyms: JHA/JSA, CAPA, material safety data sheets,
   hazardous substance register, etc.).
@@ -81,9 +81,9 @@ HC-PATIENT (45). No standalone EHS / occupational-health-and-safety domain exist
 
 ### Phase E - Personas, reach, RACI
 
-- 4 `domain_roles`: EHS Safety Manager (86), Industrial Hygienist (87), Environmental Compliance
+- 4 `personas`: EHS Safety Manager (86), Industrial Hygienist (87), Environmental Compliance
   Manager (88), all under Facilities and Real Estate; EHS Site Manager (89) cross-functional
-  (business_function_id NULL). 11 `role_modules`, every persona >= 2 modules (E2 floor met).
+  (business_function_id NULL). 11 `persona_modules`, every persona >= 2 modules (E2 floor met).
 - 5 gated lifecycle states wired to real cross-industry PCF nodes via
   `data_object_lifecycle_states.process_id` (13.9.2.4 / 6.4.2 / 13.9.3 / 13.9.1 / 13.9.1.2). 11
   `process_raci` rows; each gated process has >= 1 Responsible + 1 Accountable persona (E4), plus a
@@ -110,7 +110,7 @@ HC-PATIENT (45). No standalone EHS / occupational-health-and-safety domain exist
 
 Three market-shape `b2` forks carried to the user (none gated the build; all surfaced with
 named-vendor evidence per Rule #22): confirm the 4-module split (B2-S1), confirm owner function =
-Facilities vs Operations/Manufacturing (B2-S2), confirm the EHS -> ESG upstream disclosure edge
+Facilities vs Operations/Manufacturing (B2-S2), confirm the EHS -> ESG upstream disclosure relationship
 (B2-S3, emissions-feed boundary overlaps REAL-EST). Three `b3` additive ideas (permit-to-work as a
 first-class entity; MOC + SIF-precursor records for process industries; shared-master review for
 sites/contractors/chemicals). Candidate-code note recorded (queued EHS-MGMT, built EHS).

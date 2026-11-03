@@ -54,12 +54,12 @@ Start with `implements` (the obvious case: handoff IS the activity). When discov
 
 ## 4. PCF-anchored discovery mechanism
 
-Today's Phase D bucketing rule (trigger-event prefix) systematically conflates distinct processes that share a noun prefix (e.g. `employee.*` lumps Joiner, Leaver, Mover together) and never connects handoffs across different prefixes that implement the same process (e.g. PCF 6.1.4 "Manage employee onboarding" spans `employee.created`, `onboarding_journey.started`, `i9_form.completed`, `equipment_request.fulfilled`, `payroll.first_check_scheduled`: five prefixes today, one process). The junction gives discovery a second clustering axis grounded in an external taxonomy.
+Today's Phase D bucketing rule (trigger-event prefix) systematically conflates distinct processes that share a noun prefix (e.g. `employee.*` lumps Joiner, Leaver, Mover together) and never relates handoffs across different prefixes that implement the same process (e.g. PCF 6.1.4 "Manage employee onboarding" spans `employee.created`, `onboarding_journey.started`, `i9_form.completed`, `equipment_request.fulfilled`, `payroll.first_check_scheduled`: five prefixes today, one process). The junction gives discovery a second clustering axis grounded in an external taxonomy.
 
 **Three uses:**
 
 1. **Sub-cluster within trigger-event prefix buckets** by PCF activity. Tagged rows sharpen the cluster; untagged rows fall back to today's prefix grouping.
-2. **Connect handoffs across different trigger-event prefixes** that share a PCF activity. Surfaces process candidates that today's discovery structurally cannot find.
+2. **Relate handoffs across different trigger-event prefixes** that share a PCF activity. Surfaces process candidates that today's discovery structurally cannot find.
 3. **Localize friction within coarse buckets** by computing `friction_score` per PCF activity instead of per prefix.
 
 ---
@@ -106,7 +106,7 @@ No inverse migration script. Recovery from any mishap is via DB backup, taken in
 
 - **Buyer-facing PCF navigation surfaces** ("show me every handoff that implements PCF X.Y.Z" as a public fact sheet or SEO landing page). The junction supports this query shape, but rendering it as a buyer-facing surface is a separate plan once junction population is mature and quality is known.
 - **Adding `role` enum values beyond `implements`.** Defer until discovery proposes rows that demand a second value.
-- **`domain_module_processes` junction** ([plan-modules.md](plan-modules.md) §10 line 478). Independent of this junction; module-to-process linkage is a different query shape.
+- **`domain_module_processes` junction** ([plan-modules.md](plan-modules.md) §10 line 478). Independent of this junction; module-to-process relationship is a different query shape.
 
 ---
 

@@ -22,8 +22,8 @@ The point-solution-market test passes with 5 independent pure-plays, and the uni
 | INTRANET-GOV | (gov) | Intranet Governance | Accountability layer over intranet content. | 70 | $$ | No overlap. |
 
 Existing solutions already in catalog touching this space:
-- WorkJam (solution id 256) -> linked to WFM (59) + RET-STORE (48). Described "Frontline digital workplace, communications, and WFM." It is mis-shelved: its flagship IS frontline comms/ops, so it belongs on FRONTLINE-COMMS (add solution_domains edge, keep existing edges).
-- Staffbase (451), Simpplr (452), Firstup (453) -> linked to INTRANET (126). These are intranet/comms-led; Staffbase reaches frontline as a feature but is an INTRANET vendor, correctly shelved there. Do not move.
+- WorkJam (solution id 256) -> related to WFM (59) + RET-STORE (48). Described "Frontline digital workplace, communications, and WFM." It is mis-shelved: its flagship IS frontline comms/ops, so it belongs on FRONTLINE-COMMS (add solution_domains relationship, keep existing relationships).
+- Staffbase (451), Simpplr (452), Firstup (453) -> related to INTRANET (126). These are intranet/comms-led; Staffbase reaches frontline as a feature but is an INTRANET vendor, correctly shelved there. Do not move.
 
 ## Flagship vendors
 
@@ -48,9 +48,9 @@ M&A corrections to candidate metadata:
 INTRANET, WFM, RET-STORE, EMP-EXP each own ONE slice. No existing domain owns the **unified worker-facing frontline operations app** the pure-plays sell:
 
 1. Buyer is different: store ops / plant ops / field ops, not Internal Comms or HR (INTRANET's buyer) and not the WFM scheduler.
-2. Audience constraint is structural: workers with NO corporate email, NO workstation, mobile-first, kiosk/shared-device, supervisor cascade. This shapes every entity (acknowledgements, read receipts, channel primitives, identity tied to HCM employee + WFM shift).
+2. Audience constraint is structural: workers with NO corporate email, NO workstation, mobile-first, kiosk/shared-device, supervisor cascade. This shapes every entity (acknowledgments, read receipts, channel primitives, identity tied to HCM employee + WFM shift).
 3. Scope is broader than comms: comms is necessary but the wedge that makes it a market is task/checklist push + shift-swap conversations + microlearning + recognition fused in ONE app. That fusion is the product; none of the four adjacents fuses it.
-4. Hand-offs, not ownership: shift-swap *approved* hands to WFM; task *completed* hands to store/plant ops (RET-STORE et al.); the swap record and the shift live in WFM, the task definition in store ops. FRONTLINE-COMMS owns the worker-facing conversation/acknowledgement/execution surface and emits events.
+4. Hand-offs, not ownership: shift-swap *approved* hands to WFM; task *completed* hands to store/plant ops (RET-STORE et al.); the swap record and the shift live in WFM, the task definition in store ops. FRONTLINE-COMMS owns the worker-facing conversation/acknowledgment/execution surface and emits events.
 
 Conclusion: promote as a thin-but-distinct operational domain that consumes HCM employees + WFM shifts and hands work back to WFM / store ops. INTRANET keeps its frontline-comms capability as the office-comms platform's reach feature; FRONTLINE-COMMS is the ops-led platform.
 
@@ -70,7 +70,7 @@ Vendors: WJ=WorkJam, YO=YOOBIC, SP=Speakap, FL=Flip, BL=Blink.
 | --- | --- | :-: | :-: | :-: | :-: | :-: | --- | --- |
 | frontline_broadcasts | Master | x | x | x | x | x | Core | BROADCAST-ENGAGEMENT |
 | frontline_message_channels | Master | x | x | x | x | x | Core | BROADCAST-ENGAGEMENT |
-| content_acknowledgements | Junction/compliance | x | x | x | x | x | Core | BROADCAST-ENGAGEMENT |
+| content_acknowledgments | Junction/compliance | x | x | x | x | x | Core | BROADCAST-ENGAGEMENT |
 | frontline_recognitions | Master | x | x | x | . | x | Core | BROADCAST-ENGAGEMENT |
 | broadcast_audiences | Config | x | x | x | x | x | Core | BROADCAST-ENGAGEMENT |
 | frontline_tasks | Master | x | x | x | . | x | Core | TASK-EXECUTION |
@@ -84,12 +84,12 @@ Vendors: WJ=WorkJam, YO=YOOBIC, SP=Speakap, FL=Flip, BL=Blink.
 
 ## Compliance entities
 
-Market is not a named regulated regime (no FCRA/HIPAA/SOX/GDPR-specific surface mandated for the *comms* function itself). The relevant non-optional substrate is union/works-council content rules (esp. EU, Flip/Beekeeper emphasize "deliver content in compliance with union or worker policies") and read-receipt/acknowledgement audit. Modeled as `content_acknowledgements` (mandatory-read proof) rather than a regulator table. No dedicated compliance table required; defer any GDPR consent surface to INTRANET / HCM which already own employee PII.
+Market is not a named regulated regime (no FCRA/HIPAA/SOX/GDPR-specific surface mandated for the *comms* function itself). The relevant non-optional substrate is union/works-council content rules (esp. EU, Flip/Beekeeper emphasize "deliver content in compliance with union or worker policies") and read-receipt/acknowledgment audit. Modeled as `content_acknowledgments` (mandatory-read proof) rather than a regulator table. No dedicated compliance table required; defer any GDPR consent surface to INTRANET / HCM which already own employee PII.
 
 ## Modularization hypothesis
 
 Two full modules.
-- **FRONTLINE-COMMS-BROADCAST-ENGAGEMENT**: masters frontline_broadcasts + frontline_message_channels; carries content_acknowledgements, broadcast_audiences, frontline_recognitions. The mobile-first reach + engagement surface.
+- **FRONTLINE-COMMS-BROADCAST-ENGAGEMENT**: masters frontline_broadcasts + frontline_message_channels; carries content_acknowledgments, broadcast_audiences, frontline_recognitions. The mobile-first reach + engagement surface.
 - **FRONTLINE-COMMS-TASK-EXECUTION**: masters frontline_tasks + frontline_checklists; carries task_submissions, shift_swap_requests (lifecycle workflow), frontline_learning_modules + learning_completions. The do-the-work surface that emits hand-offs to WFM (swap approved) and store/plant ops (task completed).
 
 Both consume HCM `employees` and WFM `shifts`; frontline worker + frontline manager are user-typed (Rule #10).

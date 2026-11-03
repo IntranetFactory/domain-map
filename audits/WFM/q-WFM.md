@@ -68,7 +68,7 @@ a6:
 
 ---
 
-q7: Replace the process tag on handoff 934 (retail_labour_schedule.published, RET-STORE to WFM)? Swap the existing row (process 1886) for Develop and manage time and attendance systems (L3). (yes/no)
+q7: Replace the process tag on handoff 934 (retail_labor_schedule.published, RET-STORE to WFM)? Swap the existing row (process 1886) for Develop and manage time and attendance systems (L3). (yes/no)
 
 Recommended: yes, if you agree the existing tag is off. This is a delete-and-replace, so it needs your confirmation.
 

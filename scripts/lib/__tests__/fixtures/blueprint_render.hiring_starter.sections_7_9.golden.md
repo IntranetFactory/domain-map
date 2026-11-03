@@ -114,4 +114,4 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
-| consumer | Finance | `read` | `:read` |
+| consumer | Finance | `viewer` | `:read` |

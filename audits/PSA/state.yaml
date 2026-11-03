@@ -40,7 +40,7 @@ extra_b1a_destructive_awaiting_approval:
 
   - id: B1A-SELF-CONTAIN
     summary: "7 contributor/required-consumer DMDO rows break module self-containment (M9): embed or relax each."
-    finding: "7 domain_module_data_objects rows on PSA modules are role=contributor or role=consumer with necessity=required, pointing at a foreign-mastered entity and not embedded_master here. Each is an M9 self-containment violation. Converting role consumer->embedded_master or necessity required->optional rewrites an existing row = destructive."
+    finding: "7 domain_module_data_objects rows on PSA modules are held_as=contributor or held_as=consumer with necessity=required, pointing at a foreign-mastered entity and not embedded_master here. Each is an M9 self-containment violation. Converting role consumer->embedded_master or necessity required->optional rewrites an existing row = destructive."
     action: "Per row: convert to embedded_master (carry a local shell) OR set necessity=optional, per references/modules.md section 5. Each is a destructive overwrite -> surface the recommended per-row fix; user signs off."
     extra_m9_shapes:
       - {entity: crm_opportunities, module: PSA-PROJECT-DELIVERY, role: consumer, master_domain: CRM, recommended: "necessity optional (presence-conditional inbound seed)"}

@@ -4,8 +4,8 @@
 
 ### Summary
 
-- **Current footprint:** 5 masters (`loyalty_members`, `loyalty_transactions`, `loyalty_tiers`, `redemption_rewards`, `redemption_transactions`) + 1 contributor (`customers`). **ZERO `domain_modules` rows** (M1 hard fail). 8 capabilities. 8 solutions (7 primary + 1 partial). 2 regulations (GDPR, CPRA). 4 outbound handoffs. 3 inbound handoffs. 5 trigger events. 0 lifecycle states. 0 aliases. 0 intra-domain or cross-domain `data_object_relationships`. 0 `users` edges. 1 legacy domain-level system skill (`loyalty-system`, id 81) with 6 `skill_tools` rows, no module-level skill exists. APQC: 3 of 7 cross-domain handoffs carry a `discovery_substring` tag (record_status `new`), 0 `approved`, 0 `agent_curated`.
-- **Vendor-surface basis:** Pure-play loyalty specialists (Antavo, LoyaltyLion, Yotpo, Annex Cloud, Marigold) plus enterprise suites (Salesforce Loyalty Management, SAP Emarsys Loyalty), aligned with the eight capabilities already linked. Compliance anchor: GDPR Articles 7/15/17 for consent and erasure on member profiles (member data is PII; loyalty profiles routinely carry preference signals beyond transactional fields).
+- **Current footprint:** 5 masters (`loyalty_members`, `loyalty_transactions`, `loyalty_tiers`, `redemption_rewards`, `redemption_transactions`) + 1 contributor (`customers`). **ZERO `domain_modules` rows** (M1 hard fail). 8 capabilities. 8 solutions (7 primary + 1 partial). 2 regulations (GDPR, CPRA). 4 outbound handoffs. 3 inbound handoffs. 5 trigger events. 0 lifecycle states. 0 aliases. 0 intra-domain or cross-domain `data_object_relationships`. 0 relationships to `users`. 1 legacy domain-level system skill (`loyalty-system`, id 81) with 6 `skill_tools` rows, no module-level skill exists. APQC: 3 of 7 cross-domain handoffs carry a `discovery_substring` tag (record_status `new`), 0 `approved`, 0 `agent_curated`.
+- **Vendor-surface basis:** Pure-play loyalty specialists (Antavo, LoyaltyLion, Yotpo, Annex Cloud, Marigold) plus enterprise suites (Salesforce Loyalty Management, SAP Emarsys Loyalty), aligned with the eight capabilities already related. Compliance anchor: GDPR Articles 7/15/17 for consent and erasure on member profiles (member data is PII; loyalty profiles routinely carry preference signals beyond transactional fields).
 - **Bucket 1 (in-scope, agent fixable):** 14 items.
 - **Bucket 2 (surface-for-user, judgment):** 5 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 5 items.
@@ -18,7 +18,7 @@
 
 Auto-derived from `handoffs` (source = LOYALTY or target = LOYALTY) plus contributor / consumer DMDOs on LOYALTY masters (LOYALTY is contributor on `customers` mastered in CRM / CSM / SUB-MGMT / CDP / MDM, see report-only follow-ups for the multi-master issue on `customers`).
 
-| Neighbor | Outbound rows | Inbound rows | Edge weight | Deep-dive needed |
+| Neighbor | Outbound rows | Inbound rows | Relationship weight | Deep-dive needed |
 |---|---|---|---|---|
 | B2C-COMM | 1 (`redemption_transaction.completed`) | 2 (`commerce_order.placed`, `fulfillment.delivered`) | 3 | yes |
 | CRM | 1 (`tier.upgraded`) | 0 (LOYALTY is contributor on `customers`) | 2 | no, light summary |
@@ -26,7 +26,7 @@ Auto-derived from `handoffs` (source = LOYALTY or target = LOYALTY) plus contrib
 | MA | 1 (`member.lapsed`) | 0 | 1 | no, light summary |
 | FIN | 1 (`loyalty_transaction.posted`) | 0 | 1 | no, light summary |
 
-Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cross-domain edge sits with NULL `source_domain_module_id` (outbound) and the four-leg analysis cannot resolve `producer master + lifecycle state` (LOYALTY has no lifecycle states authored). Pass 4 deep-dives for B2C-COMM are queued as Bucket 1 follow-up after M1 cures.
+Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cross-domain relationship sits with NULL `source_domain_module_id` (outbound) and the four-leg analysis cannot resolve `producer master + lifecycle state` (LOYALTY has no lifecycle states authored). Pass 4 deep-dives for B2C-COMM are queued as Bucket 1 follow-up after M1 cures.
 
 ### Bucket 1 - In-scope confirmed gaps
 
@@ -35,13 +35,13 @@ Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cr
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-S1 | M1 / M2 / M6 (hard fail) | LOYALTY has 8 capabilities and zero `domain_modules` rows. Rule #14 requires ≥1 module per domain and ≥2 modules for domains with ≥3 capabilities. Every downstream band (B / E / F / handoff module-FKs) cascades from this. | Author the module split (proposal in Bucket 2 item 1): minimum 4 modules (`LOY-PROGRAM-MGT`, `LOY-MEMBER-MGT`, `LOY-LEDGER-REWARDS`, `LOY-PARTNER-PROMO`) with `domain_module_capabilities` covering all 8 existing capabilities, plus `domain_module_data_objects` for the 5 masters anchored at the right module. Phase-M loader pattern from `scripts/loaders/load_research.ts`. |
-| B1-S2 | F2 | LOYALTY has zero module-level `skill_type='system'` skills (only the legacy domain-level `loyalty-system` id 81, `domain_module_id` NULL). Rule #17 requires exactly one system skill per module. | Phase-S loader: author one `<module_code_lower>_agent` skill per new module (e.g. `loy_member_mgt_agent`), each with ≥1 `skill_tools` row. Migrate the existing 6 tool links from skill 81 to the matching module skills (`query_loyalty_members` → `loy_member_mgt_agent`; `query_loyalty_transactions` + `query_loyalty_tiers` → `loy_ledger_rewards_agent`; etc.). |
+| B1-S2 | F2 | LOYALTY has zero module-level `skill_type='system'` skills (only the legacy domain-level `loyalty-system` id 81, `domain_module_id` NULL). Rule #17 requires exactly one system skill per module. | Phase-S loader: author one `<module_code_lower>_agent` skill per new module (e.g. `loy_member_mgt_agent`), each with ≥1 `skill_tools` row. Migrate the existing 6 tool relationships from skill 81 to the matching module skills (`query_loyalty_members` → `loy_member_mgt_agent`; `query_loyalty_transactions` + `query_loyalty_tiers` → `loy_ledger_rewards_agent`; etc.). |
 | B1-S3 | F1 | Once module-level system skills exist, the legacy `loyalty-system` row (id 81, `domain_id=78`, `domain_module_id=NULL`) is obsolete. | DELETE skill id 81 and its 6 `skill_tools` rows AFTER the module-level skills + tools are in place. Strict ordering: deploy new first, then retire old. |
-| B1-S4 | B12 / Rule #12 | Zero `data_object_lifecycle_states` rows on any of the 5 masters. Workflow-bearing masters: `loyalty_members` (active / lapsed / opted-out / closed), `loyalty_transactions` (pending / posted / reversed / expired), `loyalty_tiers` (config-shape, no workflow), `redemption_rewards` (draft / published / paused / discontinued), `redemption_transactions` (initiated / fulfilled / delivered / cancelled / refunded). | Phase-B loader: author state machines per master + `requires_permission` flags on workflow gates + `domain_module_id` per realizing module (M5). `loyalty_tiers` is the only config-shape exemption candidate; surface to user per Bucket 2 item 4. |
+| B1-S4 | B12 / Rule #12 | Zero `data_object_lifecycle_states` rows on any of the 5 masters. Workflow-bearing masters: `loyalty_members` (active / lapsed / opted-out / closed), `loyalty_transactions` (pending / posted / reversed / expired), `loyalty_tiers` (config-shape, no workflow), `redemption_rewards` (draft / published / paused / discontinued), `redemption_transactions` (initiated / fulfilled / delivered / canceled / refunded). | Phase-B loader: author state machines per master + `requires_permission` flags on workflow gates + `domain_module_id` per realizing module (M5). `loyalty_tiers` is the only config-shape exemption candidate; surface to user per Bucket 2 item 4. |
 | B1-S5 | B11 | Zero `data_object_aliases` rows. Cross-vendor synonyms: `loyalty_members` ↔ `program_members` / `loyalty_program_subscribers`, `loyalty_transactions` ↔ `point_transactions` / `accrual_events`, `loyalty_tiers` ↔ `member_tiers` / `program_levels`, `redemption_rewards` ↔ `reward_catalog_items` / `redeemables`, `redemption_transactions` ↔ `reward_redemptions` / `burns`. | Phase-B loader: author 2 to 3 alias rows per master (cluster-drafts pattern). |
-| B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected edges: `loyalty_members has loyalty_transactions`, `loyalty_members belongs_to loyalty_tiers`, `loyalty_transactions accrues_to loyalty_members`, `redemption_transactions consumes loyalty_transactions`, `redemption_transactions redeems redemption_rewards`, `redemption_transactions issued_to loyalty_members`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. |
-| B1-S7 | B7 / Rule #10 | Zero `users` edges. Expected actors: `loyalty_members` (account_manager when B2B2C), `loyalty_tiers` (config_author), `redemption_rewards` (catalog_owner), `loyalty_transactions` (adjustment_author for manual point adjustments), `redemption_transactions` (fulfillment_owner). | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id=748` (`users` built-in). |
-| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` rows for the 4 outbound handoffs. Each outbound handoff needs a mirror relationship row from LOYALTY's master to the target's master / payload. | Phase-B loader, four edges to author: (`loyalty_tiers signals CRM.customers`) for tier.upgraded; (`loyalty_members triggers_winback_on MA.audience_segments` or similar) for member.lapsed; (`loyalty_transactions accrues_to FIN.gl_journal_entries` or similar) for loyalty_transaction.posted; (`redemption_transactions fulfills_via B2C-COMM.commerce_orders`) for redemption_transaction.completed. Final verbs reviewed by user during loader draft. |
+| B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected relationships: `loyalty_members has loyalty_transactions`, `loyalty_members belongs_to loyalty_tiers`, `loyalty_transactions accrues_to loyalty_members`, `redemption_transactions consumes loyalty_transactions`, `redemption_transactions redeems redemption_rewards`, `redemption_transactions issued_to loyalty_members`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. |
+| B1-S7 | B7 / Rule #10 | Zero relationships to `users`. Expected actors: `loyalty_members` (account_manager when B2B2C), `loyalty_tiers` (config_author), `redemption_rewards` (catalog_owner), `loyalty_transactions` (adjustment_author for manual point adjustments), `redemption_transactions` (fulfillment_owner). | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id=748` (`users` built-in). |
+| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` rows for the 4 outbound handoffs. Each outbound handoff needs a mirror relationship row from LOYALTY's master to the target's master / payload. | Phase-B loader, four relationships to author: (`loyalty_tiers signals CRM.customers`) for tier.upgraded; (`loyalty_members triggers_winback_on MA.audience_segments` or similar) for member.lapsed; (`loyalty_transactions accrues_to FIN.gl_journal_entries` or similar) for loyalty_transaction.posted; (`redemption_transactions fulfills_via B2C-COMM.commerce_orders`) for redemption_transaction.completed. Final verbs reviewed by user during loader draft. |
 | B1-S9 | B10b outbound | All 4 outbound handoffs (ids 231, 232, 497, 498) have `source_domain_module_id = NULL`. Per the B10b derivation rule the missing module is the LOYALTY module that masters each event's `data_object_id`, which today is undefined because LOYALTY has zero modules. Resolves automatically AFTER B1-S1 cures. | Re-run B10b backfill (`backfill_*_handoff_modules` loader pattern) AFTER M1 lands. |
 | B1-S10 | A4 / Rule #20 | `catalog_tagline` and `catalog_description` are both empty strings. Buyer-shaped fields are required by Rule #20 for the catalog UI. | Draft in buyer voice (workflow + value), surface to user for approval per Rule #20 (see Bucket 2 item 2 for proposed wording). |
 | B1-S11 | C2 | LOYALTY business function ownership is Marketing (owner) + Customer Success (contributor). Two capabilities likely diverge: `LOY-MEMBER-PORTAL` (Customer Success owner more natural than Marketing) and `LOY-POINTS-LEDGER` (Finance ownership for accrual liability accounting). | Add 2 `business_function_capabilities` rows where capability ownership differs from domain RACI. User reviews proposed function assignments. |
@@ -52,7 +52,7 @@ Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cr
 |---|---|---|---|---|
 | B1-M1 | `gdpr_consent_records` | LOY-MEMBER-MGT | GDPR Art. 7 + CPRA | Loyalty profiles routinely carry preference signals (channel opt-in, partner data-share consent, behavioral tracking). The current model has no consent capture surface. Antavo, LoyaltyLion, Salesforce Loyalty all ship this. |
 | B1-M2 | `data_subject_requests` | LOY-MEMBER-MGT | GDPR Art. 15-22 + CPRA | Erasure / access / rectification request tracking. Universal across all flagship vendors. |
-| B1-M3 | `unclaimed_property_records` | LOY-LEDGER-REWARDS | State escheatment laws (US) | Unredeemed balances may be subject to state escheatment if the program qualifies as stored value. Material for any sizeable program. Surfaces in Antavo and SAP Emarsys documentation. |
+| B1-M3 | `unclaimed_property_records` | LOY-LEDGER-REWARDS | State escheatment laws (US) | Unredeemed balances may be subject to state escheatment if the program qualifies as stored value. Material for any sizable program. Surfaces in Antavo and SAP Emarsys documentation. |
 | B1-M4 | `promotion_campaigns` | LOY-PARTNER-PROMO (or LOY-PROGRAM-MGT) | LOY-PROMOTION-ENG capability already exists | Capability `LOY-PROMOTION-ENG` (id 291) has no entity backing it. Vendors universally ship a promotions/campaigns master (bonus points campaigns, tier acceleration windows, reward boost periods). |
 | B1-M5 | `member_communications_preferences` | LOY-MEMBER-MGT | CAN-SPAM + GDPR + CPRA | Channel-level opt-in/opt-out is required at the program level (loyalty is opt-in commerce; consent withdrawal must propagate). Salesforce Marketing Cloud Engagement (the partial-coverage solution already in the catalog) signals this gap. |
 
@@ -80,7 +80,7 @@ No handoffs are deferred to Discover Pass 3 for custom processes; APQC PCF "Mana
 
 #### BOUNDARY findings per neighbor
 
-| Neighbor | Edge weight | Findings |
+| Neighbor | Relationship weight | Findings |
 |---|---|---|
 | B2C-COMM | 3 | Pass-4 deep-dive blocked by M1. After M1 cures: verify `loyalty_members` (or `loyalty_program_enrollments`) is loaded as a B2C-COMM consumer DMDO so commerce_order.placed can deterministically resolve to a member balance update. Verify redemption_transaction.completed payload module-FK after B2C-COMM modules accept the inbound. |
 | CRM | 2 | LOYALTY contributes to CRM-mastered `customers`. tier.upgraded outbound exists. Once LOYALTY modules exist, ensure CRM-ACCT-MGT (which already carries `loyalty_tiers` as consumer per DMDO row in module 46) gets an explicit `data_object_relationships` mirror per Pass-4 Section 5. |
@@ -101,7 +101,7 @@ No handoffs are deferred to Discover Pass 3 for custom processes; APQC PCF "Mana
    - **catalog_description (3 short paragraphs, buyer voice):** Paragraph 1: enrollment, member profiles, tier progression. Paragraph 2: points accrual rules, rewards catalog, redemption workflows, partner coalitions. Paragraph 3: program analytics, member portal / mobile app, integration with commerce, CRM, marketing automation. Approve, rewrite, or delegate to marketing.
 3. **`loyalty_tiers` lifecycle exemption (B12 config-shape).** `loyalty_tiers` is a config table (program designer authors tiers once, occasionally edits qualifying thresholds; no per-row workflow). Per Rule #12, config-shape masters are exempt from lifecycle states; per Rule #15 the exemption used to require a `data_objects.notes` annotation but that license is rescinded. Decide: (a) accept the exemption, no lifecycle states authored, no notes written; (b) load minimal states (`draft`, `active`, `retired`) for audit traceability anyway; (c) defer until program-of-records pattern is reviewed.
 4. **Pattern flags on masters (B4).** Default-false flags on all 5 masters. Re-evaluate per Rule #12: `loyalty_members.has_personal_content` is likely TRUE (loyalty profiles carry preferences, communication history, partner data-share consent). Others (submit_lock, single_approver) probably remain FALSE for all masters. Decide which to flip.
-5. **`customers` (data_object 97) multi-master conflict.** LOYALTY is `contributor + required` on `customers` (97). Catalog-wide query shows 5 domains claim `role='master'` on this same `data_object_id`: CRM (canonical), CSM, SUB-MGMT, CDP, MDM. This is a catalog-wide M7 hard fail that LOYALTY did not cause (LOYALTY only contributes). Report-only for LOYALTY (the fix lives in whichever domain agrees to demote). Flagging because the LOYALTY audit observed it; the cure routes to a catalog-wide MDM / CDP audit, not this domain's fix-loop.
+5. **`customers` (data_object 97) multi-master conflict.** LOYALTY is `contributor + required` on `customers` (97). Catalog-wide query shows 5 domains claim `held_as='master'` on this same `data_object_id`: CRM (canonical), CSM, SUB-MGMT, CDP, MDM. This is a catalog-wide M7 hard fail that LOYALTY did not cause (LOYALTY only contributes). Report-only for LOYALTY (the fix lives in whichever domain agrees to demote). Flagging because the LOYALTY audit observed it; the cure routes to a catalog-wide MDM / CDP audit, not this domain's fix-loop.
 
 ### Bucket 3 - Phase 0 pending (speculative; vendor-research vetting needed)
 
@@ -131,7 +131,7 @@ No handoffs are deferred to Discover Pass 3 for custom processes; APQC PCF "Mana
 
 ### Report-only follow-ups (owed by other domains)
 
-- **`customers` (data_object 97) multi-master** (Bucket 2 item 5 detail): 5 domains carry `role='master'` on the same data_object id. Catalog-wide M7 hard fail. Not LOYALTY's responsibility to cure; surfaces here only because the LOYALTY audit observed it via the `customers` contributor DMDO. Route to a catalog-wide audit covering CRM / CSM / SUB-MGMT / CDP / MDM ownership negotiation.
+- **`customers` (data_object 97) multi-master** (Bucket 2 item 5 detail): 5 domains carry `held_as='master'` on the same data_object id. Catalog-wide M7 hard fail. Not LOYALTY's responsibility to cure; surfaces here only because the LOYALTY audit observed it via the `customers` contributor DMDO. Route to a catalog-wide audit covering CRM / CSM / SUB-MGMT / CDP / MDM ownership negotiation.
 - **B2C-COMM B9 ownership on the inbound `fulfillment.delivered` (505) and `commerce_order.placed` (324) handoffs into LOYALTY:** target_domain_module_id is NULL on both. Resolves on LOYALTY's side only after B1-S1 (Bucket 1 module split). Source-side `source_domain_module_id` should already be wired by B2C-COMM; verify on next B2C-COMM audit.
 - **CDP B9 ownership on inbound `segment.activated` (478) into LOYALTY:** same NULL target_domain_module_id pattern. Resolves after B1-S1.
 - **CRM Pass-4 mirror relationship:** when CRM-ACCT-MGT is re-audited, verify it carries a `data_object_relationships` row mirroring the LOYALTY `tier.upgraded` outbound (CRM consumes `loyalty_tiers` via DMDO 46 already, but the relationship row is missing on both sides).
@@ -169,9 +169,9 @@ Applied truly-technical B1 fixes only (audit-pre-specified tuples that do not re
 | B1-S3 (DELETE legacy skill 81 + 6 skill_tools) | Strict ordering per audit: must follow B1-S2 cure; defer until module-level skills exist. |
 | B1-S4 (lifecycle states across 5 masters) | Gated on B1-S1 (needs `domain_module_id` per state); Bucket 2 item 3 user pick for `loyalty_tiers` exemption. |
 | B1-S5 (data_object_aliases, 5 masters) | Audit gives candidate forms ("2-3 alias rows per master") but does not pre-specify exact tuples (Rule per prompt: bulk aliases require pre-specified tuples). |
-| B1-S6 (intra-domain `data_object_relationships`, 6 edges) | Out of B1-technical scope (only `users` edges in scope); also no full tuples (no verb / inverse_verb / cardinality / owner_side specified). |
-| B1-S7 (`users` edges, 5 actor labels) | Actor labels named (account_manager, config_author, catalog_owner, adjustment_author, fulfillment_owner) but no verb / inverse_verb / cardinality / owner_side tuples. Not pre-specified per Rule #10. |
-| B1-S8 (cross-domain relationships, 4 edges) | Audit explicitly states "Final verbs reviewed by user during loader draft"; also gated on B1-S1. |
+| B1-S6 (intra-domain `data_object_relationships`, 6 relationships) | Out of B1-technical scope (only relationships to `users` in scope); also no full tuples (no verb / inverse_verb / cardinality / owner_side specified). |
+| B1-S7 (relationships to `users`, 5 actor labels) | Actor labels named (account_manager, config_author, catalog_owner, adjustment_author, fulfillment_owner) but no verb / inverse_verb / cardinality / owner_side tuples. Not pre-specified per Rule #10. |
+| B1-S8 (cross-domain relationships, 4 relationships) | Audit explicitly states "Final verbs reviewed by user during loader draft"; also gated on B1-S1. |
 | B1-S9 (B10b source FK backfill) | Audit explicitly states "Resolves automatically AFTER B1-S1 cures". |
 | B1-S10 (catalog_tagline / catalog_description) | Rule #20: surface to user before write (Bucket 2 item 2 wording already drafted, awaiting approval). |
 | B1-S11 (`business_function_capabilities` for LOY-MEMBER-PORTAL, LOY-POINTS-LEDGER) | Audit explicitly states "User reviews proposed function assignments"; new contributors / consumers excluded per prompt. |
@@ -197,7 +197,7 @@ Audit Coverage rollup states "0 `agent_curated` exist today" for LOYALTY's 7 cro
 ### Summary
 
 - **Current footprint:** domain id 78, 0 `domain_modules` (M1 hard fail), 8 capabilities, 5 masters (`loyalty_members` 263, `loyalty_transactions` 264, `loyalty_tiers` 265, `redemption_rewards` 717, `redemption_transactions` 718) + 1 contributor (`customers` 97), 8 solutions (7 primary + 1 partial), 2 regulations (GDPR, CPRA), 5 trigger events, 7 cross-domain handoffs (4 outbound: 231, 232, 497, 498; 3 inbound: 324, 478, 505), 0 lifecycle states, 0 aliases, 0 `data_object_relationships` rows touching any LOYALTY master, 1 legacy domain-level system skill (`loyalty-system` id 81, `domain_module_id=NULL`) with 6 `skill_tools` rows, 0 module-level skills. APQC tags exist on 7 of 7 cross-domain handoffs (4 `agent_curated`, 3 `discovery_substring`), 0 `approved`.
-- **Vendor-surface basis:** Pure-play loyalty specialists (Antavo, LoyaltyLion, Yotpo, Annex Cloud, Marigold) plus enterprise suites (Salesforce Loyalty Management, SAP Emarsys Loyalty) already linked. Compliance anchor: GDPR Articles 7/15/17 for consent and erasure on member profiles; US state escheatment for unredeemed balances.
+- **Vendor-surface basis:** Pure-play loyalty specialists (Antavo, LoyaltyLion, Yotpo, Annex Cloud, Marigold) plus enterprise suites (Salesforce Loyalty Management, SAP Emarsys Loyalty) already related. Compliance anchor: GDPR Articles 7/15/17 for consent and erasure on member profiles; US state escheatment for unredeemed balances.
 - **Bucket 1 (in-scope, agent fixable):** 13 items.
 - **Bucket 2 (surface-for-user, judgment):** 5 items.
 - **Bucket 3 (Phase 0 pending, speculative):** 5 items.
@@ -208,7 +208,7 @@ Audit Coverage rollup states "0 `agent_curated` exist today" for LOYALTY's 7 cro
 
 ### Correction to prior audit
 
-The 2026-05-30 audit Bucket 2 item 5 claimed `customers` (data_object 97) has 5 `role='master'` rows across CRM, CSM, SUB-MGMT, CDP, MDM. Live query at audit time returns **only one** `master` row, in CRM-ACCT-MGT (module 46, domain CRM). M7 catalog-wide single-master on `customers` PASSES. The prior claim was incorrect; no catalog-wide cleanup needed for the `customers` master, and Bucket 2 item 5 from the prior audit is dropped.
+The 2026-05-30 audit Bucket 2 item 5 claimed `customers` (data_object 97) has 5 `held_as='master'` rows across CRM, CSM, SUB-MGMT, CDP, MDM. Live query at audit time returns **only one** `master` row, in CRM-ACCT-MGT (module 46, domain CRM). M7 catalog-wide single-master on `customers` PASSES. The prior claim was incorrect; no catalog-wide cleanup needed for the `customers` master, and Bucket 2 item 5 from the prior audit is dropped.
 
 ### Pass 1 - Structural (S/A/M/B/C/D/E/F/H bands)
 
@@ -226,15 +226,15 @@ The 2026-05-30 audit Bucket 2 item 5 claimed `customers` (data_object 97) has 5 
 | M4 | Every capability has a realizing module | FAIL. All 8 capabilities orphaned. |
 | M5 | Workflow-gate states have `domain_module_id` | Vacuous (0 states). |
 | M6 | Every module realizes ≥1 capability | Vacuous (0 modules). |
-| M7 | Catalog-wide single-master + within-domain coherence | PASS. `customers` (97) has exactly one master row (CRM-ACCT-MGT). All 5 LOYALTY masters have exactly one `role='master'` row each. |
+| M7 | Catalog-wide single-master + within-domain coherence | PASS. `customers` (97) has exactly one master row (CRM-ACCT-MGT). All 5 LOYALTY masters have exactly one `held_as='master'` row each. |
 | M8 | Module-level catalog UX fields | Vacuous (0 modules). |
 | B1 | ≥1 master | PASS. 5 masters. |
 | B2 | `singular_label` + `plural_label` on every master | PASS. All 5 masters carry both. |
 | B3 | Naming arbitration (Rule #9) | PASS. All 5 names prefixed (`loyalty_*`, `redemption_*`); no bare-word claim needed. |
 | B4 | Pattern flags considered (Rule #12) | FAIL (consideration not recorded). All flags default-false on all 5 masters. Re-evaluation required per Bucket 2 item 4 (likely candidate: `loyalty_members.has_personal_content=true`). |
 | B5 | `embedded_master` integrity | Vacuous (no embedded_master rows). |
-| B6 | Intra-domain `data_object_relationships` | FAIL. Zero rows touching any LOYALTY master. Expected ≥6 edges. |
-| B7 | `users` edges (Rule #10) | FAIL. Zero rows. Expected ≥5 actor labels across 5 masters. |
+| B6 | Intra-domain `data_object_relationships` | FAIL. Zero rows touching any LOYALTY master. Expected ≥6 relationships. |
+| B7 | relationships to `users` (Rule #10) | FAIL. Zero rows. Expected ≥5 actor labels across 5 masters. |
 | B8 | Cross-domain outbound `data_object_relationships` | FAIL. Zero outbound rows for the 4 outbound handoffs (231, 232, 497, 498). |
 | B9 | Outbound `trigger_events` + `handoffs` | PARTIAL. 5 events / 5 masters present, but events 497/498/499 have `event_category=''` (FAIL Rule #13 catalog enum check; only event 204 and 205 carry `lifecycle`). 4 outbound handoffs present. |
 | B9b | Intra-domain cross-module handoffs | Vacuous (0 modules). |
@@ -251,14 +251,14 @@ The 2026-05-30 audit Bucket 2 item 5 claimed `customers` (data_object 97) has 5 
 | F3 | Every module-level system skill has ≥1 `skill_tools` row | Vacuous. |
 | F4 | Tool `operation_kind` ↔ `data_object_id` invariant | PASS on the 6 legacy tools (5 `query` rows with `data_object_id` set; 1 `side_effect` with NULL). |
 | F5 | Semantius score computable per module | Vacuous. |
-| F7 | Channel primitives only when channel is the workflow | FAIL. `send_email` (tool 37) is linked to skill 81 with no `skill_tools.notes` justification. Generic notification shape; default should be `notify_person`. Routes to Bucket 2 (judgment on whether to revert or annotate). |
+| F7 | Channel primitives only when channel is the workflow | FAIL. `send_email` (tool 37) is related to skill 81 with no `skill_tools.notes` justification. Generic notification shape; default should be `notify_person`. Routes to Bucket 2 (judgment on whether to revert or annotate). |
 | H1 | Every cross-domain handoff has a `handoff_processes` row OR explicit deferral | PASS by volume. 7 of 7 handoffs carry tags (4 `agent_curated`: 231/324/497/498; 3 `discovery_substring`: 232/478/505). Quality headline 0% approved. |
 
 ### Pass 2 - Neighbor discovery
 
 Auto-derived from `handoffs` (source = LOYALTY or target = LOYALTY).
 
-| Neighbor | Outbound rows | Inbound rows | Edge weight | Deep-dive needed |
+| Neighbor | Outbound rows | Inbound rows | Relationship weight | Deep-dive needed |
 |---|---|---|---|---|
 | B2C-COMM (71) | 1 (`redemption_transaction.completed`) | 2 (`commerce_order.placed`, `fulfillment.delivered`) | 3 | yes (deferred, gated on M1) |
 | CRM (69) | 1 (`tier.upgraded`) | 0 | 2 | no, light |
@@ -275,18 +275,18 @@ Pass 4 deep-dives for B2C-COMM remain queued as Bucket 1 follow-up after M1 cure
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1-S1 | M1 / M2 / M4 / M6 (hard fail) | LOYALTY has 8 capabilities and zero `domain_modules` rows. Every downstream band cascades. | Phase-M loader authoring the 4-module shape proposed in Bucket 2 item 1 (LOY-PROGRAM-MGT, LOY-MEMBER-MGT, LOY-LEDGER-REWARDS, LOY-PARTNER-PROMO) plus `domain_module_capabilities` for all 8 capabilities and `domain_module_data_objects` for the 5 masters. |
-| B1-S2 | F2 | Once modules exist, no module-level `skill_type='system'` skill exists. | Phase-S loader: author one `<module_code_lower>_agent` skill per new module with ≥1 `skill_tools` row each. Migrate the 6 legacy tool links from skill 81. Gated on B1-S1. |
+| B1-S2 | F2 | Once modules exist, no module-level `skill_type='system'` skill exists. | Phase-S loader: author one `<module_code_lower>_agent` skill per new module with ≥1 `skill_tools` row each. Migrate the 6 legacy tool relationships from skill 81. Gated on B1-S1. |
 | B1-S3 | F1 | Legacy `loyalty-system` (id 81, `domain_module_id=NULL`) becomes obsolete once module skills land. | DELETE skill 81 + its 6 `skill_tools` rows AFTER B1-S2 lands (strict ordering). |
 | B1-S4 | B12 / Rule #12 | Zero `data_object_lifecycle_states` on any master. | Phase-B loader: author states per master + `requires_permission` on workflow gates + `domain_module_id` per realizing module. `loyalty_tiers` is the config-shape exemption candidate (Bucket 2 item 3). Gated on B1-S1. |
 | B1-S5 | B11 | Zero `data_object_aliases`. | Phase-B loader, 2-3 alias rows per master (cluster-drafts pattern). Tuples not pre-specified in this audit; surface to user for cluster-drafts draft. |
-| B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected edges enumerated in `extra_expected_edges`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. Tuples pending user-side cluster draft. |
-| B1-S7 | B7 / Rule #10 | Zero `users` edges. Expected actors enumerated in `extra_expected_actors`. | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id` for `users` (built-in). Tuples pending user-side cluster draft. |
-| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` for the 4 outbound handoffs (231 to CRM, 232 to MA, 497 to FIN, 498 to B2C-COMM). | Phase-B loader: author 4 mirror edges. Final verbs reviewed by user. Gated on B1-S1. |
+| B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected relationships enumerated in `extra_expected_relationships`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. Tuples pending user-side cluster draft. |
+| B1-S7 | B7 / Rule #10 | Zero relationships to `users`. Expected actors enumerated in `extra_expected_actors`. | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id` for `users` (built-in). Tuples pending user-side cluster draft. |
+| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` for the 4 outbound handoffs (231 to CRM, 232 to MA, 497 to FIN, 498 to B2C-COMM). | Phase-B loader: author 4 mirror relationships. Final verbs reviewed by user. Gated on B1-S1. |
 | B1-S9 | B10b outbound | All 4 outbound handoffs (231, 232, 497, 498) have `source_domain_module_id = NULL`. | Re-run B10b backfill AFTER M1 lands. |
 | B1-S10 | A4 / Rule #20 | `catalog_tagline` and `catalog_description` both empty. | Draft per Rule #20 wording; gated on Bucket 2 item 2 user approval. |
 | B1-S11 | C2 | Two capability ownership overrides expected: `LOY-MEMBER-PORTAL` to Customer Success, `LOY-POINTS-LEDGER` to Finance. | Add 2 `business_function_capabilities` rows. Gated on Bucket 2 item 4. |
 | B1-S12 | B9 / Rule #13 | Trigger events 497 (`loyalty_transaction.posted`), 498 (`redemption_reward.published`), 499 (`redemption_transaction.completed`) carry `event_category=''`. Rule #13 enum check: allowed values are `lifecycle`, `state_change`, `threshold`, `signal`. All three are lifecycle events. | PATCH `event_category='lifecycle'` on `trigger_events.id` in (497, 498, 499). Surgical CLI. Not gated. |
-| B1-S13 | F7 | `send_email` (tool 37) linked to skill 81 with empty `skill_tools.notes`. Default should be `notify_person` unless workflow needs the channel. | Either PATCH `skill_tools.tool_id` to `notify_person` (idempotency-safe DELETE if it duplicates) or surface workflow justification. Gated on Bucket 2 item 5 + B1-S3 ordering (skill 81 may be deleted entirely). |
+| B1-S13 | F7 | `send_email` (tool 37) related to skill 81 with empty `skill_tools.notes`. Default should be `notify_person` unless workflow needs the channel. | Either PATCH `skill_tools.tool_id` to `notify_person` (idempotency-safe DELETE if it duplicates) or surface workflow justification. Gated on Bucket 2 item 5 + B1-S3 ordering (skill 81 may be deleted entirely). |
 
 #### MISSING (compliance + engagement surface, carried forward from 2026-05-30)
 
@@ -306,7 +306,7 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 
 #### BOUNDARY findings per neighbor
 
-| Neighbor | Edge weight | Findings |
+| Neighbor | Relationship weight | Findings |
 |---|---|---|
 | B2C-COMM (71) | 3 | Pass-4 deep-dive blocked by M1. After M1: verify `loyalty_members` (or `loyalty_program_enrollments`) is loaded as a B2C-COMM consumer DMDO; verify `redemption_transaction.completed` payload module-FK after B2C-COMM accepts the inbound. |
 | CRM (69) | 2 | Outbound 231 target=46 (CRM-ACCT-MGT) already wired. Once LOYALTY modules exist, source FK backfill + mirror `data_object_relationships` row on the CRM side. |
@@ -320,7 +320,7 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 2. **Catalog UX wording (A4 / Rule #20).** Wording was drafted in the 2026-05-30 audit and not approved. Re-surfacing: tagline "Reward repeat customers with points, tiers, and personalized perks that grow customer lifetime value." Description 3 paragraphs on enrollment + tier progression + member profiles, accrual + catalog + redemption + partner coalitions, program analytics + portal + integrations. Approve, rewrite, or delegate.
 3. **`loyalty_tiers` lifecycle exemption (B12 config-shape).** Decide: (a) accept exemption (no states, no notes per Rule #15), (b) load minimal states (`draft`, `active`, `retired`), (c) defer.
 4. **Pattern flags on masters (B4).** Re-evaluate per Rule #12: likely `loyalty_members.has_personal_content=true` (loyalty profiles carry preferences + communication history + partner data-share consent). Other flags likely remain false. Decide which to flip.
-5. **`send_email` (tool 37) on legacy skill 81 (F7).** Generic notification shape, no `skill_tools.notes` justification. Three options: (a) wait (skill 81 is slated for DELETE after B1-S2, so this concern dissolves with the legacy skill), (b) PATCH the link to `notify_person` now if any module-level migration would otherwise carry the violation forward, (c) the skill genuinely needs the channel; supply the workflow-specific note for `skill_tools.notes` (Rule #15 user-approved wording).
+5. **`send_email` (tool 37) on legacy skill 81 (F7).** Generic notification shape, no `skill_tools.notes` justification. Three options: (a) wait (skill 81 is slated for DELETE after B1-S2, so this concern dissolves with the legacy skill), (b) PATCH the relationship to `notify_person` now if any module-level migration would otherwise carry the violation forward, (c) the skill genuinely needs the channel; supply the workflow-specific note for `skill_tools.notes` (Rule #15 user-approved wording).
 
 ### Bucket 3 - Phase 0 pending (speculative; carried forward unchanged)
 
@@ -360,7 +360,7 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 
 ### Scope
 
-Modularization-only pass: authored the LOYALTY `domain_modules` set, linked existing capabilities, and assigned existing data_objects at their established role and necessity. Reuse-only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. This cures the long-standing M1 hard fail (B1-S1 / B1B-S1, gating block) using a 3-module shape rather than the prior 4-module proposal, because the 4th proposed module (LOY-PARTNER-PROMO) had no in-domain master to anchor it (its intended master `promotion_campaigns` is an unbuilt B1B-M4 entity, out of scope for a reuse-only pass). The partner and promotion capabilities fold into a single member-engagement module instead.
+Modularization-only pass: authored the LOYALTY `domain_modules` set, related existing capabilities, and assigned existing data_objects at their established role and necessity. Reuse-only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. This cures the long-standing M1 hard fail (B1-S1 / B1B-S1, gating block) using a 3-module shape rather than the prior 4-module proposal, because the 4th proposed module (LOY-PARTNER-PROMO) had no in-domain master to anchor it (its intended master `promotion_campaigns` is an unbuilt B1B-M4 entity, out of scope for a reuse-only pass). The partner and promotion capabilities fold into a single member-engagement module instead.
 
 ### Module shape authored (3 full modules)
 
@@ -378,7 +378,7 @@ The 2026-05-30 and 2026-05-31 audits proposed a 4-module split with a dedicated 
 
 ### Master pre-check (catalog-wide, MANDATORY)
 
-Ran `/domain_module_data_objects?data_object_id=in.(263,264,265,717,718,97)&role=eq.master` before any write.
+Ran `/domain_module_data_objects?data_object_id=in.(263,264,265,717,718,97)&held_as=eq.master` before any write.
 
 - customers (97): one foreign master row in module 46 (CRM-ACCT-MGT). Assigned `contributor` here (its existing LOYALTY role). No demotion needed, never promoted.
 - loyalty_members (263), loyalty_transactions (264), loyalty_tiers (265), redemption_rewards (717), redemption_transactions (718): zero existing master rows anywhere. Each safely mastered in exactly one LOYALTY module. No demotions via the pre-check.
@@ -463,7 +463,7 @@ Legacy DELETEs (prior values snapshotted for reversibility):
 - DELETE skill 81: `{id:81, skill_name:"loyalty-system", skill_type:"system", domain_id:78, domain_module_id:NULL}`.
 - DELETE 6 skill_tools on skill 81: id 666 (tool 571 query_loyalty_members), 667 (572 query_loyalty_transactions), 668 (573 query_loyalty_tiers), 669 (37 send_email, side_effect), 988 (826 query_redemption_rewards), 989 (827 query_redemption_transactions). All were `requirement_level=required`.
 
-F7 / B2-SEND-EMAIL resolution: the `send_email` (tool 37) channel-primitive link (skill_tools 669) was the F7 violation on skill 81. It dissolved with the legacy skill delete; no new module skill carries `send_email` (channel-vs-capability default is `notify_person`/`notify_team`, and no LOYALTY module workflow requires the email channel specifically). B2-SEND-EMAIL is therefore moot; left in `b2` for the record but no separate fix needed.
+F7 / B2-SEND-EMAIL resolution: the `send_email` (tool 37) channel-primitive relationship (skill_tools 669) was the F7 violation on skill 81. It dissolved with the legacy skill delete; no new module skill carries `send_email` (channel-vs-capability default is `notify_person`/`notify_team`, and no LOYALTY module workflow requires the email channel specifically). B2-SEND-EMAIL is therefore moot; left in `b2` for the record but no separate fix needed.
 
 Post-load verification (live): module 272 -> 1 system skill / 2 skill_tools; 273 -> 1 / 3; 274 -> 1 / 1. Legacy domain-level system skills for domain 78 with `domain_module_id IS NULL` = 0 (F1 pass). F2 (exactly one system skill per module) and F3 (>=1 skill_tools per skill) pass on all three modules.
 

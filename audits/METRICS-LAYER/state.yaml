@@ -19,7 +19,7 @@ b1a:
       embedded_master/consumer rows existed to preserve). Shell rows are a design addition, not a reuse.
       The 2026-06-06 b1a pass SKIPPED this item: the action conditions execution on confirming the exact shell
       set against current emitter behavior, which is a design judgment on load-bearing master data beyond the
-      deterministic action text. Structural note from that pass: the newly authored B6 edge
+      deterministic action text. Structural note from that pass: the newly authored B6 relationship
       metric_materializations precomputes metric_definitions (is_required=true) crosses module boundaries
       (709 on 276 -> 252 on 275), so the spec'd 252-embedded_master-on-276 shell would resolve a real M9
       self-containment finding; the 252-on-277 and 711-consumer-on-275/276 shells remain design choices.

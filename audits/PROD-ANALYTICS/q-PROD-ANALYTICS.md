@@ -41,23 +41,23 @@ a3:
 
 ---
 
-q4: Should experimentation (A/B testing, feature flags) be in-scope of Product Analytics, or a separate domain that PA links to?
+q4: Should experimentation (A/B testing, feature flags) be in-scope of Product Analytics, or a separate domain that PA relates to?
 
-- a) Separate domain: experimentation and feature management is its own domain (feature flags, experiments, assignments); PROD-ANALYTICS gets a consumer edge (experiment exposure logged as events, metric lifts computed on PA's stream).
+- a) Separate domain: experimentation and feature management is its own domain (feature flags, experiments, assignments); PROD-ANALYTICS gets a consumer relationship (experiment exposure logged as events, metric lifts computed on PA's stream).
 - b) In-scope: PROD-ANALYTICS ships an experimentation module mastering experiments, variants, assignments, feature flags, and metric lifts.
 
-Recommended: a. The evidence is split: Amplitude (Experiment), PostHog, and Pendo bundle experiments, but Mixpanel, Heap, and June do not (3 of 6 vendors), and LaunchDarkly and Statsig are a distinct feature-management and experimentation market. Feature flags belong with feature management, not analytics. Keeping experimentation a separate domain with a PROD-ANALYTICS consumer edge matches how the strongest pure-plays (Mixpanel, Heap) draw the line. Choose b only if you want a deliberately wide Product Analytics scope.
+Recommended: a. The evidence is split: Amplitude (Experiment), PostHog, and Pendo bundle experiments, but Mixpanel, Heap, and June do not (3 of 6 vendors), and LaunchDarkly and Statsig are a distinct feature-management and experimentation market. Feature flags belong with feature management, not analytics. Keeping experimentation a separate domain with a PROD-ANALYTICS consumer relationship matches how the strongest pure-plays (Mixpanel, Heap) draw the line. Choose b only if you want a deliberately wide Product Analytics scope.
 
 a4:
 
 ---
 
-q5: Should session replay and experience analytics (session replay, heatmaps) be in-scope of Product Analytics, or a separate domain that PA links to?
+q5: Should session replay and experience analytics (session replay, heatmaps) be in-scope of Product Analytics, or a separate domain that PA relates to?
 
-- a) Separate domain: a digital-experience-analytics domain masters session replays and heatmaps; PROD-ANALYTICS links to a replay from a funnel drop-off.
+- a) Separate domain: a digital-experience-analytics domain masters session replays and heatmaps; PROD-ANALYTICS relationships to a replay from a funnel drop-off.
 - b) In-scope: PROD-ANALYTICS ships a session-analytics module mastering session replays, replay events, and heatmaps.
 
-Recommended: a. Session replay is present in only 3 of the 6 surveyed PA vendors (Amplitude, PostHog, and Pendo add it; Mixpanel, Heap, and June omit it), and there is a robust standalone experience-analytics market (FullStory, Hotjar, Contentsquare, LogRocket). Keeping session replay a separate digital-experience-analytics domain, with PROD-ANALYTICS linking to a replay from a funnel drop-off, matches the pure-play landscape. Choose b only if you want a deliberately wide Product Analytics scope.
+Recommended: a. Session replay is present in only 3 of the 6 surveyed PA vendors (Amplitude, PostHog, and Pendo add it; Mixpanel, Heap, and June omit it), and there is a robust standalone experience-analytics market (FullStory, Hotjar, Contentsquare, LogRocket). Keeping session replay a separate digital-experience-analytics domain, with PROD-ANALYTICS relating to a replay from a funnel drop-off, matches the pure-play landscape. Choose b only if you want a deliberately wide Product Analytics scope.
 
 a5:
 

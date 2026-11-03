@@ -2,11 +2,11 @@
 
 Implements the five-pass Discover mode described in [README.md § c) Discover cross-domain processes](../../../../README.md). Operates catalog-wide (not per-domain) on top of the cross-domain handoff DAG that Research lays down and Validate keeps pairwise-clean.
 
-The mode exists because Phase D was previously a "ranked-table printout" buried under per-market workflows. Once `handoff_processes` became a permanent junction with reviewable rows and `skills.process_id` became a load-bearing FK for APQC linkage, the workflow earned a top-level surface. README's "Two modes" framing was true when Phase D had no persistent substrate; now it's the third mode.
+The mode exists because Phase D was previously a "ranked-table printout" buried under per-market workflows. Once `handoff_processes` became a permanent junction with reviewable rows and `skills.process_id` became a load-bearing FK for APQC relationship, the workflow earned a top-level surface. README's "Two modes" framing was true when Phase D had no persistent substrate; now it's the third mode.
 
 ## Layered APQC ownership
 
-APQC linkage is captured at the layer where the information exists. The substring matcher is a fallback, not the primary source:
+APQC relationship is captured at the layer where the information exists. The substring matcher is a fallback, not the primary source:
 
 - **Phase B authors `handoff_processes`** when the per-domain analyst knows the implementing PCF activity (Phase-B deliverable 7). The analyst was reading vendor surface maps, talking to subject matter experts, and reasoning about cross-domain workflows when they wrote the handoff — they often know which PCF activity it implements. Capture that signal at author time.
 - **Discover Pass 2 fills the gaps** with substring inference, but ONLY for handoffs Phase B left untagged. Authored rows are never overwritten or re-suggested.
@@ -16,11 +16,11 @@ APQC linkage is captured at the layer where the information exists. The substrin
 
 ## The dependency on Validate
 
-Discover **layers** APQC PCF mappings + process-skill linkage onto cross-domain handoffs. Each cross-domain `handoffs` row is one edge in the catalog-wide DAG; Discover clusters edges, anchors clusters to PCF activities, and authors process skills whose toolset (derived from the process's `process_tools`) orchestrates the cluster.
+Discover **layers** APQC PCF mappings + process-skill relationship onto cross-domain handoffs. Each cross-domain `handoffs` row is one relationship between two domains in the catalog-wide DAG; Discover clusters handoffs, anchors clusters to PCF activities, and authors process skills whose toolset (derived from the process's `process_tools`) orchestrates the cluster.
 
-This only makes sense if the underlying edges are clean. Validate's per-domain Pass 4 (pairwise reconciliation) already guarantees that each handoff between two specific domains is structurally complete: producer master + lifecycle, trigger event, handoff row with both module FKs, consumer DMDO on the target side. Discover assumes this. Pass 0 below is the catalog-wide rollup of those same checks, run as a pre-flight gate.
+This only makes sense if the underlying handoffs are clean. Validate's per-domain Pass 4 (pairwise reconciliation) already guarantees that each handoff between two specific domains is structurally complete: producer master + lifecycle, trigger event, handoff row with both module FKs, consumer DMDO on the target side. Discover assumes this. Pass 0 below is the catalog-wide rollup of those same checks, run as a pre-flight gate.
 
-**Running Discover on unvalidated handoffs is a known failure mode:** APQC clusters get built from edges that may have NULL module FKs, missing consumer DMDOs, or orphaned trigger events. The resulting process skills are anchored to defective substrates and their Semantius coverage rollup is uncomputable in the same way. Pass 0 stops the mode rather than letting this happen.
+**Running Discover on unvalidated handoffs is a known failure mode:** APQC clusters get built from handoffs that may have NULL module FKs, missing consumer DMDOs, or orphaned trigger events. The resulting process skills are anchored to defective substrates and their Semantius coverage rollup is uncomputable in the same way. Pass 0 stops the mode rather than letting this happen.
 
 ## The five passes
 
@@ -33,7 +33,7 @@ The check runs five queries against the cross-domain handoff slice of the catalo
 1. **NULL `source_domain_module_id` on a cross-domain row whose source domain has modules.** `/handoffs?source_domain_id=neq.target_domain_id&source_domain_module_id=is.null&...` cross-joined against `domain_modules` to filter for source domains that actually have modules. Each hit is a Validate B10b failure on the source domain.
 2. **NULL `target_domain_module_id` on a cross-domain row whose target domain has modules.** Symmetric to #1. Each hit is a B10b failure on the target domain.
 3. **Cross-domain handoff whose `trigger_event_id` resolves to a `trigger_events` row whose `data_object_id` is NOT mastered on the source side.** Each hit is a B9 attribution defect (the event's publisher is not the publisher).
-4. **Cross-domain handoff whose `data_object_id` is not declared on the target side via `domain_module_data_objects` with role IN (`consumer`, `contributor`, `embedded_master`).** Each hit is a B8 reverse-direction gap on the target domain.
+4. **Cross-domain handoff whose `data_object_id` is not declared on the target side via `domain_module_data_objects` with `held_as` IN (`consumer`, `contributor`, `embedded_master`).** Each hit is a B8 reverse-direction gap on the target domain.
 5. **Cross-domain handoff with a `trigger_events` row that no other handoff references AND no `data_object_lifecycle_states` row whose `permission_verb_override` matches the event's verb suffix.** Each hit is an orphaned event — possible mis-attribution or a stale row.
 
 Group results by the domain that owes the fix. **If any group is non-empty, Discover stops** and surfaces:
@@ -64,8 +64,8 @@ Read-only diff between `handoff_processes` (any `record_status`) and the set of 
 
 | Category | Definition | Discover's response |
 |---|---|---|
-| **Authored, approved** | Phase B authored the link AND the user has approved | Ground truth; treated as authoritative for Pass 3 clustering; never re-suggested by Pass 2 |
-| **Authored, pending** | Phase B authored the link, awaiting user review | **Surfaced for review BEFORE Pass 2 runs** — so substring guesses don't compete with the analyst's intent. User approves / rejects per row |
+| **Authored, approved** | Phase B authored the relationship AND the user has approved | Ground truth; treated as authoritative for Pass 3 clustering; never re-suggested by Pass 2 |
+| **Authored, pending** | Phase B authored the relationship, awaiting user review | **Surfaced for review BEFORE Pass 2 runs** — so substring guesses don't compete with the analyst's intent. User approves / rejects per row |
 | **Discovered, pending** | Prior Pass 2 substring-inferred rows still awaiting review | Add to Pass 3 review queue, lower confidence framing than authored-pending |
 | **Untagged** | Handoffs with no `handoff_processes` row of any kind | Targets for Pass 2's substring matcher |
 | **Conflicting** | Handoff has both an authored row and a discovered row pointing at different processes | **Authored row wins by default** (analyst had context); surface for user arbitration |
@@ -102,11 +102,11 @@ For each top-N process, surface:
 
 Apply choices via PATCH `record_status`. Rule #1 applies: the agent never auto-flips to `approved`.
 
-**3b. Process-skill linkage.** For each process where `handoff_processes` accumulates `record_status='approved'` rows above some threshold (default: ≥3 approved rows on a process means the orchestration is real), check whether a `skills` row exists with `skill_type='process' AND process_id=<id>`. Three sub-cases:
+**3b. Process-skill relationship.** For each process where `handoff_processes` accumulates `record_status='approved'` rows above some threshold (default: ≥3 approved rows on a process means the orchestration is real), check whether a `skills` row exists with `skill_type='process' AND process_id=<id>`. Three sub-cases:
 
 1. **Process-skill exists with `process_id` set correctly:** nothing to do. Score the skill via the existing tools layer and surface in the report.
-2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) were linked to their value-stream `business_processes` rows by the per-domain-skill migration (2026-06-06); pre-migration they sat in this state.
-3. **No process-skill exists yet:** propose authoring one. First create or reuse the value-stream `business_processes` row, then derive the involved-domain set from the bucket's source + target domains and author its required tools as `process_tools` on the process (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Link the `skills` row via `process_id`; the skill derives its toolset from the `process_tools`. Surface for user approval per Rule #1. All new `skills`, `business_processes`, and `process_tools` rows ship as `record_status='new'`.
+2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) were related to their value-stream `business_processes` rows by the per-domain-skill migration (2026-06-06); pre-migration they sat in this state.
+3. **No process-skill exists yet:** propose authoring one. First create or reuse the value-stream `business_processes` row, then derive the involved-domain set from the bucket's source + target domains and author its required tools as `process_tools` on the process (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Relate the `skills` row via `process_id`; the skill derives its toolset from the `process_tools`. Surface for user approval per Rule #1. All new `skills`, `business_processes`, and `process_tools` rows ship as `record_status='new'`.
 
 Pass 3 is the only pass that writes outside the `handoff_processes.record_status` PATCH and the optional `skills.process_id` PATCH. Loader writes (a new `skills` row, its `business_processes` row, and that process's `process_tools` set) only happen on explicit per-row approval.
 
@@ -135,7 +135,7 @@ The raw subagent / ranked-table JSON dumps stay in `.tmp_deploy/` (gitignored, e
 ## Anti-patterns
 
 - ❌ Skipping Pass 0 because "we just want the ranked candidates". The candidates are derived from the same handoff DAG; if the DAG has NULL module FKs, the candidates are over-counted or mis-attributed. Pass 0 takes seconds; never skip.
-- ❌ Skipping Pass 1.5 because "we just want to run discovery". Pass 1.5 prevents Pass 2 from over-writing or duplicating Phase B's authored tags. Without it, the substring matcher will compete with the analyst's curated link, and the authored link gets buried under low-quality substring guesses on the same handoffs.
+- ❌ Skipping Pass 1.5 because "we just want to run discovery". Pass 1.5 prevents Pass 2 from over-writing or duplicating Phase B's authored tags. Without it, the substring matcher will compete with the analyst's curated relationship, and the authored relationship gets buried under low-quality substring guesses on the same handoffs.
 - ❌ **Setting `record_status='approved'` on any `handoff_processes` row in any script — no exception for Phase B authored rows.** Rule #1 applies uniformly: every row the agent generates is `record_status='new'`. The author's context is captured in provenance and surfaced at Pass 3 review, but does NOT bypass user approval. Auto-approving authored rows would create a class of "trust me, the analyst said so" tags that escape review, which is exactly the failure mode Rule #1 forbids.
 - ❌ Bypassing Phase B authoring when the analyst knows the PCF activity. The information dies at handoff-creation time if not captured — Discover has to recover it later via substring matching, which is lossy. When you know, tag at author time; the `record_status='new'` flag protects review discipline.
 - ❌ Authoring a process skill before its handoff_processes are approved. The skill's required-tool set is derived from the involved-domain set, which is derived from the approved cluster. Authoring from un-reviewed proposals embeds substring-match defects into the skill's tools.

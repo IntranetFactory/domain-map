@@ -57,11 +57,11 @@ function helpDeskFixture(opts: HelpDeskOpts = {}): Fixture {
     lifecycle: opts.lifecycle ?? [],
     relationships: opts.relationships ?? [],
     handoffs: opts.handoffs ?? [],
-    domainRoles: [
-      { id: AGENT, role_code: "SUPPORT-AGENT" },
-      { id: LEAD, role_code: "SUPPORT-LEAD" },
-      { id: WATCHER, role_code: "SUPPORT-WATCHER" },
-      { id: MANAGER, role_code: "SUPPORT-MANAGER" },
+    personas: [
+      { id: AGENT, persona_code: "SUPPORT-AGENT" },
+      { id: LEAD, persona_code: "SUPPORT-LEAD" },
+      { id: WATCHER, persona_code: "SUPPORT-WATCHER" },
+      { id: MANAGER, persona_code: "SUPPORT-MANAGER" },
     ],
     processRaci: opts.processRaci ?? [],
     processes: opts.processes ?? [],
@@ -342,29 +342,29 @@ describe("R7: the description agrees with the derived counts", () => {
 
 // ---------- R8 ----------
 
-describe("R8: row-scope rules have a single-person users edge", () => {
-  const edge = (p: Record<string, unknown>) => relationshipRow({ id: 1, data_object_id: USERS, related_data_object_id: TICKETS, relationship_verb: "is assigned", ...p });
+describe("R8: row-scope rules have a single-person relationship to users", () => {
+  const relationship = (p: Record<string, unknown>) => relationshipRow({ id: 1, data_object_id: USERS, related_data_object_id: TICKETS, relationship_verb: "is assigned", ...p });
   const r8 = (relationships: any[]) => of(helpDesk({ personalContent: true, relationships }).findings, "R8");
 
   test("users on the one side of a one_to_many, or a one_to_one, passes", () => {
-    expect(r8([edge({})])).toEqual([]);
-    expect(r8([edge({ relationship_type: "one_to_one" })])).toEqual([]);
-    expect(r8([edge({ data_object_id: TICKETS, related_data_object_id: USERS, relationship_type: "many_to_one" })])).toEqual([]);
+    expect(r8([relationship({})])).toEqual([]);
+    expect(r8([relationship({ relationship_type: "one_to_one" })])).toEqual([]);
+    expect(r8([relationship({ data_object_id: TICKETS, related_data_object_id: USERS, relationship_type: "many_to_one" })])).toEqual([]);
   });
 
-  test("no users edge warns, naming the entity and the rule", () => {
+  test("no relationship to users warns, naming the entity and the rule", () => {
     expect(shape(r8([]))).toEqual(["R8 warn HELPDESK-CORE [tickets, ticket_edit_scope]"]);
-    expect(r8([])[0].detail).toContain("it has no users edge");
+    expect(r8([])[0].detail).toContain("it has no relationship to users");
   });
 
-  test("a many_to_many edge, users on the many side, or a two-role verb warn", () => {
-    expect(r8([edge({ relationship_type: "many_to_many" })])[0].detail).toContain("many users per row");
-    expect(r8([edge({ data_object_id: TICKETS, related_data_object_id: USERS })])[0].detail).toContain("users is not the one side");
-    expect(r8([edge({ relationship_verb: "is assigned to or owns" })])[0].detail).toContain("the verb names two roles");
+  test("a many_to_many relationship, users on the many side, or a two-person verb warn", () => {
+    expect(r8([relationship({ relationship_type: "many_to_many" })])[0].detail).toContain("many users per row");
+    expect(r8([relationship({ data_object_id: TICKETS, related_data_object_id: USERS })])[0].detail).toContain("users is not the one side");
+    expect(r8([relationship({ relationship_verb: "is assigned to or owns" })])[0].detail).toContain("the verb names two kinds of person");
   });
 
-  test("one single-person edge among several is enough", () => {
-    expect(r8([edge({ id: 1, relationship_type: "many_to_many" }), edge({ id: 2 })])).toEqual([]);
+  test("one single-person relationship among several is enough", () => {
+    expect(r8([relationship({ id: 1, relationship_type: "many_to_many" }), relationship({ id: 2 })])).toEqual([]);
   });
 });
 
@@ -374,7 +374,7 @@ describe("R1-R8 over every module of the hiring-starter scenario", () => {
   const fx = hiringStarterScenario();
   const run = (id: number) => checkModel(deriveModuleModel(fx.index.modulesById.get(id)!, fx.ctx), { ctx: fx.ctx });
 
-  test("the starter: the Informed row without an event (R5) and candidates without a users edge (R8)", () => {
+  test("the starter: the Informed row without an event (R5) and candidates without a relationship to users (R8)", () => {
     expect(shape(run(IDS.STARTER))).toEqual([
       "R5 warn HIRING-STARTER [HIRING-MANAGER, recruit_source_candidates]",
       "R8 warn HIRING-STARTER [candidates, candidate_edit_scope]",

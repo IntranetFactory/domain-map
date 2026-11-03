@@ -26,7 +26,7 @@ Microsoft Azure Boards (primary), GitLab (secondary).
 2 gates (portfolio_epics -> approve_epic on EAP-PR; program_increments -> commit_pi on EAP-PE).
 Naming arbitration: dropped proposed `agile_okrs` and `strategic_themes` masters — EAP consumes
 existing okr_objectives (WORK-MGMT) and strategic_initiatives / strategic_portfolios (SPM)
-instead. 6 trigger_events, 6 handoffs, 21 relationships (intra-domain hierarchy + users edges +
+instead. 6 trigger_events, 6 handoffs, 21 relationships (intra-domain hierarchy + relationships to `users` +
 cross-domain), 16 aliases.
 
 **Phase C (functions).** owner Software Engineering, contributor Product Management, consumer

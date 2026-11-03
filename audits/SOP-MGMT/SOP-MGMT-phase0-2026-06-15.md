@@ -4,7 +4,7 @@ Candidate: **Process Documentation and SOP Management** (SOP-MGMT). Research onl
 Buyer: operations lead / SMB founder / franchise / frontline ops (not the enterprise architect).
 Market: authoring, versioning, publishing, and tracking acknowledgment of SOPs, process docs, work instructions, and operational playbooks.
 
-Catalog checks (live): no existing SOP-MGMT / EQMS / DAP domain. KMS (33) is an unbuilt stub (no modules). `document_versions` (430) is mastered by **ECM**; `knowledge_articles` (51) is shared across ITSM/CSM/HRSD knowledge modules; `work_instructions` (596) already exists as a catalog entity (manufacturing/MES, references product + production_order) and is unlinked but the **name is taken** — SOP-MGMT must use a distinct neutral name.
+Catalog checks (live): no existing SOP-MGMT / EQMS / DAP domain. KMS (33) is an unbuilt stub (no modules). `document_versions` (430) is mastered by **ECM**; `knowledge_articles` (51) is shared across ITSM/CSM/HRSD knowledge modules; `work_instructions` (596) already exists as a catalog entity (manufacturing/MES, references product + production_order) and is unrelated but the **name is taken** — SOP-MGMT must use a distinct neutral name.
 
 ## Flagship vendors
 
@@ -82,7 +82,7 @@ Three modules, each with >=1 master (Rule #14; domain has >=3 capabilities so >=
 
 ## Boundary verdicts
 
-- **KMS (33, unbuilt stub):** SOP-MGMT *masters* procedures, work-instruction steps, checklists, and acknowledgment; it *consumes* generic `knowledge_articles` / FAQ / search (KMS surface). Recommendation: **stand SOP-MGMT up as its own domain, not a KMS module.** The buyers differ (frontline ops vs knowledge manager) and the entity center of gravity (assign-and-acknowledge + controlled documents) is absent from KMS. KMS keeps generic articles/search; SOP-MGMT links to them as references, never re-masters them.
+- **KMS (33, unbuilt stub):** SOP-MGMT *masters* procedures, work-instruction steps, checklists, and acknowledgment; it *consumes* generic `knowledge_articles` / FAQ / search (KMS surface). Recommendation: **stand SOP-MGMT up as its own domain, not a KMS module.** The buyers differ (frontline ops vs knowledge manager) and the entity center of gravity (assign-and-acknowledge + controlled documents) is absent from KMS. KMS keeps generic articles/search; SOP-MGMT relationships to them as references, never re-masters them.
 - **ECM (91):** ECM masters the heavyweight repository, records management, and `document_versions` (430). SOP-MGMT *consumes/embeds* ECM storage where present but masters its own lighter `document_revisions` for the operator surface. SOP-MGMT does not re-propose ECM's repository or version entities.
 - **GRC (15):** GRC masters **policies**; SOP-MGMT masters **procedures** (the how-to that implements a policy). SOP-MGMT references `policies` (GRC) from procedures, does not master them.
 - **LMS (57) / ONBOARDING (99):** LMS masters courses/certifications; ONBOARDING masters new-hire journeys. SOP-MGMT's acknowledgment + comprehension quizzes are lightweight read-and-confirm, not graded courseware; `training_acknowledgment_links` bridges to LMS/ONBOARDING rather than duplicating their masters.

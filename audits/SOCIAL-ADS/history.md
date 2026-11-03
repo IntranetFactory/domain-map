@@ -55,9 +55,9 @@ Report: [.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md](../../.tmp_deploy/SOCIAL-A
   (campaigns: draft -> in_review -> active -> paused -> completed/archived with gated transitions;
   ad sets; ads; creatives draft -> in_review -> approved -> published -> archived), realizing module set.
 - `data_object_relationships` (20): intra-domain structure (campaign/ad_set/ad/creative tree, budget
-  pacing, metrics, conversions), 4 `users` edges (Rule #10: manages campaign, authors/approves creative,
-  owns budget), and cross-domain edges to SMM (campaign promotes social_posts), CDP/MA (ad_audiences
-  syncs from audiences), and conversion edges to customers.
+  pacing, metrics, conversions), 4 relationships to `users` (Rule #10: manages campaign, authors/approves creative,
+  owns budget), and cross-domain relationships to SMM (campaign promotes social_posts), CDP/MA (ad_audiences
+  syncs from audiences), and conversion relationships to customers.
 - `data_object_aliases` (11): ad group, campaign tier, custom/lookalike audience, ad creative, etc.
 - `trigger_events` (5): social_ad_campaign.launched, ad_conversion.captured, ad_budget.reallocated,
   social_ad_performance.threshold_breached, social_ad_creative.approved.
@@ -82,21 +82,21 @@ Report: [.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md](../../.tmp_deploy/SOCIAL-A
 
 ### Phase E (personas + RACI)
 
-- `domain_roles` (3): Paid Social Manager (MARKETING-PAID-SOCIAL-MANAGER), Performance Marketer
+- `personas` (3): Paid Social Manager (MARKETING-PAID-SOCIAL-MANAGER), Performance Marketer
   (MARKETING-PERFORMANCE-MARKETER), Creative Strategist (MARKETING-CREATIVE-STRATEGIST), all under
   Marketing.
-- `role_modules` (6): every persona reaches both modules (>=2-module floor).
+- `persona_modules` (6): every persona reaches both modules (>=2-module floor).
 - `process_raci` (6) on real cross-industry PCF nodes (carve-out: no net-new APQC processes):
   3.3 Develop and manage marketing plans (id 23), 3.3.2 Establish marketing budgets (id 134),
-  3.3.4.2 Develop marketing messages (id 662). Exactly-one-actor satisfied (actor_role_id set,
-  actor_skill_id null).
+  3.3.4.2 Develop marketing messages (id 662). Exactly-one-actor satisfied (persona_id set,
+  skill_id null).
 
 ### Compliance / verification
 
 - Rule #1: every row `record_status='new'`; nothing stamped approved/pending/rejected.
 - Rule #15: verified by query that `notes` is empty on every inserted row across data_objects,
   data_object_aliases, data_object_relationships, domain_module_data_objects, domain_module_tools,
-  handoffs, role_modules, solution_domains, vendors, solutions.
+  handoffs, persona_modules, solution_domains, vendors, solutions.
 - No git, no em-dash, American English, no Python, no MCP (all I/O via the semantius CLI).
 
 Loader: [.tmp_deploy/load_social_ads_2026_06_14.ts](../../.tmp_deploy/load_social_ads_2026_06_14.ts) (idempotent, Bun, run from project root).

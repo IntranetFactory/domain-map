@@ -1,0 +1,133 @@
+{
+ "taken_at": "2026-11-03T15:59:35.933Z",
+ "metadata": [
+  {
+   "kind": "field",
+   "key": "domains.min_org_size",
+   "column": "description",
+   "from": "Smallest organisation-size tier at which this domain becomes a real budget concern (i.e. dedicated tooling is purchased, even at starter level). Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+.",
+   "to": "Smallest organization-size tier at which this domain becomes a real budget concern (i.e. dedicated tooling is purchased, even at starter level). Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+."
+  },
+  {
+   "kind": "field",
+   "key": "solutions.min_org_size",
+   "column": "description",
+   "from": "Smallest organisation-size tier the solution targets. Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+. Leading number sorts; t-shirt letter is for human conversation; upper bound is the memory aid.",
+   "to": "Smallest organization-size tier the solution targets. Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+. Leading number sorts; t-shirt letter is for human conversation; upper bound is the memory aid."
+  },
+  {
+   "kind": "field",
+   "key": "solutions.max_org_size",
+   "column": "description",
+   "from": "Largest organisation-size tier the solution targets. Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+.",
+   "to": "Largest organization-size tier the solution targets. Values: 10 xs <50 / 20 s <500 / 30 m <2500 / 40 l <10000 / 50 xl 10000+."
+  },
+  {
+   "kind": "field",
+   "key": "domains.site_catalog",
+   "column": "description",
+   "from": "TRUE when the domain is listed on the public site catalog (catalog/domain-map/domain-list-site.json). Seeded with every domain whose semantius_agent_first score was 100; maintained by hand afterwards.",
+   "to": "TRUE when the domain is listed on the public site catalog (catalog/domain-map/domain-list-site.json). Seeded with every domain whose semantius_agent_first score was 100; maintained by hand afterward."
+  },
+  {
+   "kind": "field",
+   "key": "data_objects.entity_type",
+   "column": "description",
+   "from": "Classification of what kind of entity this is. Drives the Rule #12 lifecycle-state audit: only operational_workflow without lifecycle states surfaces as a gap; everything else passes whether stateful or stateless. Values: operational_workflow (has business workflow, needs lifecycle states + gates), operational_record (per-X record without workflow, e.g. notes, files, acknowledgements, log entries), catalog (config / template / taxonomy referenced by other entities; may carry a publishing lifecycle), junction (N:M relationship, may carry a qualifier and its own lifecycle), computed (derived rollup; lifecycle implicit in source), unclassified (default; surfaces to audit until set).",
+   "to": "Classification of what kind of entity this is. Drives the Rule #12 lifecycle-state audit: only operational_workflow without lifecycle states surfaces as a gap; everything else passes whether stateful or stateless. Values: operational_workflow (has business workflow, needs lifecycle states + gates), operational_record (per-X record without workflow, e.g. notes, files, acknowledgments, log entries), catalog (config / template / taxonomy referenced by other entities; may carry a publishing lifecycle), junction (N:M relationship, may carry a qualifier and its own lifecycle), computed (derived rollup; lifecycle implicit in source), unclassified (default; surfaces to audit until set)."
+  }
+ ],
+ "cells": [
+  {
+   "table": "business_processes",
+   "id": 211,
+   "column": "description",
+   "from": "Measuring the satisfaction level of customers as pertains to how their complaints are handled and resolved. This process element requires the organization to estimate the customers level of fulfillment with the process reconciling their complaints and towards the objective of ensuring customer retention. The feedback received can be used to develop concepts for new opportunities to boost the level of customer satisfaction.",
+   "to": "Measuring the satisfaction level of customers as pertains to how their complaints are handled and resolved. This process element requires the organization to estimate the customers level of fulfillment with the process reconciling their complaints and toward the objective of ensuring customer retention. The feedback received can be used to develop concepts for new opportunities to boost the level of customer satisfaction."
+  },
+  {
+   "table": "business_processes",
+   "id": 551,
+   "column": "description",
+   "from": "Direct, supervise, and control the product/service details necessary to execute the process. Adhere to details and descriptions for product/service through identified or guided parameters towards final outcome in the market with due critical analysis formed on organizational objectives.",
+   "to": "Direct, supervise, and control the product/service details necessary to execute the process. Adhere to details and descriptions for product/service through identified or guided parameters toward final outcome in the market with due critical analysis formed on organizational objectives."
+  },
+  {
+   "table": "business_processes",
+   "id": 1106,
+   "column": "description",
+   "from": "Building and maintaining intelligence towards changing organizational goals, supporting management, and operational or functional levels of the business. It is the ability to understand business trends that present threats or opportunities for IT in an organization.",
+   "to": "Building and maintaining intelligence toward changing organizational goals, supporting management, and operational or functional levels of the business. It is the ability to understand business trends that present threats or opportunities for IT in an organization."
+  },
+  {
+   "table": "business_processes",
+   "id": 1140,
+   "column": "description",
+   "from": "Conveying the value addition through adopting technology targeting towards integrated profitable business operations.",
+   "to": "Conveying the value addition through adopting technology targeting toward integrated profitable business operations."
+  },
+  {
+   "table": "business_processes",
+   "id": 1221,
+   "column": "description",
+   "from": "Creating and establishing service component portfolio by defining investments, and activities. Analyze and examine the value of the service component portfolio, and allocate resources towards it.",
+   "to": "Creating and establishing service component portfolio by defining investments, and activities. Analyze and examine the value of the service component portfolio, and allocate resources toward it."
+  },
+  {
+   "table": "business_processes",
+   "id": 1294,
+   "column": "description",
+   "from": "Maintaining and transfer of knowledge towards service support with the change/upgrade in technology over a stipulated period. Ensure IT staff is well trained and tested on the new learning of service support.",
+   "to": "Maintaining and transfer of knowledge toward service support with the change/upgrade in technology over a stipulated period. Ensure IT staff is well trained and tested on the new learning of service support."
+  },
+  {
+   "table": "business_processes",
+   "id": 1474,
+   "column": "description",
+   "from": "Computing all expenses paid to and receivables collected over the organization's banking activity. Calculate all charges and receivables, towards interest, fees, and any other payments over its own bank accounts. Record transactions in the books of accounts.",
+   "to": "Computing all expenses paid to and receivables collected over the organization's banking activity. Calculate all charges and receivables, toward interest, fees, and any other payments over its own bank accounts. Record transactions in the books of accounts."
+  },
+  {
+   "table": "business_processes",
+   "id": 1816,
+   "column": "description",
+   "from": "Establishing a direction and vision on how the organization behaves towards customers in a consistent, effective way. The key attributes for customer experience vision consists of emotional connection, commitments and expectations, compelling value proposition, and ease of understanding the organization's behavior.",
+   "to": "Establishing a direction and vision on how the organization behaves toward customers in a consistent, effective way. The key attributes for customer experience vision consists of emotional connection, commitments and expectations, compelling value proposition, and ease of understanding the organization's behavior."
+  },
+  {
+   "table": "business_processes",
+   "id": 1963,
+   "column": "description",
+   "from": "Overseeing the foreign exchange balance sheet with an eye towards potential risk. Risks include changes in conversion rates between the time the transaction occurred and when it is completed, or when transactions are made in a denomination other than that of the organization's base currency.",
+   "to": "Overseeing the foreign exchange balance sheet with an eye toward potential risk. Risks include changes in conversion rates between the time the transaction occurred and when it is completed, or when transactions are made in a denomination other than that of the organization's base currency."
+  },
+  {
+   "table": "data_objects",
+   "id": 183,
+   "column": "description",
+   "from": "Calculated driver score (e.g. Strategy, Growth, Recognition, Wellbeing, Leadership) at a team/department/segment grain. The action layer of engagement listening.",
+   "to": "Calculated driver score (e.g. Strategy, Growth, Recognition, Well-being, Leadership) at a team/department/segment grain. The action layer of engagement listening."
+  },
+  {
+   "table": "solutions",
+   "id": 565,
+   "column": "description",
+   "from": "Subscription, billing, and revenue management for telecoms / IoT / SaaS verticals.",
+   "to": "Subscription, billing, and revenue management for telecom / IoT / SaaS verticals."
+  },
+  {
+   "table": "solutions",
+   "id": 971,
+   "column": "description",
+   "from": "Microsoft 365-native employee engagement and continuous-feedback tool. Part of Zensai's Human Success Platform alongside Learn365 and Perform365; the engagement product traces back to Weekly10, merged into Zensai in 2023. Runs inside Microsoft Teams, SharePoint, and Outlook; covers regular check-ins, pulse surveys, recognition, and wellbeing signals for mid-market and enterprise M365 shops that want engagement embedded in the existing collaboration stack.",
+   "to": "Microsoft 365-native employee engagement and continuous-feedback tool. Part of Zensai's Human Success Platform alongside Learn365 and Perform365; the engagement product traces back to Weekly10, merged into Zensai in 2023. Runs inside Microsoft Teams, SharePoint, and Outlook; covers regular check-ins, pulse surveys, recognition, and well-being signals for mid-market and enterprise M365 shops that want engagement embedded in the existing collaboration stack."
+  },
+  {
+   "table": "vendors",
+   "id": 497,
+   "column": "description",
+   "from": "Subscription, billing, and revenue management for telecoms / IoT / SaaS.",
+   "to": "Subscription, billing, and revenue management for telecom / IoT / SaaS."
+  }
+ ]
+}

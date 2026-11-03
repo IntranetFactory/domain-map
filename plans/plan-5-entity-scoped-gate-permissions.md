@@ -128,7 +128,7 @@ mechanical.
   already exists (idempotent) - merge, do not rename, do not migrate grants. This RETIRES the
   deferred plan-4 platform item "re-prefix gates at deploy / rename on upgrade."
 - Dedup: a gate minted by two installed units (a starter and the canonical module) is the same code
-  -> one tenant permission row; each module's `:admin` hierarchy edge points at it.
+  -> one tenant permission row; each module's `:admin` hierarchy relationship points at it.
 
 ## Live-write inventory
 None in this repo. Code (two derivation functions + hierarchy) + docs + regenerated blueprints

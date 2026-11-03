@@ -42,7 +42,7 @@ q3: The Accessibility Governance capability is currently just a scan. Should acc
 
 You asked: "would that be an optional module?" It could be, but the cleaner home is the base Inventory module, where the accessibility scan already lives. A separate opt-in accessibility module only pays off if you deploy accessibility governance selectively for some orgs and not others. Neither accessibility vendor sells conformance as a separable add-on, it sits in the same product as the scan, so I have framed this as base-module (a) vs optional-module (b).
 
-- a) Add an accessibility conformance record AND register the standards (WCAG 2.2, EN 301 549, the European Accessibility Act), in the base Inventory module where the scan already lives. (I already linked ADA and Section 508 to this domain in the earlier pass.)
+- a) Add an accessibility conformance record AND register the standards (WCAG 2.2, EN 301 549, the European Accessibility Act), in the base Inventory module where the scan already lives. (I already related ADA and Section 508 to this domain in the earlier pass.)
 - b) Same as (a), but ship the conformance record as its own OPTIONAL accessibility module (deploy-time opt-in).
 - c) Just register the standards, keep accessibility as a scan only (no conformance record).
 - d) Neither: leave accessibility as a scan with no standards or conformance tracking.
@@ -55,7 +55,7 @@ a3:
 
 ## Optional (will not hold up the build)
 
-q4: Improvements found during governance currently become a generic work item handed to Work Management. Should there be a dedicated, typed improvement / remediation record instead (linking a finding to its fix to the content it cleared)? (yes/no)
+q4: Improvements found during governance currently become a generic work item handed to Work Management. Should there be a dedicated, typed improvement / remediation record instead (relating a finding to its fix to the content it cleared)? (yes/no)
 
 You asked: "can we have a basic embedded Work Management?" You already do. The domain embeds Work Management today: improvements become generic work items (mastered by Work Management, embedded into the Governance module as an optional embed), so basic embedded task handling is live now. This q4 is only about whether to add a domain-specific remediation record ON TOP of that generic embed.
 

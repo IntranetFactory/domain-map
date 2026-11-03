@@ -51,7 +51,7 @@ type Rec = {
   unclassified_masters: number;
   unclassified_master_names: string[];
   m9_shapes: number;
-  m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[];
+  m9_details: { entity: string; module: string; held_as: string; is_install_optional: boolean | null; master_domains: string[] }[];
   verdict: string;
   b1a_codes: string[];
 };
@@ -84,7 +84,7 @@ function buildItems(r: Rec): Item[] {
         id: code,
         summary: `Unbuilt domain: 0 domain_modules (M1 fail), ${r.capability_count} capabilities awaiting a build.`,
         finding: `Live triage ${TRIAGE_DATE}: this domain has 0 domain_modules rows (M1 fail) and ${r.capability_count} capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies.`,
-        action: `Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward.`,
+        action: `Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward.`,
       });
     } else if (code === "B1A-MODULARIZE") {
       items.push({
@@ -104,8 +104,8 @@ function buildItems(r: Rec): Item[] {
       items.push({
         id: code,
         summary: `Multi-module (${r.module_count} modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer.`,
-        finding: `Live triage ${TRIAGE_DATE}: ${r.module_count} domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain.`,
-        action: `Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the ${r.module_count} modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts).`,
+        finding: `Live triage ${TRIAGE_DATE}: ${r.module_count} domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain.`,
+        action: `Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the ${r.module_count} modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts).`,
       });
     } else if (code === "B1A-ENTITY-TYPE") {
       const names = r.unclassified_master_names;
@@ -118,12 +118,12 @@ function buildItems(r: Rec): Item[] {
       });
     } else if (code === "B1A-SELF-CONTAIN") {
       const shapeLines = r.m9_details.map(
-        (m) => `      - {entity: ${m.entity}, module: ${m.module}, role: ${m.role}, master_domain: ${m.master_domains.join("+")}}`,
+        (m) => `      - {entity: ${m.entity}, module: ${m.module}, held_as: ${m.held_as}, master_domain: ${m.master_domains.join("+")}}`,
       );
       items.push({
         id: code,
         summary: `${r.m9_shapes} contributor/required-consumer rows break module self-containment (M9): embed or relax each.`,
-        finding: `Live triage ${TRIAGE_DATE}: ${r.m9_shapes} domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with is_install_optional=false, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.`,
+        finding: `Live triage ${TRIAGE_DATE}: ${r.m9_shapes} domain_module_data_objects rows on this domain's modules are held_as=contributor or held_as=consumer with is_install_optional=false, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.`,
         action: `Per row, convert to embedded_master (carry a local shell) or set is_install_optional=true (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency.`,
         afterAction: ["    extra_m9_shapes:", ...shapeLines],
       });

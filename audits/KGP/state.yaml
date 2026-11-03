@@ -28,8 +28,8 @@ b1b:
       - {data_object_id: 742, name: kgp_ontologies, target_module_id: 270, workflow: "drafting->validating->published->superseded->retired"}
       - {data_object_id: 743, name: kgp_knowledge_graph_entities, target_module_id: 271, workflow: "asserted->validated->reasoned->merged->retired"}
 
-  - id: B1B-B8-OUTBOUND-EDGES
-    summary: "Mirror data_object_relationships edges from KGP payload masters to the receiving masters in DATA-AI-PLAT and DCG; target-side masters not yet stable."
+  - id: B1B-B8-OUTBOUND-RELATIONSHIPS
+    summary: "Mirror data_object_relationships rows from KGP payload masters to the receiving masters in DATA-AI-PLAT and DCG; target-side masters not yet stable."
     finding: >-
       Handoffs 697 (KGP->DATA-AI-PLAT, payload kgp_ontologies 742), 698 + 699 (KGP->DCG,
       payload kgp_knowledge_graph_entities 743) lack mirror data_object_relationships to the
@@ -63,14 +63,14 @@ b1b:
       - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: target_domain_module_id}
       - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
       - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
-      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.linked, payload: knowledge_graph_entities, null_field: source_domain_module_id}
+      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.related, payload: knowledge_graph_entities, null_field: source_domain_module_id}
       - {handoff_id: 265, direction: inbound, source_domain: DCG, target_domain: KGP, trigger_event: glossary_term.published, payload: glossary_terms, null_field: source_domain_module_id}
 
   - id: B1B-APQC-H222-H697-H698-H699
     summary: "Tag 4 remaining KGP-touching handoffs with APQC PCF processes once a confirmed PCF is identified."
     finding: >-
       Of 7 KGP handoffs, h.221 + h.223 + h.265 are tagged (all -> process 275, agent_curated/new;
-      h.221 resolved under B1A-APQC-H221). The other 4 (222 MDM->KGP kg_entity.linked
+      h.221 resolved under B1A-APQC-H221). The other 4 (222 MDM->KGP kg_entity.related
       payload knowledge_graph_entities; 697 kgp_ontology.imported; 698 kgp_knowledge_graph_entity.merged;
       699 kgp_knowledge_graph_entity.created) lack tags. The 2026-05-30 audit cited PCF
       external_ids 10563 / 10564 / 10571 / 10568; the 2026-05-31 fix pass found no live
@@ -80,7 +80,7 @@ b1b:
     blocked_by:
       - {type: depends_on, ref: pcf_lookup_pass, reason: "audit-cited PCF external_ids 10563/10564/10571/10568 not present in catalog; need re-discovery against live processes"}
     affected_handoffs:
-      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.linked, payload: knowledge_graph_entities, null_field: handoff_processes}
+      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.related, payload: knowledge_graph_entities, null_field: handoff_processes}
       - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: handoff_processes}
       - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: handoff_processes}
       - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: handoff_processes}
@@ -128,7 +128,7 @@ b2:
   - id: B2-S1
     summary: "Canonical ontology owner across KGP / DCG / DATA-AI-PLAT (legacy domain_data_objects double-master on data_object 254)."
     question: >-
-      Data_object 254 'ontologies' has role='master' rows on BOTH DCG (88) and
+      Data_object 254 'ontologies' has held_as='master' rows on BOTH DCG (88) and
       DATA-AI-PLAT (129) at the legacy domain_data_objects rollup, plus MDM (87) carries a
       contributor row. KGP separately masters kgp_ontologies (742, now in module 270) which
       duplicates the concept. Pick the canonical owner; the loser-side domain DELETEs its

@@ -11,8 +11,8 @@ last_audit: "2026-06-13"
 # vulnerability_remediations 1031, vulnerability_exceptions 1032, vulnerability_assessments 1033)
 # placed into modules via domain_module_data_objects (+ org_units embedded, software_installations
 # consumed), lifecycle states on the 5 workflow masters, the vuln-mgmt-system skill + tools +
-# domain_module_tools, 5 personas + role_modules. This completion pass added:
-#  - 11 data_object_relationships: 6 intra-domain (B6), 3 users edges (B7), 2 cross-domain (B8)
+# domain_module_tools, 5 personas + persona_modules. This completion pass added:
+#  - 11 data_object_relationships: 6 intra-domain (B6), 3 relationships to users (B7), 2 cross-domain (B8)
 #  - 15 lifecycle-cover trigger_events (B9)
 #  - 1 handoff module-FK backfill (B10b): handoff 36 target -> VULN-MGMT-DETECT (332)
 # Only user-judgment decisions remain.
@@ -30,9 +30,9 @@ b2:
 
   - id: B2-VM-REMEDIATION-OWNERSHIP
     summary: Confirm that vulnerability_remediations is mastered in VULN-MGMT (built) and add the outbound handoff to ITSM, vs handing remediation entirely to ITSM.
-    question: "Keep vulnerability_remediations mastered in VULN-MGMT as the security-side workflow (built, with a cross-domain edge to ITSM service_changes already loaded), and add an outbound handoff vulnerability_remediation.assigned -> ITSM so fixes executed through the service desk are tracked there; or do not master remediation here at all and only create/consume ITSM tickets?"
+    question: "Keep vulnerability_remediations mastered in VULN-MGMT as the security-side workflow (built, with a cross-domain relationship to ITSM service_changes already loaded), and add an outbound handoff vulnerability_remediation.assigned -> ITSM so fixes executed through the service desk are tracked there; or do not master remediation here at all and only create/consume ITSM tickets?"
     options: [a-master-here-plus-handoff-to-itsm, b-itsm-only-consume-status-back, c-master-here-no-itsm-integration]
-    why: "Flagship VM vendors master their own remediation/response entity even when they integrate with ServiceNow. Tenable Vulnerability Management has its own remediation recommendations and a ServiceNow ticketing connector; Qualys VMDR ships Patch Management and its own remediation tickets while also pushing to ServiceNow; Rapid7 InsightVM owns Remediation Projects and tickets and syncs to ITSM; Microsoft Defender VM owns Remediation activities and hands the request to Intune/ServiceNow for execution; CrowdStrike Falcon Spotlight routes through Falcon Fusion. ServiceNow Vulnerability Response is the inverse case: it lives natively inside ITSM, so there the security view and the ticket are the same record. Real trade-off: mastering here gives the security team an SLA/MTTR view independent of whoever executes the patch (the prioritized queue and the close-the-loop verification stay security-owned), at the cost of a second record to reconcile with the ITSM change/incident; ITSM-only keeps one record but loses the security-side posture lens and verification re-scan linkage. The built shape (a) matches Tenable/Qualys/Rapid7/Microsoft/CrowdStrike; adding the outbound handoff is the only piece not yet loaded because the ITSM-side module FK and trigger event want your sign-off."
+    why: "Flagship VM vendors master their own remediation/response entity even when they integrate with ServiceNow. Tenable Vulnerability Management has its own remediation recommendations and a ServiceNow ticketing connector; Qualys VMDR ships Patch Management and its own remediation tickets while also pushing to ServiceNow; Rapid7 InsightVM owns Remediation Projects and tickets and syncs to ITSM; Microsoft Defender VM owns Remediation activities and hands the request to Intune/ServiceNow for execution; CrowdStrike Falcon Spotlight routes through Falcon Fusion. ServiceNow Vulnerability Response is the inverse case: it lives natively inside ITSM, so there the security view and the ticket are the same record. Real trade-off: mastering here gives the security team an SLA/MTTR view independent of whoever executes the patch (the prioritized queue and the close-the-loop verification stay security-owned), at the cost of a second record to reconcile with the ITSM change/incident; ITSM-only keeps one record but loses the security-side posture lens and verification re-scan relationship. The built shape (a) matches Tenable/Qualys/Rapid7/Microsoft/CrowdStrike; adding the outbound handoff is the only piece not yet loaded because the ITSM-side module FK and trigger event want your sign-off."
 
   - id: B2-VM-CVE-INTEL-SOURCE
     summary: Confirm vulnerability_definitions is mastered here (built as a catalog) while volatile exploit intel is consumed from THREAT-INTEL, and decide whether to add the inbound exploit-intel handoff now.
@@ -54,12 +54,12 @@ b3:
 
   - id: B3-VM-REMEDIATION-ITSM-HANDOFF
     candidate: "Outbound vulnerability_remediation.assigned -> ITSM (service_changes / service_incidents) handoff"
-    rationale: "When a fix is executed through the service desk, the assigned remediation should open or link an ITSM change/incident. The cross-domain data_object_relationship vulnerability_remediations -> service_changes is loaded; the formal handoff row (with trigger event and module FKs) wants the B2-VM-REMEDIATION-OWNERSHIP decision first. Additive, non-blocking."
+    rationale: "When a fix is executed through the service desk, the assigned remediation should open or relate an ITSM change/incident. The cross-domain data_object_relationship vulnerability_remediations -> service_changes is loaded; the formal handoff row (with trigger event and module FKs) wants the B2-VM-REMEDIATION-OWNERSHIP decision first. Additive, non-blocking."
     vendor_evidence: ["Tenable Vulnerability Management (ServiceNow connector)", "Qualys VMDR (ServiceNow ITSM integration)", "Rapid7 InsightVM (ITSM ticketing sync)", "Microsoft Defender Vulnerability Management (Intune / ServiceNow remediation)", "ServiceNow Vulnerability Response (native ITSM)"]
 
   - id: B3-VM-CMDB-ASSET-HANDOFF
     candidate: "Inbound CMDB/ITAM asset-population handoff (configuration_item.discovered / hardware_asset.onboarded feeding scan scope)"
-    rationale: "Scanning runs against an asset population that CMDB (configuration_items, loaded as a cross-domain edge) and ITAM/HAM (hardware_assets) master. A formal inbound handoff would let new-asset events trigger scan-scope updates. The affects edge to configuration_items is loaded; the handoff is additive and non-blocking."
+    rationale: "Scanning runs against an asset population that CMDB (configuration_items, loaded as a cross-domain relationship) and ITAM/HAM (hardware_assets) master. A formal inbound handoff would let new-asset events trigger scan-scope updates. The affects relationship to configuration_items is loaded; the handoff is additive and non-blocking."
     vendor_evidence: ["Tenable One (asset inventory sync)", "Qualys VMDR (host asset / CMDB sync)", "Rapid7 InsightVM (asset groups)", "Wiz Cloud Security Platform (cloud resource graph)"]
 
   - id: B3-VM-MARKET-SURFACE

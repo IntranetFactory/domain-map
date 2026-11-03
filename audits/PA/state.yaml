@@ -34,7 +34,7 @@ b1a:
   - id: B1A-INTRA-PA-RELATIONSHIPS
     summary: Intra-PA master-to-master data_object_relationships missing. B6 partial fail.
     finding: |
-      Among the 5 PA masters (42, 43, 44, 45, 46), no direct master-to-master relationships exist. Observed rows: 5 user-edges (1595-1599, Rule #10) plus derivation feeds (org_units / employment_events / learning_records / engagement_drivers / survey_responses / customers all feed people_kpis). Missing master-to-master edges: predictive_models scores attrition_forecasts (46 -> 42), predictive_models scores workforce_segments (46 -> 44), attrition_forecasts segments workforce_segments (42 -> 44).
+      Among the 5 PA masters (42, 43, 44, 45, 46), no direct master-to-master relationships exist. Observed rows: 5 relationships to users (1595-1599, Rule #10) plus derivation feeds (org_units / employment_events / learning_records / engagement_drivers / survey_responses / customers all feed people_kpis). Missing master-to-master relationships: predictive_models scores attrition_forecasts (46 -> 42), predictive_models scores workforce_segments (46 -> 44), attrition_forecasts segments workforce_segments (42 -> 44).
     action: |
       Draft 3-4 intra-PA data_object_relationships rows. Each row needs relationship_verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side. Verb proposals not pre-specified by audit; user authoring required.
     affected_masters:
@@ -44,7 +44,7 @@ b1a:
 
   - id: B1A-SELF-CONTAIN
     summary: "5 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) -> needs user sign-off."
-    finding: "5 domain_module_data_objects rows on PA modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. Resolving rewrites a non-empty role/necessity on an existing row, which is a destructive change."
+    finding: "5 domain_module_data_objects rows on PA modules are held_as=contributor or held_as=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. Resolving rewrites a non-empty role/necessity on an existing row, which is a destructive change."
     action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency. Requires user approval (overwrite of an existing non-empty value)."
     extra_m9_shapes:
       - {entity: hcm_positions, module: PA-DEI-ANALYTICS, role: consumer, master_domain: HCM}
@@ -65,8 +65,8 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED (do not author)."
-    finding: "4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver, DEI sign-off), PA-DATA-SCIENTIST (predictive model author, DEI cohort analysis). DEFERRED per parent-task B1A-PHASE-P rule; awaiting user."
+    finding: "4 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author personas (operational) function-anchored per references/personas.md section 7, wire persona_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver, DEI sign-off), PA-DATA-SCIENTIST (predictive model author, DEI cohort analysis). DEFERRED per parent-task B1A-PHASE-P rule; awaiting user."
     extra_phase_p_triage: "2026-06-02"
 
   # --- RETIRED 2026-06-06 (per-domain-skill restoration / Plan 3) ---
@@ -77,7 +77,7 @@ b1a:
     summary: "RETIRED. Was: author 4 module-level system skills (one per PA module) + skill_tools. The per-module `system` skill grain and `skill_tools` are dropped. Per-module tool re-authoring now tracked in audits/_modularization-backlog.md."
   - id: B1A-ROLES
     superseded: "2026-06-06 per-domain-skill restoration / Plan 3"
-    summary: "RETIRED. Was: author 3-5 PA-scoped _core roles + role_modules + role_permissions. The _core roles-permissions model item is superseded; operational personas are tracked under B1A-PHASE-P (domain_roles / role_modules / process_raci), which is DEFERRED."
+    summary: "RETIRED. Was: author 3-5 PA-scoped _core roles + persona_modules + role_permissions. The _core roles-permissions model item is superseded; operational personas are tracked under B1A-PHASE-P (personas / persona_modules / process_raci), which is DEFERRED."
   - id: B1A-PERMISSIONS
     superseded: "2026-06-06 per-domain-skill restoration / Plan 3"
     summary: "RETIRED. Was: author 12 baseline _core permissions across 4 modules + workflow-gate permissions. The _core roles-permissions baseline-derivation model item is superseded; write tiers are now derived at emit time from entity_type (Rule #12) and lifecycle-state requires_permission gates."
@@ -105,7 +105,7 @@ b2:
       - "(b) PATCH events 10 + 11 data_object_id to PA-mastered rows (42)"
       - "(c) accept the cross-domain attribution as legitimate (events fire on the affected data_object, not the publisher's master)"
     why: |
-      Choice affects rows beyond PA (HCM-owned event 10 has its own publishers; SWP-owned event 11 likewise). Cross-domain coordination needed. Option (a) is the cleanest semantic fix; option (b) breaks the publisher-master link.
+      Choice affects rows beyond PA (HCM-owned event 10 has its own publishers; SWP-owned event 11 likewise). Cross-domain coordination needed. Option (a) is the cleanest semantic fix; option (b) breaks the publisher-master relationship.
     affected_events:
       - {id: 10, event_name: "attrition_risk.high", current_category: "state_change", proposed_category: "threshold_or_retire"}
       - {id: 11, event_name: "attrition.forecast_updated", current_category: "state_change", proposed_category: "retire_or_repoint"}

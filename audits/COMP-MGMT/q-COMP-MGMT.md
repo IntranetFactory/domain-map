@@ -8,18 +8,6 @@ Run the full compensation cycle: build pay plans and salary bands against market
 
 ---
 
-q1: (answer this first) The entity equity_grants is currently mastered in two places at once: the cap-table equity-administration market and the compensation incentives module. Which one should be the canonical owner?
-
-- a) Cap-table equity administration keeps the master, and compensation incentives demotes to an embedded copy.
-- b) Compensation incentives keeps the master, and cap-table equity administration demotes.
-- c) Defer, leave both as masters and accept the failing check until the next audit.
-
-Recommended: a. Cap-table is the equity-administration market where a grant lives for its whole life (vesting, exercise, forfeiture, expiration), so it is the natural canonical home; the compensation copy is kept only for standalone deployments. This decision also unblocks permissions, roles, and the equity workflow gates, so it unlocks the rest of the build.
-
-a1:
-
----
-
 q2: Pay recommendations and total-rewards statements hold individual pay data, but compensation plans currently carry no single-approver flag. Should compensation plans be marked as requiring a single named approver, since plans are typically board-approved at issuance? (yes/no)
 
 Recommended: yes. Plans are normally signed off once at issuance by a single accountable owner. This overwrites an existing flag value, so it needs your confirmation.
@@ -64,13 +52,13 @@ a6:
 
 ---
 
-q7: The vendor Sequoia One is linked to this domain as a secondary solution, but it is a PEO / benefits broker rather than a compensation-planning platform. What should happen to it?
+q7: The vendor Sequoia One is related to this domain as a secondary solution, but it is a PEO / benefits broker rather than a compensation-planning platform. What should happen to it?
 
-- a) Remove the link (scope creep).
+- a) Remove the relationship (scope creep).
 - b) Keep it as a secondary solution (broker-touches-comp narrative).
 - c) Move its primary placement to benefits administration or HRIS, where it fits better.
 
-Recommended: a. Sequoia One does not compete in the compensation-planning market, so the link over-includes. Removing it is a destructive delete, so it needs your sign-off.
+Recommended: a. Sequoia One does not compete in the compensation-planning market, so the relationship over-includes. Removing it is a destructive delete, so it needs your sign-off.
 
 a7:
 
@@ -171,7 +159,7 @@ a13:
 
 ---
 
-q14: Only two compliance regulations are linked today. Should I add the US executive-pay and equity-valuation regimes plus the state pay-transparency laws (CEO pay-ratio, deferred-comp rules, equity-valuation and executive-deduction tax rules, and the CA / CO / NY / WA pay-transparency laws)? (yes/no)
+q14: Only two compliance regulations are related today. Should I add the US executive-pay and equity-valuation regimes plus the state pay-transparency laws (CEO pay-ratio, deferred-comp rules, equity-valuation and executive-deduction tax rules, and the CA / CO / NY / WA pay-transparency laws)? (yes/no)
 
 Recommended: yes, pending a quick relevance check per regulation. Additive and non-blocking.
 
@@ -179,4 +167,43 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S7.plansingleapprover q3=B2-S7.equitysubmitlock q4=B2-S7.statementsubmitlock q5=B2-S5 q6=B2-S6 q7=B2-S3 q8=B2-S4 q9=B2-S2 q10=B1A-S9-RESIDUAL q11=B1A-SELF-CONTAIN q12=B3-PAY-EQUITY-ASSESSMENTS+B3-INCENTIVE-PLANS+B3-BONUS-POOLS+B3-COMMISSION-STATEMENTS+B3-TOTAL-REWARDS-OFFERS+B3-PAY-TRANSPARENCY-DISCLOSURES q13=B3-ICM-DOMAIN-SPLIT q14=B3-COMPLIANCE-REGULATIONS q15=B2-B9D-OWN-1046 q16=B2-B9D-OWN-1049 q17=B2-B9D-OWN-1379 q18=B1A-B9D-DESTRUCTIVE | domain_id=60 -->
+q19: The buyer copy on the incentives module (COMP-INCENTIVES) still says it follows each grant through vesting, exercise, forfeiture, and expiration, which now happens on the cap table. Replace it with the text below? (yes/no)
+
+Tagline: Decide bonus, commission, and equity awards, then track each from proposal to payout.
+
+Description: Propose bonus, commission, and equity awards as part of total rewards, approve them, and follow each one until it is paid or issued. Keep award amounts, terms, and statuses in one place so finance, payroll, and your people all see the same numbers. Give your team a clean record of every incentive you have promised.
+
+Recommended: yes. This overwrites existing buyer copy, so it needs your confirmation.
+
+a19:
+
+---
+
+q20: An offer version currently proposes an equity grant. Should it propose an incentive award instead, since the grant is only issued later on the cap table? (yes/no)
+
+Recommended: yes. An offer promises an award, and this overwrites an existing relationship, so it needs your confirmation.
+
+a20:
+
+---
+
+q21: The incentives module still realizes the capability Equity and Stock Plan Administration (EQUITY-MGMT), which overlaps the cap table's grant workflows. Which should happen?
+
+- a) Keep it here and reword the row note to cover equity award decisions and cap-table integration.
+- b) Move the capability to CAP-TABLE-GRANTS.
+
+Recommended: a. It keeps the capability inside the domain that sells it, and it changes one note.
+
+a21:
+
+---
+
+q22: The statements module (COMP-STATEMENTS) holds equity_grants as a contributor, and the module health check now flags that because the master left the domain. Should it become a consumer, since it only reads grants to compose a statement? (yes/no)
+
+Recommended: yes. This overwrites an existing value, so it needs your confirmation.
+
+a22:
+
+---
+
+<!-- agent map, ignore: q2=B2-S7.plansingleapprover q3=B2-S7.equitysubmitlock q4=B2-S7.statementsubmitlock q5=B2-S5 q6=B2-S6 q7=B2-S3 q8=B2-S4 q9=B2-S2 q10=B1A-S9-RESIDUAL q11=B1A-SELF-CONTAIN q12=B3-PAY-EQUITY-ASSESSMENTS+B3-INCENTIVE-PLANS+B3-BONUS-POOLS+B3-COMMISSION-STATEMENTS+B3-TOTAL-REWARDS-OFFERS+B3-PAY-TRANSPARENCY-DISCLOSURES q13=B3-ICM-DOMAIN-SPLIT q14=B3-COMPLIANCE-REGULATIONS q15=B2-B9D-OWN-1046 q16=B2-B9D-OWN-1049 q17=B2-B9D-OWN-1379 q18=B1A-B9D-DESTRUCTIVE q19=B2-INCENTIVE-COPY q20=B2-OFFER-AWARD q21=B2-EQUITY-MGMT-CAPABILITY q22=B2-STATEMENTS-EQUITY-HOLD | domain_id=60 -->

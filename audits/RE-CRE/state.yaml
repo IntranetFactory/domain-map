@@ -10,8 +10,8 @@ b1b:
     finding: >
       Zero intra-domain master-to-master data_object_relationships across commercial_leases (363),
       stacking_plans (364), cam_charges (365), tenant_credit_records (719), sublease_transactions
-      (720), building_certifications (721). Pre-existing edges are user-edges (15 rows) and 2
-      cross-domain; no intra-domain edges exist. Modules now exist, but relationship authoring is
+      (720), building_certifications (721). Pre-existing relationships are relationships to users (15 rows) and 2
+      cross-domain; no intra-domain relationships exist. Modules now exist, but relationship authoring is
       out of this modularization pass's scope (modules + entity assignment only).
     blocked_by:
       - {type: depends_on, ref: B1B-SUBSTRATE-PASS, reason: "relationship authoring deferred to the workflow-substrate pass"}
@@ -80,7 +80,7 @@ b1b:
   - id: B1B-B8
     summary: "Author 5 cross-domain data_object_relationships for handoff payloads (B8)."
     finding: >
-      5 cross-domain payload-to-target-master edges unauthored: commercial_leases flows_into
+      5 cross-domain payload-to-target-master relationships unauthored: commercial_leases flows_into
       investment_property_holdings (303 to RE-INVEST); tenant_credit_records informs
       investment_underwriting (859 to RE-INVEST); cam_charges reconciles_into payable_invoices
       (302 to AP-AUTO); real_estate_properties listed_in stacking_plans (856 inbound);
@@ -147,10 +147,10 @@ b1b:
 b2:
   - id: B2-S2
     summary: "Confirm target master ids on RE-INVEST and AP-AUTO for B1B-B8 cross-domain relationships."
-    question: "What are the target master ids for the 5 missing cross-domain edges, and are those masters present in the catalog?"
+    question: "What are the target master ids for the 5 missing cross-domain relationships, and are those masters present in the catalog?"
     options:
       - "Supply ids for: investment_property_holdings (RE-INVEST), investment_underwriting (RE-INVEST), payable_invoices (AP-AUTO), real_estate_properties (REAL-EST id 344 exists), real_estate_transactions (RE-BROKERAGE id 353 exists)"
-      - "Defer RE-INVEST edges pending RE-INVEST audit"
+      - "Defer RE-INVEST relationships pending RE-INVEST audit"
     why: "RE-INVEST has not been audited under schema_version 2; target masters may not yet exist or may carry different names."
 
   - id: B2-S3

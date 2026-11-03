@@ -18,7 +18,7 @@ Priority order by expected B10b defect closure:
 
 | # | Domain | B10b defects | Has DMDO data? | Notes |
 |---|---|---|---|---|
-| 1 | ITSM | 57 | Yes (29 rows) | High inbound traffic from CMDB, CSM, AIOPS, HRSD; pairwise reconciliation will surface many edges |
+| 1 | ITSM | 57 | Yes (29 rows) | High inbound traffic from CMDB, CSM, AIOPS, HRSD; pairwise reconciliation will surface many relationships |
 | 2 | CSM | 63 | Yes (14 rows) | High inbound + outbound; SUB-MGMT, CRM, FSM neighbors |
 | 3 | HCM | 30 | Yes (24 rows) | Joiner cascade publisher; Payroll, IGA, ATS, Talent-Mgmt as downstream |
 | 4 | SUB-MGMT | 28 | Partial | 14 outbound + 14 inbound NULL FKs; mostly mechanical B10b derivation |

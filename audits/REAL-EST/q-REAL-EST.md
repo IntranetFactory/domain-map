@@ -29,12 +29,12 @@ a2:
 
 ---
 
-q3: Five cross-domain handoffs need a target master on the partner domain before the relationship can be wired (work orders to FSM, meter readings to ESG, spaces to HCM, properties to RE-CRE, and properties to RE-INVEST). Only the EAM link is wired today. Should I surface the target master IDs on each neighbor so the relationship rows can be authored?
+q3: Five cross-domain handoffs need a target master on the partner domain before the relationship can be wired (work orders to FSM, meter readings to ESG, spaces to HCM, properties to RE-CRE, and properties to RE-INVEST). Only the EAM relationship is wired today. Should I surface the target master IDs on each neighbor so the relationship rows can be authored?
 
 - a) Yes, surface the partner target masters now (RE-CRE and RE-INVEST have no masters yet, so those two may need their own audits first).
 - b) Wait until each neighbor domain is audited and only wire EAM for now.
 
-Recommended: a. Surfacing the targets now lets the cross-domain edges land as the neighbor masters appear, and flags the RE-CRE / RE-INVEST gaps early.
+Recommended: a. Surfacing the targets now lets the cross-domain relationships land as the neighbor masters appear, and flags the RE-CRE / RE-INVEST gaps early.
 
 a3:
 

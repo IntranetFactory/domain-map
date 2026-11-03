@@ -12,7 +12,7 @@ q1: (answer this first) The classification is already settled (this is a real, m
 - a) Build the full real-market stack: research the candidate masters first, then load the modules, masters, capabilities, roles, and skill for the module split chosen below.
 - b) Build a minimal starter first (one full inventory module plus one starter permissions-audit module), and defer lifecycle, stale-content, and external-sharing to a later pass.
 
-Recommended: a. The eleven linked specialist products (AvePoint, ShareGate, Syskit Point, CoreView, Rencore, Orchestry and more) are pure-play governance suites with their own commerce, so the full build matches the real market. This choice gates the module split and every candidate master below it, so it unlocks the rest of the build.
+Recommended: a. The eleven related specialist products (AvePoint, ShareGate, Syskit Point, CoreView, Rencore, Orchestry and more) are pure-play governance suites with their own commerce, so the full build matches the real market. This choice gates the module split and every candidate master below it, so it unlocks the rest of the build.
 
 a1:
 
@@ -62,7 +62,7 @@ q5: One capability (backup and restore for collaboration workloads) overlaps a c
 
 - a) Promote SaaS Backup to its own domain and move the backup capability to it.
 - b) Keep the backup capability under Collaboration Governance.
-- c) Promote SaaS Backup but keep the backup capability here as a partial-overlap link.
+- c) Promote SaaS Backup but keep the backup capability here as a partial-overlap relationship.
 
 Recommended: a. The backup specialists sell independently and several have no collaboration-governance offering at all, so backup reads as its own market. This depends on q1 and on the SaaS Backup triage.
 
@@ -74,7 +74,7 @@ q6: One capability (tenant migration) overlaps a candidate Tenant Migration doma
 
 - a) Promote Tenant Migration to its own domain and move the migration capability to it.
 - b) Keep the migration capability under Collaboration Governance.
-- c) Promote Tenant Migration but keep the migration capability here as a partial-overlap link.
+- c) Promote Tenant Migration but keep the migration capability here as a partial-overlap relationship.
 
 Recommended: a. Migration is frequently bought separately from the governance suite (especially for mergers and acquisitions), so it reads as its own market. This depends on q1 and on the Tenant Migration triage.
 

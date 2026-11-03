@@ -24,7 +24,7 @@ last_audit: "2026-06-13"
 
 b1a:
   - id: B1A-S2
-    summary: "Author 3 to 5 capabilities and link via capability_domains."
+    summary: "Author 3 to 5 capabilities and relate via capability_domains."
     finding: "Zero capability_domains rows on VSDP (domain_id=80). Capabilities can land before modules and inform the module-shape decision, but the canonical capability set the catalog draws follows the chosen module shape, so this rides with the build."
     action: "Draft 3 to 5 capabilities (source-control + collaboration, CI/CD pipeline orchestration, build and artifact management, release and deployment orchestration, value-stream analytics) and load capabilities + capability_domains rows via the Phase A loader pattern."
     blocked_by:
@@ -34,7 +34,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live 2026-06-07: still 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so the domain is not deployable. It must be built before any persona / RACI / per-module work applies. Per Validate-mode UNBUILT handling, the agent does NOT scaffold the module set unprompted; it surfaces the build and leaves the cascade. The build is gated on the B2-1 module-shape decision."
-    action: "After B2-1 is decided: run Phase A then M then B then C then S to author the module set, capabilities, masters' per-module attribution, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "After B2-1 is decided: run Phase A then M then B then C then S to author the module set, capabilities, masters' per-module attribution, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     blocked_by:
       - {type: user_decision, ref: B2-1, reason: module shape sets the module roster the Phase A loader writes}
 
@@ -48,12 +48,12 @@ b1b:
     affected_entities: [domain_modules]
 
   - id: B1B-S3
-    summary: "0 intra-VSDP entity edges + 0 users edges (Rule #10)."
-    finding: "Zero data_object_relationships rows between the 8 VSDP masters and zero edges from any VSDP master to users (id 748). Tuple authoring (verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) still owed."
+    summary: "0 intra-VSDP entity relationships + 0 relationships to users (Rule #10)."
+    finding: "Zero data_object_relationships rows between the 8 VSDP masters and zero relationships from any VSDP master to users (id 748). Tuple authoring (verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) still owed."
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: lifecycle states needed before some edges are stable}
-      - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects related_data_object_id selection for test_runs/ci_pipeline_runs edges}
-      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization edges}
+      - {type: prerequisite_entity, ref: B1B-S1, reason: lifecycle states needed before some relationships are stable}
+      - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects related_data_object_id selection for test_runs/ci_pipeline_runs relationships}
+      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization relationships}
     affected_masters:
       - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: source_control_authoring}
       - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: source_control_authoring}
@@ -69,7 +69,7 @@ b1b:
     finding: "Zero roles tied to VSDP modules (no modules to tie to) and zero roles under business_function_id=60 (Platform Engineering). Multi-module-domain qualifier per E1 requires >=3 distinct roles once modules land."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: roles need at least 2 modules per E2 floor}
-    affected_entities: [roles, role_modules, role_permissions]
+    affected_entities: [roles, persona_modules, role_permissions]
 
   - id: B1B-S5
     summary: "SUPERSEDED: legacy vsdp-system skill grain item."
@@ -84,7 +84,7 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1, reason: domain_module_id attribution per M5 requires modules}
     affected_masters:
       - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: draft_to_open_to_review_to_approved_to_merged_or_closed}
-      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: queued_to_running_to_succeeded_or_failed_or_cancelled}
+      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: queued_to_running_to_succeeded_or_failed_or_canceled}
       - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: pending_to_running_to_succeeded_or_failed_with_rollback}
 
   - id: B1B-B1
@@ -135,7 +135,7 @@ b1b:
     finding: "B8 audit shows zero data_object_relationships rows from any of the 8 VSDP masters into other domains. Each outbound handoff with a clean payload mapping implies a relationship row (e.g. software_deployments feeds environments via APP-PAAS / OBS / ITSM; pull_requests realizes work_items via WORK-MGMT)."
     blocked_by:
       - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects ci_pipeline_runs to test_runs verb selection}
-      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization edges}
+      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization relationships}
     affected_handoffs:
       - {handoff_id: 770, direction: outbound, source_domain: VSDP, target_domain: APP-PAAS, trigger_event: software_deployment.completed, payload: software_deployments, null_field: cross_domain_data_object_relationship}
       - {handoff_id: 771, direction: outbound, source_domain: VSDP, target_domain: TEST-MGMT, trigger_event: ci_pipeline_run.failed, payload: ci_pipeline_runs, null_field: cross_domain_data_object_relationship}
@@ -180,10 +180,10 @@ b2:
 
   - id: B2-4
     summary: "KUBE-PLAT + APP-PAAS boundary: software_deployments role."
-    question: "Is software_deployments the umbrella event (current master role) over platform-specific realizations (helm_releases, paas_deployments), or a derived/computed view that should flip to role=derived (matches Plandek normalization model)?"
+    question: "Is software_deployments the umbrella event (current master role) over platform-specific realizations (helm_releases, paas_deployments), or a derived/computed view that should flip to held_as=derived (matches Plandek normalization model)?"
     options:
-      - keep software_deployments role=master (umbrella over realizations)
-      - flip role=derived (computed view over platform-specific masters)
+      - keep software_deployments held_as=master (umbrella over realizations)
+      - flip held_as=derived (computed view over platform-specific masters)
 
   - id: B2-5
     summary: "Bitbucket / Bamboo same-load addition."

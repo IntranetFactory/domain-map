@@ -26,7 +26,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 7 capabilities and 0 masters awaiting a build."
     finding: "Live triage 2026-06-07: 0 domain_modules rows (M1 fail), 7 capability_domains rows, 0 masters. Not deployable today. Must be built before any persona / RACI / role / system-skill work applies."
-    action: "Run Phase A (solutions are loaded) then M then B then S to author the module set, masters, and the system skills. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-L1 + B2-M1 + B2-K1 + B2-T1."
+    action: "Run Phase A (solutions are loaded) then M then B then S to author the module set, masters, and the system skills. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-L1 + B2-M1 + B2-K1 + B2-T1."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -68,7 +68,7 @@ b1b:
   - id: B1B-V1-ACCOUNT-PLANS
     summary: "Load account_plans master in ACCT-PLAN-CORE (or wherever B2-M1's module shape lands it)."
     finding: "MISSING entity. The account_plans master is the headline record-type across all 5 flagships; parent record for objectives, strategies, white-space cells, and stakeholder rollups."
-    action: "Author data_objects row plus domain_module_data_objects (role=master, necessity=required) on the chosen target module, plus baseline lifecycle states (draft, approved, executed, archived) and pattern flags per Rule #12 entity_type=operational_workflow."
+    action: "Author data_objects row plus domain_module_data_objects (held_as=master, necessity=required) on the chosen target module, plus baseline lifecycle states (draft, approved, executed, archived) and pattern flags per Rule #12 entity_type=operational_workflow."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
       - {type: user_decision, ref: B2-M1}

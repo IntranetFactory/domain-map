@@ -9,7 +9,7 @@
     "parent_domain_code": null,
     "certification_required": false,
     "catalog_tagline": "Run every team's projects, tasks, and goals in one place, from first request to finished work.",
-    "catalog_description": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then connect them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when."
+    "catalog_description": "Bring structured work out of scattered spreadsheets and inboxes. Create projects, break them into assignable tasks with owners and due dates, map dependencies, and watch progress on boards, timelines, and dashboards that update as the work moves.\n\nSet team objectives and key results, then relate them to the tasks that move them so progress rolls up automatically. Standardize repeatable work with templates, and let automations handle status changes, reminders, and routing.\n\nBuilt for operations, marketing, and any team running cross-functional work that needs one shared view of who is doing what, by when."
   },
   "aliases": [],
   "business_functions": {
@@ -84,13 +84,13 @@
         "okr_check_ins",
         "okr_key_results",
         "okr_objectives",
-        "work_goal_links"
+        "work_goal_relationships"
       ],
       "embedded_masters": [
         "work_items"
       ],
       "consumers": [],
-      "description": "Team-execution OKR tracking surface: objectives with key results that link to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR linking."
+      "description": "Team-execution OKR tracking surface: objectives with key results that relate to work items for automatic progress rollup, weekly check-in cadences, scoring, and closure. Deploys alongside the task-execution module for full integration, or standalone with a thin embedded work-item shell for KR relationships."
     },
     {
       "code": "WORK-MGMT-INTAKE",
@@ -252,7 +252,7 @@
       "name": "okr_objectives",
       "singular_label": "Objective / OKR",
       "plural_label": "Objective / OKRs",
-      "description": "Hierarchical objective with measurable key results, weighted progress rollup from child objectives or linked work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes, canonical Signal-1 multi-master.",
+      "description": "Hierarchical objective with measurable key results, weighted progress rollup from child objectives or related work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes: canonical Signal-1 multi-master.",
       "is_canonical_bare_word": false,
       "has_personal_content": true,
       "aliases": [
@@ -704,10 +704,10 @@
       ]
     },
     {
-      "name": "work_goal_links",
-      "singular_label": "Work-to-Goal Link",
-      "plural_label": "Work-to-Goal Links",
-      "description": "Contribution link between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it.",
+      "name": "work_goal_relationships",
+      "singular_label": "Work-to-Goal Relationship",
+      "plural_label": "Work-to-Goal Relationships",
+      "description": "Contribution relationship between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -716,11 +716,11 @@
           "source": "synonym"
         },
         {
-          "name": "contribution_link",
+          "name": "contribution_relationship",
           "source": "synonym"
         },
         {
-          "name": "goal_link",
+          "name": "goal_relationship",
           "source": "synonym"
         }
       ],
@@ -1529,15 +1529,15 @@
       "required": false
     },
     {
-      "from": "work_goal_links",
-      "verb": "links_to",
+      "from": "work_goal_relationships",
+      "verb": "relates_to",
       "to": "okr_objectives",
       "cardinality": "one_to_many",
       "required": true
     },
     {
-      "from": "work_goal_links",
-      "verb": "links",
+      "from": "work_goal_relationships",
+      "verb": "relates",
       "to": "work_items",
       "cardinality": "one_to_many",
       "required": true
@@ -1691,7 +1691,7 @@
     {
       "skill_grain": "domain",
       "skill_name": "work-mgmt",
-      "description": "Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, link them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards.",
+      "description": "Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, relate them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards.",
       "trigger_keywords": "work management, project tracker, task tracker, to-do list, kanban, swimlane, Gantt, roadmap, sprint backlog, burndown, milestone tracking, dependency mapping, ticket queue, request queue, work intake, OKR, KPI, goal tracking, timesheets, resource allocation, capacity planning, workload balancing, creative markup, proofing, approval workflow, status rollup, cross-project dashboards, PMO, BizOps, marketing ops, operations team",
       "tools": [
         {
@@ -1842,7 +1842,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "MARKETING-CAMPAIGN-MANAGER",
       "business_function": "Marketing",
@@ -1924,7 +1924,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

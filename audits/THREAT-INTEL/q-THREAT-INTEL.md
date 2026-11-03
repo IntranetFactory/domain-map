@@ -83,7 +83,7 @@ a7:
 
 q8: Three regulatory regimes touch Threat Intelligence programs (PCI-DSS intrusion-detection and incident-response requirements, GDPR security-of-processing, and the US CISA Automated Indicator Sharing program). Should I tag the relevant ones onto this domain? (yes/no)
 
-Recommended: yes. PCI-DSS and GDPR rows almost certainly already exist and can be linked cheaply; CISA Automated Indicator Sharing likely needs a new regulation row created first. Additive and non-blocking.
+Recommended: yes. PCI-DSS and GDPR rows almost certainly already exist and can be related cheaply; CISA Automated Indicator Sharing likely needs a new regulation row created first. Additive and non-blocking.
 
 a8:
 

@@ -41,8 +41,8 @@ import {
   clearCatalogCache,
   isDomainReleased,
   loadCachedCatalog,
-  ROLE_ORDER,
-  ROLE_RANK,
+  HELD_AS_ORDER,
+  HELD_AS_RANK,
   type AllRelationships,
   type CatalogIndex,
   type CoMasterRow,
@@ -62,7 +62,7 @@ import {
   type RelationshipModel,
 } from "./lib/blueprint_derive";
 import { checkModel, RULE_IDS, RULES, type ModelFinding } from "./lib/blueprint_invariants";
-import { checkRelationshipShape, checkUserEdges } from "./lib/catalog_invariants";
+import { checkRelationshipShape, checkUserRelationships } from "./lib/catalog_invariants";
 
 // ---------- CLI flags (set by main) ----------
 // Only the IO driver reads these; the renderers below never do.
@@ -79,6 +79,13 @@ const TODAY = new Date().toISOString().slice(0, 10);
 // `write tier`) plus the §7 `high risk?` column. Emit exactly this one version key, never a
 // consumer/authoring-tool version.
 const BLUEPRINT_VERSION = "3.1";
+// TEMPORARY (2026-11-03): §6.1, §6.2 and §6.3 are postponed while their catalog data is inconsistent
+// (audits/ATS/hiring-starter-blueprint-review-2026-11-02.md). The CLI shows those sections as if the
+// data did not exist, and R6 has no rows to check. Only what they show is gated: the catalog is still
+// loaded in full, so everything else, related_modules included, uses the full data. Set to false to
+// restore. renderBlueprint stays ungated by default, so the fixture tests and
+// blueprint_contract_check.ts still see the sections.
+const POSTPONE_SECTIONS_6_1_TO_6_3 = true;
 
 // ---------- catalog bindings (set by bindCatalog) ----------
 // The markdown renderers below read the catalog through these module bindings; bindCatalog sets
@@ -90,17 +97,27 @@ let modulesById: CatalogIndex["modulesById"];
 let USERS_ID = -1;
 // The derivation rules (./lib/blueprint_derive.ts) read the catalog only through this context.
 let deriveCtx: DeriveCtx;
+let crossDomainContextPostponed = false;
 
-function bindCatalog(index: CatalogIndex, all: AllRelationships): void {
+function bindCatalog(index: CatalogIndex, all: AllRelationships, postponeCrossDomainContext = false): void {
   ({ domainsById, dataObjectsById, industriesById, modulesById } = index);
   USERS_ID = index.usersId;
+  crossDomainContextPostponed = postponeCrossDomainContext;
   deriveCtx = makeDeriveCtx(index, all);
+}
+
+// The model a blueprint shows. While §6.1 to §6.3 are postponed, only their rows are removed, after
+// derivation, so every other derived value is computed from the full catalog.
+function deriveShownModel(modules: ModuleRow[]): BlueprintModel {
+  const model = deriveBlueprintModel(modules, deriveCtx);
+  if (!crossDomainContextPostponed) return model;
+  return { ...model, handoffs: { outbound: [], inbound: [] }, catalog: { ...model.catalog, coMasters: [] } };
 }
 
 // Render one blueprint (the full markdown file) for a scope of modules from an already-loaded
 // catalog. Pure apart from the emit-time console warnings: no catalog fetch, no file IO.
-export function renderBlueprint(modules: ModuleRow[], index: CatalogIndex, all: AllRelationships): string {
-  bindCatalog(index, all);
+export function renderBlueprint(modules: ModuleRow[], index: CatalogIndex, all: AllRelationships, postponeCrossDomainContext = false): string {
+  bindCatalog(index, all, postponeCrossDomainContext);
   return emitBlueprint(modules);
 }
 
@@ -159,7 +176,7 @@ function pushYamlField(out: string[], key: string, value: string): void {
   }
 }
 
-const ROLE_INFO: Record<string, { classDef: string }> = {
+const HELD_AS_INFO: Record<string, { classDef: string }> = {
   master: { classDef: "fill:#d4f4dd,stroke:#27ae60,color:#0b3d20" },
   embedded_master: { classDef: "fill:#fff4cc,stroke:#c79100,color:#5b4500" },
   contributor: { classDef: "fill:#cfe8ff,stroke:#1976d2,color:#0d3a66" },
@@ -169,51 +186,51 @@ const ROLE_INFO: Record<string, { classDef: string }> = {
   external: { classDef: "fill:#f5f5f5,stroke:#9e9e9e,color:#616161,stroke-dasharray:3 3" },
 };
 
-// ROLE_ORDER, ROLE_RANK, ScopeRow, CoMasterRow, OwnerInfo and the four scoped query
+// HELD_AS_ORDER, HELD_AS_RANK, ScopeRow, CoMasterRow, OwnerInfo and the four scoped query
 // helpers (loadAliases / loadRelationships / loadCoMasters / loadOwners) now live in
 // ./lib/catalog.ts. Render functions below operate on the ModuleCatalog struct that
 // loadModuleCatalog returns.
 
 // Build mermaid diagram for a scoped data_object set.
-//   scopeRoles  - role per data_object that is "in scope" (rendered with its role color)
-//   edges       - every relationship row touching the scope (caller passes all; we filter
-//                 down to intra-scope edges and to built-in `users` edges that touch scope)
+//   scopeHeldAs  - held_as per data_object that is "in scope" (rendered with its held_as color)
+//   relationships - every relationship row touching the scope (caller passes all; we filter
+//                 down to intra-scope relationships and to built-in `users` relationships that touch scope)
 // Only in-scope entities + the `users` platform built-in are rendered. External neighbors
 // are deliberately omitted - they make the diagram too noisy. The §5.3 table covers
-// cross-scope edges in textual form.
+// cross-scope relationships in textual form.
 function renderMermaid(
-  scopeRoles: Map<number, string>,
+  scopeHeldAs: Map<number, string>,
   scopeInstallOptional: Map<number, boolean>,
-  edges: any[],
+  relationships: any[],
 ): string[] {
   const lines: string[] = [];
   lines.push("```mermaid");
   lines.push("flowchart TD");
-  const usedRoles = new Set<string>();
-  for (const role of scopeRoles.values()) usedRoles.add(role);
-  const intraEdges: any[] = [];
-  const userEdges: any[] = [];
-  for (const r of edges) {
+  const usedHeldAs = new Set<string>();
+  for (const heldAs of scopeHeldAs.values()) usedHeldAs.add(heldAs);
+  const intraRelationships: any[] = [];
+  const userRelationships: any[] = [];
+  for (const r of relationships) {
     const a = r.data_object_id as number;
     const b = r.related_data_object_id as number;
-    const aInScope = scopeRoles.has(a);
-    const bInScope = scopeRoles.has(b);
+    const aInScope = scopeHeldAs.has(a);
+    const bInScope = scopeHeldAs.has(b);
     const aUsers = a === USERS_ID;
     const bUsers = b === USERS_ID;
     if (aInScope && bInScope) {
-      intraEdges.push(r);
+      intraRelationships.push(r);
     } else if ((aUsers && bInScope) || (aInScope && bUsers)) {
-      userEdges.push(r);
+      userRelationships.push(r);
     }
-    // else: cross-scope edge with an external neighbor - omitted from the diagram
+    // else: cross-scope relationship with an external neighbor - omitted from the diagram
   }
-  const usesUsers = userEdges.length > 0;
-  for (const role of ROLE_ORDER) {
-    if (usedRoles.has(role)) lines.push(`  classDef ${role} ${ROLE_INFO[role].classDef};`);
+  const usesUsers = userRelationships.length > 0;
+  for (const heldAs of HELD_AS_ORDER) {
+    if (usedHeldAs.has(heldAs)) lines.push(`  classDef ${heldAs} ${HELD_AS_INFO[heldAs].classDef};`);
   }
-  if (usesUsers) lines.push(`  classDef platform_builtin ${ROLE_INFO.platform_builtin.classDef};`);
-  // Nodes: every in-scope entity, plus `users` if any user edges remain.
-  const nodeIds = new Set<number>(scopeRoles.keys());
+  if (usesUsers) lines.push(`  classDef platform_builtin ${HELD_AS_INFO.platform_builtin.classDef};`);
+  // Nodes: every in-scope entity, plus `users` if any relationships to it remain.
+  const nodeIds = new Set<number>(scopeHeldAs.keys());
   if (usesUsers) nodeIds.add(USERS_ID);
   for (const id of nodeIds) {
     const obj = dataObjectsById.get(id);
@@ -221,13 +238,13 @@ function renderMermaid(
     const label = obj.plural_label.replace(/"/g, '\\"');
     lines.push(`  ${obj.data_object_name}["${label}"]`);
   }
-  // Edges: intra-scope + user edges only.
-  for (const r of [...intraEdges, ...userEdges]) {
+  // Diagram edges: intra-scope + `users` relationships only.
+  for (const r of [...intraRelationships, ...userRelationships]) {
     const a = dataObjectsById.get(r.data_object_id as number);
     const b = dataObjectsById.get(r.related_data_object_id as number);
     if (!a || !b) continue;
-    // Rule 5 (edge-verb consistency): the diagram edge label must equal the §5.1 / §5.2 verb
-    // column byte-for-byte. The verb column is the bare `relationship_verb`; edge optionality is
+    // Rule 5 (diagram-edge verb consistency): the diagram edge label must equal the §5.1 / §5.2 verb
+    // column byte-for-byte. The verb column is the bare `relationship_verb`; relationship optionality is
     // conveyed by the §5 `field_required` column (and the per-node dashed-stroke overlay below), NOT by
     // an `(opt)` suffix on the label, so we emit the bare verb here too.
     const verb = (r.relationship_verb || "→").replace(/"/g, '\\"');
@@ -237,10 +254,10 @@ function renderMermaid(
   for (const id of nodeIds) {
     const obj = dataObjectsById.get(id);
     if (!obj) continue;
-    const cls = scopeRoles.has(id) ? scopeRoles.get(id)! : "platform_builtin";
+    const cls = scopeHeldAs.has(id) ? scopeHeldAs.get(id)! : "platform_builtin";
     lines.push(`  class ${obj.data_object_name} ${cls};`);
   }
-  // Per-node install-optional overlay: dashed stroke on top of the role classDef.
+  // Per-node install-optional overlay: dashed stroke on top of the held_as classDef.
   // Mermaid honors per-node `style` directives even when a class is already applied.
   for (const id of nodeIds) {
     const obj = dataObjectsById.get(id);
@@ -260,11 +277,11 @@ function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
   // The Description cell prefers the short reader-facing `catalog_description`; it falls back
   // to the analyst-facing `description` when catalog_description has not been authored yet, so
   // the surface degrades gracefully mid-migration.
-  // Role classification is conveyed visually via the mermaid color coding below.
+  // The held_as classification is conveyed visually via the mermaid color coding below.
   out.push(tableHeader(["Name", "data_object", "Description"]));
   const sorted = [...scopeRows].sort((a, b) => {
-    const ra = ROLE_RANK[a.role] ?? 99;
-    const rb = ROLE_RANK[b.role] ?? 99;
+    const ra = HELD_AS_RANK[a.held_as] ?? 99;
+    const rb = HELD_AS_RANK[b.held_as] ?? 99;
     if (ra !== rb) return ra - rb;
     return a.data_object.plural_label.localeCompare(b.data_object.plural_label);
   });
@@ -319,7 +336,7 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
   if (opts.includeOwnerSide) headers.push("owner_side");
   headers.push("delete_mode", "fk_format", "notes");
   out.push(tableHeader(headers));
-  for (const { edge: r, deleteMode: dm } of rows) {
+  for (const { relationship: r, deleteMode: dm } of rows) {
     const a = dataObjectsById.get(r.data_object_id as number);
     const b = dataObjectsById.get(r.related_data_object_id as number);
     if (!a || !b) continue;
@@ -332,7 +349,7 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
     if (opts.includeKind) cells.push(r.relationship_kind || "");
     cells.push(fieldRequiredCell(r));
     if (opts.includeOwnerSide) cells.push(r.owner_side || "");
-    // B4: resolved ON DELETE mode + Semantius FK format per link (derived in the model).
+    // B4: resolved ON DELETE mode + Semantius FK format per relationship (derived in the model).
     cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
     out.push(tableRow(cells));
@@ -340,14 +357,14 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
   return out;
 }
 
-// A many_to_many link has no field on either entity, only a junction table, so nothing to require.
+// A many_to_many relationship has no field on either entity, only a junction table, so nothing to require.
 function fieldRequiredCell(r: any): string {
   if (r.relationship_type === "many_to_many") return "-";
   return r.is_required ? "yes" : "no";
 }
 
 // §5.3: no delete_mode or fk_format, because the field is only proposed at deploy.
-function renderExternalLinkTable(rows: any[]): string[] {
+function renderExternalRelationshipTable(rows: any[]): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
   out.push(tableHeader(["from", "verb", "to", "cardinality", "field_required", "notes"]));
@@ -370,7 +387,7 @@ function renderExternalLinkTable(rows: any[]): string[] {
 function renderCoMasters(rows: CoMasterRow[]): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
-  out.push(tableHeader(["data_object", "other module / domain", "role", "install_optional", "notes"]));
+  out.push(tableHeader(["data_object", "other module / domain", "held_as", "install_optional", "notes"]));
   const sorted = [...rows].sort((a, b) => {
     const an = dataObjectsById.get(a.data_object_id)?.data_object_name ?? "";
     const bn = dataObjectsById.get(b.data_object_id)?.data_object_name ?? "";
@@ -390,7 +407,7 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
     out.push(tableRow([
       `\`${obj.data_object_name}\``,
       owner,
-      r.role,
+      r.held_as,
       r.is_install_optional ? "yes" : "-",
       r.notes || "",
     ]));
@@ -404,7 +421,7 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
 // silently rendered). Returns both the code-shaped slug ("mastered in" column) and the
 // human-readable name ("label" column).
 function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string; label: string } {
-  if (r.role === "master" || r.role === "derived") return { code: "-", label: "-" };
+  if (r.held_as === "master" || r.held_as === "derived") return { code: "-", label: "-" };
   const info = owners.get(r.data_object_id);
   if (!info) {
     const fallback = r.data_object.kind === "platform_builtin" ? "_(platform built-in)_" : "-";
@@ -412,7 +429,7 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
   }
   if (info.modules.length > 1) {
     throw new Error(
-      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.modules.length} modules with role=master (${info.modules.map((m) => m.domain_module_code).join(", ")}). Expected exactly one.`,
+      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.modules.length} modules with held_as=master (${info.modules.map((m) => m.domain_module_code).join(", ")}). Expected exactly one.`,
     );
   }
   if (info.modules.length === 1) {
@@ -421,7 +438,7 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
   }
   if (info.domains.length > 1) {
     throw new Error(
-      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.domains.length} domains with role=master (${info.domains.map((d) => d.domain_code).join(", ")}). Expected exactly one.`,
+      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.domains.length} domains with held_as=master (${info.domains.map((d) => d.domain_code).join(", ")}). Expected exactly one.`,
     );
   }
   if (info.domains.length === 1) {
@@ -436,12 +453,12 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
 
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
   const out: string[] = [];
-  const deps = scopeRows.filter((r) => r.role !== "master");
+  const deps = scopeRows.filter((r) => r.held_as !== "master");
   if (deps.length === 0) return out;
-  out.push(tableHeader(["data_object", "role here", "install_optional", "catalog owner(s)", "slice notes"]));
+  out.push(tableHeader(["data_object", "held_as", "install_optional", "catalog owner(s)", "slice notes"]));
   const sorted = [...deps].sort((a, b) => {
-    const ra = ROLE_RANK[a.role] ?? 99;
-    const rb = ROLE_RANK[b.role] ?? 99;
+    const ra = HELD_AS_RANK[a.held_as] ?? 99;
+    const rb = HELD_AS_RANK[b.held_as] ?? 99;
     if (ra !== rb) return ra - rb;
     return a.data_object.data_object_name.localeCompare(b.data_object.data_object_name);
   });
@@ -462,7 +479,7 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
         : "_(no catalog owner recorded)_";
     out.push(tableRow([
       `\`${r.data_object.data_object_name}\``,
-      r.role,
+      r.held_as,
       r.is_install_optional ? "yes" : "-",
       ownerCell,
       r.notes || "",
@@ -480,7 +497,7 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
 // ============================================================
 // UNIFIED BLUEPRINT EMITTER
 // One body shape for both single-module and multi-module (starter-kit / future bundle)
-// blueprints. Scope = union of input modules' data_objects, strongest role wins per
+// blueprints. Scope = union of input modules' data_objects, strongest held_as wins per
 // data_object. Front matter difference is the length of the `domain_modules:` list.
 // ============================================================
 
@@ -493,11 +510,11 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   // can never report different facts for the same module. Every derived value sections 2-9
   // show (write tiers, delete modes, gates, permissions, roles, RACI) is computed once, in
   // ./lib/blueprint_derive.ts, into the BlueprintModel; the code below only renders it.
-  const model: BlueprintModel = deriveBlueprintModel(modules, deriveCtx);
+  const model: BlueprintModel = deriveShownModel(modules);
   const cat: ModuleCatalog = model.catalog;
   const {
     scopeRows,
-    scopeRolesById,
+    scopeHeldAsById,
     scopeInstallOptionalById,
     aliasRows,
     relationships: rels,
@@ -641,7 +658,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   } else {
     out.push(...renderEntitySummary(scopeRows));
     out.push("");
-    out.push(...renderMermaid(scopeRolesById, scopeInstallOptionalById, rels.all));
+    out.push(...renderMermaid(scopeHeldAsById, scopeInstallOptionalById, rels.all));
     out.push("");
   }
 
@@ -689,14 +706,14 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
     // `data_object`; `entity_type` sits immediately before `write tier`. Downstream parses by
     // header name, not column position, but this is the canonical order. (`modules` is an
     // extra multi-module-bundle column inserted before `notes`; single-module blueprints omit it.)
-    const headers = ["#", "data_object", "catalog code", "singular", "plural", "role", "mastered in", "mastered label", "install_optional", "personal_content", "entity_type", "write tier"];
+    const headers = ["#", "data_object", "catalog code", "singular", "plural", "held_as", "mastered in", "mastered label", "install_optional", "personal_content", "entity_type", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
     const sortOrder = ["master", "embedded_master", "contributor", "consumer", "derived"];
     const sorted = [...model.entities].sort((a, b) => {
-      const ra = sortOrder.indexOf(a.role) === -1 ? 99 : sortOrder.indexOf(a.role);
-      const rb = sortOrder.indexOf(b.role) === -1 ? 99 : sortOrder.indexOf(b.role);
+      const ra = sortOrder.indexOf(a.held_as) === -1 ? 99 : sortOrder.indexOf(a.held_as);
+      const rb = sortOrder.indexOf(b.held_as) === -1 ? 99 : sortOrder.indexOf(b.held_as);
       if (ra !== rb) return ra - rb;
       return a.data_object.plural_label.localeCompare(b.data_object.plural_label);
     });
@@ -719,7 +736,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
         canonicalCode,
         o.singular_label,
         o.plural_label,
-        r.role,
+        r.held_as,
         owner.code,
         owner.label,
         r.is_install_optional ? "yes" : "-",
@@ -745,57 +762,63 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   out.push("");
   out.push("_`field_required` applies only when both entities are installed. It never makes an entity required._");
   out.push("");
-  out.push("### 5.1 Links between entities in this blueprint");
+  out.push("### 5.1 Relationships between entities in this blueprint");
   out.push("");
   if (model.relationships.intra.length === 0) {
-    out.push(noneSection("no links with both entities in this blueprint"));
+    out.push(noneSection("no relationships with both entities in this blueprint"));
   } else {
     out.push(...renderRelationshipTable(model.relationships.intra, { includeOwnerSide: true, includeKind: true }));
   }
   out.push("");
-  out.push("### 5.2 Links to platform built-ins (`users`)");
+  out.push("### 5.2 Relationships to platform built-ins (`users`)");
   out.push("");
   if (model.relationships.userRels.length === 0) {
-    out.push(noneSection("no links to platform built-ins"));
+    out.push(noneSection("no relationships to platform built-ins"));
   } else {
     out.push(...renderRelationshipTable(model.relationships.userRels, { includeOwnerSide: true, includeKind: false }));
   }
   out.push("");
-  out.push("### 5.3 Links to entities outside this blueprint");
+  out.push("### 5.3 Relationships to entities outside this blueprint");
   out.push("");
-  out.push("_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._");
+  out.push("_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._");
   out.push("");
-  out.push("#### 5.3a Outgoing links: this blueprint's entity points to the external entity");
+  out.push("#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity");
   out.push("");
   if (model.relationships.outgoing.length === 0) {
-    out.push(noneSection("no outgoing links to external entities"));
+    out.push(noneSection("no outgoing relationships to external entities"));
   } else {
     // Rule 4 (no raw HTML): plain markdown table, never a `<details>` / `<summary>` collapsible.
-    out.push(...renderExternalLinkTable(model.relationships.outgoing));
+    out.push(...renderExternalRelationshipTable(model.relationships.outgoing));
   }
   out.push("");
-  out.push("#### 5.3b Incoming links: the external entity points to this blueprint's entity");
+  out.push("#### 5.3b Incoming relationships: the external entity points to this blueprint's entity");
   out.push("");
   if (model.relationships.incoming.length === 0) {
-    out.push(noneSection("no incoming links from external entities"));
+    out.push(noneSection("no incoming relationships from external entities"));
   } else {
-    out.push(...renderExternalLinkTable(model.relationships.incoming));
+    out.push(...renderExternalRelationshipTable(model.relationships.incoming));
   }
   out.push("");
 
   // §6 Cross-domain context
   out.push("## 6. Cross-domain context");
   out.push("");
+  // TEMPORARILY DISABLED until the data this section uses is consistent: POSTPONE_SECTIONS_6_1_TO_6_3
+  // empties `coMasters`, so §6.1 always shows its placeholder.
   out.push("### 6.1 Master consumers (other modules / domains that embed this scope's masters)");
   out.push("");
   if (coMasters.length === 0) {
-    out.push(noneSection("no other module embeds this scope's masters; the canonical owners do."));
+    out.push(noneSection(scopeRows.some((r) => r.held_as === "master")
+      ? "no other module embeds this scope's masters"
+      : "this scope masters no entities"));
   } else {
-    out.push("_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._");
+    out.push("_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._");
     out.push("");
     out.push(...renderCoMasters(coMasters));
   }
   out.push("");
+  // TEMPORARILY DISABLED until the data this section uses is consistent: POSTPONE_SECTIONS_6_1_TO_6_3
+  // empties `model.handoffs.outbound`, so §6.2 always shows its placeholder.
   out.push("### 6.2 Outbound handoffs (events this scope publishes)");
   out.push("");
   if (model.handoffs.outbound.length === 0) {
@@ -804,6 +827,8 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
     out.push(...renderHandoffTable(model.handoffs.outbound, "outbound"));
   }
   out.push("");
+  // TEMPORARILY DISABLED until the data this section uses is consistent: POSTPONE_SECTIONS_6_1_TO_6_3
+  // empties `model.handoffs.inbound`, so §6.3 always shows its placeholder.
   out.push("### 6.3 Inbound handoffs (events this scope reacts to)");
   out.push("");
   if (model.handoffs.inbound.length === 0) {
@@ -814,7 +839,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   out.push("");
   out.push("### 6.4 Master providers (modules / domains that own masters this scope embeds)");
   out.push("");
-  if (scopeRows.some((r) => r.role !== "master")) {
+  if (scopeRows.some((r) => r.held_as !== "master")) {
     out.push(...renderDependencies(scopeRows, owners));
   } else {
     out.push(noneSection("this scope embeds no masters owned elsewhere; every entity is mastered here"));
@@ -823,7 +848,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
 
   // §7 Lifecycle states
   // States belong to the data_object, not the module. Every entity touched by
-  // this scope (any DMDO role) shows its full state machine; per-state
+  // this scope (any DMDO held_as) shows its full state machine; per-state
   // `realizing module` column indicates whose permission prefix the gate uses,
   // or "(always)" when the gate is universal (domain_module_id is NULL).
   out.push("## 7. Lifecycle states");
@@ -837,7 +862,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
       const did = obj.id;
       const states = stateModels.map((sm) => sm.state);
       out.push(`### \`${obj.data_object_name}\` (${obj.singular_label})`);
-      if (scopeRow && scopeRow.role !== "master") {
+      if (scopeRow && scopeRow.held_as !== "master") {
         const ownerInfo = owners.get(did);
         const ownerLabel = ownerInfo && ownerInfo.modules.length > 0
           ? ownerInfo.modules.map((m) => `\`${m.domain_module_code}\``).join(", ")
@@ -845,7 +870,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
             ? ownerInfo.domains.map((d) => `\`${d.domain_code}\` (domain-level)`).join(", ")
             : "_(no canonical master found)_";
         out.push("");
-        out.push(`_This scope holds \`${obj.data_object_name}\` as **${scopeRow.role}**; the canonical state machine is owned by ${ownerLabel}._`);
+        out.push(`_This scope holds \`${obj.data_object_name}\` as **${scopeRow.held_as}**; the canonical state machine is owned by ${ownerLabel}._`);
       }
       out.push("");
       const headers = ["order", "state_name", "initial?", "terminal?"];
@@ -867,7 +892,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
         // still resolves to no module is a genuine gap (e.g. a dangling realizing module),
         // not the benign "gate owned by an out-of-scope master" case (which stays blank).
         // Annotate + warn rather than emit a silent empty gate.
-        if (s.requires_permission && !g && scopeRows.some((r) => r.data_object_id === did && r.role === "master")) {
+        if (s.requires_permission && !g && scopeRows.some((r) => r.data_object_id === did && r.held_as === "master")) {
           gate = "⚠ _(unresolved gate: no realizing module)_";
           console.warn(`  ⚠ M2: requires_permission state \`${obj.data_object_name}.${s.state_name}\` resolves to no gate (${modules.map((m) => m.domain_module_code).join("+")})`);
         }
@@ -954,7 +979,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   // §9 Roles, RACI, and responsibilities (DERIVED, Plan 3 step B). Baseline roles (B1),
   // permission hierarchy (B2), and RACI realization (B3) per module; functional ownership +
   // default grants (B5) once per scope. Nothing here is stored: the deployer provisions the
-  // tenant from this blueprint (see references/roles.md and downstream-updates rows 3-5).
+  // tenant from this blueprint (see references/personas.md and downstream-updates rows 3-5).
   out.push("## 9. Roles, RACI, and responsibilities (derived)");
   out.push("");
   out.push("_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._");
@@ -1040,7 +1065,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
       if (!et || et === "unclassified") {
         unclassified.push(o.data_object_name);
       }
-      if (r.role !== "master") continue;
+      if (r.held_as !== "master") continue;
       // M5: an operational_workflow master must carry >=1 lifecycle state.
       if (et === "operational_workflow" && !lifecycleObjIds.has(r.data_object_id)) {
         console.warn(`  ⚠ M5: \`${o.data_object_name}\` is operational_workflow but has no lifecycle states (${modCodes})`);
@@ -1111,7 +1136,7 @@ function blueprintBodyIgnoringDate(s: string): string {
 // The derived-result invariants R1-R8 for one emitted unit. The model is derived again from the
 // same catalog the render used (derivation is pure and in-memory), so emitBlueprint stays unchanged.
 function modelFindings(modules: ModuleRow[]): ModelFinding[] {
-  return checkModel(deriveBlueprintModel(modules, deriveCtx), { ctx: deriveCtx });
+  return checkModel(deriveShownModel(modules), { ctx: deriveCtx });
 }
 
 async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
@@ -1180,7 +1205,7 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
 // also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
 // Exits non-zero on any `fail` finding, emit failure, R7 finding or catalog data defect; other `warn`
 // findings never fail the run. The data defects are checked over every relationship, not per module,
-// because a wrong link reaches the blueprint of every module that touches either entity.
+// because a wrong relationship reaches the blueprint of every module that touches either entity.
 const LINT_BLOCKING_DATA_RULES = new Set(["many_to_many_reference", "owner_side_not_parent", "optional_composition_single_parent"]);
 function lintModuleList(modules: ModuleRow[], label: string): void {
   const byRule = new Map<string, { fail: number; warn: number; modules: Set<string> }>();
@@ -1213,7 +1238,7 @@ function lintModuleList(modules: ModuleRow[], label: string): void {
   const r7 = byRule.get("R7")?.warn ?? 0;
   const nameOf = (id: number) => dataObjectsById.get(id)?.data_object_name ?? `#${id}`;
   const relationships = deriveCtx.all.relationships;
-  const dataDefects = [...checkRelationshipShape(relationships, { nameOf }), ...checkUserEdges(relationships, USERS_ID, { nameOf })].filter((f) => LINT_BLOCKING_DATA_RULES.has(f.rule));
+  const dataDefects = [...checkRelationshipShape(relationships, { nameOf }), ...checkUserRelationships(relationships, USERS_ID, { nameOf })].filter((f) => LINT_BLOCKING_DATA_RULES.has(f.rule));
   for (const f of dataDefects) console.log(`fail  ${f.id}  ${f.rule}  ${f.detail}`);
   console.log("");
   console.log(`lint summary (${label}): ${modules.length} module(s), ${fails} fail, ${warns} warn (${r7} blocking R7), ${dataDefects.length} catalog data defect(s), ${failures.length} emit failure(s)`);
@@ -1269,7 +1294,7 @@ async function main(): Promise<void> {
     index: CatalogIndex;
     all: AllRelationships;
   };
-  bindCatalog(index, allRelationships);
+  bindCatalog(index, allRelationships, POSTPONE_SECTIONS_6_1_TO_6_3);
   const { modulesByCode } = index;
   const allModules = index.modules;
 

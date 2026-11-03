@@ -13,7 +13,7 @@
 
 HAM-owned entity count: **5** across 2 full modules.
 
-Host-linked starter (NOT HAM-owned, see boundary finding): HVAC-SVC-MGMT (171, starter) carries 12 field-service embedded_master entities.
+Host-related starter (NOT HAM-owned, see boundary finding): HVAC-SVC-MGMT (171, starter) carries 12 field-service embedded_master entities.
 
 ## Vendors
 
@@ -71,7 +71,7 @@ Non-optional regardless of vendor presence, all routing to HAM-WARRANTY-PARTS:
 | MISSING | 16 (5 compliance) |
 | WRONG-OWNERSHIP | 0 |
 | SCOPE-CREEP | 1 (spare_parts_inventory dup on mis-hosted HVAC starter) |
-| BOUNDARY (host-link) | 1 (HVAC-SVC-MGMT -> HAM) |
+| BOUNDARY (host-relationship) | 1 (HVAC-SVC-MGMT -> HAM) |
 
 ## Top 5 most-impactful MISSING
 
@@ -87,13 +87,13 @@ Non-optional regardless of vendor presence, all routing to HAM-WARRANTY-PARTS:
 
 The 2-module split — HAM-ASSET-REGISTRY (identity / lifecycle / custody) vs HAM-WARRANTY-PARTS (warranty / disposal / spare-parts / maintenance) — is coherent and self-explaining. Both modules keep >=1 master; Rule #14 satisfied (2 modules for a >=3-capability domain, each with masters). The register-vs-post-deployment boundary is clean: every MISSING entity lands unambiguously in one module (custody/audit/taxonomy -> registry; compliance/disposal/parts -> warranty-parts). No merge/split/rename needed. The deficiency is **depth, not structure**: with only 5 entities HAM cannot record who holds an asset, where it is, or how it was sanitized at end of life.
 
-### BOUNDARY / MODULARIZATION finding — HVAC-SVC-MGMT host link
+### BOUNDARY / MODULARIZATION finding — HVAC-SVC-MGMT host relationship
 
-Starter module **HVAC-SVC-MGMT (id 171)** is host-linked to HAM (domain_id=51). Its 12 embedded_master entities (customers, crm_contacts, customer_sites, installed_equipment, service_pm_schedules, service_work_orders, field_visits, dispatch_records, service_contracts, sales_quotes, customer_invoices, spare_parts_inventory) describe an **HVAC field-service business**, not IT hardware asset management. `installed_equipment`'s own catalog description: "Customer-owned equipment that the service organization installs and maintains ... the asset register that work orders are performed against" — a **field-service** asset register.
+Starter module **HVAC-SVC-MGMT (id 171)** is host-related to HAM (domain_id=51). Its 12 embedded_master entities (customers, crm_contacts, customer_sites, installed_equipment, service_pm_schedules, service_work_orders, field_visits, dispatch_records, service_contracts, sales_quotes, customer_invoices, spare_parts_inventory) describe an **HVAC field-service business**, not IT hardware asset management. `installed_equipment`'s own catalog description: "Customer-owned equipment that the service organization installs and maintains ... the asset register that work orders are performed against" — a **field-service** asset register.
 
-Module 171 is host-linked to **6 domains**: FSM (31), CRM (69), CPQ (73), SUB-MGMT (97), HAM (51), FIN (65). Its natural primary home is **FSM**. The **HAM link (51) is anomalous** and should be removed. This is a `domain_module_host_domains` row DELETE = **destructive, requires explicit user approval; NOT executed in this audit**. No HVAC entity is folded into HAM's hardware surface.
+Module 171 is host-related to **6 domains**: FSM (31), CRM (69), CPQ (73), SUB-MGMT (97), HAM (51), FIN (65). Its natural primary home is **FSM**. The **HAM relationship (51) is anomalous** and should be removed. This is a `domain_module_host_domains` row DELETE = **destructive, requires explicit user approval; NOT executed in this audit**. No HVAC entity is folded into HAM's hardware surface.
 
-The lone SCOPE-CREEP item (`spare_parts_inventory` appearing twice) is a symptom of this mis-host, not independent HAM creep — it resolves with the host-link removal, not a HAM change.
+The lone SCOPE-CREEP item (`spare_parts_inventory` appearing twice) is a symptom of this mis-host, not independent HAM creep — it resolves with the host-relationship removal, not a HAM change.
 
 ## Boundary exclusions respected (NOT reported as HAM MISSING)
 

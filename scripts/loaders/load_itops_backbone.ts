@@ -232,7 +232,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Anomaly Detection",
     plural_label: "Anomaly Detections",
     display_label: "Anomaly Detection",
-    description: "Detected deviation from learned normal behaviour: KPI excursion outside seasonality bands, novel error pattern, traffic shape change. Feeds correlation and predictive_signals.",
+    description: "Detected deviation from learned normal behavior: KPI excursion outside seasonality bands, novel error pattern, traffic shape change. Feeds correlation and predictive_signals.",
     master_domain: "AIOPS",
   },
   {
@@ -257,9 +257,9 @@ const insertableObjects = allObjects.map(({ master_domain, ...rest }) => rest);
 const dataObjMap = await syncByKey("/data_objects", insertableObjects, "data_object_name");
 
 // =============================================================================
-// PHASE 2 — master links
+// PHASE 2 — master relationships
 // =============================================================================
-console.log("\n=== Phase 2: master links ===");
+console.log("\n=== Phase 2: master relationships ===");
 
 const allDDO = await get("/domain_data_objects?select=domain_id,data_object_id&limit=20000");
 const existingDDOKey = new Set(allDDO.map(r => `${r.domain_id}|${r.data_object_id}`));
@@ -268,16 +268,16 @@ const masterRows = allObjects
   .map(o => ({
     domain_id: did(o.master_domain),
     data_object_id: dataObjMap.get(o.data_object_name)!,
-    role: "master",
+    held_as: "master",
     notes: "",
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
 
 if (masterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${masterRows.length} master links`);
+  console.log(`  /domain_data_objects: inserting ${masterRows.length} master relationships`);
   await insertChunked("/domain_data_objects", masterRows);
 } else {
-  console.log(`  /domain_data_objects: all master links already present`);
+  console.log(`  /domain_data_objects: all master relationships already present`);
 }
 
 // =============================================================================
@@ -285,51 +285,51 @@ if (masterRows.length > 0) {
 // =============================================================================
 console.log("\n=== Phase 3: multi-master / contributor / consumer rows ===");
 
-type SignalRow = { data_object: string; domain: string; role: "master" | "contributor" | "consumer" | "derived"; notes: string };
+type SignalRow = { data_object: string; domain: string; held_as: "master" | "contributor" | "consumer" | "derived"; notes: string };
 
 const signals: SignalRow[] = [
   // configuration_items — the IT-ops flagship multi-master
-  { data_object: "configuration_items", domain: "DISCOVERY", role: "contributor", notes: "Auto-discovered CI candidates feed CMDB via the ci.discovered handoff; reconciliation against existing CIs happens at the CMDB boundary." },
-  { data_object: "configuration_items", domain: "HAM", role: "contributor", notes: "Hardware-asset side of the same physical thing — HAM masters the financial/lifecycle view, CMDB masters the operational/topology view. Cross-reference via natural keys (serial, MAC, asset tag)." },
-  { data_object: "configuration_items", domain: "SAM", role: "contributor", notes: "Software-installation side feeds CIs that represent installed applications, with version and licence linkage." },
-  { data_object: "configuration_items", domain: "SMP", role: "contributor", notes: "SaaS-application side feeds CIs for sanctioned SaaS apps (Slack, Salesforce) so they appear in business-service maps." },
-  { data_object: "configuration_items", domain: "ITSM", role: "consumer", notes: "Incidents, problems, and changes reference CIs for impact analysis and routing." },
-  { data_object: "configuration_items", domain: "AIOPS", role: "consumer", notes: "Topology and CI metadata power correlation — adjacent CIs in the relationship graph are likelier shared-cause candidates." },
+  { data_object: "configuration_items", domain: "DISCOVERY", held_as: "contributor", notes: "Auto-discovered CI candidates feed CMDB via the ci.discovered handoff; reconciliation against existing CIs happens at the CMDB boundary." },
+  { data_object: "configuration_items", domain: "HAM", held_as: "contributor", notes: "Hardware-asset side of the same physical thing — HAM masters the financial/lifecycle view, CMDB masters the operational/topology view. Cross-reference via natural keys (serial, MAC, asset tag)." },
+  { data_object: "configuration_items", domain: "SAM", held_as: "contributor", notes: "Software-installation side feeds CIs that represent installed applications, with version and license linkage." },
+  { data_object: "configuration_items", domain: "SMP", held_as: "contributor", notes: "SaaS-application side feeds CIs for sanctioned SaaS apps (Slack, Salesforce) so they appear in business-service maps." },
+  { data_object: "configuration_items", domain: "ITSM", held_as: "consumer", notes: "Incidents, problems, and changes reference CIs for impact analysis and routing." },
+  { data_object: "configuration_items", domain: "AIOPS", held_as: "consumer", notes: "Topology and CI metadata power correlation — adjacent CIs in the relationship graph are likelier shared-cause candidates." },
 
   // ci_relationships — DISCOVERY contributes
-  { data_object: "ci_relationships", domain: "DISCOVERY", role: "contributor", notes: "Auto-discovered topology (network flow, dependency probes, k8s service-mesh introspection) feeds the CMDB relationship graph." },
+  { data_object: "ci_relationships", domain: "DISCOVERY", held_as: "contributor", notes: "Auto-discovered topology (network flow, dependency probes, k8s service-mesh introspection) feeds the CMDB relationship graph." },
 
   // service_maps — DISCOVERY contributes, OBS consumes
-  { data_object: "service_maps", domain: "DISCOVERY", role: "contributor", notes: "Service-mapping discovery (transaction tracing, dependency walks) produces candidate service maps that CMDB normalizes and publishes." },
-  { data_object: "service_maps", domain: "OBS", role: "consumer", notes: "Overlays SLO state and trace-derived dependency information on service maps for engineering-side service health views." },
+  { data_object: "service_maps", domain: "DISCOVERY", held_as: "contributor", notes: "Service-mapping discovery (transaction tracing, dependency walks) produces candidate service maps that CMDB normalizes and publishes." },
+  { data_object: "service_maps", domain: "OBS", held_as: "consumer", notes: "Overlays SLO state and trace-derived dependency information on service maps for engineering-side service health views." },
 
   // monitoring_policies — DISCOVERY contributes (auto-binds policies to discovered CIs)
-  { data_object: "monitoring_policies", domain: "DISCOVERY", role: "contributor", notes: "Auto-binds class-default monitoring policies to newly discovered CIs via the device.requires_monitoring handoff." },
+  { data_object: "monitoring_policies", domain: "DISCOVERY", held_as: "contributor", notes: "Auto-binds class-default monitoring policies to newly discovered CIs via the device.requires_monitoring handoff." },
 
   // events — OBS, SECOPS contribute, AIOPS consumes
-  { data_object: "events", domain: "OBS", role: "contributor", notes: "OBS-derived alerts (SLO breach, error-rate spike, anomaly trigger) feed back into the ITOM event stream for unified correlation." },
-  { data_object: "events", domain: "SECOPS", role: "contributor", notes: "Security events that require operational coordination are mirrored into the ITOM event stream so AIOPS correlation sees the full picture." },
-  { data_object: "events", domain: "AIOPS", role: "consumer", notes: "Primary input to event correlation, anomaly detection, and root-cause analysis." },
+  { data_object: "events", domain: "OBS", held_as: "contributor", notes: "OBS-derived alerts (SLO breach, error-rate spike, anomaly trigger) feed back into the ITOM event stream for unified correlation." },
+  { data_object: "events", domain: "SECOPS", held_as: "contributor", notes: "Security events that require operational coordination are mirrored into the ITOM event stream so AIOPS correlation sees the full picture." },
+  { data_object: "events", domain: "AIOPS", held_as: "consumer", notes: "Primary input to event correlation, anomaly detection, and root-cause analysis." },
 
   // alerts — AIOPS contributes (suppression/rewriting), ITSM consumes
-  { data_object: "alerts", domain: "AIOPS", role: "contributor", notes: "AIOPS rewrites the alert stream by suppressing known-noise patterns and promoting correlated clusters. The 'one alert per incident' goal lives or dies here." },
-  { data_object: "alerts", domain: "ITSM", role: "consumer", notes: "Alerts that survive filtering become ITSM incidents via the event.alert_triggered handoff." },
+  { data_object: "alerts", domain: "AIOPS", held_as: "contributor", notes: "AIOPS rewrites the alert stream by suppressing known-noise patterns and promoting correlated clusters. The 'one alert per incident' goal lives or dies here." },
+  { data_object: "alerts", domain: "ITSM", held_as: "consumer", notes: "Alerts that survive filtering become ITSM incidents via the event.alert_triggered handoff." },
 
   // error_groups — ITSM consumer
-  { data_object: "error_groups", domain: "ITSM", role: "consumer", notes: "Error groups that exceed an occurrence threshold or impact production releases can seed ITSM incidents directly." },
+  { data_object: "error_groups", domain: "ITSM", held_as: "consumer", notes: "Error groups that exceed an occurrence threshold or impact production releases can seed ITSM incidents directly." },
 
   // distributed_traces — AIOPS consumer
-  { data_object: "distributed_traces", domain: "AIOPS", role: "consumer", notes: "Trace-level anomalies (latency spikes on specific spans, error patterns localized to a service) feed AIOPS correlation alongside metric and log signals." },
+  { data_object: "distributed_traces", domain: "AIOPS", held_as: "consumer", notes: "Trace-level anomalies (latency spikes on specific spans, error patterns localized to a service) feed AIOPS correlation alongside metric and log signals." },
 
   // service_level_objectives — ITSM consumer (slo.breached → incident)
-  { data_object: "service_level_objectives", domain: "ITSM", role: "consumer", notes: "SLO breach events route into ITSM as incidents when the burn rate exceeds the error-budget threshold." },
+  { data_object: "service_level_objectives", domain: "ITSM", held_as: "consumer", notes: "SLO breach events route into ITSM as incidents when the burn rate exceeds the error-budget threshold." },
 ];
 
 const signalRows = signals
   .map(s => ({
     domain_id: did(s.domain),
     data_object_id: dataObjMap.get(s.data_object)!,
-    role: s.role,
+    held_as: s.held_as,
     notes: s.notes,
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
@@ -501,8 +501,8 @@ console.log(`  total data_objects:           ${totalDO}`);
 console.log(`  total domain_data_objects:    ${totalDDO}`);
 console.log(`  total cross_domain_handoffs:  ${totalHO}`);
 
-console.log("\nMulti-master leaderboard (data_objects with role=master count > 1):");
-const allMasterRows = await get("/domain_data_objects?role=eq.master&select=data_object_id&limit=20000");
+console.log("\nMulti-master leaderboard (data_objects with held_as=master count > 1):");
+const allMasterRows = await get("/domain_data_objects?held_as=eq.master&select=data_object_id&limit=20000");
 const masterCount = new Map<number, number>();
 for (const r of allMasterRows) {
   const id = Number(r.data_object_id);

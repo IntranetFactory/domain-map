@@ -675,7 +675,7 @@
     {
       "code": "OKR-OWNER",
       "name": "OKR Owner",
-      "description": "Cross-functional objective owner who commits and scores OKRs and links key results to executing work items.",
+      "description": "Cross-functional objective owner who commits and scores OKRs and relates key results to executing work items.",
       "business_function_id": null,
       "business_function": null,
       "record_status": "new",

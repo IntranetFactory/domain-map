@@ -76,9 +76,9 @@ a6:
 
 ---
 
-q7: Keep personal-data assets as a distinct privacy master with an optional link to the data-governance data catalog, rather than merging the two? (yes/no)
+q7: Keep personal-data assets as a distinct privacy master with an optional relationship to the data-governance data catalog, rather than merging the two? (yes/no)
 
-Recommended: yes (keep distinct). All five flagships build a personal-data inventory inside the privacy product rather than consuming a generic asset catalog, because the privacy inventory tracks semantics the governance catalog does not (special-category flags, lawful basis, retention, linkage to processing activities and to a data subject). Keep personal-data assets as its own master with an optional reference to the data-governance data assets, not a merge or an embed. The rest of the extra-entity list (processing activities, processor agreements, transfers, PIA/DPIA, breach records, consent purposes) is now vetted and folds into the q2 build scope.
+Recommended: yes (keep distinct). All five flagships build a personal-data inventory inside the privacy product rather than consuming a generic asset catalog, because the privacy inventory tracks semantics the governance catalog does not (special-category flags, lawful basis, retention, relationship to processing activities and to a data subject). Keep personal-data assets as its own master with an optional reference to the data-governance data assets, not a merge or an embed. The rest of the extra-entity list (processing activities, processor agreements, transfers, PIA/DPIA, breach records, consent purposes) is now vetted and folds into the q2 build scope.
 
 a7:
 

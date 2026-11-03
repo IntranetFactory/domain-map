@@ -46,13 +46,13 @@ q4: Should a new dedicated Marketplace Ops role be added for the day-to-day mark
 - b) Add a new Talent Development Marketplace Ops role.
 - c) Defer the marketplace-ops role until a customer asks.
 
-Recommended: b. Eightfold and Gloat both ship a dedicated marketplace-admin persona in their RBAC, though the catalog has historically folded admin-ops into the broader function-manager role. This shapes how the role layer and personas get wired, so it is your call.
+Recommended: b. Eightfold and Gloat both ship a dedicated marketplace-admin persona in their RBAC, though the catalog has historically folded admin-ops into the broader function-manager role. This shapes how the persona layer and personas get wired, so it is your call.
 
 a4:
 
 ---
 
-q5: Eleven required contributor/consumer links on this domain's modules point at entities mastered by other domains (career aspirations, competency models, job postings, job profiles, requisitions, skill profiles, skill taxonomies, skills-gap analyses) and break module self-containment. May I fix each one, either by carrying a local embedded shell or by relaxing it to optional? (yes/no)
+q5: Eleven required contributor/consumer relationships on this domain's modules point at entities mastered by other domains (career aspirations, competency models, job postings, job profiles, requisitions, skill profiles, skill taxonomies, skills-gap analyses) and break module self-containment. May I fix each one, either by carrying a local embedded shell or by relaxing it to optional? (yes/no)
 
 Recommended: yes. Per-row, convert to an embedded master where the module truly needs the data locally, or relax to optional where the dependency is presence-conditional. This rewrites the role/necessity on existing rows, which is destructive, so it needs your sign-off.
 

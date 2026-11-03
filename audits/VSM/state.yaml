@@ -11,7 +11,7 @@ b1b: []
 b2:
   - id: B2-VSM-PHASE-E
     summary: Author Phase E personas for VSM, or skip (overlay domain, no gated processes).
-    question: Author Phase E (domain_roles personas + process_raci) for VSM now?
+    question: Author Phase E (personas personas + process_raci) for VSM now?
     options: [skip, author]
     why: >-
       VSM is a derive/overlay domain: it has no operational_workflow masters, no lifecycle

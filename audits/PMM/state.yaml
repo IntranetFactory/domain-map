@@ -10,7 +10,7 @@ last_audit: "2026-06-15"
 b1b:
   - id: B1B-PHASE-P
     summary: "Persona / RACI layer (E1) for the 4-module domain. DEFERRED (author on go-ahead)."
-    finding: "PMM has 4 full modules and 0 personas. Candidate personas: Product Marketing Manager (cross-module), Competitive Intelligence Analyst, Launch Manager, Sales Enablement Manager. Author domain_roles + role_modules reach + process_raci, wire lifecycle.process_id."
+    finding: "PMM has 4 full modules and 0 personas. Candidate personas: Product Marketing Manager (cross-module), Competitive Intelligence Analyst, Launch Manager, Sales Enablement Manager. Author personas + persona_modules reach + process_raci, wire lifecycle.process_id."
 
   - id: B1B-HANDOFFS
     summary: "Cross-domain handoffs (B9) - inbound from PROD-MGMT + CI/win-loss outbound feeds. DEFERRED."

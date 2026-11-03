@@ -16,7 +16,7 @@ b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (8 modules) with 0 personas (E1): persona / RACI layer. DEFERRED."
     status: deferred
-    finding: "8 domain_modules and 0 domain_roles. Candidate personas: Farm Operator, CSA Manager, Wholesale/Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher/Processing Coordinator, Harvest Planner. Author on explicit user go-ahead."
+    finding: "8 domain_modules and 0 personas. Candidate personas: Farm Operator, CSA Manager, Wholesale/Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher/Processing Coordinator, Harvest Planner. Author on explicit user go-ahead."
 
 b1b:
   - id: B1B-S1

@@ -1,0 +1,165 @@
+{
+ "taken_at": "2026-11-03T15:26:53.584Z",
+ "loader": ".tmp_deploy/fix_two_master_entities_2026_11_03.ts",
+ "before": {
+  "dmdo": [
+   {
+    "id": 399,
+    "domain_module_data_object_label": "COMP-INCENTIVES / equity_grants",
+    "held_as": "master",
+    "is_install_optional": false
+   },
+   {
+    "id": 1379,
+    "domain_module_data_object_label": "FOOD-TRACE-SUPPLIER-PROVENANCE / supplier_certifications",
+    "held_as": "master",
+    "is_install_optional": false
+   }
+  ],
+  "equityStates": [
+   {
+    "id": 112,
+    "data_object_lifecycle_state_label": "equity_grants.proposed",
+    "domain_module_id": 79
+   },
+   {
+    "id": 113,
+    "data_object_lifecycle_state_label": "equity_grants.approved",
+    "domain_module_id": 79
+   },
+   {
+    "id": 114,
+    "data_object_lifecycle_state_label": "equity_grants.granted",
+    "domain_module_id": 79
+   },
+   {
+    "id": 115,
+    "data_object_lifecycle_state_label": "equity_grants.vesting",
+    "domain_module_id": 79
+   },
+   {
+    "id": 116,
+    "data_object_lifecycle_state_label": "equity_grants.exercised",
+    "domain_module_id": 79
+   },
+   {
+    "id": 117,
+    "data_object_lifecycle_state_label": "equity_grants.forfeited",
+    "domain_module_id": 79
+   },
+   {
+    "id": 118,
+    "data_object_lifecycle_state_label": "equity_grants.expired",
+    "domain_module_id": 79
+   }
+  ],
+  "certStates": [
+   {
+    "id": 1771,
+    "data_object_lifecycle_state_label": "supplier_certifications.uploaded",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1772,
+    "data_object_lifecycle_state_label": "supplier_certifications.verified",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1773,
+    "data_object_lifecycle_state_label": "supplier_certifications.active",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1774,
+    "data_object_lifecycle_state_label": "supplier_certifications.expiring",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1775,
+    "data_object_lifecycle_state_label": "supplier_certifications.expired",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1776,
+    "data_object_lifecycle_state_label": "supplier_certifications.renewed",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1777,
+    "data_object_lifecycle_state_label": "supplier_certifications.revoked",
+    "domain_module_id": 258
+   }
+  ],
+  "certEvents": [
+   {
+    "id": 1518,
+    "event_name": "supplier_certification.uploaded",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1519,
+    "event_name": "supplier_certification.renewed",
+    "domain_module_id": 258
+   },
+   {
+    "id": 1520,
+    "event_name": "supplier_certification.revoked",
+    "domain_module_id": 258
+   }
+  ],
+  "modules": [
+   {
+    "id": 21,
+    "domain_module_code": "CAP-TABLE-GRANTS",
+    "description": "Option pool tracking (size, available headroom), RSU/option grant issuance with board approval, grant acceptance, vesting-schedule administration. Multi-masters equity_grants alongside COMP-MGMT (which holds the compensation-policy slice)."
+   },
+   {
+    "id": 79,
+    "domain_module_code": "COMP-INCENTIVES",
+    "description": "Bonus, commission, and long-term equity plan administration. Masters equity_grants and folds INCENTIVE-MGMT + EQUITY-MGMT capabilities (grant lifecycle, vesting, exercise, expense tracking)."
+   }
+  ],
+  "handoffs": [
+   {
+    "id": 362,
+    "handoff_label": "Food Traceability and Provenance → Supplier Relationship Management : supplier_certification.expired",
+    "source_domain_id": 155,
+    "target_domain_id": 28,
+    "source_domain_module_id": null,
+    "target_domain_module_id": null,
+    "data_object_id": 498,
+    "trigger_event_id": 352
+   },
+   {
+    "id": 423,
+    "handoff_label": "Compensation Management → Payroll Management : equity_grant.vested",
+    "source_domain_id": 60,
+    "target_domain_id": 55,
+    "source_domain_module_id": 79,
+    "target_domain_module_id": 92,
+    "data_object_id": 158,
+    "trigger_event_id": 427
+   },
+   {
+    "id": 424,
+    "handoff_label": "Compensation Management → Core Financial Management : equity_grant.granted",
+    "source_domain_id": 60,
+    "target_domain_id": 65,
+    "source_domain_module_id": 79,
+    "target_domain_module_id": null,
+    "data_object_id": 158,
+    "trigger_event_id": 426
+   },
+   {
+    "id": 1150,
+    "handoff_label": "Compensation Management → Compensation Management : equity_grant.granted",
+    "source_domain_id": 60,
+    "target_domain_id": 60,
+    "source_domain_module_id": 79,
+    "target_domain_module_id": 85,
+    "data_object_id": 157,
+    "trigger_event_id": 426
+   }
+  ]
+ }
+}

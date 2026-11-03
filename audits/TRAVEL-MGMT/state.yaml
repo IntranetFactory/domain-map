@@ -15,7 +15,7 @@ last_audit: "2026-06-14"
 #   Phase B: 9 mastered data_objects + 1 embedded_master (employees) + users consumer rows;
 #     entity_type classified; pattern flags considered (trip_bookings.submit_lock,
 #     trip_approvals.single_approver, traveler_profiles.personal_content); 20
-#     data_object_relationships (intra-domain + users edges + cross-domain to EXPENSE/SPEND +
+#     data_object_relationships (intra-domain + relationships to users + cross-domain to EXPENSE/SPEND +
 #     HCM employees->traveler_profiles); 14 aliases; lifecycle states on all 6 workflow
 #     masters; 9 trigger_events; 7 handoffs (3 outbound to EXPENSE/SPEND pre-existing,
 #     3 intra-domain cross-module B9b, 1 outbound to HCM on duty_of_care_alert.raised).
@@ -28,7 +28,7 @@ last_audit: "2026-06-14"
 #     operational 17/21=0.81 (the 4 non-platform tools are the 3 external fetch tools +
 #     the notify abstraction; they flip to platform when Semantius ships outbound + fetch).
 #   Phase E: 3 personas (TRAVEL-MANAGER, TRAVEL-ARRANGER, cross-functional TRAVELER) +
-#     11 role_modules (each persona >=2 modules).
+#     11 persona_modules (each persona >=2 modules).
 # All open items below are user decisions; the build is agent-finished otherwise.
 
 b2:

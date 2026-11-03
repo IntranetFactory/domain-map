@@ -54,7 +54,7 @@ From the market-surface JSON. Bold rows are top-5 most-impactful.
 | **gxp_training_signoffs** | LMS-COMPLIANCE-TRAINING | FDA 21 CFR Part 11 | Witnessed e-signature binding learner + course + version + timestamp; hard blocker for life-sciences |
 | phishing_simulations | LMS-COMPLIANCE-TRAINING | PCI DSS 12.6 | KnowBe4 / Proofpoint surface |
 | phishing_simulation_results | LMS-COMPLIANCE-TRAINING | PCI DSS 12.6 | Junction for above |
-| **dpo_training_acknowledgements** | TRAINING-RECORDS-STARTER | GDPR Art. 39 | Non-optional for EU operators; gap in the otherwise-complete jurisdictional set |
+| **dpo_training_acknowledgments** | TRAINING-RECORDS-STARTER | GDPR Art. 39 | Non-optional for EU operators; gap in the otherwise-complete jurisdictional set |
 | pci_dss_awareness_records | TRAINING-RECORDS-STARTER | PCI DSS 12.6 | Card-handler training records |
 | data_retention_policies | LMS-CT-GDPR | GDPR Art. 5(1)(e) | Policy rows driving deletion automation |
 | reminder_schedules | LMS-AUTOMATION | - | Nudge cadence config |
@@ -65,9 +65,9 @@ From the market-surface JSON. Bold rows are top-5 most-impactful.
 
 | Band | ID | Finding | Fix |
 |---|---|---|---|
-| M4 | SKILLS-MGMT capability (id 20) is linked to LMS via `capability_domains` but no LMS module realizes it; only `SKILLS-MGMT-TAXONOMY` (in the `SKILLS-MGMT` domain) realizes it. | Two clean options surfaced as Bucket 2 item #1, not auto-fixable. |
+| M4 | SKILLS-MGMT capability (id 20) is related to LMS via `capability_domains` but no LMS module realizes it; only `SKILLS-MGMT-TAXONOMY` (in the `SKILLS-MGMT` domain) realizes it. | Two clean options surfaced as Bucket 2 item #1, not auto-fixable. |
 | B12 | Lifecycle states present on **46 of 63** LMS-owned masters (73%). 17 masters carry no `data_object_lifecycle_states` rows. Some are likely config-shape (catalogs, tags, categories, templates); others are workflow-bearing and need states. | Bucket-2 review (item #2) to classify each of the 17 as config-exempt or workflow-bearing; load states for the workflow-bearing subset. |
-| E1 (soft) | `TRAINING-RECORDS-STARTER` (module 182) has zero `role_modules` entries. Every other LMS module has ≥1 primary + 2 secondary roles. Per Rule #19 starters are first-class deployable units; per the catalog convention they need a role surface too. | Bucket 2 item #3, name the recommended role(s). |
+| E1 (soft) | `TRAINING-RECORDS-STARTER` (module 182) has zero `persona_modules` entries. Every other LMS module has ≥1 primary + 2 secondary roles. Per Rule #19 starters are first-class deployable units; per the catalog convention they need a role surface too. | Bucket 2 item #3, name the recommended role(s). |
 
 #### BOUNDARY findings (1)
 
@@ -122,7 +122,7 @@ Existing tags: 2 rows, both `proposal_source='discovery_override'`, `record_stat
 
 ### Bucket 2, Surface-for-user (judgment calls)
 
-1. **SKILLS-MGMT capability ↔ LMS attribution (M4).** The `SKILLS-MGMT` capability (id 20) is linked to LMS via `capability_domains` but no LMS module realizes it (only `SKILLS-MGMT-TAXONOMY` in the SKILLS-MGMT domain does). Two options:
+1. **SKILLS-MGMT capability ↔ LMS attribution (M4).** The `SKILLS-MGMT` capability (id 20) is related to LMS via `capability_domains` but no LMS module realizes it (only `SKILLS-MGMT-TAXONOMY` in the SKILLS-MGMT domain does). Two options:
    - (a) **Drop** `capability_domains` row for LMS×SKILLS-MGMT. The SKILLS-MGMT domain is the proper owner; the capability appears in LMS only because LMS-COURSE-DELIVERY uses `course_tags` for skill tagging, which is downstream consumption.
    - (b) **Add** a realizing LMS module for it, most likely `LMS-PATHS` (which carries `skill_profiles` as consumer and would naturally realize a "skill alignment" capability there once `skill_targets` ships from MISSING #9).
    - Recommendation: (a) is the cleaner interpretation. (b) becomes viable only after the MISSING entity `skill_targets` is loaded.
@@ -130,7 +130,7 @@ Existing tags: 2 rows, both `proposal_source='discovery_override'`, `record_stat
 
 2. **B12 lifecycle states on 17 of 63 masters are absent.** Some are obviously config-shape (catalogs, tags, categories, templates with author-once / occasional-edit shape); others are workflow-bearing. Names visible in DMDO: `course_tags`, `course_categories`, `course_catalogs`, `course_ratings`, `course_reviews`, `course_discussions`, `notification_templates`, `audiences`, `certificate_templates`, `prerequisite_rules`, `learning_path_steps`, `learning_path_assignments`, `regulator_filing_exports`, `learner_notifications`, `manager_nudges`, `escalation_rules`, plus several jurisdictional record types. Per Rule #15 (RESCINDED auto-population of `data_objects.notes`), the audit cannot annotate the config-shape exemption in `notes` without your exact wording. **Question: should I (a) surface the per-master list with proposed config-vs-workflow classification for your row-by-row call, or (b) ship lifecycle states for everything that looks workflow-bearing and skip the rest silently?**
 
-3. **`TRAINING-RECORDS-STARTER` role coverage (E1 soft).** The starter has zero `role_modules` entries. Likely candidates: `L-AND-D-LEARNING-ADMIN` (primary) and `GRC-COMPLIANCE-TRAINING-MANAGER` (secondary). **Confirm both, or name a different set.** This is a soft E1: the 2-module floor applies per-role, not per-module, so a starter without roles is structurally permissible but functionally hollow.
+3. **`TRAINING-RECORDS-STARTER` role coverage (E1 soft).** The starter has zero `persona_modules` entries. Likely candidates: `L-AND-D-LEARNING-ADMIN` (primary) and `GRC-COMPLIANCE-TRAINING-MANAGER` (secondary). **Confirm both, or name a different set.** This is a soft E1: the 2-module floor applies per-role, not per-module, so a starter without roles is structurally permissible but functionally hollow.
 
 4. **HRSD → LMS `case_category.updated` (handoff id 1121) target module is ambiguous.** Could be `LMS-COMPLIANCE-TRAINING` (case-category drives compliance-tag inheritance) or `LMS-PATHS` (case-category drives learning-path assignment). **Which?**
 
@@ -161,7 +161,7 @@ Buckets 2 items 1, 3, 4, 5 are independent of each other. Item 2 depends only on
 - **Current footprint:** 8 modules (7 full + 1 starter `TRAINING-RECORDS-STARTER`), **64 LMS-owned masters**, 113 DMDO rows, 67 trigger events, 49 aliases, ~167 lifecycle-state rows across 47 masters.
 - **Cross-domain handoffs:** 24 outbound (LMS → TALENT-MGMT, HCM, GRC, IGA, SKILLS-MGMT) + 4 inbound (ONBOARDING, GRC, HCM, HRSD) = 28 cross-domain rows. Intra-domain `lifecycle_progression` rows: 12 (visible in B9b section).
 - **System skills:** 8 / 8 modules carry exactly one `skill_type='system'` skill. Zero legacy domain-level system skills.
-- **Semantius score:** **100% strict_score** on every module (176 / 176 `skill_tools` rows resolve to `tools.coverage_tier='platform'`). Zero `external`, zero `integration`, zero F4 invariant violations, zero channel-primitive links (F7 PASS).
+- **Semantius score:** **100% strict_score** on every module (176 / 176 `skill_tools` rows resolve to `tools.coverage_tier='platform'`). Zero `external`, zero `integration`, zero F4 invariant violations, zero channel-primitive relationships (F7 PASS).
 - **APQC coverage:** 8 of 28 cross-domain handoffs tagged (29% coverage). 0 approved. 6 `agent_curated` (handoffs 1048, 1079, 1080, 1121, 1288, 1295), 2 `discovery_override` (handoffs 8, 373). **20 cross-domain handoffs still untagged.**
 - **Bucket 1 (b1a, agent-fixable):** **6 items.**
 - **Bucket 1 (b1b, blocked):** **6 items.**
@@ -178,7 +178,7 @@ Carried verbatim from the 2026-05-29 market-audit pass. Flagships: Cornerstone L
 
 | ID | Defect | Fix |
 |---|---|---|
-| B7 user edges | `data_object_relationships` has **zero** rows in either direction between LMS masters and `users` (data_object id 41). Per Rule #10, every LMS master with a user-typed actor (instructor, learner, assigner, approver, author, reviewer) MUST carry a `data_object_relationships` edge to `users`. Affected masters include `instructors` (instructor user), `course_enrollments` (learner), `assessment_attempts` (learner), `learner_certifications` (learner + issuer), `compliance_assignments` (learner + assigner), `learning_path_assignments` (learner + assigner), `course_versions` / `course_assessments` / `certification_definitions` (author + publisher), `course_reviews` / `course_discussions` (author), `compliance_audit_records` / `training_evidence_records` / `regulator_filing_exports` (signer / submitter), `learner_badges` (learner), `gdpr_consent_records` / `subject_access_requests` / `data_deletion_requests` (subject + fulfiller), `manager_nudges` (manager). | Author the missing `data_object_relationships` rows per Rule #10. Loader pattern from prior cluster-drafts work; pre-flight verifies the `users` row is `kind='platform_builtin'`. |
+| B7 relationships to `users` | `data_object_relationships` has **zero** rows in either direction between LMS masters and `users` (data_object id 41). Per Rule #10, every LMS master with a user-typed actor (instructor, learner, assigner, approver, author, reviewer) MUST carry a `data_object_relationships` row to `users`. Affected masters include `instructors` (instructor user), `course_enrollments` (learner), `assessment_attempts` (learner), `learner_certifications` (learner + issuer), `compliance_assignments` (learner + assigner), `learning_path_assignments` (learner + assigner), `course_versions` / `course_assessments` / `certification_definitions` (author + publisher), `course_reviews` / `course_discussions` (author), `compliance_audit_records` / `training_evidence_records` / `regulator_filing_exports` (signer / submitter), `learner_badges` (learner), `gdpr_consent_records` / `subject_access_requests` / `data_deletion_requests` (subject + fulfiller), `manager_nudges` (manager). | Author the missing `data_object_relationships` rows per Rule #10. Loader pattern from prior cluster-drafts work; pre-flight verifies the `users` row is `kind='platform_builtin'`. |
 
 #### STRUCTURAL findings (3)
 
@@ -235,20 +235,20 @@ These rows have `target_domain_module_id=null` on the **target side** (LMS as so
 
 | ID | Item | Blocked by |
 |---|---|---|
-| B1B-M4-SKILLS-MGMT | `capability_domains` carries an LMS×SKILLS-MGMT link but no LMS module realizes capability id 20 (SKILLS-MGMT). Either drop the link or add LMS-PATHS as a realizing module after `skill_targets` ships. | Bucket 2 item #1 (user decision: drop vs add). |
-| B1B-MISSING-ENTITIES | 19 MISSING entities from 2026-05-29 market audit (top-5: `question_banks`, `cmi5_assignable_units`, `gxp_training_signoffs`, `dpo_training_acknowledgements`, plus `phishing_simulations`, `data_retention_policies`, etc.). | Bucket 2 item #2 (user approves which to load, per loader-group). |
+| B1B-M4-SKILLS-MGMT | `capability_domains` carries an LMS×SKILLS-MGMT relationship but no LMS module realizes capability id 20 (SKILLS-MGMT). Either drop the relationship or add LMS-PATHS as a realizing module after `skill_targets` ships. | Bucket 2 item #1 (user decision: drop vs add). |
+| B1B-MISSING-ENTITIES | 19 MISSING entities from 2026-05-29 market audit (top-5: `question_banks`, `cmi5_assignable_units`, `gxp_training_signoffs`, `dpo_training_acknowledgments`, plus `phishing_simulations`, `data_retention_policies`, etc.). | Bucket 2 item #2 (user approves which to load, per loader-group). |
 | B1B-A4-M8-COPY | Draft + write `catalog_tagline` + `catalog_description` for 1 domain row + 8 module rows. Buyer voice per Rule #20. | Bucket 2 item #3 (user approves the drafts BEFORE writing per Rule #20). |
 | B1B-B12-LIFECYCLE | Load lifecycle states for the workflow-bearing subset of the 17 stateless masters. | Bucket 2 item #4 (user picks per-master config-vs-workflow classification). |
-| B1B-E1-STARTER-ROLES | `TRAINING-RECORDS-STARTER` (module 182) has zero `role_modules` entries; every other LMS module has 2-4. | Bucket 2 item #5 (user names which roles the starter inherits). |
+| B1B-E1-STARTER-ROLES | `TRAINING-RECORDS-STARTER` (module 182) has zero `persona_modules` entries; every other LMS module has 2-4. | Bucket 2 item #5 (user names which roles the starter inherits). |
 | B1B-B10b-INBOUND-1121 | Inbound handoff 1121 (HRSD → LMS, `case_category.updated` → `case_categories`) has `target_domain_module_id=null`. LMS endpoint is ambiguous (LMS-COMPLIANCE-TRAINING vs LMS-PATHS). | Bucket 2 item #6 (user picks the target module). |
 
 ### Bucket 2, Surface-for-user (judgment calls)
 
 1. **SKILLS-MGMT capability ↔ LMS attribution (M4).** Carried from 2026-05-29. Options: (a) DELETE `capability_domains` row for LMS × capability id 20 (SKILLS-MGMT is owned by SKILLS-MGMT-TAXONOMY); or (b) add `LMS-PATHS` (module 34) as the realizing module after `skill_targets` (MISSING entity) ships. Recommendation: (a) cleaner; (b) viable after Phase B insert for `skill_targets`. **Independent of Bucket 3 (none).**
-2. **2026-05-29 MISSING entity load routing.** 19 vendor-surface entities still undeployed. Recommend grouping into 6 loaders: (a) course-delivery (`question_banks`, `cmi5_assignable_units`, `lrs_statement_endpoints`, `observation_checklists`, `observation_checklist_results`), (b) ILT (`training_room_bookings`, `session_rosters`, `session_cancellations`), (c) paths (`skill_targets`, `learning_recommendations`), (d) credentials (`credential_verifications`, `certification_renewals`), (e) compliance (`gxp_training_signoffs`, `phishing_simulations`, `phishing_simulation_results`, `dpo_training_acknowledgements`, `pci_dss_awareness_records`), (f) GDPR (`data_retention_policies`), (g) automation (`reminder_schedules`). Approve all / approve some / decline.
+2. **2026-05-29 MISSING entity load routing.** 19 vendor-surface entities still undeployed. Recommend grouping into 6 loaders: (a) course-delivery (`question_banks`, `cmi5_assignable_units`, `lrs_statement_endpoints`, `observation_checklists`, `observation_checklist_results`), (b) ILT (`training_room_bookings`, `session_rosters`, `session_cancellations`), (c) paths (`skill_targets`, `learning_recommendations`), (d) credentials (`credential_verifications`, `certification_renewals`), (e) compliance (`gxp_training_signoffs`, `phishing_simulations`, `phishing_simulation_results`, `dpo_training_acknowledgments`, `pci_dss_awareness_records`), (f) GDPR (`data_retention_policies`), (g) automation (`reminder_schedules`). Approve all / approve some / decline.
 3. **Catalog UX copy (A4 + M8).** Should I draft buyer-voice `catalog_tagline` and `catalog_description` for 1 LMS domain row plus all 8 modules (`LMS-COURSE-DELIVERY`, `LMS-COMPLIANCE-TRAINING`, `LMS-PATHS`, `LMS-ILT-DELIVERY`, `LMS-CREDENTIALS`, `LMS-CT-GDPR`, `LMS-AUTOMATION`, `TRAINING-RECORDS-STARTER`)? Drafts go to chat for review before any write. Answer: yes / yes for some / draft a single example first.
 4. **B12 lifecycle classification on 17 masters.** 17 LMS masters with zero lifecycle states. Likely config-shape (no workflow): `course_tags`, `course_categories`, `course_catalogs`, `audiences`, `notification_templates`, `certificate_templates`, `prerequisite_rules`, `course_resources`, `recertification_schedules` (schedule rule, not record), `learning_path_steps` (sequence row), `continuing_education_credits` (sum-typed ledger). Likely workflow-bearing: `assessment_questions` (draft → published → retired), `quiz_responses` (submitted → graded), `course_modules` / `lessons` (draft → published → retired), `xapi_statements` (recorded → validated). Approve the recommended split (a) row-by-row, or (b) ship lifecycle states for the workflow-bearing subset I named and accept the others as config-shape with no annotation (Rule #15 forbids the prior `data_objects.notes` exemption).
-5. **`TRAINING-RECORDS-STARTER` role coverage (soft E1).** Module 182 has zero `role_modules`. Likely candidates: `L-AND-D-LEARNING-ADMIN` (primary), `GRC-COMPLIANCE-TRAINING-MANAGER` (secondary), `MANAGER-AS-LEARNER-MANAGER` (secondary). Confirm or name a different set.
+5. **`TRAINING-RECORDS-STARTER` role coverage (soft E1).** Module 182 has zero `persona_modules`. Likely candidates: `L-AND-D-LEARNING-ADMIN` (primary), `GRC-COMPLIANCE-TRAINING-MANAGER` (secondary), `MANAGER-AS-LEARNER-MANAGER` (secondary). Confirm or name a different set.
 6. **HRSD → LMS handoff 1121 target module.** `case_category.updated` carrying `case_categories` could land in `LMS-COMPLIANCE-TRAINING` (compliance-tag inheritance) or `LMS-PATHS` (learning-path assignment by case category). Pick one.
 
 Buckets 2 items 1, 3, 5, 6 are independent. Item 2 depends only on per-loader-group approval. Item 4 routing (a vs b) is independent.
@@ -259,7 +259,7 @@ Buckets 2 items 1, 3, 5, 6 are independent. Item 2 depends only on per-loader-gr
 
 ### Pairwise reconciliation
 
-No pairwise pass invoked this audit. Neighbor set discovered from handoffs: HCM (5 inbound + 5 outbound), GRC (5 outbound + 1 inbound), IGA (4 outbound), TALENT-MGMT (3 outbound), SKILLS-MGMT (5 outbound, all currently lifecycle_progression intra), HRSD (1 inbound + 1 outbound), ONBOARDING (2 inbound). Heaviest edges (≥3): HCM, GRC, IGA. Pairwise b1 mode 3+4 not run as part of this Validate b1 pass (the audit ran the structural + market-anchor passes only); recommend HCM and GRC pairwise reconciliation as a follow-up.
+No pairwise pass invoked this audit. Neighbor set discovered from handoffs: HCM (5 inbound + 5 outbound), GRC (5 outbound + 1 inbound), IGA (4 outbound), TALENT-MGMT (3 outbound), SKILLS-MGMT (5 outbound, all currently lifecycle_progression intra), HRSD (1 inbound + 1 outbound), ONBOARDING (2 inbound). Heaviest relationships (≥3): HCM, GRC, IGA. Pairwise b1 mode 3+4 not run as part of this Validate b1 pass (the audit ran the structural + market-anchor passes only); recommend HCM and GRC pairwise reconciliation as a follow-up.
 
 ### Decisions
 
@@ -278,7 +278,7 @@ nothing written to the catalog. Market subagent surface at `c:/tmp/LMS-market-su
 
 - **Footprint:** 8 modules (7 full + 1 starter), **64 LMS-owned masters**, 113 DMDO rows, ~67 trigger
   events, ~63 aliases, ~167 lifecycle-state rows across 47 masters, 8 system skills.
-- **Semantius score:** **100% strict on every module** (every linked tool `coverage_tier=platform`).
+- **Semantius score:** **100% strict on every module** (every related tool `coverage_tier=platform`).
   F1-F5 + F7 all pass.
 - **Strong bands:** A1/A2/A3, M1/M2/M5/M6/M7, B1/B2/B5/B6/B6b/B7/B9/B9b/B11, C1/C2, F1-F7.
 - **This pass found four issues the prior two audits (2026-05-29, 2026-05-31) missed, corrected one
@@ -286,11 +286,11 @@ nothing written to the catalog. Market subagent surface at `c:/tmp/LMS-market-su
 
 ### Correction to prior audits
 
-- **`B1A-B7-USER-EDGES` was a false finding.** Both prior audits claimed "zero `data_object_relationships`
+- **`B1A-B7-USER-RELATIONSHIPS` was a false finding.** Both prior audits claimed "zero `data_object_relationships`
   between LMS masters and `users` (data_object id 41)". Data_object **41 is `variance_analyses`**, not
-  users; the platform `users` built-in is **748**. Querying 748 returns **37 user-to-master edges**
+  users; the platform `users` built-in is **748**. Querying 748 returns **37 user-to-master relationships**
   (users owns/curates/authors courses + learning_paths, enrolls/completes, earns badges/credits,
-  signs acknowledgements, files SAR/deletion, etc.). **B7 PASSES.** The prior b1a item is dropped.
+  signs acknowledgments, files SAR/deletion, etc.). **B7 PASSES.** The prior b1a item is dropped.
 
 ### New findings (not in prior audits)
 
@@ -341,9 +341,9 @@ Counts: MISSING 7, SCOPE-CREEP 2, WRONG-OWNERSHIP 2, MODULARIZATION 5. Three ref
 
 ### Pairwise reconciliation
 
-Neighbors (by edge weight): HCM, GRC, IGA, SKILLS-MGMT, TALENT-MGMT, ONBOARDING, HRSD. Heaviest:
+Neighbors (by relationship weight): HCM, GRC, IGA, SKILLS-MGMT, TALENT-MGMT, ONBOARDING, HRSD. Heaviest:
 HCM + GRC + IGA. Light pass only; the cross-domain findings reduce to (a) the peer-owed B10b null
-module FKs above and (b) handoff 1121's questionable HRSD->LMS `case_categories` edge. Full HCM /
+module FKs above and (b) handoff 1121's questionable HRSD->LMS `case_categories` relationship. Full HCM /
 GRC pairwise deferred.
 
 ### Decisions
@@ -380,8 +380,8 @@ User (2026-06-02, second pass): **"do B2-REFACTOR-B now, postpone other B2, do b
 5. **Peer-owed B10b null module FKs reported** to [audits/_validate-cross-domain.md](../_validate-cross-domain.md)
    (12 rows owed by HCM / GRC / SKILLS-MGMT; report-only, not LMS's fix).
 
-**Correction logged:** the prior `B1A-B7-USER-EDGES` finding was false (it queried data_object 41 =
-`variance_analyses`; `users` is 748). B7 passes (37 user-to-master edges). Item dropped.
+**Correction logged:** the prior `B1A-B7-USER-RELATIONSHIPS` finding was false (it queried data_object 41 =
+`variance_analyses`; `users` is 748). B7 passes (37 user-to-master relationships). Item dropped.
 
 UI spot-check: https://tests.semantius.app/domain_map/data_objects ,
 https://tests.semantius.app/domain_map/handoff_processes ,
@@ -400,9 +400,9 @@ the external master). Table `domain_module_data_objects`, 3 PATCH rows.
 
 | module | data_object_id | entity | prior | new |
 |---|---|---|---|---|
-| 33 LMS-COMPLIANCE-TRAINING | 18 | onboarding_tasks (mastered by ONBOARDING) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
-| 34 LMS-PATHS | 175 | performance_goals (mastered by TALENT-MGMT) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
-| 34 LMS-PATHS | 26 | skills_gap_analyses (mastered by SWP) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
+| 33 LMS-COMPLIANCE-TRAINING | 18 | onboarding_tasks (mastered by ONBOARDING) | held_as=consumer, necessity=required | held_as=consumer, necessity=**optional** |
+| 34 LMS-PATHS | 175 | performance_goals (mastered by TALENT-MGMT) | held_as=consumer, necessity=required | held_as=consumer, necessity=**optional** |
+| 34 LMS-PATHS | 26 | skills_gap_analyses (mastered by SWP) | held_as=consumer, necessity=required | held_as=consumer, necessity=**optional** |
 
 Scope note: `policy_attestations` (286, consumer+required on module 33) was NOT touched - it is
 in b1b (B1B-M9-SELF-CONTAINMENT, gated on user_decision B2-M9-DECISION), not in the b1a
@@ -410,13 +410,13 @@ in b1b (B1B-M9-SELF-CONTAINMENT, gated on user_decision B2-M9-DECISION), not in 
 
 ### B1A-PHASE-P (Phase E personas + RACI) - DONE
 
-Authored the LMS persona / RACI layer (function-anchored per roles.md sec 7; ATS pilot was the
+Authored the LMS persona / RACI layer (function-anchored per personas.md sec 7; ATS pilot was the
 reference). All personas `record_status='new'` (DB default, Rule #1). No `_core` RBAC tables
 written; the permission bundle is derived, not stored.
 
-**`domain_roles` - 5 new personas** (1 existing persona reused by accretion, not recreated):
+**`personas` - 5 new personas** (1 existing persona reused by accretion, not recreated):
 
-| id | role_code | role_name | business_function |
+| id | persona_code | persona_name | business_function |
 |---|---|---|---|
 | 22 | LD-LEARNING-ADMIN | Learning Administrator | 11 Learning and Development |
 | 23 | LD-INSTRUCTIONAL-DESIGNER | Instructional Designer | 11 Learning and Development |
@@ -425,12 +425,12 @@ written; the permission bundle is derived, not stored.
 | 26 | PEOPLE-MANAGER | People Manager | NULL (cross-functional) |
 | 11 | LEGAL-COMPLIANCE-SPECIALIST | Compliance Specialist | 7 Legal (REUSED - existing ATS persona, reach extended) |
 
-**`role_modules` - 27 reach rows** (25 new + the 2 on the reused persona 11). Every persona meets
+**`persona_modules` - 27 reach rows** (25 new + the 2 on the reused persona 11). Every persona meets
 the 2-module floor: 22 -> 7 modules, 23 -> 4, 24 -> 3, 25 -> 5, 26 -> 4, 11 -> 2 (modules 180
 primary, 33 secondary - covers learner-data-privacy DSAR handling).
 
 **`data_object_lifecycle_states.process_id` - 16 gates wired** (all were `process_id=null`; PATCH
-sets the process-to-permission edge):
+sets the process-to-permission relationship):
 
 | process_id | APQC process | wired gates (data_object.state) |
 |---|---|---|
@@ -455,12 +455,12 @@ Responsible and >=1 Accountable (E4):
 
 ### Verification
 
-Re-queried post-write: M9 rows now consumer/optional (3/3); role_modules 27 rows reaching LMS
+Re-queried post-write: M9 rows now consumer/optional (3/3); persona_modules 27 rows reaching LMS
 modules; lifecycle states 16 with process_id set; process_raci 21 rows. E1 now passes (6 personas
 reach the 8-module domain where 0 existed). E2 2-module floor holds for every persona.
 
-UI spot-check: https://tests.semantius.app/domain_map/domain_roles ,
-https://tests.semantius.app/domain_map/role_modules ,
+UI spot-check: https://tests.semantius.app/domain_map/personas ,
+https://tests.semantius.app/domain_map/persona_modules ,
 https://tests.semantius.app/domain_map/process_raci ,
 https://tests.semantius.app/domain_map/domain_module_data_objects
 
@@ -529,7 +529,7 @@ folded into the b2 entries (`agent_answer`) and the new q-file.
   `embedded_master` is the right target shape (local shell for standalone erasure, defers to a
   canonical PRIV-MGMT master when present) but PRIV-MGMT (domain 20) masters nothing today, so it
   must be built first -> still defer (recommended a). Added option (b) = build PRIV-MGMT + demote.
-- **a4 -> B2-SKILLS-MGMT-ATTRIBUTION** ("explain both"). (a) delete the orphan link (clean; SKILLS-MGMT
+- **a4 -> B2-SKILLS-MGMT-ATTRIBUTION** ("explain both"). (a) delete the orphan relationship (clean; SKILLS-MGMT
   owns it); (b) realize capability 20 in LMS-PATHS after skill_targets ships (couples to q8). Both
   explained in the q-file.
 - **a7 -> B2-1121-ROUTING** ("explain the options"). (a) COMPLIANCE-TRAINING = compliance-tag
@@ -670,7 +670,7 @@ catalog writes landed at `record_status='new'` (Rule #1); no `record_status` fli
   session_rosters 1275, session_cancellations 1276); PATHS (skill_targets 1277, learning_recommendations
   1278); CREDENTIALS (credential_verifications 1279, certification_renewals 1280); COMPLIANCE-TRAINING
   (gxp_training_signoffs 1281, phishing_simulations 1282, phishing_simulation_results 1283); STARTER
-  (dpo_training_acknowledgements 1284, pci_dss_awareness_records 1285); AUTOMATION (reminder_schedules
+  (dpo_training_acknowledgments 1284, pci_dss_awareness_records 1285); AUTOMATION (reminder_schedules
   1286). The 19th, `data_retention_policies`, was RECONCILED to the existing `records_retention_policies`
   (433, mastered by ECM): wired 433 as `consumer`/`optional` into LMS-CT-GDPR (180) + rollup, no
   duplicate entity. Resolves B1B-MISSING-ENTITIES.
@@ -703,7 +703,7 @@ catalog writes landed at `record_status='new'` (Rule #1); no `record_status` fli
   embedded-master pattern?"). Answered: for a shared DATA entity the general pattern IS the per-domain
   role on `domain_module_data_objects` (embedded_master / consumer; `domain_module_host_domains` is
   deprecated, see references/deprecations.md), and LMS already follows it. But this orphan is a
-  `capability_domains` link, which has no master/embedded_master/consumer qualifier, so the embedded-
+  `capability_domains` relationship, which has no master/embedded_master/consumer qualifier, so the embedded-
   master middle option does not apply: it reduces to delete-the-orphan (SKILLS-MGMT owns + realizes it)
   vs realize-it-in-LMS-PATHS now that skill_targets (1277) shipped. Folded into q1 of the new q-file.
 - **a4 -> B2-1121-ROUTING** ("how are other vendors handling that?"). Answered with vendor grounding:

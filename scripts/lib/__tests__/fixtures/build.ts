@@ -49,8 +49,8 @@ export function buildFixture(input: FixtureInput): Fixture {
     lifecycle: [...(input.lifecycle ?? [])],
     handoffs: [...(input.handoffs ?? [])],
     hostDomains: [...(input.hostDomains ?? deriveHostDomains(dmdo, input.modules ?? []))],
-    domainRoles: [...(input.domainRoles ?? [])],
-    roleModules: [...(input.roleModules ?? [])],
+    personas: [...(input.personas ?? [])],
+    personaModules: [...(input.personaModules ?? [])],
     processRaci: [...(input.processRaci ?? [])],
     businessFunctions: [...(input.businessFunctions ?? [])],
     businessFunctionDomains: [...(input.businessFunctionDomains ?? [])],
@@ -128,8 +128,8 @@ export function usersObject(id: number): DataObject {
 
 // ---------- raw relationship row factories ----------
 
-export function dmdoRow(domain_module_id: number, data_object_id: number, role: string, p: Record<string, unknown> = {}): any {
-  return { domain_module_id, data_object_id, role, is_install_optional: false, notes: "", ...p };
+export function dmdoRow(domain_module_id: number, data_object_id: number, held_as: string, p: Record<string, unknown> = {}): any {
+  return { domain_module_id, data_object_id, held_as, is_install_optional: false, notes: "", ...p };
 }
 
 export function relationshipRow(
@@ -163,9 +163,9 @@ export function lifecycleState(
   };
 }
 
-// A process_raci row for a persona actor (domain_roles id) on a process.
-export function raciRow(id: number, process_id: number, actor_role_id: number, raci: string, p: Record<string, unknown> = {}): any {
-  return { id, process_id, actor_role_id, actor_skill_id: null, raci, consultation_blocking: false, ...p };
+// A process_raci row for a persona actor (personas id) on a process.
+export function raciRow(id: number, process_id: number, persona_id: number, raci: string, p: Record<string, unknown> = {}): any {
+  return { id, process_id, persona_id, skill_id: null, raci, consultation_blocking: false, ...p };
 }
 
 export function processRow(id: number, process_key: string, p: Record<string, unknown> = {}): any {

@@ -28,9 +28,9 @@ a2:
 
 ---
 
-q3: Forecasting records live in REV-INTEL, but CRM has no link to them today. Should I add an optional read-only link so reps see forecast roll-ups inside the pipeline view? (yes/no)
+q3: Forecasting records live in REV-INTEL, but CRM has no relationship to them today. Should I add an optional read-only relationship so reps see forecast roll-ups inside the pipeline view? (yes/no)
 
-Recommended: yes. A `consumer` (or `derived`) link from CRM-PIPELINE-MGT to REV-INTEL's `revenue_forecasts` matches how Salesforce/Dynamics surface forecast roll-ups on the pipeline without CRM owning the forecast record. Purely additive, no new master.
+Recommended: yes. A `consumer` (or `derived`) relationship from CRM-PIPELINE-MGT to REV-INTEL's `revenue_forecasts` matches how Salesforce/Dynamics surface forecast roll-ups on the pipeline without CRM owning the forecast record. Purely additive, no new master.
 
 a3:
 
@@ -38,7 +38,7 @@ a3:
 
 q4: Per-rep quotas, commission tracking, and partner relationships are real vendor categories, but they belong to Sales Performance Management (quotas, commissions: Xactly, Varicent, Salesforce Spiff) and Partner Relationship Management (Salesforce PRM, Microsoft Partner Center), not to CRM. Both of those domains exist as empty stubs in the catalog (no modules, no data). Want me to queue building SALES-PERF and PRM as their own domains? (yes/no)
 
-Recommended: yes, but as separate domain builds outside this CRM pass. Quotas and commissions are a distinct incentive-comp software market; partner relationships are a distinct PRM market. Folding them into CRM would misplace three masters. CRM stays a consumer of quotas/forecasts and of co-sell opportunity links.
+Recommended: yes, but as separate domain builds outside this CRM pass. Quotas and commissions are a distinct incentive-comp software market; partner relationships are a distinct PRM market. Folding them into CRM would misplace three masters. CRM stays a consumer of quotas/forecasts and of co-sell opportunity relationships.
 
 a4:
 

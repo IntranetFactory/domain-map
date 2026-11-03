@@ -38,7 +38,7 @@ Employee and manager self-service portal coordinating cross-domain lifecycle: on
 | Compensation Plans | `compensation_plans` | Total-rewards package definitions per role, level, and location, covering base, bonus target, equity, and allowances. |
 | Compliance Training Assignments | `compliance_assignments` | Mandatory training assignments tied to a regulation, role, location, or hire event, with due dates and escalation policy. |
 | Course Completions | `course_completions` | Terminal completion records per learner per course version, marking the course as finished. |
-| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and links to position, manager, and org unit. |
+| Employees | `employees` | Canonical records of people currently or formerly employed, carrying identity, employment metadata, and relationships to position, manager, and org unit. |
 | Employment Events | `employment_events` | Lifecycle events for an employee, such as hire, promotion, transfer, leave, comp change, and termination. The audit history of an employment. |
 | Engagement Drivers | `engagement_drivers` | Calculated driver scores, such as growth, recognition, and leadership, at a team, department, or segment level. |
 | HR Cases | `hr_cases` | Employee inquiries and service requests routed to HR operations, such as pay questions, benefits changes, leave requests, and complaints. |
@@ -121,7 +121,7 @@ flowchart TD
   users -->|"authors"| workforce_segments
   users -->|"tracks_balance_for"| absence_balances
   users -->|"requests"| absence_requests
-  employees -->|"is_linked_to"| users
+  employees -->|"is_related_to"| users
   users -->|"records"| employment_events
   users -->|"approves"| absence_requests
   users -->|"assigned"| asset_lifecycle_events
@@ -188,7 +188,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `worker_change_requests` | `worker_change_requests` | Worker Change Request | Worker Change Requests | master | - | - | required | yes | operational_workflow | `:manage` | - |
 | 2 | `pre_employees` | `pre_employees` | Pre-Employee | Pre-Employees | embedded_master | `ats-pre-employee-record` | Pre-Employee Record | required | yes | operational_workflow | `:manage` | - |
@@ -220,7 +220,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -247,7 +247,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `employees` | has | `worker_change_requests` | one_to_many | reference | required | source | restrict | reference | - |
 | `employees` | applies_as | `candidates` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -267,7 +267,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | authors | `workforce_segments` | many_to_many | optional | target | clear | reference | - |
 | `users` | tracks_balance_for | `absence_balances` | one_to_many | required | source | restrict | reference | - |
 | `users` | requests | `absence_requests` | one_to_many | required | source | restrict | reference | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
 | `users` | records | `employment_events` | one_to_many | optional | source | clear | reference | - |
 | `users` | approves | `absence_requests` | one_to_many | optional | source | clear | reference | - |
 | `users` | assigned | `asset_lifecycle_events` | one_to_many | optional | source | clear | reference | - |
@@ -288,7 +288,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | is_successor_in | `succession_plans` | many_to_many | required | target | restrict | reference | - |
 | `users` | requests | `worker_change_requests` | one_to_many | required | source | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -306,7 +306,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `hardware_assets` | delivered by | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
 | `service_changes` | generates | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -339,12 +339,12 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_offers` | gated_by | `offer_approvals` | one_to_many | optional | none | n/a | - |
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | none | n/a | - |
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | none | n/a | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | optional | none | n/a | - |
 | `course_completions` | records_completion_of | `course_versions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `course_enrollments` | yields | `course_completions` | one_to_many | optional | none | n/a | - |
 | `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `compliance_assignments` | evidences | `compliance_audit_records` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | optional | none | n/a | - |
 | `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | optional | none | n/a | - |
 | `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | optional | none | n/a | - |
 | `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | optional | none | n/a | - |
@@ -485,7 +485,7 @@ _(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `pre_employees` | embedded_master | required | ATS-PRE-EMPLOYEE-RECORD (ATS) | - |
 | `asset_lifecycle_events` | contributor | optional | ITAM-LIFECYCLE (ITAM) | - |

@@ -14,7 +14,7 @@ q1: (answer this first) How should EPM be split into modules (the sub-areas of t
 - c) (c) 2-module split: Planning (plans + budgets + forecasts + scenarios) plus Reporting (variances) (rebuild required).
 - d) (e) a custom alternative you supply (rebuild required).
 
-Recommended: a. It is already live and matches how the FP&A platforms cluster the work; the other options force a rebuild and re-cascade every downstream load. This choice drives every module, lifecycle owner, role, and per-module link below it, so it unlocks the rest of the build.
+Recommended: a. It is already live and matches how the FP&A platforms cluster the work; the other options force a rebuild and re-cascade every downstream load. This choice drives every module, lifecycle owner, role, and per-module relationship below it, so it unlocks the rest of the build.
 
 a1:
 

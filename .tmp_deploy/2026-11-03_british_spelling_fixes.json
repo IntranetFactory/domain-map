@@ -1,0 +1,3470 @@
+{
+ "built_from": "scratchpad dump of 2026-11-03",
+ "word_map": {
+  "acknowledgement": "acknowledgment",
+  "acknowledgements": "acknowledgments",
+  "aluminium": "aluminum",
+  "amortised": "amortized",
+  "anonymisation": "anonymization",
+  "anonymised": "anonymized",
+  "artefact": "artifact",
+  "artefacts": "artifacts",
+  "authorisation": "authorization",
+  "cancelled": "canceled",
+  "catalogue": "catalog",
+  "categorisation": "categorization",
+  "centre": "center",
+  "characterised": "characterized",
+  "customisable": "customizable",
+  "customisation": "customization",
+  "defence": "defense",
+  "dialled": "dialed",
+  "dialler": "dialer",
+  "emphasising": "emphasizing",
+  "energised": "energized",
+  "enquiries": "inquiries",
+  "enquiry": "inquiry",
+  "enrolment": "enrollment",
+  "fertiliser": "fertilizer",
+  "fertilisers": "fertilizers",
+  "finalisation": "finalization",
+  "flavoured": "flavored",
+  "fulfilment": "fulfillment",
+  "incentivised": "incentivized",
+  "initialisation": "initialization",
+  "initialise": "initialize",
+  "initialised": "initialized",
+  "instalment": "installment",
+  "labour": "labor",
+  "licence": "license",
+  "localised": "localized",
+  "medallists": "medalists",
+  "minimisation": "minimization",
+  "modelled": "modeled",
+  "modelling": "modeling",
+  "monetisation": "monetization",
+  "normalise": "normalize",
+  "notarisation": "notarization",
+  "offences": "offenses",
+  "operationalisation": "operationalization",
+  "operationalises": "operationalizes",
+  "optimisation": "optimization",
+  "optimised": "optimized",
+  "organisation": "organization",
+  "organisations": "organizations",
+  "parallelisation": "parallelization",
+  "personalisation": "personalization",
+  "personalised": "personalized",
+  "prioritisation": "prioritization",
+  "programme": "program",
+  "programmes": "programs",
+  "rationalisation": "rationalization",
+  "realisation": "realization",
+  "realised": "realized",
+  "reprioritisation": "reprioritization",
+  "specialising": "specializing",
+  "speciality": "specialty",
+  "standardised": "standardized",
+  "unauthorised": "unauthorized",
+  "utilisation": "utilization",
+  "fulfil_order": "fulfill_order"
+ },
+ "status_tables": [
+  "business_function_capabilities",
+  "business_function_domains",
+  "business_functions",
+  "business_processes",
+  "capabilities",
+  "capability_domains",
+  "data_object_aliases",
+  "data_object_lifecycle_states",
+  "data_object_relationships",
+  "data_objects",
+  "domain_aliases",
+  "domain_data_objects",
+  "domain_module_tools",
+  "domain_modules",
+  "domain_regulations",
+  "domains",
+  "handoff_processes",
+  "handoffs",
+  "industries",
+  "jurisdictions",
+  "personas",
+  "process_tools",
+  "regulations",
+  "skills",
+  "solution_domains",
+  "solutions",
+  "tool_solutions",
+  "tools",
+  "trigger_events",
+  "vendors"
+ ],
+ "cells": [
+  {
+   "table": "business_function_domains",
+   "id": 316,
+   "column": "notes",
+   "group": "prose",
+   "old": "FP&A contributes valuation modelling and underwriting analysis.",
+   "new": "FP&A contributes valuation modeling and underwriting analysis.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "business_function_domains",
+   "id": 347,
+   "column": "notes",
+   "group": "prose",
+   "old": "Ag-input procurement (seed / fertiliser / chemicals) feeds FMIS input-inventory and reconciles applications against purchases.",
+   "new": "Ag-input procurement (seed / fertilizer / chemicals) feeds FMIS input-inventory and reconciles applications against purchases.",
+   "words": [
+    "fertiliser->fertilizer"
+   ]
+  },
+  {
+   "table": "business_function_domains",
+   "id": 357,
+   "column": "notes",
+   "group": "prose",
+   "old": "Production operations executes CCP monitoring, sanitation, and allergen-control programmes on the plant floor.",
+   "new": "Production operations executes CCP monitoring, sanitation, and allergen-control programs on the plant floor.",
+   "words": [
+    "programmes->programs"
+   ]
+  },
+  {
+   "table": "business_processes",
+   "id": 51,
+   "column": "description",
+   "group": "prose",
+   "old": "Designing and maintaining the IT services/solutions catalogue. Evaluate the performance of IT services/solutions. Communicate the results to the management.",
+   "new": "Designing and maintaining the IT services/solutions catalog. Evaluate the performance of IT services/solutions. Communicate the results to the management.",
+   "words": [
+    "catalogue->catalog"
+   ]
+  },
+  {
+   "table": "business_processes",
+   "id": 242,
+   "column": "description",
+   "group": "prose",
+   "old": "Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the enquiry has been made.",
+   "new": "Handling instances where an employee believes that he/she has been inappropriately treated or he/she desires clarification. Encourage employees to inquire when needed. Record and clarify the issues for which the inquiry has been made.",
+   "words": [
+    "enquiry->inquiry"
+   ]
+  },
+  {
+   "table": "business_processes",
+   "id": 256,
+   "column": "description",
+   "group": "prose",
+   "old": "Establishing and maintaining service levels for the provision of IT services and solutions. Design and maintain the IT services and solution catalogue, as well as service level agreements. Evaluate the performance of IT service level agreements. Communicate the results to the management.",
+   "new": "Establishing and maintaining service levels for the provision of IT services and solutions. Design and maintain the IT services and solution catalog, as well as service level agreements. Evaluate the performance of IT service level agreements. Communicate the results to the management.",
+   "words": [
+    "catalogue->catalog"
+   ]
+  },
+  {
+   "table": "business_processes",
+   "id": 740,
+   "column": "description",
+   "group": "prose",
+   "old": "Attending to any queries received from the customers, even after a sales order has been serviced. Deploy ad hoc personnel for managing these enquiries.",
+   "new": "Attending to any queries received from the customers, even after a sales order has been serviced. Deploy ad hoc personnel for managing these inquiries.",
+   "words": [
+    "enquiries->inquiries"
+   ]
+  },
+  {
+   "table": "business_processes",
+   "id": 1029,
+   "column": "description",
+   "group": "prose",
+   "old": "Document the results of both formal reviews to include both positive and negative feedback and commentary. May include acknowledgement by involved parties.",
+   "new": "Document the results of both formal reviews to include both positive and negative feedback and commentary. May include acknowledgment by involved parties.",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "capabilities",
+   "id": 177,
+   "column": "description",
+   "group": "prose",
+   "old": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artefact, lessons-learned relationships. Distinct discipline from standard incident handling.",
+   "new": "War-room workflow for high-severity incidents: bridge calls, exec comms, stakeholder updates, post-mortem / PIR artifact, lessons-learned relationships. Distinct discipline from standard incident handling.",
+   "words": [
+    "artefact->artifact"
+   ]
+  },
+  {
+   "table": "capabilities",
+   "id": 264,
+   "column": "description",
+   "group": "prose",
+   "old": "Behavioral + demographic scoring with grading and nurture-stream triggers; B2B-flavoured.",
+   "new": "Behavioral + demographic scoring with grading and nurture-stream triggers; B2B-flavored.",
+   "words": [
+    "flavoured->flavored"
+   ]
+  },
+  {
+   "table": "capabilities",
+   "id": 279,
+   "column": "capability_name",
+   "group": "identifier",
+   "old": "Auto-Dialler and Click-to-Call",
+   "new": "Auto-Dialer and Click-to-Call",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "capabilities",
+   "id": 279,
+   "column": "description",
+   "group": "prose",
+   "old": "Power/parallel dialler with local-presence numbers and call disposition logging.",
+   "new": "Power/parallel dialer with local-presence numbers and call disposition logging.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 738,
+   "column": "permission_verb_override",
+   "group": "identifier",
+   "old": "fulfil_order",
+   "new": "fulfill_order",
+   "words": [
+    "fulfil->fulfill"
+   ]
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2802,
+   "column": "state_name",
+   "group": "identifier",
+   "old": "cancelled",
+   "new": "canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2806,
+   "column": "state_name",
+   "group": "identifier",
+   "old": "cancelled",
+   "new": "canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2841,
+   "column": "state_name",
+   "group": "identifier",
+   "old": "cancelled",
+   "new": "canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2845,
+   "column": "state_name",
+   "group": "identifier",
+   "old": "cancelled",
+   "new": "canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "relationship_verb",
+   "group": "identifier",
+   "old": "dialled_call",
+   "new": "dialed_call",
+   "words": [
+    "dialled->dialed"
+   ]
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "inverse_verb",
+   "group": "identifier",
+   "old": "is_dialled_by",
+   "new": "is_dialed_by",
+   "words": [
+    "dialled->dialed"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 7,
+   "column": "description",
+   "group": "prose",
+   "old": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters).",
+   "new": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medalists, alumni, target-school grads, hard-to-fill skill clusters).",
+   "words": [
+    "medallists->medalists"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 341,
+   "column": "description",
+   "group": "prose",
+   "old": "Detected over-privilege, toxic combination (PII + public access), unauthorised access, shadow-data exposure. DSPM remediation trigger.",
+   "new": "Detected over-privilege, toxic combination (PII + public access), unauthorized access, shadow-data exposure. DSPM remediation trigger.",
+   "words": [
+    "unauthorised->unauthorized"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 648,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "retail_labour_schedules",
+   "new": "retail_labor_schedules",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 673,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "visitor_nda_acknowledgements",
+   "new": "visitor_nda_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 902,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "fcra_summary_of_rights_acknowledgements",
+   "new": "fcra_summary_of_rights_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 941,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "harassment_training_acknowledgements",
+   "new": "harassment_training_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 952,
+   "column": "description",
+   "group": "prose",
+   "old": "GDPR Article 17 right-to-erasure request: scope, anonymisation policy, regulator deadline, fulfillment status.",
+   "new": "GDPR Article 17 right-to-erasure request: scope, anonymization policy, regulator deadline, fulfillment status.",
+   "words": [
+    "anonymisation->anonymization"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 1142,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "content_acknowledgements",
+   "new": "content_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 1284,
+   "column": "data_object_name",
+   "group": "identifier",
+   "old": "dpo_training_acknowledgements",
+   "new": "dpo_training_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 1376,
+   "column": "description",
+   "group": "prose",
+   "old": "A reservation a customer makes against one or more departures, holding the booked rate options, participant count, total price, payment status, channel of origin, and the full lifecycle from pending through completed, cancelled, or no-show.",
+   "new": "A reservation a customer makes against one or more departures, holding the booked rate options, participant count, total price, payment status, channel of origin, and the full lifecycle from pending through completed, canceled, or no-show.",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 1392,
+   "column": "description",
+   "group": "prose",
+   "old": "A reusable waiver document definition with custom clauses, questions, and acknowledgements an operator requires for an activity, published for guests to sign.",
+   "new": "A reusable waiver document definition with custom clauses, questions, and acknowledgments an operator requires for an activity, published for guests to sign.",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "data_objects",
+   "id": 1392,
+   "column": "catalog_description",
+   "group": "prose",
+   "old": "Reusable waiver definitions with custom clauses, questions, and acknowledgements an operator requires for an activity.",
+   "new": "Reusable waiver definitions with custom clauses, questions, and acknowledgments an operator requires for an activity.",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 92,
+   "column": "notes",
+   "group": "prose",
+   "old": "Onboarding provisioning tasks open ITSM service requests for IT fulfilment (laptop, accounts, access).",
+   "new": "Onboarding provisioning tasks open ITSM service requests for IT fulfillment (laptop, accounts, access).",
+   "words": [
+    "fulfilment->fulfillment"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 101,
+   "column": "notes",
+   "group": "prose",
+   "old": "The licence terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view.",
+   "new": "The license terms (allowed use, audit clauses, true-up rules) live in CLM; SAM holds the operational count and metering view.",
+   "words": [
+    "licence->license"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 248,
+   "column": "notes",
+   "group": "prose",
+   "old": "BEN-ADMIN defines the benefit deduction codes that PAYROLL operationalises in gross-to-net calculation.",
+   "new": "BEN-ADMIN defines the benefit deduction codes that PAYROLL operationalizes in gross-to-net calculation.",
+   "words": [
+    "operationalises->operationalizes"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 249,
+   "column": "notes",
+   "group": "prose",
+   "old": "COMP-MGMT defines compensation-driven earning codes (bonus, equity vest, allowance) that PAYROLL operationalises.",
+   "new": "COMP-MGMT defines compensation-driven earning codes (bonus, equity vest, allowance) that PAYROLL operationalizes.",
+   "words": [
+    "operationalises->operationalizes"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 280,
+   "column": "notes",
+   "group": "prose",
+   "old": "PSA consumes project-tagged time_entries for billable-hours calculation and utilisation reporting.",
+   "new": "PSA consumes project-tagged time_entries for billable-hours calculation and utilization reporting.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 308,
+   "column": "notes",
+   "group": "prose",
+   "old": "PA consumes engagement_drivers at team/department grain for cross-cutting people-analytics dashboards and attrition modelling features.",
+   "new": "PA consumes engagement_drivers at team/department grain for cross-cutting people-analytics dashboards and attrition modeling features.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 321,
+   "column": "notes",
+   "group": "prose",
+   "old": "HRSD consumes the worker record as the principal authentication / authorisation context for case visibility and routing.",
+   "new": "HRSD consumes the worker record as the principal authentication / authorization context for case visibility and routing.",
+   "words": [
+    "authorisation->authorization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 363,
+   "column": "notes",
+   "group": "prose",
+   "old": "WFM consumes positions to enforce position-based scheduling rules: required skills, location, cost-centre, and FTE budget per position.",
+   "new": "WFM consumes positions to enforce position-based scheduling rules: required skills, location, cost-center, and FTE budget per position.",
+   "words": [
+    "centre->center"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 364,
+   "column": "notes",
+   "group": "prose",
+   "old": "WFM consumes job_profiles for skill/qualification matching when filling open shifts and for labour-law rules tied to job class.",
+   "new": "WFM consumes job_profiles for skill/qualification matching when filling open shifts and for labor-law rules tied to job class.",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 366,
+   "column": "notes",
+   "group": "prose",
+   "old": "PSA consumes employees as the consultant pool for resource staffing and utilisation tracking.",
+   "new": "PSA consumes employees as the consultant pool for resource staffing and utilization tracking.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 434,
+   "column": "notes",
+   "group": "prose",
+   "old": "Process-anchored capability decomposition: capabilities map onto modelled processes and value streams. Owned by the Process Office / Operational Excellence.",
+   "new": "Process-anchored capability decomposition: capabilities map onto modeled processes and value streams. Owned by the Process Office / Operational Excellence.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 435,
+   "column": "notes",
+   "group": "prose",
+   "old": "Application-anchored capability mapping: capabilities map onto applications for rationalisation and TIME scoring. Owned by Enterprise Architecture. Co-master with BPA: APM anchors capability on application portfolio, BPA anchors capability on process architecture.",
+   "new": "Application-anchored capability mapping: capabilities map onto applications for rationalization and TIME scoring. Owned by Enterprise Architecture. Co-master with BPA: APM anchors capability on application portfolio, BPA anchors capability on process architecture.",
+   "words": [
+    "rationalisation->rationalization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 449,
+   "column": "notes",
+   "group": "prose",
+   "old": "LOYALTY master; reference data shared with marketing for personalisation.",
+   "new": "LOYALTY master; reference data shared with marketing for personalization.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 475,
+   "column": "notes",
+   "group": "prose",
+   "old": "Prioritisation backlog",
+   "new": "Prioritization backlog",
+   "words": [
+    "prioritisation->prioritization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 480,
+   "column": "notes",
+   "group": "prose",
+   "old": "Realised-value tracking",
+   "new": "Realized-value tracking",
+   "words": [
+    "realised->realized"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 482,
+   "column": "notes",
+   "group": "prose",
+   "old": "SWP-mastered; SPM consumes for resource-impact modelling",
+   "new": "SWP-mastered; SPM consumes for resource-impact modeling",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 489,
+   "column": "notes",
+   "group": "prose",
+   "old": "User policy acknowledgements",
+   "new": "User policy acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 491,
+   "column": "notes",
+   "group": "prose",
+   "old": "Curated evidence artefacts; AUDIT consumes",
+   "new": "Curated evidence artifacts; AUDIT consumes",
+   "words": [
+    "artefacts->artifacts"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 498,
+   "column": "notes",
+   "group": "prose",
+   "old": "Discovery artefacts; flow to GRC issues",
+   "new": "Discovery artifacts; flow to GRC issues",
+   "words": [
+    "artefacts->artifacts"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 738,
+   "column": "notes",
+   "group": "prose",
+   "old": "AGENCY-MGMT consumes won opportunities (CRM-mastered) as the trigger to spin up an agency_job and request scope finalisation.",
+   "new": "AGENCY-MGMT consumes won opportunities (CRM-mastered) as the trigger to spin up an agency_job and request scope finalization.",
+   "words": [
+    "finalisation->finalization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 820,
+   "column": "notes",
+   "group": "prose",
+   "old": "Per-product-line allergen-control programmes.",
+   "new": "Per-product-line allergen-control programs.",
+   "words": [
+    "programmes->programs"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 823,
+   "column": "notes",
+   "group": "prose",
+   "old": "Adds risk-scoring metadata to FOOD-TRACE-mastered certs for supplier-risk programme.",
+   "new": "Adds risk-scoring metadata to FOOD-TRACE-mastered certs for supplier-risk program.",
+   "words": [
+    "programme->program"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 832,
+   "column": "notes",
+   "group": "prose",
+   "old": "Optimised DTC delivery routes.",
+   "new": "Optimized DTC delivery routes.",
+   "words": [
+    "optimised->optimized"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 870,
+   "column": "notes",
+   "group": "prose",
+   "old": "PAYROLL local-masters org_units for cost-centre and legal-entity allocation of payroll journals when no HCM is deployed; reads from HCM when present.",
+   "new": "PAYROLL local-masters org_units for cost-center and legal-entity allocation of payroll journals when no HCM is deployed; reads from HCM when present.",
+   "words": [
+    "centre->center"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 892,
+   "column": "notes",
+   "group": "prose",
+   "old": "LMS local-masters cost_centers for training-cost allocation only when finance integration exists or training-budget tracking is enabled; many deployments skip cost-centre tagging on training.",
+   "new": "LMS local-masters cost_centers for training-cost allocation only when finance integration exists or training-budget tracking is enabled; many deployments skip cost-center tagging on training.",
+   "words": [
+    "centre->center"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 901,
+   "column": "notes",
+   "group": "prose",
+   "old": "PA reads merit_recommendations to inform attrition modelling (under-promoted, under-merited workers).",
+   "new": "PA reads merit_recommendations to inform attrition modeling (under-promoted, under-merited workers).",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 903,
+   "column": "notes",
+   "group": "prose",
+   "old": "PA reads survey_responses (anonymised) to fuse engagement signals into attrition and performance modelling. Distinct from engagement_drivers (aggregate) \u2014 this is row-level.",
+   "new": "PA reads survey_responses (anonymized) to fuse engagement signals into attrition and performance modeling. Distinct from engagement_drivers (aggregate) \u2014 this is row-level.",
+   "words": [
+    "anonymised->anonymized",
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 904,
+   "column": "notes",
+   "group": "prose",
+   "old": "PA reads benefit_enrollments for total-rewards-analytics and benefits-utilisation reporting. Many PA deployments skip benefits analytics.",
+   "new": "PA reads benefit_enrollments for total-rewards-analytics and benefits-utilization reporting. Many PA deployments skip benefits analytics.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1148,
+   "column": "notes",
+   "group": "prose",
+   "old": "Some orders carry pickup-from-location / delivery-from-location semantics; OMS local-masters for omnichannel fulfilment scenarios. Optional in pure ship-from-warehouse setups.",
+   "new": "Some orders carry pickup-from-location / delivery-from-location semantics; OMS local-masters for omnichannel fulfillment scenarios. Optional in pure ship-from-warehouse setups.",
+   "words": [
+    "fulfilment->fulfillment"
+   ]
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1157,
+   "column": "notes",
+   "group": "prose",
+   "old": "Strategy-office slice: corporate strategic initiative register with sponsor, benefits realisation, and traceability to strategic objectives. Co-mastered with SPM whose slice is the PMO portfolio view.",
+   "new": "Strategy-office slice: corporate strategic initiative register with sponsor, benefits realization, and traceability to strategic objectives. Co-mastered with SPM whose slice is the PMO portfolio view.",
+   "words": [
+    "realisation->realization"
+   ]
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 98,
+   "column": "notes",
+   "group": "prose",
+   "old": "Rating calibration sessions normalise scores before the cycle locks.",
+   "new": "Rating calibration sessions normalize scores before the cycle locks.",
+   "words": [
+    "normalise->normalize"
+   ]
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 142,
+   "column": "notes",
+   "group": "prose",
+   "old": "Predictive case categorisation, priority scoring, suggested-response drafting, and auto-routing on incoming HR cases.",
+   "new": "Predictive case categorization, priority scoring, suggested-response drafting, and auto-routing on incoming HR cases.",
+   "words": [
+    "categorisation->categorization"
+   ]
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 389,
+   "column": "notes",
+   "group": "prose",
+   "old": "Acknowledgement signing on published reviews in regulated industries.",
+   "new": "Acknowledgment signing on published reviews in regulated industries.",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 617,
+   "column": "notes",
+   "group": "prose",
+   "old": "Update initiative status, milestones, and benefits realisation.",
+   "new": "Update initiative status, milestones, and benefits realization.",
+   "words": [
+    "realisation->realization"
+   ]
+  },
+  {
+   "table": "domain_module_tools",
+   "id": 879,
+   "column": "notes",
+   "group": "prose",
+   "old": "Subscription charge (full-season pre-pay or instalment).",
+   "new": "Subscription charge (full-season pre-pay or installment).",
+   "words": [
+    "instalment->installment"
+   ]
+  },
+  {
+   "table": "domain_modules",
+   "id": 409,
+   "column": "description",
+   "group": "prose",
+   "old": "The screening decision and the FCRA/EEOC paperwork chain: adjudication against the eligibility matrix, FCRA disclosures, candidate authorizations, pre-adverse and adverse action notices, summary-of-rights acknowledgements, disputes, individualized assessments, and ban-the-box assessments. Regulation-driven entities that must exist even where a vendor hides them in the order UI.",
+   "new": "The screening decision and the FCRA/EEOC paperwork chain: adjudication against the eligibility matrix, FCRA disclosures, candidate authorizations, pre-adverse and adverse action notices, summary-of-rights acknowledgments, disputes, individualized assessments, and ban-the-box assessments. Regulation-driven entities that must exist even where a vendor hides them in the order UI.",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "domain_modules",
+   "id": 420,
+   "column": "catalog_description",
+   "group": "prose",
+   "old": "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgements your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it.",
+   "new": "Capture the legal paperwork every guest needs to sign before they take part. Build custom waivers with the questions and acknowledgments your activity requires, send them ahead of time, and let guests sign on any device. Handle minors with guardian signatures, and keep every signed release stored against the right booking and participant so it is there if you ever need it.",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 8,
+   "column": "business_logic",
+   "group": "prose",
+   "old": "Test runner orchestration (queuing, parallelisation, retry) is engine-like, but the test-management application itself is pure CRUD over cases, runs, and defects.",
+   "new": "Test runner orchestration (queuing, parallelization, retry) is engine-like, but the test-management application itself is pure CRUD over cases, runs, and defects.",
+   "words": [
+    "parallelisation->parallelization"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 14,
+   "column": "description",
+   "group": "prose",
+   "old": "Collection, curation, and operationalisation of indicators and adversary intelligence.",
+   "new": "Collection, curation, and operationalization of indicators and adversary intelligence.",
+   "words": [
+    "operationalisation->operationalization"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 80,
+   "column": "business_logic",
+   "group": "prose",
+   "old": "CI/CD execution graph runtime, artefact management, and policy enforcement; pipelines and projects are CRUD over this.",
+   "new": "CI/CD execution graph runtime, artifact management, and policy enforcement; pipelines and projects are CRUD over this.",
+   "words": [
+    "artefact->artifact"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 95,
+   "column": "description",
+   "group": "prose",
+   "old": "Outbound sales cadences, multi-channel sequencing, dialler, conversation intelligence, and rep productivity. Sits alongside CRM rather than replacing it.",
+   "new": "Outbound sales cadences, multi-channel sequencing, dialer, conversation intelligence, and rep productivity. Sits alongside CRM rather than replacing it.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 95,
+   "column": "business_logic",
+   "group": "prose",
+   "old": "Conversation intelligence ML (transcription, sentiment, deal-risk signals) and dialler integration; sequencing and outreach are workflow.",
+   "new": "Conversation intelligence ML (transcription, sentiment, deal-risk signals) and dialer integration; sequencing and outreach are workflow.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "domains",
+   "id": 191,
+   "column": "catalog_description",
+   "group": "prose",
+   "old": "Run employment background checks end to end. Build screening packages from criminal, employment, education, identity, driving, and drug components, then invite candidates to a portal to give consent and complete their checks. Adjudicate results against a configurable eligibility matrix, and when a result is disqualifying, walk the full pre-adverse and adverse action chain with disclosures, authorizations, summary-of-rights acknowledgements, and dispute handling. Keep workers cleared after hire with continuous monitoring, rescreening, identity verification, and right-to-work checks.",
+   "new": "Run employment background checks end to end. Build screening packages from criminal, employment, education, identity, driving, and drug components, then invite candidates to a portal to give consent and complete their checks. Adjudicate results against a configurable eligibility matrix, and when a result is disqualifying, walk the full pre-adverse and adverse action chain with disclosures, authorizations, summary-of-rights acknowledgments, and dispute handling. Keep workers cleared after hire with continuous monitoring, rescreening, identity verification, and right-to-work checks.",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "handoffs",
+   "id": 18,
+   "column": "description",
+   "group": "prose",
+   "old": "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event.",
+   "new": "New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event.",
+   "words": [
+    "initialised->initialized"
+   ]
+  },
+  {
+   "table": "handoffs",
+   "id": 22,
+   "column": "description",
+   "group": "prose",
+   "old": "New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs.",
+   "new": "New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs.",
+   "words": [
+    "initialisation->initialization"
+   ]
+  },
+  {
+   "table": "handoffs",
+   "id": 364,
+   "column": "description",
+   "group": "prose",
+   "old": "CSA payment events post revenue to ERP-FIN; full-season pre-pays require deferred-revenue accounting amortised across delivery weeks.",
+   "new": "CSA payment events post revenue to ERP-FIN; full-season pre-pays require deferred-revenue accounting amortized across delivery weeks.",
+   "words": [
+    "amortised->amortized"
+   ]
+  },
+  {
+   "table": "handoffs",
+   "id": 973,
+   "column": "description",
+   "group": "prose",
+   "old": "Captured KDEs are retained as audit-evidence artefacts for FSMA traceability audits.",
+   "new": "Captured KDEs are retained as audit-evidence artifacts for FSMA traceability audits.",
+   "words": [
+    "artefacts->artifacts"
+   ]
+  },
+  {
+   "table": "handoffs",
+   "id": 1204,
+   "column": "description",
+   "group": "prose",
+   "old": "Strategy decision from an operating review (e.g. initiative cancellation, reprioritisation) updates the affected initiative records.",
+   "new": "Strategy decision from an operating review (e.g. initiative cancellation, reprioritization) updates the affected initiative records.",
+   "words": [
+    "reprioritisation->reprioritization"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 3,
+   "column": "description",
+   "group": "prose",
+   "old": "Hospitals, clinics, ambulatory care, long-term care, and other patient-care delivery organisations.",
+   "new": "Hospitals, clinics, ambulatory care, long-term care, and other patient-care delivery organizations.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 11,
+   "column": "description",
+   "group": "prose",
+   "old": "Pharmaceutical manufacturers, biotech, medical devices, and contract research organisations. Heavy regulatory burden (FDA, EMA, GxP) and global-payroll complexity.",
+   "new": "Pharmaceutical manufacturers, biotech, medical devices, and contract research organizations. Heavy regulatory burden (FDA, EMA, GxP) and global-payroll complexity.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 12,
+   "column": "description",
+   "group": "prose",
+   "old": "Sub-national government entities: states/provinces, counties, municipalities, public agencies. Distinct procurement (StateRAMP, GovCloud), labour rules, and budget cycles from federal Public Sector.",
+   "new": "Sub-national government entities: states/provinces, counties, municipalities, public agencies. Distinct procurement (StateRAMP, GovCloud), labor rules, and budget cycles from federal Public Sector.",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 13,
+   "column": "description",
+   "group": "prose",
+   "old": "Tax-exempt organisations including charities, foundations, religious bodies, advocacy groups. Distinct grant-accounting, fund-balance, donor-restricted-fund requirements.",
+   "new": "Tax-exempt organizations including charities, foundations, religious bodies, advocacy groups. Distinct grant-accounting, fund-balance, donor-restricted-fund requirements.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 16,
+   "column": "description",
+   "group": "prose",
+   "old": "Law firms, solo practitioners, and legal-service organisations: litigation, transactional, regulatory, IP, real-estate, family, criminal defense, and in-house counsel offshoots. Buyer profile distinct from other professional services by ABA Model Rules, IOLTA trust accounting, conflict-of-interest constraints, and matter-centric workflow. Sub-segment of Professional Services in NAICS.",
+   "new": "Law firms, solo practitioners, and legal-service organizations: litigation, transactional, regulatory, IP, real-estate, family, criminal defense, and in-house counsel offshoots. Buyer profile distinct from other professional services by ABA Model Rules, IOLTA trust accounting, conflict-of-interest constraints, and matter-centric workflow. Sub-segment of Professional Services in NAICS.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 21,
+   "column": "description",
+   "group": "prose",
+   "old": "NAICS 722. Full-service restaurants, quick-service restaurants (QSR), fast-casual, catering, food trucks, bars, coffee shops, and other prepared-food-for-immediate-consumption operations. Separate top-level (not under Hospitality) because the vendor stack is operationally distinct from lodging: restaurant POS (Toast, Square for Restaurants, TouchBistro), online-ordering aggregation (Olo, Otter), kitchen display systems, restaurant-specific labour scheduling (7shifts, Restaurant365), and direct delivery integrations. Driven by gig-labour and aggregator economics not present in lodging.",
+   "new": "NAICS 722. Full-service restaurants, quick-service restaurants (QSR), fast-casual, catering, food trucks, bars, coffee shops, and other prepared-food-for-immediate-consumption operations. Separate top-level (not under Hospitality) because the vendor stack is operationally distinct from lodging: restaurant POS (Toast, Square for Restaurants, TouchBistro), online-ordering aggregation (Olo, Otter), kitchen display systems, restaurant-specific labor scheduling (7shifts, Restaurant365), and direct delivery integrations. Driven by gig-labor and aggregator economics not present in lodging.",
+   "words": [
+    "labour->labor",
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 22,
+   "column": "description",
+   "group": "prose",
+   "old": "NAICS 111. Row crops (corn, soy, wheat, cotton), specialty crops (vineyards, orchards, market gardens), greenhouse / controlled-environment ag, and field vegetables. Vendor stack diverges sharply by farm size: smallholder FMIS (Farmbrite, AgriWebb) vs enterprise row-crop FMIS (Climate FieldView, Granular, Conservis). USDA Organic certification and state-level pesticide regulations apply. Speciality-crop-specific tooling (Vinsight, AgCode, Croptracker) is a candidate sub-industry \u2014 defer until vendor evidence justifies.",
+   "new": "NAICS 111. Row crops (corn, soy, wheat, cotton), specialty crops (vineyards, orchards, market gardens), greenhouse / controlled-environment ag, and field vegetables. Vendor stack diverges sharply by farm size: smallholder FMIS (Farmbrite, AgriWebb) vs enterprise row-crop FMIS (Climate FieldView, Granular, Conservis). USDA Organic certification and state-level pesticide regulations apply. Specialty-crop-specific tooling (Vinsight, AgCode, Croptracker) is a candidate sub-industry \u2014 defer until vendor evidence justifies.",
+   "words": [
+    "speciality->specialty"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 25,
+   "column": "description",
+   "group": "prose",
+   "old": "NAICS 445. Supermarkets, grocery, specialty food retailers, beverage retailers, butcher / fish / produce shops. Sub-segment of Retail because POS / merchandising fundamentals carry over, but distinct perishables management (short shelf life, cold-chain monitoring, dynamic markdowns), thin margins driving aggressive markdown-optimisation tooling, and AP-pay-on-receipt supplier dynamics.",
+   "new": "NAICS 445. Supermarkets, grocery, specialty food retailers, beverage retailers, butcher / fish / produce shops. Sub-segment of Retail because POS / merchandising fundamentals carry over, but distinct perishables management (short shelf life, cold-chain monitoring, dynamic markdowns), thin margins driving aggressive markdown-optimization tooling, and AP-pay-on-receipt supplier dynamics.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "industries",
+   "id": 29,
+   "column": "description",
+   "group": "prose",
+   "old": "Buyout, growth equity, and credit strategies in private companies, characterised by control or significant minority stakes and longer holding periods.",
+   "new": "Buyout, growth equity, and credit strategies in private companies, characterized by control or significant minority stakes and longer holding periods.",
+   "words": [
+    "characterised->characterized"
+   ]
+  },
+  {
+   "table": "jurisdictions",
+   "id": 3,
+   "column": "description",
+   "group": "prose",
+   "old": "Federal jurisdiction of the United States of America. State-level jurisdictions (e.g. California) are modelled separately as children.",
+   "new": "Federal jurisdiction of the United States of America. State-level jurisdictions (e.g. California) are modeled separately as children.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "jurisdictions",
+   "id": 11,
+   "column": "description",
+   "group": "prose",
+   "old": "Federal jurisdiction. Major Workday delivery centre; localised payroll via partner. Complex statutory deductions (PF, ESI, professional tax, TDS) and state-level variations.",
+   "new": "Federal jurisdiction. Major Workday delivery center; localized payroll via partner. Complex statutory deductions (PF, ESI, professional tax, TDS) and state-level variations.",
+   "words": [
+    "centre->center",
+    "localised->localized"
+   ]
+  },
+  {
+   "table": "jurisdictions",
+   "id": 16,
+   "column": "description",
+   "group": "prose",
+   "old": "US state. NYC Local Law 144 (AEDT bias audit), NY state pay-transparency law (s.194-b), state DOL labour rules.",
+   "new": "US state. NYC Local Law 144 (AEDT bias audit), NY state pay-transparency law (s.194-b), state DOL labor rules.",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "jurisdictions",
+   "id": 18,
+   "column": "description",
+   "group": "prose",
+   "old": "US state. Pay-transparency requirements (SB 5761) and L&I labour rules.",
+   "new": "US state. Pay-transparency requirements (SB 5761) and L&I labor rules.",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 11,
+   "column": "description",
+   "group": "prose",
+   "old": "AML/CTF predicate offences, ultimate-beneficial-owner registers, enhanced due diligence, and sanctions screening obligations for obliged entities.",
+   "new": "AML/CTF predicate offenses, ultimate-beneficial-owner registers, enhanced due diligence, and sanctions screening obligations for obliged entities.",
+   "words": [
+    "offences->offenses"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 20,
+   "column": "description",
+   "group": "prose",
+   "old": "Expanded HIPAA enforcement, breach-notification rules, and incentivised EHR adoption. Aligns ePHI safeguards with HIPAA Security Rule.",
+   "new": "Expanded HIPAA enforcement, breach-notification rules, and incentivized EHR adoption. Aligns ePHI safeguards with HIPAA Security Rule.",
+   "words": [
+    "incentivised->incentivized"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 31,
+   "column": "description",
+   "group": "prose",
+   "old": "Standardised security assessment, authorization (ATO), and continuous monitoring for cloud products sold to US federal agencies. Levels: Low / Moderate / High / Tailored.",
+   "new": "Standardized security assessment, authorization (ATO), and continuous monitoring for cloud products sold to US federal agencies. Levels: Low / Moderate / High / Tailored.",
+   "words": [
+    "standardised->standardized"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 41,
+   "column": "description",
+   "group": "prose",
+   "old": "Authorisation, capital, depositary, valuation, and reporting requirements for managers of alternative investment funds in the EU.",
+   "new": "Authorization, capital, depositary, valuation, and reporting requirements for managers of alternative investment funds in the EU.",
+   "words": [
+    "authorisation->authorization"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 45,
+   "column": "description",
+   "group": "prose",
+   "old": "Embedded-emissions reporting and (from 2026) charges on imports of cement, iron and steel, aluminium, fertilisers, electricity, and hydrogen.",
+   "new": "Embedded-emissions reporting and (from 2026) charges on imports of cement, iron and steel, aluminum, fertilizers, electricity, and hydrogen.",
+   "words": [
+    "aluminium->aluminum",
+    "fertilisers->fertilizers"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 64,
+   "column": "description",
+   "group": "prose",
+   "old": "Federal prohibition on age-based employment discrimination against workers 40 and older. Drives age-anonymised candidate review and disparate-impact testing in workforce-analytics tooling.",
+   "new": "Federal prohibition on age-based employment discrimination against workers 40 and older. Drives age-anonymized candidate review and disparate-impact testing in workforce-analytics tooling.",
+   "words": [
+    "anonymised->anonymized"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 67,
+   "column": "description",
+   "group": "prose",
+   "old": "Federal prohibition on use of genetic information in employment decisions and health insurance underwriting. Drives benefits-enrolment data minimisation and wellness-program design.",
+   "new": "Federal prohibition on use of genetic information in employment decisions and health insurance underwriting. Drives benefits-enrollment data minimization and wellness-program design.",
+   "words": [
+    "enrolment->enrollment",
+    "minimisation->minimization"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 69,
+   "column": "description",
+   "group": "prose",
+   "old": "Internet-based work-authorisation verification system. Mandatory for federal contractors and in several US states; voluntary elsewhere. Integrates with I-9 onboarding flow.",
+   "new": "Internet-based work-authorization verification system. Mandatory for federal contractors and in several US states; voluntary elsewhere. Integrates with I-9 onboarding flow.",
+   "words": [
+    "authorisation->authorization"
+   ]
+  },
+  {
+   "table": "regulations",
+   "id": 84,
+   "column": "description",
+   "group": "prose",
+   "old": "US federal statute (15 U.S.C. §1681 et seq.) governing collection, dissemination, and use of consumer credit information including pre-employment background checks. Mandates pre-adverse-action and adverse-action notices, candidate disclosure of report sources, and a Summary of Rights acknowledgement.",
+   "new": "US federal statute (15 U.S.C. §1681 et seq.) governing collection, dissemination, and use of consumer credit information including pre-employment background checks. Mandates pre-adverse-action and adverse-action notices, candidate disclosure of report sources, and a Summary of Rights acknowledgment.",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 6,
+   "column": "description",
+   "group": "prose",
+   "old": "SAM Pro for entitlement reconciliation and licence optimisation.",
+   "new": "SAM Pro for entitlement reconciliation and license optimization.",
+   "words": [
+    "licence->license",
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 11,
+   "column": "description",
+   "group": "prose",
+   "old": "Application inventory, rationalisation, and TIME analysis.",
+   "new": "Application inventory, rationalization, and TIME analysis.",
+   "words": [
+    "rationalisation->rationalization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 14,
+   "column": "description",
+   "group": "prose",
+   "old": "Vulnerability ingestion, prioritisation, and remediation workflows.",
+   "new": "Vulnerability ingestion, prioritization, and remediation workflows.",
+   "words": [
+    "prioritisation->prioritization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 54,
+   "column": "description",
+   "group": "prose",
+   "old": "SAM with audit-defence focus.",
+   "new": "SAM with audit-defense focus.",
+   "words": [
+    "defence->defense"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 82,
+   "column": "description",
+   "group": "prose",
+   "old": "Vulnerability management and risk prioritisation.",
+   "new": "Vulnerability management and risk prioritization.",
+   "words": [
+    "prioritisation->prioritization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 195,
+   "column": "description",
+   "group": "prose",
+   "old": "Benefits administration, enrolment, and carrier connectivity.",
+   "new": "Benefits administration, enrollment, and carrier connectivity.",
+   "words": [
+    "enrolment->enrollment"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 251,
+   "column": "description",
+   "group": "prose",
+   "old": "People-analytics platform with bring-your-own-data modelling.",
+   "new": "People-analytics platform with bring-your-own-data modeling.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 266,
+   "column": "description",
+   "group": "prose",
+   "old": "Benefits administration and enrolment platform.",
+   "new": "Benefits administration and enrollment platform.",
+   "words": [
+    "enrolment->enrollment"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 268,
+   "column": "description",
+   "group": "prose",
+   "old": "Vendor management system for contingent labour.",
+   "new": "Vendor management system for contingent labor.",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 277,
+   "column": "description",
+   "group": "prose",
+   "old": "ERP for people-centric services organisations.",
+   "new": "ERP for people-centric services organizations.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 345,
+   "column": "description",
+   "group": "prose",
+   "old": "AI-driven CPQ and price optimisation.",
+   "new": "AI-driven CPQ and price optimization.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 378,
+   "column": "description",
+   "group": "prose",
+   "old": "DXP built on Drupal with CDP and personalisation.",
+   "new": "DXP built on Drupal with CDP and personalization.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 395,
+   "column": "description",
+   "group": "prose",
+   "old": "Pure-play strategic workforce planning platform. Built for scenario modelling, skills-gap analysis, and demand/supply forecasting over multi-year horizons.",
+   "new": "Pure-play strategic workforce planning platform. Built for scenario modeling, skills-gap analysis, and demand/supply forecasting over multi-year horizons.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 396,
+   "column": "description",
+   "group": "prose",
+   "old": "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modelling, and headcount scenarios on top of HR data.",
+   "new": "Org-design and workforce-planning platform. Combines current-state org-chart analytics, future-state design modeling, and headcount scenarios on top of HR data.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 407,
+   "column": "description",
+   "group": "prose",
+   "old": "Sales Performance Management platform spanning incentive compensation, territory and quota planning, sales-capacity modelling, and revenue intelligence overlays.",
+   "new": "Sales Performance Management platform spanning incentive compensation, territory and quota planning, sales-capacity modeling, and revenue intelligence overlays.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 410,
+   "column": "description",
+   "group": "prose",
+   "old": "Modern incentive compensation management platform with a spreadsheet-style modelling experience for RevOps and finance teams.",
+   "new": "Modern incentive compensation management platform with a spreadsheet-style modeling experience for RevOps and finance teams.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 412,
+   "column": "description",
+   "group": "prose",
+   "old": "SAP's cloud incentive compensation management product (formerly SAP Callidus Commissions / CallidusCloud). Plan modelling, calculation, dispute and payee statements.",
+   "new": "SAP's cloud incentive compensation management product (formerly SAP Callidus Commissions / CallidusCloud). Plan modeling, calculation, dispute and payee statements.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 413,
+   "column": "description",
+   "group": "prose",
+   "old": "Anaplan's connected-planning application focused on sales \u2014 territory and quota, sales forecasting, incentive comp modeling, and capacity planning, modelled on the Anaplan calculation engine.",
+   "new": "Anaplan's connected-planning application focused on sales \u2014 territory and quota, sales forecasting, incentive comp modeling, and capacity planning, modeled on the Anaplan calculation engine.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 415,
+   "column": "description",
+   "group": "prose",
+   "old": "Commission tracking and ICM platform optimised for SMB and mid-market sales teams; rep-facing commission visibility and self-serve plan setup.",
+   "new": "Commission tracking and ICM platform optimized for SMB and mid-market sales teams; rep-facing commission visibility and self-serve plan setup.",
+   "words": [
+    "optimised->optimized"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 422,
+   "column": "notes",
+   "group": "prose",
+   "old": "Replaces and extends the earlier Sales Analytics / High Velocity Sales Einstein insights; positioned against Gong and Clari for Salesforce-standardised shops.",
+   "new": "Replaces and extends the earlier Sales Analytics / High Velocity Sales Einstein insights; positioned against Gong and Clari for Salesforce-standardized shops.",
+   "words": [
+    "standardised->standardized"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 447,
+   "column": "notes",
+   "group": "prose",
+   "old": "Contentstack increasingly markets itself as a composable DXP since acquiring Lytics in 2023; modelled as primary HCMS with secondary DXP coverage.",
+   "new": "Contentstack increasingly markets itself as a composable DXP since acquiring Lytics in 2023; modeled as primary HCMS with secondary DXP coverage.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 448,
+   "column": "description",
+   "group": "prose",
+   "old": "Developer-led headless CMS with Slice Machine for component-driven content modelling and visual previews of slices in the local development environment.",
+   "new": "Developer-led headless CMS with Slice Machine for component-driven content modeling and visual previews of slices in the local development environment.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 449,
+   "column": "description",
+   "group": "prose",
+   "old": "Lightweight SaaS headless CMS targeted at small teams and marketing sites, with simple content modelling, blogging features, and REST APIs.",
+   "new": "Lightweight SaaS headless CMS targeted at small teams and marketing sites, with simple content modeling, blogging features, and REST APIs.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 471,
+   "column": "description",
+   "group": "prose",
+   "old": "SaaS Microsoft 365 management suite (migration, reporting, audit, recovery, license optimisation) consolidating the Metalogix and Cogmotive lineages.",
+   "new": "SaaS Microsoft 365 management suite (migration, reporting, audit, recovery, license optimization) consolidating the Metalogix and Cogmotive lineages.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 472,
+   "column": "description",
+   "group": "prose",
+   "old": "Microsoft 365 management platform with delegated administration, license optimisation, configuration baselining (via Simeon Cloud), and reporting.",
+   "new": "Microsoft 365 management platform with delegated administration, license optimization, configuration baselining (via Simeon Cloud), and reporting.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 473,
+   "column": "description",
+   "group": "prose",
+   "old": "Microsoft 365 and Exchange monitoring, reporting, and license-optimisation platform.",
+   "new": "Microsoft 365 and Exchange monitoring, reporting, and license-optimization platform.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 486,
+   "column": "notes",
+   "group": "prose",
+   "old": "AIP (Artificial Intelligence Platform) is modelled as the AI tier of Foundry on the same ontology \u2014 not a separate solution row. Foundry deploys on Palantir's cloud, hyperscalers, or fully on-prem/air-gapped.",
+   "new": "AIP (Artificial Intelligence Platform) is modeled as the AI tier of Foundry on the same ontology \u2014 not a separate solution row. Foundry deploys on Palantir's cloud, hyperscalers, or fully on-prem/air-gapped.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 500,
+   "column": "description",
+   "group": "prose",
+   "old": "Forecasting, scheduling, and adherence management for contact-centre and back-office labour.",
+   "new": "Forecasting, scheduling, and adherence management for contact-center and back-office labor.",
+   "words": [
+    "centre->center",
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 516,
+   "column": "description",
+   "group": "prose",
+   "old": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalisation.",
+   "new": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalization.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 542,
+   "column": "description",
+   "group": "prose",
+   "old": "MSP-focused remote-control tool (a.k.a. ConnectWise Control / ConnectWise ScreenConnect): attended/unattended sessions with strong customisation, integrated with ConnectWise PSA and RMM.",
+   "new": "MSP-focused remote-control tool (a.k.a. ConnectWise Control / ConnectWise ScreenConnect): attended/unattended sessions with strong customization, integrated with ConnectWise PSA and RMM.",
+   "words": [
+    "customisation->customization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 546,
+   "column": "description",
+   "group": "prose",
+   "old": "Mid-market PSA bolt-on to Oracle NetSuite ERP: resource planning, project accounting, time/expense, billing, utilisation. Competes head-to-head with Kantata and Certinia in mid-market RFPs.",
+   "new": "Mid-market PSA bolt-on to Oracle NetSuite ERP: resource planning, project accounting, time/expense, billing, utilization. Competes head-to-head with Kantata and Certinia in mid-market RFPs.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 546,
+   "column": "notes",
+   "group": "prose",
+   "old": "Distinct SKU from the broader NetSuite ERP row; modelled separately for accurate PSA market positioning.",
+   "new": "Distinct SKU from the broader NetSuite ERP row; modeled separately for accurate PSA market positioning.",
+   "words": [
+    "modelled->modeled"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 550,
+   "column": "description",
+   "group": "prose",
+   "old": "Modern lightweight PSA aimed at digital/professional services SMBs. Clean UX, strong utilisation/billing analytics.",
+   "new": "Modern lightweight PSA aimed at digital/professional services SMBs. Clean UX, strong utilization/billing analytics.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 557,
+   "column": "description",
+   "group": "prose",
+   "old": "B2C marketing automation: cross-channel journeys, AI-recommended audiences, mobile + web personalisation. Acquired by SAP in 2020.",
+   "new": "B2C marketing automation: cross-channel journeys, AI-recommended audiences, mobile + web personalization. Acquired by SAP in 2020.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 564,
+   "column": "description",
+   "group": "prose",
+   "old": "AI-driven multichannel sales engagement: email/LinkedIn/calls/SMS cadences with AI personalisation.",
+   "new": "AI-driven multichannel sales engagement: email/LinkedIn/calls/SMS cadences with AI personalization.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 567,
+   "column": "description",
+   "group": "prose",
+   "old": "Sales engagement platform: cadences, dialler, email tracking, conversation intelligence, AI rep coaching.",
+   "new": "Sales engagement platform: cadences, dialer, email tracking, conversation intelligence, AI rep coaching.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 568,
+   "column": "description",
+   "group": "prose",
+   "old": "Sales engagement platform: cadences, dialler, conversation intelligence (Drift acquisition 2024), forecasting (post-InsightSquared).",
+   "new": "Sales engagement platform: cadences, dialer, conversation intelligence (Drift acquisition 2024), forecasting (post-InsightSquared).",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 569,
+   "column": "description",
+   "group": "prose",
+   "old": "Sales engagement + B2B prospecting database in one: cadences, dialler, embedded intent data, contact discovery.",
+   "new": "Sales engagement + B2B prospecting database in one: cadences, dialer, embedded intent data, contact discovery.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 571,
+   "column": "description",
+   "group": "prose",
+   "old": "Salesforce-native sales engagement: cadences, dialler, email tracking, deeply integrated with SFDC. Owned by Clari since 2024.",
+   "new": "Salesforce-native sales engagement: cadences, dialer, email tracking, deeply integrated with SFDC. Owned by Clari since 2024.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 574,
+   "column": "description",
+   "group": "prose",
+   "old": "Sales engagement layered on ZoomInfo's B2B contact/intent database: cadences, dialler, intent-triggered workflows.",
+   "new": "Sales engagement layered on ZoomInfo's B2B contact/intent database: cadences, dialer, intent-triggered workflows.",
+   "words": [
+    "dialler->dialer"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 580,
+   "column": "description",
+   "group": "prose",
+   "old": "Enterprise monetisation platform for complex recurring revenue: hierarchies, partner billing, telco/media verticals.",
+   "new": "Enterprise monetization platform for complex recurring revenue: hierarchies, partner billing, telco/media verticals.",
+   "words": [
+    "monetisation->monetization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 581,
+   "column": "description",
+   "group": "prose",
+   "old": "Cloud monetisation platform for complex billing scenarios: usage rating, mediation, AR, revenue management.",
+   "new": "Cloud monetization platform for complex billing scenarios: usage rating, mediation, AR, revenue management.",
+   "words": [
+    "monetisation->monetization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 602,
+   "column": "description",
+   "group": "prose",
+   "old": "Project management built around services workflows: client billing, time tracking, resource utilisation, milestone management.",
+   "new": "Project management built around services workflows: client billing, time tracking, resource utilization, milestone management.",
+   "words": [
+    "utilisation->utilization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 604,
+   "column": "description",
+   "group": "prose",
+   "old": "BPMN 2.0 process modelling, repository, simulation, and collaborative publishing. Part of the SAP Signavio Process Transformation Suite (distinct from Signavio Process Intelligence, the mining product).",
+   "new": "BPMN 2.0 process modeling, repository, simulation, and collaborative publishing. Part of the SAP Signavio Process Transformation Suite (distinct from Signavio Process Intelligence, the mining product).",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 604,
+   "column": "notes",
+   "group": "prose",
+   "old": "Acquired by SAP in 2021. The Process Manager is the modelling product; Signavio Process Intelligence (id 187) is the mining product. Both are sold as part of the broader Signavio suite.",
+   "new": "Acquired by SAP in 2021. The Process Manager is the modeling product; Signavio Process Intelligence (id 187) is the mining product. Both are sold as part of the broader Signavio suite.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 605,
+   "column": "description",
+   "group": "prose",
+   "old": "Veteran enterprise BPA platform: BPMN/EPC modelling, repository, governance workflows, simulation, ARIS Connect publishing, and ARIS Risk & Compliance Manager.",
+   "new": "Veteran enterprise BPA platform: BPMN/EPC modeling, repository, governance workflows, simulation, ARIS Connect publishing, and ARIS Risk & Compliance Manager.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 606,
+   "column": "description",
+   "group": "prose",
+   "old": "Process and capability-modelling platform built on Microsoft Azure / Power BI. Ships APQC PCF as reference content; covers BPA, capability maps, risk, and EA views.",
+   "new": "Process and capability-modeling platform built on Microsoft Azure / Power BI. Ships APQC PCF as reference content; covers BPA, capability maps, risk, and EA views.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 607,
+   "column": "description",
+   "group": "prose",
+   "old": "BPA platform with integrated process mining (via the Logpickr acquisition). Covers modelling, simulation, conformance, and publishing in one suite.",
+   "new": "BPA platform with integrated process mining (via the Logpickr acquisition). Covers modeling, simulation, conformance, and publishing in one suite.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 609,
+   "column": "description",
+   "group": "prose",
+   "old": "Standards-purist BPMN/DMN/CMMN modelling suite with strong decision-modelling and executable workflow features. Used by the OMG community as a reference implementation.",
+   "new": "Standards-purist BPMN/DMN/CMMN modeling suite with strong decision-modeling and executable workflow features. Used by the OMG community as a reference implementation.",
+   "words": [
+    "modelling->modeling",
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 610,
+   "column": "description",
+   "group": "prose",
+   "old": "ArchiMate-native enterprise architecture and process architecture platform. Co-flagship: equally strong on BPA (process modelling, capability mapping) and APM (application portfolio, EA).",
+   "new": "ArchiMate-native enterprise architecture and process architecture platform. Co-flagship: equally strong on BPA (process modeling, capability mapping) and APM (application portfolio, EA).",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 622,
+   "column": "description",
+   "group": "prose",
+   "old": "Headless BI / semantic-layer platform emphasising SQL-first metric authoring, lineage, and deterministic AI-agent consumption.",
+   "new": "Headless BI / semantic-layer platform emphasizing SQL-first metric authoring, lineage, and deterministic AI-agent consumption.",
+   "words": [
+    "emphasising->emphasizing"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 623,
+   "column": "description",
+   "group": "prose",
+   "old": "Cloud-native headless BI tier emphasising embedded analytics, multi-tenant data products, and semantic-layer governance. Distinct from the older GoodData Platform.",
+   "new": "Cloud-native headless BI tier emphasizing embedded analytics, multi-tenant data products, and semantic-layer governance. Distinct from the older GoodData Platform.",
+   "words": [
+    "emphasising->emphasizing"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 772,
+   "column": "description",
+   "group": "prose",
+   "old": "Cloud dairy herd-management platform with strong reproductive workflows and customisable cow-card views.",
+   "new": "Cloud dairy herd-management platform with strong reproductive workflows and customizable cow-card views.",
+   "words": [
+    "customisable->customizable"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 788,
+   "column": "description",
+   "group": "prose",
+   "old": "CSA platform specialising in personalised share customisation: per-member swap weeks, dietary preferences, pause / vacation handling.",
+   "new": "CSA platform specializing in personalized share customization: per-member swap weeks, dietary preferences, pause / vacation handling.",
+   "words": [
+    "specialising->specializing",
+    "personalised->personalized",
+    "customisation->customization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 790,
+   "column": "description",
+   "group": "prose",
+   "old": "CSA-membership-specific software: season setup, share-customisation, delivery / pickup management, recurring billing.",
+   "new": "CSA-membership-specific software: season setup, share-customization, delivery / pickup management, recurring billing.",
+   "words": [
+    "customisation->customization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 846,
+   "column": "description",
+   "group": "prose",
+   "old": "Open low-code PLM platform with subscription-only commercial model. Strong growth in industrial OEMs needing customisation.",
+   "new": "Open low-code PLM platform with subscription-only commercial model. Strong growth in industrial OEMs needing customization.",
+   "words": [
+    "customisation->customization"
+   ]
+  },
+  {
+   "table": "solutions",
+   "id": 862,
+   "column": "description",
+   "group": "prose",
+   "old": "Microsoft 365-native learning experience surfaced inside Microsoft Teams and the broader Viva employee-experience suite. Aggregates content from LinkedIn Learning, Microsoft Learn, third-party LMS partners (Cornerstone, Skillsoft, Coursera, edX, Pluralsight), and an organisation's own SharePoint/SCORM content. Strongest fit for M365-stack employers wanting in-the-flow-of-work learning recommendations; thinner than a full-blown LMS on compliance training and certifications.",
+   "new": "Microsoft 365-native learning experience surfaced inside Microsoft Teams and the broader Viva employee-experience suite. Aggregates content from LinkedIn Learning, Microsoft Learn, third-party LMS partners (Cornerstone, Skillsoft, Coursera, edX, Pluralsight), and an organization's own SharePoint/SCORM content. Strongest fit for M365-stack employers wanting in-the-flow-of-work learning recommendations; thinner than a full-blown LMS on compliance training and certifications.",
+   "words": [
+    "organisation->organization"
+   ]
+  },
+  {
+   "table": "tools",
+   "id": 675,
+   "column": "tool_name",
+   "group": "identifier",
+   "old": "query_retail_labour_schedules",
+   "new": "query_retail_labor_schedules",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "tools",
+   "id": 754,
+   "column": "tool_name",
+   "group": "identifier",
+   "old": "query_visitor_nda_acknowledgements",
+   "new": "query_visitor_nda_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "tools",
+   "id": 1373,
+   "column": "tool_name",
+   "group": "identifier",
+   "old": "query_harassment_training_acknowledgements",
+   "new": "query_harassment_training_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "tools",
+   "id": 1374,
+   "column": "tool_name",
+   "group": "identifier",
+   "old": "sign_harassment_training_acknowledgement",
+   "new": "sign_harassment_training_acknowledgment",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "tools",
+   "id": 1994,
+   "column": "tool_name",
+   "group": "identifier",
+   "old": "query_content_acknowledgements",
+   "new": "query_content_acknowledgments",
+   "words": [
+    "acknowledgements->acknowledgments"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1071,
+   "column": "event_name",
+   "group": "identifier",
+   "old": "retail_labour_schedule.published",
+   "new": "retail_labor_schedule.published",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1072,
+   "column": "event_name",
+   "group": "identifier",
+   "old": "retail_labour_schedule.shortfall_detected",
+   "new": "retail_labor_schedule.shortfall_detected",
+   "words": [
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1081,
+   "column": "description",
+   "group": "prose",
+   "old": "A service connection (water/gas/electric) has been energised at a premises; downstream billing starts the consumption clock and CSM closes the move-in case.",
+   "new": "A service connection (water/gas/electric) has been energized at a premises; downstream billing starts the consumption clock and CSM closes the move-in case.",
+   "words": [
+    "energised->energized"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1100,
+   "column": "description",
+   "group": "prose",
+   "old": "A new lactation cycle has been opened for a cow after calving; downstream feed and breeding cycles initialise, ERP-FIN updates herd KPIs.",
+   "new": "A new lactation cycle has been opened for a cow after calving; downstream feed and breeding cycles initialize, ERP-FIN updates herd KPIs.",
+   "words": [
+    "initialise->initialize"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1175,
+   "column": "description",
+   "group": "prose",
+   "old": "A new in-house legal matter has been opened (litigation hold, regulatory enquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk relationship.",
+   "new": "A new in-house legal matter has been opened (litigation hold, regulatory inquiry, M&A workstream, employment dispute). ECM creates the matter file workspace; GRC logs the regulatory or risk relationship.",
+   "words": [
+    "enquiry->inquiry"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1343,
+   "column": "event_name",
+   "group": "identifier",
+   "old": "harassment_training_acknowledgement.signed",
+   "new": "harassment_training_acknowledgment.signed",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1716,
+   "column": "event_name",
+   "group": "identifier",
+   "old": "content_acknowledgement.recorded",
+   "new": "content_acknowledgment.recorded",
+   "words": [
+    "acknowledgement->acknowledgment"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "event_name",
+   "group": "identifier",
+   "old": "booking.cancelled",
+   "new": "booking.canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "description",
+   "group": "prose",
+   "old": "A booking is cancelled by guest or operator. Releases capacity, may trigger a refund, and frees assigned guides and equipment.",
+   "new": "A booking is canceled by guest or operator. Releases capacity, may trigger a refund, and frees assigned guides and equipment.",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "trigger_events",
+   "id": 1744,
+   "column": "to_state",
+   "group": "identifier",
+   "old": "cancelled",
+   "new": "canceled",
+   "words": [
+    "cancelled->canceled"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 180,
+   "column": "description",
+   "group": "prose",
+   "old": "ERP vendor for people-centric services organisations.",
+   "new": "ERP vendor for people-centric services organizations.",
+   "words": [
+    "organisations->organizations"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 183,
+   "column": "description",
+   "group": "prose",
+   "old": "Business-planning and modelling platform.",
+   "new": "Business-planning and modeling platform.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 213,
+   "column": "description",
+   "group": "prose",
+   "old": "Pricing optimisation and CPQ software.",
+   "new": "Pricing optimization and CPQ software.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 341,
+   "column": "description",
+   "group": "prose",
+   "old": "Remote online notarisation and identity-assured e-signature vendor (formerly Notarize).",
+   "new": "Remote online notarization and identity-assured e-signature vendor (formerly Notarize).",
+   "words": [
+    "notarisation->notarization"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 376,
+   "column": "description",
+   "group": "prose",
+   "old": "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modelling, skills-gap analysis, and capacity planning for large enterprises.",
+   "new": "Sydney-based pure-play strategic workforce planning vendor. Strong in scenario modeling, skills-gap analysis, and capacity planning for large enterprises.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 377,
+   "column": "description",
+   "group": "prose",
+   "old": "London-based org-design and workforce-planning platform. Strong in restructure modelling, position management, span-of-control analysis, and what-if scenarios on top of HR data.",
+   "new": "London-based org-design and workforce-planning platform. Strong in restructure modeling, position management, span-of-control analysis, and what-if scenarios on top of HR data.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 388,
+   "column": "description",
+   "group": "prose",
+   "old": "Modern incentive compensation management vendor designed for ops-led plan modelling.",
+   "new": "Modern incentive compensation management vendor designed for ops-led plan modeling.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 388,
+   "column": "notes",
+   "group": "prose",
+   "old": "Founded 2017, HQ San Francisco. Backed by ICONIQ, Sequoia, Y Combinator. Spreadsheet-style modelling experience differentiator vs traditional ICM tools.",
+   "new": "Founded 2017, HQ San Francisco. Backed by ICONIQ, Sequoia, Y Combinator. Spreadsheet-style modeling experience differentiator vs traditional ICM tools.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 447,
+   "column": "description",
+   "group": "prose",
+   "old": "AI-native workforce management platform focused on labour optimisation, scheduling, and frontline employee experience for retail / hospitality / healthcare.",
+   "new": "AI-native workforce management platform focused on labor optimization, scheduling, and frontline employee experience for retail / hospitality / healthcare.",
+   "words": [
+    "labour->labor",
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 448,
+   "column": "description",
+   "group": "prose",
+   "old": "Customer engagement and workforce engagement management vendor; WFM optimisation for contact-centre and back-office labour.",
+   "new": "Customer engagement and workforce engagement management vendor; WFM optimization for contact-center and back-office labor.",
+   "words": [
+    "optimisation->optimization",
+    "centre->center",
+    "labour->labor"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 462,
+   "column": "description",
+   "group": "prose",
+   "old": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalisation.",
+   "new": "Skills-development and learning-experience platform combining content aggregation, skill tracking, and pathway personalization.",
+   "words": [
+    "personalisation->personalization"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 500,
+   "column": "description",
+   "group": "prose",
+   "old": "Travel and spend-management platform with virtual cards, SaaS-spend optimisation, and bill-pay.",
+   "new": "Travel and spend-management platform with virtual cards, SaaS-spend optimization, and bill-pay.",
+   "words": [
+    "optimisation->optimization"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 515,
+   "column": "description",
+   "group": "prose",
+   "old": "Operator of Basecamp \u2014 opinionated project communication and management tool emphasising simplicity.",
+   "new": "Operator of Basecamp \u2014 opinionated project communication and management tool emphasizing simplicity.",
+   "words": [
+    "emphasising->emphasizing"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 516,
+   "column": "description",
+   "group": "prose",
+   "old": "Business-transformation platform vendor focused on process and capability modelling on Microsoft Azure.",
+   "new": "Business-transformation platform vendor focused on process and capability modeling on Microsoft Azure.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 517,
+   "column": "description",
+   "group": "prose",
+   "old": "Business process management vendor (Process360 Live platform \u2014 modelling, mining, and intelligence).",
+   "new": "Business process management vendor (Process360 Live platform \u2014 modeling, mining, and intelligence).",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 519,
+   "column": "description",
+   "group": "prose",
+   "old": "Standards-driven business automation vendor (Digital Enterprise Suite \u2014 BPMN, DMN, CMMN modelling).",
+   "new": "Standards-driven business automation vendor (Digital Enterprise Suite \u2014 BPMN, DMN, CMMN modeling).",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 519,
+   "column": "notes",
+   "group": "prose",
+   "old": "Founded 1996, HQ Quebec City. Strong OMG-standards focus (BPMN/DMN/CMMN); known for decision modelling and pure-play standards compliance.",
+   "new": "Founded 1996, HQ Quebec City. Strong OMG-standards focus (BPMN/DMN/CMMN); known for decision modeling and pure-play standards compliance.",
+   "words": [
+    "modelling->modeling"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 528,
+   "column": "description",
+   "group": "prose",
+   "old": "Analytics platform with a headless-BI tier (GoodData.CN) emphasising embedded analytics, semantic-layer governance, and multi-tenant data products.",
+   "new": "Analytics platform with a headless-BI tier (GoodData.CN) emphasizing embedded analytics, semantic-layer governance, and multi-tenant data products.",
+   "words": [
+    "emphasising->emphasizing"
+   ]
+  },
+  {
+   "table": "vendors",
+   "id": 653,
+   "column": "description",
+   "group": "prose",
+   "old": "CSA-focused platform specialising in share customisation and member experience.",
+   "new": "CSA-focused platform specializing in share customization and member experience.",
+   "words": [
+    "specialising->specializing",
+    "customisation->customization"
+   ]
+  }
+ ],
+ "labels": [
+  {
+   "table": "capability_domains",
+   "id": 281,
+   "column": "capability_domain_label",
+   "from": "Auto-Dialler and Click-to-Call / Sales Engagement",
+   "to": "Auto-Dialer and Click-to-Call / Sales Engagement"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1322,
+   "column": "data_object_lifecycle_state_label",
+   "from": "harassment_training_acknowledgements.pending",
+   "to": "harassment_training_acknowledgments.pending"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1323,
+   "column": "data_object_lifecycle_state_label",
+   "from": "harassment_training_acknowledgements.acknowledged",
+   "to": "harassment_training_acknowledgments.acknowledged"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 1324,
+   "column": "data_object_lifecycle_state_label",
+   "from": "harassment_training_acknowledgements.archived",
+   "to": "harassment_training_acknowledgments.archived"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2802,
+   "column": "data_object_lifecycle_state_label",
+   "from": "supplier_information_requests.cancelled",
+   "to": "supplier_information_requests.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2806,
+   "column": "data_object_lifecycle_state_label",
+   "from": "supplier_tasks.cancelled",
+   "to": "supplier_tasks.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2841,
+   "column": "data_object_lifecycle_state_label",
+   "from": "activity_departures.cancelled",
+   "to": "activity_departures.canceled"
+  },
+  {
+   "table": "data_object_lifecycle_states",
+   "id": 2845,
+   "column": "data_object_lifecycle_state_label",
+   "from": "activity_bookings.cancelled",
+   "to": "activity_bookings.canceled"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 412,
+   "column": "data_object_relationship_label",
+   "from": "visitor_registrations acknowledges visitor_nda_acknowledgements",
+   "to": "visitor_registrations acknowledges visitor_nda_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 425,
+   "column": "data_object_relationship_label",
+   "from": "users witnessed nda visitor_nda_acknowledgements",
+   "to": "users witnessed nda visitor_nda_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 688,
+   "column": "data_object_relationship_label",
+   "from": "retail_labour_schedules allocates store_tasks",
+   "to": "retail_labor_schedules allocates store_tasks"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 697,
+   "column": "data_object_relationship_label",
+   "from": "users publishes schedules retail_labour_schedules",
+   "to": "users publishes schedules retail_labor_schedules"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 702,
+   "column": "data_object_relationship_label",
+   "from": "retail_labour_schedules materializes_as work_shifts",
+   "to": "retail_labor_schedules materializes_as work_shifts"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1335,
+   "column": "data_object_relationship_label",
+   "from": "candidates acknowledges_via fcra_summary_of_rights_acknowledgements",
+   "to": "candidates acknowledges_via fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1341,
+   "column": "data_object_relationship_label",
+   "from": "background_checks gated_by fcra_summary_of_rights_acknowledgements",
+   "to": "background_checks gated_by fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1384,
+   "column": "data_object_relationship_label",
+   "from": "compliance_assignments acknowledged_via harassment_training_acknowledgements",
+   "to": "compliance_assignments acknowledged_via harassment_training_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1419,
+   "column": "data_object_relationship_label",
+   "from": "users acknowledges harassment_training_acknowledgements",
+   "to": "users acknowledges harassment_training_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1694,
+   "column": "data_object_relationship_label",
+   "from": "users dialled_call call_recordings",
+   "to": "users dialed_call call_recordings"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2520,
+   "column": "data_object_relationship_label",
+   "from": "frontline_broadcasts is acknowledged by content_acknowledgements",
+   "to": "frontline_broadcasts is acknowledged by content_acknowledgments"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 2525,
+   "column": "data_object_relationship_label",
+   "from": "users records content_acknowledgements",
+   "to": "users records content_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 959,
+   "column": "domain_data_object_label",
+   "from": "Retail Store Operations / retail_labour_schedules",
+   "to": "Retail Store Operations / retail_labor_schedules"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 984,
+   "column": "domain_data_object_label",
+   "from": "Visitor Management / visitor_nda_acknowledgements",
+   "to": "Visitor Management / visitor_nda_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1262,
+   "column": "domain_data_object_label",
+   "from": "Learning Management / harassment_training_acknowledgements",
+   "to": "Learning Management / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_data_objects",
+   "id": 1304,
+   "column": "domain_data_object_label",
+   "from": "Learning Management / dpo_training_acknowledgements",
+   "to": "Learning Management / dpo_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1036,
+   "column": "domain_module_data_object_label",
+   "from": "LMS-COMPLIANCE-TRAINING / harassment_training_acknowledgements",
+   "to": "LMS-COMPLIANCE-TRAINING / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1071,
+   "column": "domain_module_data_object_label",
+   "from": "TRAINING-RECORDS-STARTER / harassment_training_acknowledgements",
+   "to": "TRAINING-RECORDS-STARTER / harassment_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1842,
+   "column": "domain_module_data_object_label",
+   "from": "FRONTLINE-COMMS-BROADCAST-ENGAGEMENT / content_acknowledgements",
+   "to": "FRONTLINE-COMMS-BROADCAST-ENGAGEMENT / content_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 2049,
+   "column": "domain_module_data_object_label",
+   "from": "TRAINING-RECORDS-STARTER / dpo_training_acknowledgements",
+   "to": "TRAINING-RECORDS-STARTER / dpo_training_acknowledgments"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 2077,
+   "column": "domain_module_data_object_label",
+   "from": "BGV-ADJUDICATION-COMPLIANCE / fcra_summary_of_rights_acknowledgements",
+   "to": "BGV-ADJUDICATION-COMPLIANCE / fcra_summary_of_rights_acknowledgments"
+  },
+  {
+   "table": "handoffs",
+   "id": 934,
+   "column": "handoff_label",
+   "from": "Retail Store Operations → Workforce Management : retail_labour_schedule.published",
+   "to": "Retail Store Operations → Workforce Management : retail_labor_schedule.published"
+  }
+ ],
+ "left_unchanged": [
+  {
+   "reason": "proper name",
+   "word": "fulfil",
+   "note": "Fulfil / Fulfil.IO, the vendor and its product (plus its computed solution_domain label and URLs); the one verb override is fixed",
+   "table": "solution_domains",
+   "id": 1185,
+   "column": "solution_domain_label"
+  },
+  {
+   "reason": "proper name",
+   "word": "fulfil",
+   "note": "Fulfil / Fulfil.IO, the vendor and its product (plus its computed solution_domain label and URLs); the one verb override is fixed",
+   "table": "solutions",
+   "id": 832,
+   "column": "solution_name"
+  },
+  {
+   "reason": "url",
+   "word": "fulfil",
+   "note": "fulfil.io, the vendor's domain",
+   "table": "solutions",
+   "id": 832,
+   "column": "solution_url"
+  },
+  {
+   "reason": "proper name",
+   "word": "fulfil",
+   "note": "Fulfil / Fulfil.IO, the vendor and its product (plus its computed solution_domain label and URLs); the one verb override is fixed",
+   "table": "vendors",
+   "id": 683,
+   "column": "vendor_name"
+  },
+  {
+   "reason": "url",
+   "word": "fulfil",
+   "note": "fulfil.io, the vendor's domain",
+   "table": "vendors",
+   "id": 683,
+   "column": "vendor_url"
+  },
+  {
+   "reason": "proper name",
+   "word": "mitre",
+   "note": "MITRE ATT&CK",
+   "table": "domains",
+   "id": 14,
+   "column": "catalog_description"
+  },
+  {
+   "reason": "proper name",
+   "word": "cypher",
+   "note": "Cypher, the graph query language",
+   "table": "domains",
+   "id": 138,
+   "column": "description"
+  },
+  {
+   "reason": "url",
+   "word": "harmonising",
+   "note": "inside a URL path",
+   "table": "regulations",
+   "id": 129,
+   "column": "regulation_url"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_function_domains",
+   "id": 294,
+   "column": "notes"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_processes",
+   "id": 89,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_processes",
+   "id": 233,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_processes",
+   "id": 455,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_processes",
+   "id": 497,
+   "column": "process_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "business_processes",
+   "id": 676,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "capabilities",
+   "id": 710,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_aliases",
+   "id": 1869,
+   "column": "alias_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_aliases",
+   "id": 1870,
+   "column": "alias_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 629,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 630,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 631,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 1948,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 1949,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 1950,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 1951,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 1952,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 2785,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 2786,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_lifecycle_states",
+   "id": 2787,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 346,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1012,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1018,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1026,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1276,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1741,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 1741,
+   "column": "relationship_verb"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 2202,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 2207,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 2208,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 2691,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_object_relationships",
+   "id": 2692,
+   "column": "data_object_relationship_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 26,
+   "column": "data_object_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 26,
+   "column": "plural_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 41,
+   "column": "data_object_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 41,
+   "column": "plural_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 95,
+   "column": "data_object_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "data_objects",
+   "id": 95,
+   "column": "plural_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 26,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 42,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 136,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 1180,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 1196,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_data_objects",
+   "id": 1225,
+   "column": "domain_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 296,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 421,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 434,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 915,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 946,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 1322,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_module_data_objects",
+   "id": 1587,
+   "column": "domain_module_data_object_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_modules",
+   "id": 94,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_modules",
+   "id": 95,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_modules",
+   "id": 325,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domain_modules",
+   "id": 352,
+   "column": "catalog_description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "domains",
+   "id": 174,
+   "column": "catalog_description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "handoffs",
+   "id": 102,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "handoffs",
+   "id": 115,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "skills",
+   "id": 7,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 140,
+   "column": "tool_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 140,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 154,
+   "column": "tool_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 154,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 299,
+   "column": "tool_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "analyses",
+   "note": "plural noun of analysis, every one read in context; no verb use",
+   "table": "tools",
+   "id": 299,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "dialogues",
+   "note": "conversation sense (APQC text), not a software form",
+   "table": "business_processes",
+   "id": 251,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "forwards",
+   "note": "verb or roll-forwards noun",
+   "table": "capabilities",
+   "id": 399,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "forwards",
+   "note": "verb or roll-forwards noun",
+   "table": "domain_modules",
+   "id": 280,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "forwards",
+   "note": "verb or roll-forwards noun",
+   "table": "handoffs",
+   "id": 1108,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "forwards",
+   "note": "verb or roll-forwards noun",
+   "table": "tools",
+   "id": 1206,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "queueing",
+   "note": "accepted American spelling, standard in telephony",
+   "table": "capabilities",
+   "id": 655,
+   "column": "capability_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "queueing",
+   "note": "accepted American spelling, standard in telephony",
+   "table": "capability_domains",
+   "id": 723,
+   "column": "capability_domain_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "queueing",
+   "note": "accepted American spelling, standard in telephony",
+   "table": "domain_modules",
+   "id": 329,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 67,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 282,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 353,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1305,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1310,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1556,
+   "column": "process_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1556,
+   "column": "process_key"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1559,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1560,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1672,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1673,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1675,
+   "column": "process_name"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1675,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "preventative",
+   "note": "accepted American variant of preventive, APQC wording",
+   "table": "business_processes",
+   "id": 1675,
+   "column": "process_key"
+  },
+  {
+   "reason": "valid American English",
+   "word": "flyers",
+   "note": "accepted American spelling",
+   "table": "business_processes",
+   "id": 961,
+   "column": "description"
+  },
+  {
+   "reason": "valid American English",
+   "word": "disc",
+   "note": "abbreviation of discovery in RMM-DISC and COMM-SEARCH-DISC",
+   "table": "capabilities",
+   "id": 206,
+   "column": "capability_code"
+  },
+  {
+   "reason": "valid American English",
+   "word": "disc",
+   "note": "abbreviation of discovery in RMM-DISC and COMM-SEARCH-DISC",
+   "table": "capabilities",
+   "id": 307,
+   "column": "capability_code"
+  },
+  {
+   "reason": "valid American English",
+   "word": "disc",
+   "note": "abbreviation of discovery in RMM-DISC and COMM-SEARCH-DISC",
+   "table": "domain_module_capabilities",
+   "id": 434,
+   "column": "domain_module_capability_label"
+  },
+  {
+   "reason": "valid American English",
+   "word": "disc",
+   "note": "abbreviation of discovery in RMM-DISC and COMM-SEARCH-DISC",
+   "table": "domain_module_capabilities",
+   "id": 661,
+   "column": "domain_module_capability_label"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 211,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 551,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1106,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1140,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1221,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1294,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1474,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1816,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "towards",
+   "note": "valid in American English, not clearly British in context, all in APQC business_processes.description",
+   "table": "business_processes",
+   "id": 1963,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "lettable",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be rentable",
+   "table": "data_objects",
+   "id": 357,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "lettable",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be rentable",
+   "table": "data_objects",
+   "id": 357,
+   "column": "catalog_description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "lettable",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be rentable",
+   "table": "domain_data_objects",
+   "id": 585,
+   "column": "notes"
+  },
+  {
+   "reason": "left for owner",
+   "word": "lettable",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be rentable",
+   "table": "domain_modules",
+   "id": 286,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "demerger",
+   "note": "British-leaning vocabulary in APQC text, not a spelling",
+   "table": "business_processes",
+   "id": 491,
+   "column": "process_name"
+  },
+  {
+   "reason": "left for owner",
+   "word": "demerger",
+   "note": "British-leaning vocabulary in APQC text, not a spelling",
+   "table": "business_processes",
+   "id": 491,
+   "column": "process_key"
+  },
+  {
+   "reason": "left for owner",
+   "word": "demerging",
+   "note": "British-leaning vocabulary in APQC text, not a spelling",
+   "table": "business_processes",
+   "id": 491,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "telecoms",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be telecom",
+   "table": "solutions",
+   "id": 565,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "telecoms",
+   "note": "British-leaning vocabulary, not a spelling; American usage would be telecom",
+   "table": "vendors",
+   "id": 497,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "wellbeing",
+   "note": "American dictionaries prefer well-being; a hyphen change, not a dialect spelling",
+   "table": "data_objects",
+   "id": 183,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "wellbeing",
+   "note": "American dictionaries prefer well-being; a hyphen change, not a dialect spelling",
+   "table": "solutions",
+   "id": 971,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "saleyard",
+   "note": "Australian and British vocabulary, not a spelling",
+   "table": "tools",
+   "id": 1946,
+   "column": "description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "grazier",
+   "note": "Australian and British vocabulary, includes a persona name and code; not a spelling",
+   "table": "domains",
+   "id": 176,
+   "column": "catalog_description"
+  },
+  {
+   "reason": "left for owner",
+   "word": "grazier",
+   "note": "Australian and British vocabulary, includes a persona name and code; not a spelling",
+   "table": "persona_modules",
+   "id": 676,
+   "column": "persona_module_label"
+  },
+  {
+   "reason": "left for owner",
+   "word": "grazier",
+   "note": "Australian and British vocabulary, includes a persona name and code; not a spelling",
+   "table": "persona_modules",
+   "id": 677,
+   "column": "persona_module_label"
+  },
+  {
+   "reason": "left for owner",
+   "word": "grazier",
+   "note": "Australian and British vocabulary, includes a persona name and code; not a spelling",
+   "table": "personas",
+   "id": 95,
+   "column": "persona_name"
+  },
+  {
+   "reason": "left for owner",
+   "word": "grazier",
+   "note": "Australian and British vocabulary, includes a persona name and code; not a spelling",
+   "table": "personas",
+   "id": 95,
+   "column": "persona_code"
+  },
+  {
+   "reason": "left for owner",
+   "word": "actioned",
+   "note": "British-leaning usage in a state name, not a spelling",
+   "table": "data_object_lifecycle_states",
+   "id": 2401,
+   "column": "data_object_lifecycle_state_label"
+  },
+  {
+   "reason": "left for owner",
+   "word": "actioned",
+   "note": "British-leaning usage in a state name, not a spelling",
+   "table": "data_object_lifecycle_states",
+   "id": 2401,
+   "column": "state_name"
+  }
+ ]
+}

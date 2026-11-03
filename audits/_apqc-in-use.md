@@ -320,8 +320,8 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [S] h=203  CRM → SALES-PERF  `account.tier_changed`  payload=customers
 
 ### 10729 L2 — Perform revenue accounting (2)
-- [S] h=131  PSA → FIN  `revenue.recognised`  payload=revenue_recognition_records
-- [S] h=197  SUB-MGMT → FIN  `revenue.recognised`  payload=revenue_recognition_records
+- [S] h=131  PSA → FIN  `revenue.recognized`  payload=revenue_recognition_records
+- [S] h=197  SUB-MGMT → FIN  `revenue.recognized`  payload=revenue_recognition_records
 
 ### 10735 L2 — Manage internal controls (2)
 - [S] h=840  GRC → AUDIT  `control.failed`  payload=compliance_controls

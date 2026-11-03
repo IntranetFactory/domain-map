@@ -48,7 +48,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `contract_milestones` | `contract_milestones` | Contract Milestone | Contract Milestones | master | - | - | optional | - | operational_workflow | `:manage` | - |
 | 2 | `contract_obligations` | `contract_obligations` | Contract Obligation | Contract Obligations | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -59,18 +59,18 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 _(none: no relationships with both endpoints inside the scope)_
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | is obligation owner for | `contract_obligations` | one_to_many | optional | source | clear | reference | - |
 | `users` | owns | `contract_milestones` | one_to_many | optional | source | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -84,11 +84,11 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `project_billing_milestones` | updates | `contract_obligations` | one_to_many | optional | none | n/a | - |
 | `legal_contracts` | has milestone | `contract_milestones` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 

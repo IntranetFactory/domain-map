@@ -73,19 +73,19 @@ q6: Should the Brand and Creative roles (brand manager, creative ops, photograph
 - a) Author the roles now.
 - b) Defer until the modules exist.
 
-Recommended: b. Roles attach to modules, so authoring them before any module exists creates orphaned records; deferring is the cleaner sequence. The owner and contributor function links are already in place, so nothing breaks by waiting.
+Recommended: b. Roles attach to modules, so authoring them before any module exists creates orphaned records; deferring is the cleaner sequence. The owner and contributor function relationships are already in place, so nothing breaks by waiting.
 
 a6:
 
 ---
 
-q7: For symmetry, DAM should carry outbound asset-to-user relationship edges to mirror the three existing inbound ones (uploaded, owns, approves). How should those outbound edges be defined?
+q7: For symmetry, DAM should carry outbound asset-to-user relationships to mirror the three existing inbound ones (uploaded, owns, approves). How should those outbound relationships be defined?
 
-- a) Mirror the inbound edges (for example: was_uploaded_by, is_owned_by, was_approved_by).
+- a) Mirror the inbound relationships (for example: was_uploaded_by, is_owned_by, was_approved_by).
 - b) Provide your own explicit verb/inverse/owner-side wording.
 - c) Skip them and let the existing inbound rows alone satisfy the symmetry rule.
 
-Recommended: a. Mirroring the existing inbound edges is the standard, low-risk way to satisfy the symmetry rule; the agent will not load these rows until you confirm the exact wording.
+Recommended: a. Mirroring the existing inbound relationships is the standard, low-risk way to satisfy the symmetry rule; the agent will not load these rows until you confirm the exact wording.
 
 a7:
 

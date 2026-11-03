@@ -56,9 +56,9 @@ export type HealthCtx = {
   modules: ModuleRow[];
   moduleIds: number[];
   moduleIdSet: Set<number>;
-  // domain_module_data_objects rows on the domain's modules (any role).
+  // domain_module_data_objects rows on the domain's modules (any held_as).
   dmdo: any[];
-  // <masters>: distinct data_object_ids with role='master' on the domain's modules, sorted.
+  // <masters>: distinct data_object_ids with held_as='master' on the domain's modules, sorted.
   // (SKILL.md: never read masters from the retired domain_data_objects rollup.)
   masters: number[];
   masterSet: Set<number>;

@@ -11,9 +11,9 @@ q1: (answer this first) Is Modern Intranet a thin leadership-tier landing area o
 
 - a) Confirm leadership-tier: it stays a single landing area with no full module build, and the deeper bands pass by exception.
 - b) Treat it as a full real point-solution market: build it out into roughly five to eight modules.
-- c) Hybrid: build out the parts the intranet genuinely owns (publishing, news, newsletters, analytics) as real modules, and treat journeys, frontline, and advocacy as overlays / links to adjacent markets rather than modules this domain owns.
+- c) Hybrid: build out the parts the intranet genuinely owns (publishing, news, newsletters, analytics) as real modules, and treat journeys, frontline, and advocacy as overlays / relationships to adjacent markets rather than modules this domain owns.
 
-Recommended: c. Fresh vendor research (run today) shows this is a real market but only a partial one. Intranet products genuinely own a spine no other market owns: company pages and spaces, news and announcements with audience targeting and mandatory-acknowledgement receipts (Simpplr "Must Reads", Firstup must-read campaigns, and Microsoft Viva mandatory news all persist these as compliance-grade records), and internal newsletters (Poppulo Harmony, Workshop, and ContactMonkey are full newsletter systems of record with editions, sends, and open/click tracking). But three areas are really owned by dedicated adjacent markets: employee journeys belong to Enboarder and ChangeEngine (only Firstup models them richly among intranet vendors), frontline messaging belongs to WorkJam, Beekeeper, Crew, and YOOBIC (deeper than any intranet vendor), and employee advocacy belongs to Hootsuite Amplify, Sprinklr, GaggleAMP, and EveryoneSocial (only Haiilo and Sociabble truly master it among intranet players). Search is just an index over the HR directory and knowledge base, not owned data. So five co-equal master modules over-states what the intranet owns; the hybrid shape (roughly three owned modules plus an analytics store) matches what the flagship vendors actually persist. This choice gates every build item and entity candidate below it.
+Recommended: c. Fresh vendor research (run today) shows this is a real market but only a partial one. Intranet products genuinely own a spine no other market owns: company pages and spaces, news and announcements with audience targeting and mandatory-acknowledgment receipts (Simpplr "Must Reads", Firstup must-read campaigns, and Microsoft Viva mandatory news all persist these as compliance-grade records), and internal newsletters (Poppulo Harmony, Workshop, and ContactMonkey are full newsletter systems of record with editions, sends, and open/click tracking). But three areas are really owned by dedicated adjacent markets: employee journeys belong to Enboarder and ChangeEngine (only Firstup models them richly among intranet vendors), frontline messaging belongs to WorkJam, Beekeeper, Crew, and YOOBIC (deeper than any intranet vendor), and employee advocacy belongs to Hootsuite Amplify, Sprinklr, GaggleAMP, and EveryoneSocial (only Haiilo and Sociabble truly master it among intranet players). Search is just an index over the HR directory and knowledge base, not owned data. So five co-equal master modules over-states what the intranet owns; the hybrid shape (roughly three owned modules plus an analytics store) matches what the flagship vendors actually persist. This choice gates every build item and entity candidate below it.
 
 a1:
 
@@ -54,7 +54,7 @@ a4:
 
 q5: If you pick the real-market or hybrid route on the first question, which module split should the build use?
 
-- a) Three owned modules plus analytics (matches the hybrid route): Publish (pages and spaces), News (announcements with targeting and acknowledgements), Newsletter (newsletters, editions, subscriptions), plus an Analytics module that stores the read / open / acknowledgement receipts. Journeys, frontline, and advocacy are handled as overlays / cross-domain links, not modules this domain owns.
+- a) Three owned modules plus analytics (matches the hybrid route): Publish (pages and spaces), News (announcements with targeting and acknowledgments), Newsletter (newsletters, editions, subscriptions), plus an Analytics module that stores the read / open / acknowledgment receipts. Journeys, frontline, and advocacy are handled as overlays / cross-domain relationships, not modules this domain owns.
 - b) The five-module split: Publish, News, Journey, Frontline, Search (mobile folds into Publish, analytics is cross-cutting).
 - c) One module per capability (eight modules; heavy).
 - d) A custom module set (tell me the shape).
@@ -79,7 +79,7 @@ a6:
 
 ## Optional (will not hold up the build)
 
-q7: On the real-market or hybrid route, eight master-entity candidates show up across the flagship intranet vendors (spaces, pages or posts, the announcements triplet with targeting and acknowledgements, the internal-newsletter triplet, embedded employee-directory entries, the journey triplet, the frontline triplet, and the advocacy triplet). Should I research and add the ones that hold up? (yes/no)
+q7: On the real-market or hybrid route, eight master-entity candidates show up across the flagship intranet vendors (spaces, pages or posts, the announcements triplet with targeting and acknowledgments, the internal-newsletter triplet, embedded employee-directory entries, the journey triplet, the frontline triplet, and the advocacy triplet). Should I research and add the ones that hold up? (yes/no)
 
 Recommended: yes, but additive and only after the route and modules exist. Several are universal across the vendor set, though the journey, frontline, and advocacy triplets each depend on a related domain-candidate triage first.
 

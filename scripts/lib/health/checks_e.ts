@@ -10,10 +10,10 @@
 // E4b / E4d = data_object_lifecycle_states.id.
 //
 // Implemented on the pure logic in logic_cefh.ts (ported from phase_p_triage.ts): E1, E2, E3 and
-// the B13 predicate of E6. Persona set (SKILL.md E1) = live domain_roles of an owning function
+// the B13 predicate of E6. Persona set (SKILL.md E1) = live personas of an owning function
 // (business_function_domains responsibility_type='owner') UNION the live personas reaching any
-// primary module via role_modules; E2 / E3 run over that set. Row ids: E1 / E2 = domain_roles.id,
-// E3 = role_modules.id. E1-E3 read ctx.all; E1 adds one catalog-wide /capability_domains select for
+// primary module via persona_modules; E2 / E3 run over that set. Row ids: E1 / E2 = personas.id,
+// E3 = persona_modules.id. E1-E3 read ctx.all; E1 adds one catalog-wide /capability_domains select for
 // the module-shape rule.
 //
 // E6 also runs the derived-result invariants R1-R8 (scripts/lib/blueprint_invariants.ts, health plan
@@ -53,8 +53,8 @@ function e1Personas(ctx: HealthCtx) {
   return domainPersonas({
     moduleIds: ctx.moduleIds,
     ownerFunctionIds: ownerFunctionIds(ctx),
-    personas: ctx.all.domainRoles,
-    roleModules: ctx.all.roleModules,
+    personas: ctx.all.personas,
+    personaModules: ctx.all.personaModules,
   });
 }
 
@@ -120,14 +120,14 @@ export const E_CHECKS: Check[] = [
     band: "E",
     kind: "mechanical",
     title: "2-module floor on every persona",
-    run: async (ctx) => [{ id: "E2", ...checkPersonaFloor(e1Personas(ctx).reach, ctx.all.roleModules, (id) => personaLabel(ctx, id)) }],
+    run: async (ctx) => [{ id: "E2", ...checkPersonaFloor(e1Personas(ctx).reach, ctx.all.personaModules, (id) => personaLabel(ctx, id)) }],
   },
   {
     id: "E3",
     band: "E",
     kind: "mechanical",
-    title: "role_modules carry interaction_level",
-    run: async (ctx) => [{ id: "E3", ...checkInteractionLevels(e1Personas(ctx).reach, ctx.all.roleModules, (id) => personaLabel(ctx, id)) }],
+    title: "persona_modules carry interaction_level",
+    run: async (ctx) => [{ id: "E3", ...checkInteractionLevels(e1Personas(ctx).reach, ctx.all.personaModules, (id) => personaLabel(ctx, id)) }],
   },
   {
     id: "E4",
@@ -182,7 +182,7 @@ export const E_CHECKS: Check[] = [
       const procs = gatedProcessIds(ctx);
       const found = checkAccountableAlsoResponsible(procs, ctx.all.processRaci, {
         processLabel: (id) => processLabel(ctx, id),
-        actorLabel: (r) => (r.actor_role_id != null ? personaLabel(ctx, r.actor_role_id) : `skill ${r.actor_skill_id}`),
+        actorLabel: (r) => (r.persona_id != null ? personaLabel(ctx, r.persona_id) : `skill ${r.skill_id}`),
       });
       if (found.length === 0) return [{ id: "E4c", result: "pass", detail: `${procs.length} gated processes checked (rows = process ids)` }];
       return fromInvariants("E4c", found);
@@ -218,7 +218,7 @@ export const E_CHECKS: Check[] = [
         ...(await derivedResultFindings(ctx)),
         judgment(
           "E6",
-          "reach: confirm every persona that reaches a module through role_modules gets a sensible section 9 tier (the derived gate, RACI, handoff and description mechanics are R1-R8 above; R7 is a heuristic, so confirm each R7 hit before acting on it)",
+          "reach: confirm every persona that reaches a module through persona_modules gets a sensible section 9 tier (the derived gate, RACI, handoff and description mechanics are R1-R8 above; R7 is a heuristic, so confirm each R7 hit before acting on it)",
         ),
       ];
     },

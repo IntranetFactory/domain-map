@@ -110,6 +110,6 @@ This market has >=3 capabilities (reservation, resource/guide scheduling, liabil
 | Workforce / scheduling | ACTIVITY-BOOKING <- workforce | Consumes staff/guide identities, availability, certifications (AMGA for Origin); emits `guide.assigned`, `departure.completed`. |
 | Digital commerce storefront | storefront -> ACTIVITY-BOOKING | Booking widget / embed creates `activity_bookings`; gift-card widget. |
 | Accounting / revenue | ACTIVITY-BOOKING -> accounting | `payment.captured`, `booking.refunded`, payout/commission rows export to QuickBooks (Resmark GL IDs). |
-| OTA distribution (Viator, GYG, Expedia) | bidirectional | Availability push; inbound `booking.created` from channel; `booking.cancelled`/`amended` sync. |
+| OTA distribution (Viator, GYG, Expedia) | bidirectional | Availability push; inbound `booking.created` from channel; `booking.canceled`/`amended` sync. |
 
 Key lifecycle events to emit: `booking.confirmed`, `waiver.signed`, `guide.assigned`, `departure.completed`, `booking.refunded`.

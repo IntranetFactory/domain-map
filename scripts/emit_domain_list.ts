@@ -46,10 +46,10 @@
 //
 // Ranking:
 //   entities: drawn from the domain's full modules (domain_module_data_objects) unioned with the
-//             domain_data_objects rollup, strongest role per data object winning. Ordered by
-//             role (master > embedded_master > contributor > derived; consumer and platform
+//             domain_data_objects rollup, strongest held_as per data object winning. Ordered by
+//             held_as (master > embedded_master > contributor > derived; consumer and platform
 //             built-ins like users are skipped), then required before optional, then the number of
-//             data_object_relationships edges (most connected first), then label.
+//             data_object_relationships rows (most related first), then label.
 //   vendors:  best coverage_level on the domain (primary > secondary > partial), then load order
 //             (lowest solution_domains id per vendor: research lists market leaders first), then name.
 //
@@ -97,7 +97,7 @@ type Entry = {
   min_org_size: string | null;
 };
 
-const ENTITY_ROLE_RANK: Record<string, number> = { master: 0, embedded_master: 1, contributor: 2, derived: 3 };
+const ENTITY_HELD_AS_RANK: Record<string, number> = { master: 0, embedded_master: 1, contributor: 2, derived: 3 };
 const COVERAGE_RANK: Record<string, number> = { primary: 0, secondary: 1, partial: 2 };
 
 // ---------- load ----------
@@ -130,12 +130,12 @@ const [
     ),
     pg(
       "GET",
-      "/domain_data_objects?select=domain_id,data_object_id,role,is_install_optional&record_status=neq.rejected&limit=50000",
+      "/domain_data_objects?select=domain_id,data_object_id,held_as,is_install_optional&record_status=neq.rejected&limit=50000",
     ),
     pg("GET", "/domain_modules?select=id,domain_id&module_kind=eq.full&record_status=neq.rejected&limit=10000"),
     pg(
       "GET",
-      "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&limit=50000",
+      "/domain_module_data_objects?select=domain_module_id,data_object_id,held_as,is_install_optional&limit=50000",
     ),
     pg("GET", "/data_objects?select=id,singular_label,plural_label,kind&limit=10000"),
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id&limit=50000"),
@@ -192,17 +192,17 @@ for (const r of relRows) {
   for (const id of [r.data_object_id, r.related_data_object_id]) degree.set(id, (degree.get(id) ?? 0) + 1);
 }
 
-// Per domain: data_object_id -> strongest { role, is_install_optional } across the rollup and its full modules.
+// Per domain: data_object_id -> strongest { held_as, is_install_optional } across the rollup and its full modules.
 const moduleDomain = new Map<number, number>(modules.filter((m: any) => m.domain_id != null).map((m: any) => [m.id, m.domain_id]));
-const scopeByDomain = new Map<number, Map<number, { role: string; is_install_optional: boolean }>>();
+const scopeByDomain = new Map<number, Map<number, { held_as: string; is_install_optional: boolean }>>();
 function addScope(domainId: number | undefined, r: any) {
   if (domainId == null) return;
   if (!scopeByDomain.has(domainId)) scopeByDomain.set(domainId, new Map());
   const scope = scopeByDomain.get(domainId)!;
   const prev = scope.get(r.data_object_id);
-  const rank = (x: { role: string; is_install_optional: boolean }) =>
-    (ENTITY_ROLE_RANK[x.role] ?? 9) * 2 + Number(x.is_install_optional);
-  if (!prev || rank(r) < rank(prev)) scope.set(r.data_object_id, { role: r.role, is_install_optional: r.is_install_optional });
+  const rank = (x: { held_as: string; is_install_optional: boolean }) =>
+    (ENTITY_HELD_AS_RANK[x.held_as] ?? 9) * 2 + Number(x.is_install_optional);
+  if (!prev || rank(r) < rank(prev)) scope.set(r.data_object_id, { held_as: r.held_as, is_install_optional: r.is_install_optional });
 }
 for (const r of ddoRows) addScope(r.domain_id, r);
 for (const r of dmdoRows) addScope(moduleDomain.get(r.domain_module_id), r);
@@ -300,12 +300,12 @@ for (const d of domains) {
   }
 
   const entityObjects = [...(scopeByDomain.get(d.id) ?? new Map()).entries()]
-    .filter(([, r]) => r.role in ENTITY_ROLE_RANK)
+    .filter(([, r]) => r.held_as in ENTITY_HELD_AS_RANK)
     .map(([id, r]) => ({ r, o: dataObjectById.get(id) }))
     .filter(({ o }) => o && o.kind !== "platform_builtin")
     .sort(
       (a, b) =>
-        ENTITY_ROLE_RANK[a.r.role] - ENTITY_ROLE_RANK[b.r.role] ||
+        ENTITY_HELD_AS_RANK[a.r.held_as] - ENTITY_HELD_AS_RANK[b.r.held_as] ||
         Number(a.r.is_install_optional) - Number(b.r.is_install_optional) ||
         (degree.get(b.o.id) ?? 0) - (degree.get(a.o.id) ?? 0) ||
         a.o.singular_label.localeCompare(b.o.singular_label),

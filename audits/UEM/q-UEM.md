@@ -29,7 +29,7 @@ a2:
 
 ---
 
-q3: For the relationship labels (the six device-to-user links, the seven proposed links between UEM entities, and the vendor-synonym aliases on the eight core entities), should I use the prior agreed wording (has assigned, has last seen, has issued to, has created by, has owned by, has uploaded by)?
+q3: For the relationship labels (the six device-to-user relationships, the seven proposed relationships between UEM entities, and the vendor-synonym aliases on the eight core entities), should I use the prior agreed wording (has assigned, has last seen, has issued to, has created by, has owned by, has uploaded by)?
 
 - a) Confirm the prior labels.
 - b) Revise specific labels (tell me which).

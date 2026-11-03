@@ -63,13 +63,13 @@ a7:
 
 ---
 
-q8: Which compliance regulations should be linked to Web Content Operations?
+q8: Which compliance regulations should be related to Web Content Operations?
 
-- a) Link ADA and Section 508 only, marked required, and defer the European Accessibility Act for now.
-- b) Add the European Accessibility Act as a new regulation entry first, then link all three.
-- c) Also include the GDPR cookie-consent edge, marked conditional.
+- a) Relationship ADA and Section 508 only, marked required, and defer the European Accessibility Act for now.
+- b) Add the European Accessibility Act as a new regulation entry first, then relate all three.
+- c) Also include the GDPR cookie-consent relationship, marked conditional.
 
-Recommended: a. ADA and Section 508 are already in the catalog and clearly apply to the accessibility findings; the European Accessibility Act needs a new catalog entry before it can be linked, and the GDPR cookie-consent edge is a secondary, out-of-scope-leaning concern. This call belongs to you because it writes regulation links with applicability qualifiers.
+Recommended: a. ADA and Section 508 are already in the catalog and clearly apply to the accessibility findings; the European Accessibility Act needs a new catalog entry before it can be related, and the GDPR cookie-consent relationship is a secondary, out-of-scope-leaning concern. This call belongs to you because it writes regulation relationships with applicability qualifiers.
 
 a8:
 

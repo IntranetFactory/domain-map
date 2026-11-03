@@ -29,7 +29,7 @@ a2:
 
 ---
 
-q3: Should an initiative be frozen (submit-locked) once it reaches a terminal state (completed or cancelled), so a closed initiative cannot be quietly edited afterward? (yes/no)
+q3: Should an initiative be frozen (submit-locked) once it reaches a terminal state (completed or canceled), so a closed initiative cannot be quietly edited afterward? (yes/no)
 
 Recommended: yes. A finished or canceled initiative is a fixed record that downstream portfolio and finance teams rely on. This flips a structural flag on a live master, so it needs your sign-off rather than being applied automatically.
 

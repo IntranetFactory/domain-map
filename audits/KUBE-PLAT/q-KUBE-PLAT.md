@@ -10,18 +10,18 @@ q1: (answer this first) How should Kubernetes Platform be split into modules (th
 - a) Two modules: Distribution Ops (clusters, node pools, add-ons, upgrades, registries) and Workload Ops (container workloads, Helm releases, operators, service meshes, pipelines). Mirrors the natural cluster-versus-workload split most vendors use.
 - b) One module covering the whole eight-object surface. Simpler, but the capability count will land at five to seven and force a two-module split anyway.
 
-Recommended: a. Red Hat OpenShift, Rancher (SUSE), VMware Tanzu, and Mirantis Kubernetes Engine all present a cluster/control-plane substrate (clusters, node pools, addons via cluster operators, OTA upgrades, etcd backups, registries) separately from the workload layer (container workloads, Helm releases, operators, service meshes), which is exactly the Distribution Ops versus Workload Ops boundary, and the cluster-level objects divide the same way (upgrade plans, etcd backups, storage classes to Distribution Ops; namespaces, RBAC, network policies, resource quotas to Workload Ops). One module is unstable because the capability count (5 to 7) will trip the two-module rule. This choice drives the whole unbuilt build (capabilities, solutions, lifecycle states, per-handoff module links, roles), so it unlocks everything below it.
+Recommended: a. Red Hat OpenShift, Rancher (SUSE), VMware Tanzu, and Mirantis Kubernetes Engine all present a cluster/control-plane substrate (clusters, node pools, addons via cluster operators, OTA upgrades, etcd backups, registries) separately from the workload layer (container workloads, Helm releases, operators, service meshes), which is exactly the Distribution Ops versus Workload Ops boundary, and the cluster-level objects divide the same way (upgrade plans, etcd backups, storage classes to Distribution Ops; namespaces, RBAC, network policies, resource quotas to Workload Ops). One module is unstable because the capability count (5 to 7) will trip the two-module rule. This choice drives the whole unbuilt build (capabilities, solutions, lifecycle states, per-handoff module relationships, roles), so it unlocks everything below it.
 
 a1:
 
 ---
 
-q2: For the relationships between the eight Kubernetes objects (and the one clean cross-domain link to IT service incidents), should I use the proposed link shapes (clusters own their node pools; everything else is a plain reference)?
+q2: For the relationships between the eight Kubernetes objects (and the one clean cross-domain relationship to IT service incidents), should I use the proposed relationship shapes (clusters own their node pools; everything else is a plain reference)?
 
 - a) Approve the proposed shapes (parent for clusters to node pools, reference for the rest, direction per the verb).
-- b) You will supply the exact shape for each link.
+- b) You will supply the exact shape for each relationship.
 
-Recommended: a. The proposed shapes follow the obvious ownership (node pools belong to a cluster) and reference (everything else is an independent object), so approving them lets the edges load.
+Recommended: a. The proposed shapes follow the obvious ownership (node pools belong to a cluster) and reference (everything else is an independent object), so approving them lets the relationships load.
 
 a2:
 
@@ -143,4 +143,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULARIZATION q2=B2-EDGE-TUPLES q3=B2-ALIAS-TUPLES q4=B2-REGULATIONS q5=B2-CONSUMER-DMDOS q6=B2-ROLES-SCOPE q7=B2-PROMOTE-SERVICE-MESH q8=B2-PROMOTE-CONT-REG q9=B2-PARENT-DOMAIN q10=B2-APQC-APPROVAL q11=B2-CATALOG-UX-REVIEW q12=B2-LEGACY-SKILL-NAMING q13=B3-CLUSTER-NAMESPACES+B3-CLUSTER-RBAC-POLICIES+B3-CLUSTER-NETWORK-POLICIES+B3-CLUSTER-RESOURCE-QUOTAS+B3-CLUSTER-ADDONS+B3-CLUSTER-UPGRADE-PLANS+B3-CLUSTER-ETCD-BACKUPS+B3-CLUSTER-AUDIT-LOGS+B3-CLUSTER-STORAGE-CLASSES+B3-CLUSTER-CRDS | domain_id=81 -->
+<!-- agent map, ignore: q1=B2-MODULARIZATION q2=B2-RELATIONSHIP-TUPLES q3=B2-ALIAS-TUPLES q4=B2-REGULATIONS q5=B2-CONSUMER-DMDOS q6=B2-ROLES-SCOPE q7=B2-PROMOTE-SERVICE-MESH q8=B2-PROMOTE-CONT-REG q9=B2-PARENT-DOMAIN q10=B2-APQC-APPROVAL q11=B2-CATALOG-UX-REVIEW q12=B2-LEGACY-SKILL-NAMING q13=B3-CLUSTER-NAMESPACES+B3-CLUSTER-RBAC-POLICIES+B3-CLUSTER-NETWORK-POLICIES+B3-CLUSTER-RESOURCE-QUOTAS+B3-CLUSTER-ADDONS+B3-CLUSTER-UPGRADE-PLANS+B3-CLUSTER-ETCD-BACKUPS+B3-CLUSTER-AUDIT-LOGS+B3-CLUSTER-STORAGE-CLASSES+B3-CLUSTER-CRDS | domain_id=81 -->

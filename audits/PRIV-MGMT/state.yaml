@@ -46,20 +46,20 @@ b1a:
   - id: B1A-BUILD
     summary: "UNBUILT domain: 0 domain_modules (M1 fail), 0 capability_domains. Surface the build; cascade left until the build lands."
     finding: "Live triage 2026-06-07: 0 domain_modules rows (M1 fail), 0 capability_domains rows, 0 PRIV-MGMT-owned masters (neither domain_data_objects nor domain_module_data_objects). Not deployable today. Per the UNBUILT clause the agent does NOT scaffold; the build is surfaced for the user, and the gated cascade is left in place."
-    action: "Build needs a user decision on B2-1 (which masters re-home) + B2-2 (module split) + B3-3 (additional master candidates) first. Once those land: Phase A (modules + capabilities + masters) then B (relationships, aliases, lifecycle) then C/E then the single domain-grain system skill + domain_module_tools (per-module skills are RETIRED, see 2026-06-06 supersession in history.md). If multi-module, run Phase P (personas, role_modules, process_raci) afterward."
+    action: "Build needs a user decision on B2-1 (which masters re-home) + B2-2 (module split) + B3-3 (additional master candidates) first. Once those land: Phase A (modules + capabilities + masters) then B (relationships, aliases, lifecycle) then C/E then the single domain-grain system skill + domain_module_tools (per-module skills are RETIRED, see 2026-06-06 supersession in history.md). If multi-module, run Phase P (personas, persona_modules, process_raci) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1-CLUSTER
     summary: "Module + capability + relationship + lifecycle + tool cluster (sub-items from 2026-05-30 audit), all gated on the B2-1 re-homing decision."
     finding: >-
-      Of the 13 Bucket 1 items from the 2026-05-30 audit, 3 now resolved (B1-S6 CPRA link,
+      Of the 13 Bucket 1 items from the 2026-05-30 audit, 3 now resolved (B1-S6 CPRA relationship,
       B1-S13 row 1 handoff 283 APQC, B1-S3 catalog_tagline + catalog_description authored
       2026-06-07) and the rest remain pending: B1-S1 (modules; 0 domain_modules rows),
       B1-S2 (capabilities; 0 capability_domains rows),
       B1-S4 (two flagship privacy specialists missing from solutions; gated on B3-1 vetting),
       B1-S7 (B10b PATCH on handoffs 283 + 288 target_domain_module_id; gated on B1-S1),
-      B1-S8 (B7 users edges on prospective PRIV-MGMT masters),
+      B1-S8 (B7 relationships to users on prospective PRIV-MGMT masters),
       B1-S9 (B6 intra-domain relationships among prospective masters),
       B1-S10 (B11 data_object_aliases on prospective masters),
       B1-S11 (B12 lifecycle states on prospective masters),
@@ -193,7 +193,7 @@ b3:
       privacy_impact_assessments Core(4/5)/ASSESSMENTS, data_breach_records Common(3/5) but
       load-as-Compliance/ASSESSMENTS, consent_purposes Core/CONSENT. COLLISION RESOLVED:
       personal_data_assets stays a DISTINCT privacy master (tracks special-category flags,
-      lawful basis, retention, linkage to processing activities + data subject that the DCG
+      lawful basis, retention, relationship to processing activities + data subject that the DCG
       data catalog does not), with an OPTIONAL reference FK to DCG data_assets (id 300) -
       not a merge, not an embedded_master. Surfaced as the only remaining open sub-decision
       via q7. The rest fold into the q2 build scope; vetting no longer gates B2-2.

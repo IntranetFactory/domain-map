@@ -159,7 +159,7 @@ const allObjects: ObjSpec[] = [
     singular_label: "Customer Subscription",
     plural_label: "Customer Subscriptions",
     display_label: "Customer Subscription",
-    description: "Customer's recurring revenue contract — plan, term, MRR/ARR, billing cadence, seat count, lifecycle (trial / active / paused / cancelled / churned). **Seller-side view**; distinct from `saas_subscriptions` (SMP, buyer-side view of what we consume from vendors).",
+    description: "Customer's recurring revenue contract — plan, term, MRR/ARR, billing cadence, seat count, lifecycle (trial / active / paused / canceled / churned). **Seller-side view**; distinct from `saas_subscriptions` (SMP, buyer-side view of what we consume from vendors).",
     master_domain: "SUB-MGMT",
   },
   {
@@ -206,9 +206,9 @@ const refObjects = await get(
 for (const r of refObjects) dataObjMap.set(String(r.data_object_name), Number(r.id));
 
 // =============================================================================
-// PHASE 2 — master links
+// PHASE 2 — master relationships
 // =============================================================================
-console.log("\n=== Phase 2: master links ===");
+console.log("\n=== Phase 2: master relationships ===");
 
 const allDDO = await get("/domain_data_objects?select=domain_id,data_object_id&limit=20000");
 const existingDDOKey = new Set(allDDO.map(r => `${r.domain_id}|${r.data_object_id}`));
@@ -217,16 +217,16 @@ const masterRows = allObjects
   .map(o => ({
     domain_id: did(o.master_domain),
     data_object_id: dataObjMap.get(o.data_object_name)!,
-    role: "master",
+    held_as: "master",
     notes: "",
   }))
   .filter(r => !existingDDOKey.has(`${r.domain_id}|${r.data_object_id}`));
 
 if (masterRows.length > 0) {
-  console.log(`  /domain_data_objects: inserting ${masterRows.length} master links`);
+  console.log(`  /domain_data_objects: inserting ${masterRows.length} master relationships`);
   await insertChunked("/domain_data_objects", masterRows);
 } else {
-  console.log(`  /domain_data_objects: all master links already present`);
+  console.log(`  /domain_data_objects: all master relationships already present`);
 }
 
 // =============================================================================
@@ -234,43 +234,43 @@ if (masterRows.length > 0) {
 // =============================================================================
 console.log("\n=== Phase 3: multi-master / contributor / consumer rows ===");
 
-type SignalRow = { data_object: string; domain: string; role: "master" | "contributor" | "consumer" | "derived"; notes: string };
+type SignalRow = { data_object: string; domain: string; held_as: "master" | "contributor" | "consumer" | "derived"; notes: string };
 
 const signals: SignalRow[] = [
   // customers — the 4-master flagship
-  { data_object: "customers", domain: "CSM", role: "master", notes: "Service view — owns the case history, entitlements, SLAs, CSAT, support contracts associated with the customer. Co-master alongside CRM (sales view), SUB-MGMT (financial view), and CDP (unified profile)." },
-  { data_object: "customers", domain: "SUB-MGMT", role: "master", notes: "Financial view — owns the recurring revenue relationship: subscriptions, invoices, payment status, churn state, lifetime value. Co-master alongside CRM, CSM, CDP." },
-  { data_object: "customers", domain: "CDP", role: "master", notes: "Unified resolved profile — owns the identity-resolved behavioral view across web, mobile, marketing, product. Distinct slice from CRM/CSM/SUB-MGMT operational records; CDP is where the slices get reconciled into a single golden record." },
-  { data_object: "customers", domain: "LOYALTY", role: "contributor", notes: "Contributes loyalty tier, points balance, redemption history, rewards engagement. Surfaces back to CRM/CSM as a retention overlay." },
-  { data_object: "customers", domain: "MA", role: "contributor", notes: "Contributes marketing engagement: email opens, clicks, campaign participation, opt-in state. Feeds CDP for unified profile resolution." },
-  { data_object: "customers", domain: "B2C-COMM", role: "contributor", notes: "Contributes storefront purchase history, cart abandonment, browse behavior. The transactional-commerce slice of the customer." },
-  { data_object: "customers", domain: "PA", role: "consumer", notes: "Where customer-related people-analytics overlap exists (employees acting as customers, customer-success-team workload analytics)." },
+  { data_object: "customers", domain: "CSM", held_as: "master", notes: "Service view — owns the case history, entitlements, SLAs, CSAT, support contracts associated with the customer. Co-master alongside CRM (sales view), SUB-MGMT (financial view), and CDP (unified profile)." },
+  { data_object: "customers", domain: "SUB-MGMT", held_as: "master", notes: "Financial view — owns the recurring revenue relationship: subscriptions, invoices, payment status, churn state, lifetime value. Co-master alongside CRM, CSM, CDP." },
+  { data_object: "customers", domain: "CDP", held_as: "master", notes: "Unified resolved profile — owns the identity-resolved behavioral view across web, mobile, marketing, product. Distinct slice from CRM/CSM/SUB-MGMT operational records; CDP is where the slices get reconciled into a single golden record." },
+  { data_object: "customers", domain: "LOYALTY", held_as: "contributor", notes: "Contributes loyalty tier, points balance, redemption history, rewards engagement. Surfaces back to CRM/CSM as a retention overlay." },
+  { data_object: "customers", domain: "MA", held_as: "contributor", notes: "Contributes marketing engagement: email opens, clicks, campaign participation, opt-in state. Feeds CDP for unified profile resolution." },
+  { data_object: "customers", domain: "B2C-COMM", held_as: "contributor", notes: "Contributes storefront purchase history, cart abandonment, browse behavior. The transactional-commerce slice of the customer." },
+  { data_object: "customers", domain: "PA", held_as: "consumer", notes: "Where customer-related people-analytics overlap exists (employees acting as customers, customer-success-team workload analytics)." },
 
   // contacts
-  { data_object: "contacts", domain: "MA", role: "contributor", notes: "Contributes engagement state, score deltas, opt-in/preferences." },
-  { data_object: "contacts", domain: "SALES-ENG", role: "contributor", notes: "Contributes cadence touchpoint history, call recordings, sales-email engagement." },
+  { data_object: "contacts", domain: "MA", held_as: "contributor", notes: "Contributes engagement state, score deltas, opt-in/preferences." },
+  { data_object: "contacts", domain: "SALES-ENG", held_as: "contributor", notes: "Contributes cadence touchpoint history, call recordings, sales-email engagement." },
 
   // opportunities
-  { data_object: "opportunities", domain: "CPQ", role: "consumer", notes: "Reads opportunity context to generate quotes; awarded quotes feed back as opportunity status updates." },
-  { data_object: "opportunities", domain: "SUB-MGMT", role: "consumer", notes: "Closed-won opportunities trigger subscription creation." },
+  { data_object: "opportunities", domain: "CPQ", held_as: "consumer", notes: "Reads opportunity context to generate quotes; awarded quotes feed back as opportunity status updates." },
+  { data_object: "opportunities", domain: "SUB-MGMT", held_as: "consumer", notes: "Closed-won opportunities trigger subscription creation." },
 
   // contracts (existing CLM-master) — add CSM and SUB-MGMT contributors
-  { data_object: "contracts", domain: "CSM", role: "contributor", notes: "Service / support contracts contribute their CSM-specific terms (SLA tier, named-contact lists, support hours) into the canonical contract record." },
-  { data_object: "contracts", domain: "SUB-MGMT", role: "contributor", notes: "Subscription contracts contribute their billing-relevant terms (term, renewal cadence, true-up rules, payment terms, auto-renew clauses) into the canonical contract record." },
+  { data_object: "contracts", domain: "CSM", held_as: "contributor", notes: "Service / support contracts contribute their CSM-specific terms (SLA tier, named-contact lists, support hours) into the canonical contract record." },
+  { data_object: "contracts", domain: "SUB-MGMT", held_as: "contributor", notes: "Subscription contracts contribute their billing-relevant terms (term, renewal cadence, true-up rules, payment terms, auto-renew clauses) into the canonical contract record." },
 
   // customer_subscriptions
-  { data_object: "customer_subscriptions", domain: "CRM", role: "consumer", notes: "Account-health view: which subscriptions are active, MRR by account, expansion opportunities flagged." },
-  { data_object: "customer_subscriptions", domain: "CSM", role: "consumer", notes: "Drives the customer_entitlements record on activation; reads subscription state to gate support eligibility." },
+  { data_object: "customer_subscriptions", domain: "CRM", held_as: "consumer", notes: "Account-health view: which subscriptions are active, MRR by account, expansion opportunities flagged." },
+  { data_object: "customer_subscriptions", domain: "CSM", held_as: "consumer", notes: "Drives the customer_entitlements record on activation; reads subscription state to gate support eligibility." },
 
   // customer_cases
-  { data_object: "customer_cases", domain: "CRM", role: "consumer", notes: "Account-health signal: case volume, critical-severity count, recent CSAT, all surface as account-health overlay in CRM." },
-  { data_object: "customer_cases", domain: "SUB-MGMT", role: "consumer", notes: "Case patterns (payment-related cases, churn-risk cases) feed dunning and retention workflows." },
+  { data_object: "customer_cases", domain: "CRM", held_as: "consumer", notes: "Account-health signal: case volume, critical-severity count, recent CSAT, all surface as account-health overlay in CRM." },
+  { data_object: "customer_cases", domain: "SUB-MGMT", held_as: "consumer", notes: "Case patterns (payment-related cases, churn-risk cases) feed dunning and retention workflows." },
 
   // customer_invoices
-  { data_object: "customer_invoices", domain: "CRM", role: "consumer", notes: "Payment-status overlay on the account: overdue invoices, write-offs, recent payments visible in the CRM account view." },
+  { data_object: "customer_invoices", domain: "CRM", held_as: "consumer", notes: "Payment-status overlay on the account: overdue invoices, write-offs, recent payments visible in the CRM account view." },
 
   // knowledge_articles (existing ITSM-master) — add CSM contributor
-  { data_object: "knowledge_articles", domain: "CSM", role: "contributor", notes: "Customer-facing audience for the same KB — same underlying article record, audience-filtered at the application layer. Customer self-service portals and ITSM agent assist share the corpus." },
+  { data_object: "knowledge_articles", domain: "CSM", held_as: "contributor", notes: "Customer-facing audience for the same KB — same underlying article record, audience-filtered at the application layer. Customer self-service portals and ITSM agent assist share the corpus." },
 ];
 
 const signalRows = signals
@@ -283,7 +283,7 @@ const signalRows = signals
     return {
       domain_id: did(s.domain),
       data_object_id: objId,
-      role: s.role,
+      held_as: s.held_as,
       notes: s.notes,
     };
   })
@@ -481,8 +481,8 @@ console.log(`  total data_objects:           ${totalDO}`);
 console.log(`  total domain_data_objects:    ${totalDDO}`);
 console.log(`  total cross_domain_handoffs:  ${totalHO}`);
 
-console.log("\nMulti-master leaderboard (data_objects with role=master count > 1):");
-const allMasterRows = await get("/domain_data_objects?role=eq.master&select=data_object_id&limit=20000");
+console.log("\nMulti-master leaderboard (data_objects with held_as=master count > 1):");
+const allMasterRows = await get("/domain_data_objects?held_as=eq.master&select=data_object_id&limit=20000");
 const masterCount = new Map<number, number>();
 for (const r of allMasterRows) {
   const id = Number(r.data_object_id);

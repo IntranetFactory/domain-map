@@ -46,7 +46,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `knowledge_articles` | `knowledge_articles` | Knowledge Article | Knowledge Articles | master | - | - | required | - | operational_workflow | `:manage` | - |
 
@@ -56,11 +56,11 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 _(none: no relationships with both endpoints inside the scope)_
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -69,7 +69,7 @@ _(none: no relationships with both endpoints inside the scope)_
 | `users` | authors | `knowledge_articles` | one_to_many | optional | source | clear | reference | - |
 | `users` | authored articles | `knowledge_articles` | one_to_many | required | source | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -85,17 +85,17 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `service_problems` | documented_in | `knowledge_articles` | one_to_many | optional | none | n/a | - |
 | `service_incidents` | resolved_with | `knowledge_articles` | many_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `knowledge_articles` | CSM-CASE-MGMT (Case Management) - CSM | contributor | optional | - |
 | `knowledge_articles` | CSM-KNOWLEDGE (Customer Knowledge Surface) - CSM | contributor | required | - |

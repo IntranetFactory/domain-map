@@ -52,7 +52,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `intranet_content_attestations` | `intranet_content_attestations` | Content Attestation | Content Attestations | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 2 | `intranet_content_ownership_assignments` | `intranet_content_ownership_assignments` | Content Ownership Assignment | Content Ownership Assignments | master | - | - | required | - | junction | `:manage` | - |
@@ -65,13 +65,13 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -80,7 +80,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | is accountable owner on | `intranet_content_ownership_assignments` | one_to_many | required | source | restrict | reference | - |
 | `users` | attests | `intranet_content_attestations` | one_to_many | required | source | restrict | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -91,7 +91,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `intranet_content_inventory_records` | is governed by | `intranet_content_ownership_assignments` | one_to_many | optional | none | n/a | - |
 | `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -118,7 +118,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
 | `proofing_sessions` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `work_time_entries` | logged_against | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_goal_links` | links | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
+| `work_goal_relationships` | relates | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
 | `work_statuses` | is_status_of | `work_items` | one_to_many | optional | none | n/a | - |
 | `work_status_updates` | records_change_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 
@@ -132,11 +132,11 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results relating down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | low | When WM is the work tracker for a PSA-managed delivery, work_item completion closes the loop on PSA-side time / utilization accounting. Pairs with the existing PSA -> WM project_task.completed inbound for the bidirectional sync pattern. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are linked to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke - friction is the mapping between work_item id and roadmap_item id. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal - drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are related to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke: friction is the mapping between work_item id and roadmap_item id. |
+| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal: it drives KR closure recalculation and triggers KR-fully-met evaluations on related objectives. |
+| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has related the item to a key result. In-process FK + state read; no message moves. |
 | INTGOV-GOVERNANCE | WORK-MGMT | WORK-MGMT-TASK-EXEC | `intranet_content_attestation.flagged_stale` | `pending` → `flagged_stale` _(state_change)_ | `work_items` | api_call | medium | When content is flagged stale during recertification, an improvement work item is created in Work Management for remediation. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -149,7 +149,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `work_items` | embedded_master | optional | WORK-MGMT-TASK-EXEC (WORK-MGMT) | - |
 | `users` | consumer | required | _(platform built-in)_ | - |

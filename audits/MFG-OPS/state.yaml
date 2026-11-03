@@ -17,7 +17,7 @@ last_audit: "2026-06-13"
 b1a:
   - id: B1A-S12
     summary: "Author outbound cross-domain data_object_relationships mirroring MFG-OPS outbound handoffs (B8)."
-    finding: "Underspecified for write. The 2026-06-07 execute pass authored the intra-domain edges (B1A-S10) and users edges (B1A-S11), but the B8 outbound cross-domain mirrors cannot land additively: for handoffs 950 (FIN), 951 (GRC), 954 (FOOD-TRACE) the handoff payload IS the MFG-OPS master itself (data_object_id 595 / 600 / 598) and the consuming-side target data_object in the receiving domain is not enumerated. Authoring those edges would require identifying or creating other-domains' consuming masters (cross-domain scope-creep, unseen ids), which Rule #21 SCOPE DISCIPLINE forbids. The one row with a concrete target (handoff 952: shop_floor_cases 601 -> service_incidents 47) is the row gated on B2-SHOP-FLOOR-CASES-ITSM."
+    finding: "Underspecified for write. The 2026-06-07 execute pass authored the intra-domain relationships (B1A-S10) and relationships to users (B1A-S11), but the B8 outbound cross-domain mirrors cannot land additively: for handoffs 950 (FIN), 951 (GRC), 954 (FOOD-TRACE) the handoff payload IS the MFG-OPS master itself (data_object_id 595 / 600 / 598) and the consuming-side target data_object in the receiving domain is not enumerated. Authoring those relationships would require identifying or creating other-domains' consuming masters (cross-domain scope-creep, unseen ids), which Rule #21 SCOPE DISCIPLINE forbids. The one row with a concrete target (handoff 952: shop_floor_cases 601 -> service_incidents 47) is the row gated on B2-SHOP-FLOOR-CASES-ITSM."
     action: "SURFACE. To proceed the user must either (a) name the consuming-domain data_object for each of 950/951/954 (so the related_data_object_id is a real, existing id), or (b) confirm these outbound axes do not warrant a data_object_relationship mirror (the handoffs already carry the dependency). The 952 row (601 -> 47, owner_side=source on shop_floor_cases) lands only if B2-SHOP-FLOOR-CASES-ITSM resolves 'keep ITSM target'."
     affected_handoffs:
       - {handoff_id: 950, direction: outbound, source_domain: MFG-OPS, target_domain: FIN, source_master: production_orders, source_data_object_id: 595, target_data_object_id: unspecified}
@@ -39,7 +39,7 @@ b1a:
 
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability awaiting a build; Phase P (personas/RACI) deferred."
-    finding: "Live 2026-06-07: domain 47 still has 0 domain_modules rows (M1 fail) and 1 capability_domains row, so it is not deployable. Per Rule #21 UNBUILT handling the cascade is left in place; the agent does not scaffold the module set. Phase P (personas, role_modules, process_raci) is deferred and not authored. Candidate manufacturing-operations personas to consider once built: Plant Manager, Shift Supervisor, Production Operator, Quality Inspector, Maintenance Lead."
+    finding: "Live 2026-06-07: domain 47 still has 0 domain_modules rows (M1 fail) and 1 capability_domains row, so it is not deployable. Per Rule #21 UNBUILT handling the cascade is left in place; the agent does not scaffold the module set. Phase P (personas, persona_modules, process_raci) is deferred and not authored. Candidate manufacturing-operations personas to consider once built: Plant Manager, Shift Supervisor, Production Operator, Quality Inspector, Maintenance Lead."
     action: "Surface the build. The module set ships only after the B2-MODULE-SPLIT decision; run Phase A then M then B then S, and Phase P only if the result is multi-module."
     extra_phase_p_triage: "deferred 2026-06-07"
 
@@ -51,8 +51,8 @@ b1b:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
 
   - id: B1B-S2
-    summary: "Capability count below 3 (only WORKFORCE-SCHEDULING linked; A2 fails)."
-    finding: "Only 1 capability_domains row (WORKFORCE-SCHEDULING, id 312). Pass criterion >=3, typical 5-8. The capability is realized by FSM-DISPATCH-OPS (module 161 in FSM domain 31), not by any MFG-OPS module. Cure is to author 5-7 MFG-OPS capabilities (work-instruction delivery, production-order release / dispatch, OEE and downtime tracking, in-line quality inspection, shop-floor case handling, lot traceability and genealogy, statistical process control) and either keep or re-scope the WORKFORCE-SCHEDULING link (B2-WORKFORCE-SCHEDULING)."
+    summary: "Capability count below 3 (only WORKFORCE-SCHEDULING related; A2 fails)."
+    finding: "Only 1 capability_domains row (WORKFORCE-SCHEDULING, id 312). Pass criterion >=3, typical 5-8. The capability is realized by FSM-DISPATCH-OPS (module 161 in FSM domain 31), not by any MFG-OPS module. Cure is to author 5-7 MFG-OPS capabilities (work-instruction delivery, production-order release / dispatch, OEE and downtime tracking, in-line quality inspection, shop-floor case handling, lot traceability and genealogy, statistical process control) and either keep or re-scope the WORKFORCE-SCHEDULING relationship (B2-WORKFORCE-SCHEDULING)."
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
       - {type: user_decision, ref: B2-WORKFORCE-SCHEDULING}
@@ -70,7 +70,7 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S7
-    summary: "Zero roles / role_modules / role_permissions anchored on MFG-OPS (E1-E5)."
+    summary: "Zero roles / persona_modules / role_permissions anchored on MFG-OPS (E1-E5)."
     finding: "Zero MFG-OPS-anchored roles. The single nearby role RESEARCH-DEV-MFG-ENGINEER (id 10033) is anchored on PLM modules 66 / 68, not on MFG-OPS. After module ship, author 4-5 manufacturing-operations roles (Plant Manager, Shift Supervisor, Production Operator, Quality Inspector, Maintenance Lead) under business function Manufacturing Operations with the module floor and role_permissions bundles."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
@@ -89,7 +89,7 @@ b1b:
 
   - id: B1B-INV-MGMT-HANDOFF
     summary: "Surface INV-MGMT-side inbound discovery: INV-KITTING module 63 consumer-DMDOs production_orders with no handoff row."
-    finding: "INV-MGMT-side query returned one domain_module_data_objects row: domain_module_id=63 (INV-KITTING in INV-MGMT domain 164), data_object_id=595 (production_orders), role=consumer, necessity=optional. No handoff row publishes production_order events into INV-KITTING. Candidate handoff is production_order.released or production_order.completed -> INV-KITTING. Whether MFG-OPS should publish into INV-KITTING is a B10 inbound-discovery owed by INV-MGMT's next Validate (the candidate is on INV-MGMT's owed-by-other-domains list, not MFG-OPS's responsibility)."
+    finding: "INV-MGMT-side query returned one domain_module_data_objects row: domain_module_id=63 (INV-KITTING in INV-MGMT domain 164), data_object_id=595 (production_orders), held_as=consumer, necessity=optional. No handoff row publishes production_order events into INV-KITTING. Candidate handoff is production_order.released or production_order.completed -> INV-KITTING. Whether MFG-OPS should publish into INV-KITTING is a B10 inbound-discovery owed by INV-MGMT's next Validate (the candidate is on INV-MGMT's owed-by-other-domains list, not MFG-OPS's responsibility)."
     blocked_by:
       - {type: domain_audit, blocking_domain: INV-MGMT, milestone: B10-inbound-discovery}
     extra_dmdo_rows:
@@ -108,7 +108,7 @@ b2:
 
   - id: B2-WORKFORCE-SCHEDULING
     summary: "WORKFORCE-SCHEDULING capability on MFG-OPS, scope-correct?"
-    question: "The only existing capability_domains row links WORKFORCE-SCHEDULING (id 312) to MFG-OPS. WORKFORCE-SCHEDULING is realized in FSM-DISPATCH-OPS (module 161 in FSM domain 31), not in any MFG-OPS module. MFG-OPS owns production_schedules (line / cell sequencing), which is a different concept. Keep the link or replace?"
+    question: "The only existing capability_domains row relates WORKFORCE-SCHEDULING (id 312) to MFG-OPS. WORKFORCE-SCHEDULING is realized in FSM-DISPATCH-OPS (module 161 in FSM domain 31), not in any MFG-OPS module. MFG-OPS owns production_schedules (line / cell sequencing), which is a different concept. Keep the relationship or replace?"
     options:
       - "(a) Keep, capability spans MFG-OPS and FSM/WFM by intent (cross-cutting under the cross-cutting-capability convention)"
       - "(b) Remove and author PRODUCTION-SCHEDULING (new capability) on MFG-OPS"
@@ -116,7 +116,7 @@ b2:
 
   - id: B2-SALESFORCE-MFG-CLOUD
     summary: "Salesforce Manufacturing Cloud (id 307), MFG-OPS or CRM scope?"
-    question: "Currently linked at coverage_level=secondary on MFG-OPS. Salesforce Manufacturing Cloud is account-based demand forecasting / sales-agreement management, not shop-floor execution. Where does the row belong?"
+    question: "Currently related at coverage_level=secondary on MFG-OPS. Salesforce Manufacturing Cloud is account-based demand forecasting / sales-agreement management, not shop-floor execution. Where does the row belong?"
     options:
       - "(a) Keep secondary on MFG-OPS (some run-rate-vs-commit context overlaps MFG-OPS reporting)"
       - "(b) Move to CRM only (primary semantic home)"
@@ -127,7 +127,7 @@ b2:
     summary: "Honeywell Forge Industrial / Connected Plant variant missing from solutions."
     question: "Catalog has Honeywell Forge Building Operations (id 687) but not the Industrial / Connected Plant variant, which is the MES product. Add or defer?"
     options:
-      - "(a) Add Honeywell Forge Industrial / Connected Plant as a new solutions row and link primary on MFG-OPS"
+      - "(a) Add Honeywell Forge Industrial / Connected Plant as a new solutions row and relate primary on MFG-OPS"
       - "(b) Leave as a noted gap"
     why: "Independent of module split. Adding a new solutions row is a Phase-A market-shape write; not executed without this decision per Rule #21 SCOPE DISCIPLINE."
 
@@ -162,7 +162,7 @@ b2:
     summary: "MFG-OPS regulations set is product-marketing-shaped, not shop-floor-shaped."
     question: "Current 4 regulations (EU Cyber Resilience Act, EU Data Act, Eco-design for Sustainable Products Regulation, EU Battery Regulation) describe the regulated-product layer, which is PLM-shaped. Missing for MFG-OPS audit-trail: ISO 9001, ISO 14001, IATF 16949, AS9100, ISO 13485, FDA 21 CFR Part 11, OSHA process safety. Load, move, or keep?"
     options:
-      - "(a) Load 3-5 of the missing standards as new regulations rows + domain_regulations links"
+      - "(a) Load 3-5 of the missing standards as new regulations rows + domain_regulations relationships"
       - "(b) Move the 4 existing rows to PLM (they describe the regulated-product layer)"
       - "(c) Keep as-is: MFG-OPS audit-trail uses these regulations because the shop floor produces the regulated artifact"
     why: "Independent of Bucket 3 (regulation list is vendor-knowledge-based, not Phase-0-derived). Moving existing rows (option b) is destructive and needs sign-off."

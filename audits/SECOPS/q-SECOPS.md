@@ -7,7 +7,7 @@ The security operations umbrella: the place where alerts, incidents, and investi
 
 q1: (answer this first) How should Security Operations be classified, which decides whether it owns its own data or just coordinates over other domains?
 
-- a) Keep it as a leadership-tier overlay: author a single SECOPS-LANDING module, master nothing, and declare consumer links over the masters in ITSM (service incidents), ITOM (monitoring events), DLP (data-loss incidents), and DSPM (sensitive-data incidents).
+- a) Keep it as a leadership-tier overlay: author a single SECOPS-LANDING module, master nothing, and declare consumer relationships over the masters in ITSM (service incidents), ITOM (monitoring events), DLP (data-loss incidents), and DSPM (sensitive-data incidents).
 - b) Promote it to a master-bearing umbrella: author SECOPS-CASE-MGMT, SECOPS-DETECTION-ENG, SECOPS-RESPONSE-OPS, and SECOPS-IR-COMPLIANCE modules, and master the 14 candidate entities listed in the Optional section.
 - c) Hybrid: author SECOPS-LANDING and SECOPS-CASE-MGMT now (mastering security incidents plus 2 to 3 related entities), and defer the detection-engineering and response-ops modules until the SIEM and EDR sibling domains land.
 
@@ -19,7 +19,7 @@ a1:
 
 q2: Should the detection verticals (SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, SOC-AAS) be modeled as flat top-level domains, or as children wired under Security Operations?
 
-- a) Load them as flat top-level domains with no parent-child link, and have the SECOPS umbrella consume from each.
+- a) Load them as flat top-level domains with no parent-child relationship, and have the SECOPS umbrella consume from each.
 - b) Load them as children of SECOPS, mirroring the existing SOAR, vulnerability-management, and threat-intelligence wiring.
 - c) Defer until you pick the 2 to 3 highest-priority verticals (SIEM, EDR, XDR is the minimum coherent set) and load them in a focused wave.
 

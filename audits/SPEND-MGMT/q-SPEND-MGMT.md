@@ -7,9 +7,9 @@ Control all company spending from one place: corporate cards, vendor bill pay, a
 
 q1: (answer this first) How should Corporate Spend Management handle the reimbursement area, given that out-of-pocket reimbursement is already the Expense domain's core?
 
-- a) Leave reimbursement folded into the policy-and-approval module as a reuse-only link, with Expense remaining the system of record (current state).
+- a) Leave reimbursement folded into the policy-and-approval module as a reuse-only relationship, with Expense remaining the system of record (current state).
 - b) Carve a thin Spend-owned reimbursement module that is genuinely distinct from Expense (you specify its scope and whether it needs its own record type).
-- c) Drop the reimbursement links from Spend entirely and let Expense own that capability outright.
+- c) Drop the reimbursement relationships from Spend entirely and let Expense own that capability outright.
 
 Recommended: a. Brex, Ramp, and Airbase (now BILL Spend & Expense) all bundle out-of-pocket reimbursement into their expense product rather than running a separate spend-side reimbursement record, and Coupa keeps reimbursement on its expense layer inside the wider spend suite, so reimbursement stays realized off the Expense master with Spend reusing it; (b) and (c) instead force a new Spend-owned record or a capability move that no flagship packages this way.
 
@@ -82,7 +82,7 @@ a8:
 
 q9: Should I author the missing within-domain relationships among the five spend masters (approved request generates a payment authorization, every authorization belongs to a card account, a request is evaluated against policy)? (yes/no)
 
-Recommended: yes. The relationships are clearly implied by the workflow; I just need your sign-off on the linking verbs and whether each is a reference or an ownership link.
+Recommended: yes. The relationships are clearly implied by the workflow; I just need your sign-off on the relationship verbs and whether each is a reference or an ownership relationship.
 
 a9:
 
@@ -163,9 +163,9 @@ a14:
 
 ---
 
-q15: Corporate-card reconciliation and expense-policy enforcement are currently realized off Expense-owned masters with no spend-side record. Should I treat these as intentional cross-domain links, or investigate them as gaps to fill with spend-side records?
+q15: Corporate-card reconciliation and expense-policy enforcement are currently realized off Expense-owned masters with no spend-side record. Should I treat these as intentional cross-domain relationships, or investigate them as gaps to fill with spend-side records?
 
-- a) Intentional cross-domain links: leave them realized off the Expense masters.
+- a) Intentional cross-domain relationships: leave them realized off the Expense masters.
 - b) Gaps: research whether spend-side records are warranted.
 
 Recommended: a. They read as deliberate reuse of the Expense masters rather than gaps; flagged only for your review. Non-blocking either way.

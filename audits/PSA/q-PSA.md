@@ -7,7 +7,7 @@ Run the full life of a client engagement, from the sold scope through delivery t
 
 q1: (answer this first) How should PSA relate to the revenue-recognition records that the Subscription Management domain owns, given PSA currently runs the recognition state machine and a write tool on a record it does not master?
 
-- a) PSA stays a contributor: move the recognition lifecycle states to a Subscription Management module (or clear the module link) and change PSA's recognize-revenue tool to a compute step that proposes the record for Subscription Management to commit.
+- a) PSA stays a contributor: move the recognition lifecycle states to a Subscription Management module (or clear the module relationship) and change PSA's recognize-revenue tool to a compute step that proposes the record for Subscription Management to commit.
 - b) PSA co-masters the project-revenue slice: add a second master row on the PSA financials module and record the slice split here, leaving subscription revenue with Subscription Management.
 - c) Leave it as-is and accept that the recognition permission would materialize under the wrong domain prefix.
 
@@ -88,9 +88,9 @@ a8:
 
 ---
 
-q9: One cross-domain process tag is on the wrong handoff. The handoff where a reached billing milestone updates the linked contract's obligations in Contract Lifecycle Management is currently tagged to a finance-forecasting process, which does not describe that work. The right fit is the "Manage contracts" process, which CLM already runs. Should I re-tag it? (yes/no)
+q9: One cross-domain process tag is on the wrong handoff. The handoff where a reached billing milestone updates the related contract's obligations in Contract Lifecycle Management is currently tagged to a finance-forecasting process, which does not describe that work. The right fit is the "Manage contracts" process, which CLM already runs. Should I re-tag it? (yes/no)
 
-Recommended: yes. The current tag ("prepare periodic financial forecasts") does not match "a milestone is reached and the contract obligation updates"; re-pointing it to "Manage contracts" makes the link resolve correctly. Replacing the existing tag is a destructive edit, so it needs your sign-off.
+Recommended: yes. The current tag ("prepare periodic financial forecasts") does not match "a milestone is reached and the contract obligation updates"; re-pointing it to "Manage contracts" makes the relationship resolve correctly. Replacing the existing tag is a destructive edit, so it needs your sign-off.
 
 a9:
 

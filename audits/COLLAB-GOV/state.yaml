@@ -42,7 +42,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 7 capabilities awaiting a build."
     finding: "Live triage 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 7 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Per the UNBUILT clause the build is surfaced, not scaffolded by the agent."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-1 module/split shape."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-1 module/split shape."
 
 b1b:
   - id: B1B-M1
@@ -62,7 +62,7 @@ b1b:
 
   - id: B1B-E-BAND
     summary: "Role bundling (E1-E5) gated on M-band landing."
-    finding: "domains row id 127 has zero modules; no role_modules surface to build. E-band is a Phase E load after the module split lands."
+    finding: "domains row id 127 has zero modules; no persona_modules surface to build. E-band is a Phase E load after the module split lands."
     blocked_by:
       - {type: depends_on, ref: B1B-M1, reason: "needs >=1 module to bundle roles against"}
 
@@ -75,7 +75,7 @@ b1b:
 b2:
   - id: B2-1
     summary: "Classification confirmed master-bearing (B1A-RECLASS settled). Remaining b2 question reframed: confirm the real-market BUILD scope (which capabilities stay vs promote out)."
-    question: "B1A-RECLASS already settled COLLAB-GOV as master-bearing (leadership-tier exemption rescinded 2026-06-02). The 11 linked solutions (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex, Microsoft Purview Information Protection) are pure-play collaboration-suite governance specialists with their own commerce. The open decision is the BUILD SHAPE, not whether to build."
+    question: "B1A-RECLASS already settled COLLAB-GOV as master-bearing (leadership-tier exemption rescinded 2026-06-02). The 11 related solutions (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex, Microsoft Purview Information Protection) are pure-play collaboration-suite governance specialists with their own commerce. The open decision is the BUILD SHAPE, not whether to build."
     options:
       - "(a) build the full real-market stack: Phase 0 vendor research from b3 candidates, then load Phase A / M / B / C / E / F / H for the module split chosen in B2-5."
       - "(b) build a minimal starter first (1 full inventory module + 1 starter perms-audit), defer LIFECYCLE / STALE / EXTSHARE to a later pass."
@@ -129,7 +129,7 @@ b2:
     options:
       - "promote SAAS-BACKUP to a domain, move COLLAB-GOV-BACKUP capability to it"
       - "keep COLLAB-GOV-BACKUP under COLLAB-GOV"
-      - "promote SAAS-BACKUP but keep COLLAB-GOV-BACKUP as a partial-overlap link"
+      - "promote SAAS-BACKUP but keep COLLAB-GOV-BACKUP as a partial-overlap relationship"
     why: "Depends on B2-1 (build scope) and the SAAS-BACKUP triage in _missing-domains.md."
     extra_candidate_domain: SAAS-BACKUP
     extra_candidate_mention_count: 1
@@ -140,7 +140,7 @@ b2:
     options:
       - "promote TENANT-MIGRATION to a domain, move COLLAB-GOV-MIGRATE capability to it"
       - "keep COLLAB-GOV-MIGRATE under COLLAB-GOV"
-      - "promote TENANT-MIGRATION but keep COLLAB-GOV-MIGRATE as a partial-overlap link"
+      - "promote TENANT-MIGRATION but keep COLLAB-GOV-MIGRATE as a partial-overlap relationship"
     why: "Depends on B2-1 and the TENANT-MIGRATION triage in _missing-domains.md."
     extra_candidate_domain: TENANT-MIGRATION
     extra_candidate_mention_count: 1

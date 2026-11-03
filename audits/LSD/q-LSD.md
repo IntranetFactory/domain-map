@@ -12,7 +12,7 @@ q1: (answer this first) legal_contracts is a "required consumer" on Legal: the d
 - a) Keep it required (matters genuinely depend on reading live contract data).
 - b) Demote to optional (a matter can reference a contract concept without the contract master deployed).
 
-Recommended: a. ServiceNow LSD, LawVu, and Onit all surface matter-linked contracts as a first-class read, so the dependency is workflow-bearing rather than convenience infrastructure. Demotion overwrites a non-empty value on a live row, so it needs your sign-off either way.
+Recommended: a. ServiceNow LSD, LawVu, and Onit all surface matter-related contracts as a first-class read, so the dependency is workflow-bearing rather than convenience infrastructure. Demotion overwrites a non-empty value on a live row, so it needs your sign-off either way.
 
 a1:
 
@@ -22,7 +22,7 @@ q2: How should the legal knowledge base be realized? With the five-module shape 
 
 - a) Author a legal-specific "legal knowledge articles" master inside Matter Management (a new entity, legal-owned).
 - b) Consume the shared cross-cutting knowledge base as a reader, with legal-scoped article types (no new entity).
-- c) Drop the knowledge capability link as not load-bearing.
+- c) Drop the knowledge capability relationship as not load-bearing.
 
 Recommended: b. In-house legal platforms split both ways: LawVu and Onit often carry a distinct legal Knowledge surface (which would argue for a), while ServiceNow Legal Service Delivery reuses the shared ServiceNow Knowledge base with legal scoping (b). Because you chose five modules and declined a separate Knowledge module, (b) consume-the-shared-base is the consistent fit; (a) would add a new master and only ships after you approve it here.
 

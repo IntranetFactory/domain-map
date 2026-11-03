@@ -1,7 +1,7 @@
 # Plan 2: entity_type write tiers and delete-mode (complete the structural emitter)
 
 Scope: make the blueprint carry the structural deploy facts it currently omits, the
-per-entity write tier (derived from `entity_type`) and the per-edge delete-mode / FK format.
+per-entity write tier (derived from `entity_type`) and the per-relationship delete-mode / FK format.
 This is what B1 actually meant. Decisions in [model-map-rework-plan.md](model-map-rework-plan.md).
 
 Out of scope: catalog-wide `entity_type` classification (927 of 987 unclassified; that is a
@@ -14,9 +14,9 @@ reconciliation (postponed). Plan 2 is CODE only, NO live data writes.
   cross-check (warn). Plan 2's M6 guard edits the same function; no re-factoring is needed.
 - **M7** (composition `owner_side`) - DONE (executed 2026-06-01). NOTE: `owner_side` is a
   domain-map catalog column, NOT a Semantius platform primitive; it names the PARENT (cascade
-  root) of an edge. The audit's premise ("flip all 16 composition `owner_side=target` rows")
+  root) of a relationship. The audit's premise ("flip all 16 composition `owner_side=target` rows")
   was WRONG: only 3 rows were actually wrong (ids 1186 / 1187 / 1491, flipped target->source);
-  the other 13 are child-first edges (`child belongs_to parent`) where the parent IS the
+  the other 13 are child-first relationships (`child belongs_to parent`) where the parent IS the
   target, so `owner_side=target` was already correct and was left untouched. B4's `owner_side`
   inputs are now trustworthy and Plan 2 carries NO live-write dependency. Source: the
   2026-06-01 entry in [references/skill-changelog.md](../.claude/skills/domain-map-analyst/references/skill-changelog.md).
@@ -52,7 +52,7 @@ reconciliation (postponed). Plan 2 is CODE only, NO live data writes.
 | association | optional | clear | reference |
 | inheritance | any | restrict | reference |
 
-Confirm this table before B4 emits. It is total over all four `relationship_kind` values; `inheritance` is defensive (confirmed 0 edges live on 2026-06-01). Re-derive the live edge counts at run time (Policy 4, mirrored from Plan 1). Live counts as of 2026-06-01: 1,545 reference + 180 composition (167 `owner_side=source` / 13 `target`) + 104 association + 0 inheritance. Treat these as the expectation to re-confirm at run time, not as values to assume.
+Confirm this table before B4 emits. It is total over all four `relationship_kind` values; `inheritance` is defensive (confirmed 0 relationships live on 2026-06-01). Re-derive the live relationship counts at run time (Policy 4, mirrored from Plan 1). Live counts as of 2026-06-01: 1,545 reference + 180 composition (167 `owner_side=source` / 13 `target`) + 104 association + 0 inheritance. Treat these as the expectation to re-confirm at run time, not as values to assume.
 
 ## Sequenced steps
 

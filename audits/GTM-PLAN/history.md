@@ -49,9 +49,9 @@ Vacuous (zero masters; B1 leadership-tier exemption).
 #### A-band
 
 - **A1, domains metadata.** Pass. All 7 business-meaningful columns populated and within enum bands: `crud_percentage=65`, `business_logic` non-empty (territory carving optimization, quota distribution, capacity modeling), `min_org_size='30 m <2500'`, `cost_band='$$$'`, `certification_required=false`, `usa_market_size_usd_m=600`, `market_size_source_year=2024`.
-- **A2, capabilities linked.** Pass. 7 capabilities: `MARKET-SEGMENTATION`, `TERRITORY-CARVING-PLAN`, `ACCOUNT-SCORING`, `GTM-CAPACITY-PLANNING`, `CHANNEL-MIX-PLANNING`, `LAUNCH-ORCHESTRATION`, `GTM-SCENARIO-MODELING`, `PLAN-TO-EXECUTION-HANDOFF` (8 listed in the query result; tally is 8, not 7; updated below).
+- **A2, capabilities related.** Pass. 7 capabilities: `MARKET-SEGMENTATION`, `TERRITORY-CARVING-PLAN`, `ACCOUNT-SCORING`, `GTM-CAPACITY-PLANNING`, `CHANNEL-MIX-PLANNING`, `LAUNCH-ORCHESTRATION`, `GTM-SCENARIO-MODELING`, `PLAN-TO-EXECUTION-HANDOFF` (8 listed in the query result; tally is 8, not 7; updated below).
 - **A2 correction.** Capability count is **8** (`MARKET-SEGMENTATION`, `TERRITORY-CARVING-PLAN`, `ACCOUNT-SCORING`, `GTM-CAPACITY-PLANNING`, `CHANNEL-MIX-PLANNING`, `LAUNCH-ORCHESTRATION`, `GTM-SCENARIO-MODELING`, `PLAN-TO-EXECUTION-HANDOFF`). The Summary's "7 capabilities" was an undercount; the correct number is 8. Doesn't change any pass criterion; M2 ("at least 3 capabilities implies at least 2 modules") still applies the same way.
-- **A3, solutions linked.** Pass. 7 solutions, all with coverage_level set, 4 primary (Anaplan Sales Planning, Fullcast, Salesforce Sales Planning, Pigment) plus 3 secondary (Varicent SPM, Xactly Incent, Board). The 3 secondary are SPM-tier solutions that bleed into planning; the 4 primary are the pure-play GTM planning surface.
+- **A3, solutions related.** Pass. 7 solutions, all with coverage_level set, 4 primary (Anaplan Sales Planning, Fullcast, Salesforce Sales Planning, Pigment) plus 3 secondary (Varicent SPM, Xactly Incent, Board). The 3 secondary are SPM-tier solutions that bleed into planning; the 4 primary are the pure-play GTM planning surface.
 - **A4, catalog UX fields.** FAIL. Both `catalog_tagline` and `catalog_description` are empty strings. See Bucket 1 `B1-A1`.
 - **A5, vendor ownership refresh.** Skipped (opt-in, not requested). Notable potential refresh: Fullcast.io rebranded from "Fullcast" in 2023; Salesforce Sales Planning is the rebrand of acquired Atrium and Salesforce native planning tooling. Surface to user if vendor-ownership pass is requested.
 
@@ -166,11 +166,11 @@ Effectively none. GTM-PLAN is a planning artifact; PII risk is downstream when t
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges with other domains, ranked by edge weight (handoff count plus DMDO dependency count). Zero handoffs in either direction today, so edge weight is derived from semantic adjacency only.
+Cross-domain relationships with other domains, ranked by relationship weight (handoff count plus DMDO dependency count). Zero handoffs in either direction today, so relationship weight is derived from semantic adjacency only.
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Edge weight | Notes |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Relationship weight | Notes |
 |---|---|---|---|---|---|
-| SALES-PERF | 0 | 0 | n/a (no DMDO surface yet on either side) | 0 today, semantic 5+ | Largest semantic edge: GTM-PLAN-TERRITORY hands `territories_proposed` to SALES-PERF on plan lock. SALES-PERF itself has zero modules (its own audit's `B1-M1`). Pairwise reconciliation is blocked on both sides until both modularize. |
+| SALES-PERF | 0 | 0 | n/a (no DMDO surface yet on either side) | 0 today, semantic 5+ | Largest semantic relationship: GTM-PLAN-TERRITORY hands `territories_proposed` to SALES-PERF on plan lock. SALES-PERF itself has zero modules (its own audit's `B1-M1`). Pairwise reconciliation is blocked on both sides until both modularize. |
 | CRM | 0 | 0 | n/a | 0 today, semantic 3+ | GTM-PLAN-ACCOUNT-TARGETING hands `target_account_lists` to CRM (named accounts seed CRM segmentation); CRM publishes `account.tier_changed` and `account.created` that GTM-PLAN should consume on plan refresh. None loaded. |
 | MA | 0 | 0 | n/a | 0 today, semantic 2+ | GTM-PLAN-CHANNEL-MIX informs MA campaign budget allocation; GTM-PLAN-ACCOUNT-TARGETING seeds ABM audiences in MA. None loaded. |
 | EPM | 0 | 0 | n/a | 0 today, semantic 2+ | GTM-PLAN-CAPACITY hands capacity numbers to EPM for headcount budget close. EPM's `forecast.published` and `budget.locked` events should inform GTM-PLAN scenario inputs. None loaded. |
@@ -179,11 +179,11 @@ Cross-edges with other domains, ranked by edge weight (handoff count plus DMDO d
 | SWP | 0 | 0 | n/a | 0 today, semantic 1+ | Workforce planning shares capacity-planning concepts; SWP is HR-led and feeds GTM-PLAN-CAPACITY ramp assumptions. |
 | REV-INTEL | 0 | 0 | n/a | 0 today, semantic 1+ | Plan-vs-actual scenarios in GTM-PLAN-SCENARIO consume REV-INTEL pipeline signals. Both unmodularized. |
 
-Default deep-dive threshold (edge weight at least 3) is not met for any neighbor based on actual catalog edges. All eight neighbors are semantically meaningful at edge weight 1 to 5+ but currently zero on the wire. The reconciliation surface is gated on `B1-M1` resolving on this side, plus the peer-leadership-tier neighbors (SALES-PERF, REV-INTEL, ACCT-PLAN) modularizing too.
+Default deep-dive threshold (relationship weight at least 3) is not met for any neighbor based on actual catalog relationships. All eight neighbors are semantically meaningful at relationship weight 1 to 5+ but currently zero on the wire. The reconciliation surface is gated on `B1-M1` resolving on this side, plus the peer-leadership-tier neighbors (SALES-PERF, REV-INTEL, ACCT-PLAN) modularizing too.
 
 ### Pass 4, Pairwise reconciliation per neighbor
 
-Skipped on all 8 neighbors. Every neighbor has zero existing edges to GTM-PLAN; pairwise diff requires module FKs on both sides, and GTM-PLAN has none. Even the strongest semantic neighbors (SALES-PERF, CRM, EPM) cannot reconcile until at least GTM-PLAN modularizes. Recorded as a "re-run after `B1-M1` lands" follow-up; will become meaningful once GTM-PLAN ships modules and the expected outbound handoffs to SALES-PERF / CRM / MA / EPM are drafted.
+Skipped on all 8 neighbors. Every neighbor has zero existing relationships to GTM-PLAN; pairwise diff requires module FKs on both sides, and GTM-PLAN has none. Even the strongest semantic neighbors (SALES-PERF, CRM, EPM) cannot reconcile until at least GTM-PLAN modularizes. Recorded as a "re-run after `B1-M1` lands" follow-up; will become meaningful once GTM-PLAN ships modules and the expected outbound handoffs to SALES-PERF / CRM / MA / EPM are drafted.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -279,7 +279,7 @@ Skipped (Pass 4 pairwise is blocked on `B1-M1` and on the peer-leadership-tier n
 - **CRM B9 owes outbound on `account.tier_changed` and `account.created` to GTM-PLAN.** Already partially modeled (handoff 203 fires `account.tier_changed` from CRM to SALES-PERF; the GTM-PLAN consumer side is missing). Surfaces when CRM is next validated. Today: blocked on GTM-PLAN modularization.
 - **EPM B9 owes outbound on `forecast.published` and `budget.locked` to GTM-PLAN.** Surfaces when EPM is next validated. EPM.md exists; this is not in its Report-only list yet.
 - **SALES-PERF B9 candidate (the symmetric `data_object_relationships` row for the future plan-to-execution handoff):** when GTM-PLAN masters `territories_proposed` and `quotas_proposed`, SALES-PERF should carry a relationship `territories_proposed materializes_to territories` (or the inverse). Today: cannot author because GTM-PLAN has no master. Will surface on the next SALES-PERF audit pass.
-- **ACCT-PLAN M-band cross-check (informational):** ACCT-PLAN is a leadership-tier domain at id 105 with its own unmodularized state. The GTM-PLAN to ACCT-PLAN edge (target_account_lists overlapping strategic account lists) will only land when both sides modularize. Routine, not a blocker.
+- **ACCT-PLAN M-band cross-check (informational):** ACCT-PLAN is a leadership-tier domain at id 105 with its own unmodularized state. The GTM-PLAN to ACCT-PLAN relationship (target_account_lists overlapping strategic account lists) will only land when both sides modularize. Routine, not a blocker.
 - **PMM as a candidate domain** (mention count 2 after this audit's bump). If promoted, GTM-PLAN's LAUNCH-ORCHESTRATION capability and the proposed `GTM-PLAN-LAUNCH-ORCH` module relocate. Surfaces in the next PMM triage decision.
 - **ABM-PLATFORM as a candidate domain** (mention count 1, newly queued by this audit). If promoted, GTM-PLAN's MARKET-SEGMENTATION and ACCOUNT-SCORING capabilities and the proposed `GTM-PLAN-ICP-SEGMENT` plus `GTM-PLAN-ACCOUNT-TARGETING` modules relocate. Surfaces in the next ABM-PLATFORM triage decision.
 - **SALES-PLANNING-PLATFORM as a candidate domain** (mention count 2 after this audit's bump). If promoted, GTM-PLAN's TERRITORY-CARVING-PLAN, GTM-CAPACITY-PLANNING, and GTM-SCENARIO-MODELING capabilities and the proposed `GTM-PLAN-TERRITORY`, `GTM-PLAN-CAPACITY`, `GTM-PLAN-SCENARIO` modules relocate. The largest blast radius of any candidate; surfaces in the next SALES-PLANNING-PLATFORM triage decision.
@@ -288,7 +288,7 @@ Skipped (Pass 4 pairwise is blocked on `B1-M1` and on the peer-leadership-tier n
 
 ### Triage
 
-The B1 surface in the 2026-05-30 audit lists 6 in-scope items (`B1-A1`, `B1-M1`, `B1-V1`, `B1-V2`, `B1-V3`, `B1-V4`). Classified against the truly-technical vs deferred criteria for this continuation pass, every item is deferred. The domain has 0 masters, 0 modules, 0 handoffs in either direction, 0 trigger_events, 0 lifecycle_states, 0 system skills, 0 roles, 0 `domain_regulations`, 0 `domain_aliases`. Live state was re-verified (`/domain_modules?domain_id=eq.104`, `/handoffs?or=(source_domain_id.eq.104,target_domain_id.eq.104)`, `/domain_data_objects?domain_id=eq.104`, `/domain_regulations?domain_id=eq.104` all return `[]`). With no masters and no modules, none of the technical fix categories (enum backfills, B10b FK backfills on existing handoff rows, naming-convention renames, `data_object_relationships` user-edges, `permission_verb_override`, `handoff_processes` APQC tagging) has any source rows to act on, and the audit pre-specifies none of them anyway.
+The B1 surface in the 2026-05-30 audit lists 6 in-scope items (`B1-A1`, `B1-M1`, `B1-V1`, `B1-V2`, `B1-V3`, `B1-V4`). Classified against the truly-technical vs deferred criteria for this continuation pass, every item is deferred. The domain has 0 masters, 0 modules, 0 handoffs in either direction, 0 trigger_events, 0 lifecycle_states, 0 system skills, 0 roles, 0 `domain_regulations`, 0 `domain_aliases`. Live state was re-verified (`/domain_modules?domain_id=eq.104`, `/handoffs?or=(source_domain_id.eq.104,target_domain_id.eq.104)`, `/domain_data_objects?domain_id=eq.104`, `/domain_regulations?domain_id=eq.104` all return `[]`). With no masters and no modules, none of the technical fix categories (enum backfills, B10b FK backfills on existing handoff rows, naming-convention renames, `data_object_relationships` relationships to `users`, `permission_verb_override`, `handoff_processes` APQC tagging) has any source rows to act on, and the audit pre-specifies none of them anyway.
 
 ### Fixes applied
 

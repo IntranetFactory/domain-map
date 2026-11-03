@@ -71,7 +71,7 @@ Capabilities (>=4): paddock and mob management; individual-animal records; mob m
 
 ## Overlap analysis vs existing domains
 
-- **FMIS** (Farm Management Information System): crop/whole-farm - field mapping, crop planning, planting/application records, harvest, equipment telemetry, yield analytics, ag-input inventory. Shares the whole-farm/paddock substrate and small-farm buyer, but its core is crop/field operations, not animal records. **Distinct.** Cross-domain edge: animals graze paddocks that FMIS may also map; rainfall/field-condition data lives in FMIS.
+- **FMIS** (Farm Management Information System): crop/whole-farm - field mapping, crop planning, planting/application records, harvest, equipment telemetry, yield analytics, ag-input inventory. Shares the whole-farm/paddock substrate and small-farm buyer, but its core is crop/field operations, not animal records. **Distinct.** Cross-domain relationship: animals graze paddocks that FMIS may also map; rainfall/field-condition data lives in FMIS.
 - **DAIRY-MGMT** (Dairy Herd Management): dairy vertical - parlor, lactation cycles, dry-off, milk-quality/somatic-cell-count, Grade A milk regulation. Shares "individual-animal + breeding" shape but its workflows (milking, milk quality) are "fundamentally different from beef/swine" per its own description. **Distinct sibling.**
 - **FOOD-TRACE** (Food Traceability and Provenance): downstream lot/batch genealogy + FSMA-204 CTE/KDE. Livestock hands off here at slaughter/sale (animal -> carcass lot) and on treatment withholding periods. **Cross-domain outbound handoff target.**
 - **FSQM**, **FARMER-DIRECT-SALES**: no material overlap.

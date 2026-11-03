@@ -5,13 +5,13 @@ Track what stock you hold, where it sits, and when to reorder, across every loca
 
 ---
 
-q1: (answer this first) The four sibling stock and balance links that let the Replenishment and Kitting modules share Core Stock's item and balance data currently break the deployable-unit rules. How should they be handled?
+q1: (answer this first) The four sibling stock and balance relationships that let the Replenishment and Kitting modules share Core Stock's item and balance data currently break the deployable-unit rules. How should they be handled?
 
-- a) Delete all four links, so Replenishment and Kitting always read items and balances from Core Stock by reference (they cannot deploy without Core Stock).
+- a) Delete all four relationships, so Replenishment and Kitting always read items and balances from Core Stock by reference (they cannot deploy without Core Stock).
 - b) Promote all four to embedded copies, so Replenishment and Kitting carry their own item and balance shells and can deploy standalone.
 - c) Mixed: specify which to delete and which to promote.
 
-Recommended: b. Reorder rules and kit definitions plausibly need a local item and balance shell, so promoting keeps Replenishment and Kitting independently deployable and matches how this market packages its modules. This is destructive (it deletes or rewrites existing links) and it shapes whether the modules can stand alone, so it gates the rest of the build.
+Recommended: b. Reorder rules and kit definitions plausibly need a local item and balance shell, so promoting keeps Replenishment and Kitting independently deployable and matches how this market packages its modules. This is destructive (it deletes or rewrites existing relationships) and it shapes whether the modules can stand alone, so it gates the rest of the build.
 
 a1:
 

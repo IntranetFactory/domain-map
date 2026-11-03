@@ -52,7 +52,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -66,9 +66,9 @@ b1b:
     extra_cascades: ["B1B-S4"]
 
   - id: B1B-S2
-    summary: "Author 3-5 OP-RES capabilities and capability_domains links (A2)."
-    finding: "Zero `capability_domains` rows on domain_id=18 (verified live on 2026-05-31). Even leadership-tier domains usually carry 2-4 capability links describing what the market does at the capability level."
-    action: "Draft 3-5 capabilities aligned to the OP-RES vendor surface (candidates: important-business-service-mapping, impact-tolerance-setting, scenario-testing, dependency-graph-management, resilience-incident-reporting). Apply the cross-cutting capability convention given likely overlap with BCM and TPRM. Insert `capabilities` rows and `capability_domains` rows linking to domain_id=18."
+    summary: "Author 3-5 OP-RES capabilities and capability_domains relationships (A2)."
+    finding: "Zero `capability_domains` rows on domain_id=18 (verified live on 2026-05-31). Even leadership-tier domains usually carry 2-4 capability relationships describing what the market does at the capability level."
+    action: "Draft 3-5 capabilities aligned to the OP-RES vendor surface (candidates: important-business-service-mapping, impact-tolerance-setting, scenario-testing, dependency-graph-management, resilience-incident-reporting). Apply the cross-cutting capability convention given likely overlap with BCM and TPRM. Insert `capabilities` rows and `capability_domains` rows relating to domain_id=18."
     blocked_by:
       - {type: user_decision, ref: B2-1, reason: "Capability scope and naming depend on whether OP-RES stays leadership-tier (lean set) or promotes (broader set)."}
     extra_naming_decision_required: true
@@ -97,7 +97,7 @@ b1b:
   - id: B1B-S6
     summary: "Add consumer DMDOs on OP-RES-LANDING for the handoff 252 payload and adjacent masters (B-band)."
     finding: "OP-RES declares zero `domain_module_data_objects` rows. After B1B-S1 lands a landing module, the leadership-tier landing surface should declare consumer DMDOs for the masters it reads from to compute derived signals. Verified live on 2026-05-31 by /domain_data_objects?domain_id=eq.18 returning []."
-    action: "After B1B-S1 lands, insert `domain_module_data_objects` rows on the OP-RES landing module with `role='consumer'` for at least the payload of handoff 252 (once B1B-S5 resolves which data_object that is). Likely additional consumer rows on CMDB, ITSM, SECOPS masters once B2-1 resolves."
+    action: "After B1B-S1 lands, insert `domain_module_data_objects` rows on the OP-RES landing module with `held_as='consumer'` for at least the payload of handoff 252 (once B1B-S5 resolves which data_object that is). Likely additional consumer rows on CMDB, ITSM, SECOPS masters once B2-1 resolves."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: depends_on, ref: B1B-S5, reason: "Cannot author consumer DMDO without knowing the repointed payload."}
@@ -117,7 +117,7 @@ b1b:
 b2:
   - id: B2-1
     summary: "Is OP-RES correctly classified as leadership-tier, or should it be promoted to master-bearing?"
-    question: "SKILL.md lists OP-RES on the leadership-tier exception list. Catalog state matches the label (zero masters, zero modules, zero capabilities, all three linked solutions at coverage_level='secondary', no pure-play vendor at primary coverage). However, regulator-driven substrate (DORA Articles 11, 25, 28; NIS2 significant-incident reporting) imposes mandatory data shapes that look like masters (important_business_services, impact_tolerances, resilience_scenarios). Pure-play resilience vendors (Fusion Framework System, Castellan) ship the substrate as first-class entities; broader IRM suites (Riskonnect, ServiceNow IRM, Archer) carry it as named modules. Should OP-RES stay leadership-tier or promote?"
+    question: "SKILL.md lists OP-RES on the leadership-tier exception list. Catalog state matches the label (zero masters, zero modules, zero capabilities, all three related solutions at coverage_level='secondary', no pure-play vendor at primary coverage). However, regulator-driven substrate (DORA Articles 11, 25, 28; NIS2 significant-incident reporting) imposes mandatory data shapes that look like masters (important_business_services, impact_tolerances, resilience_scenarios). Pure-play resilience vendors (Fusion Framework System, Castellan) ship the substrate as first-class entities; broader IRM suites (Riskonnect, ServiceNow IRM, Archer) carry it as named modules. Should OP-RES stay leadership-tier or promote?"
     options:
       - "(a) Keep leadership-tier; author OP-RES-LANDING only; declare consumer DMDOs on GRC, BCM, ITSM, SECOPS masters; treat regulator artifacts as derived-signal views."
       - "(b) Promote to master-bearing; author OP-RES-MAPPING (important_business_services, impact_tolerances, service_dependency_maps) and OP-RES-TESTING-AND-INCIDENT (resilience_scenarios, resilience_tests, resilience_incidents, resilience_remediation_actions) modules; survivors of Phase 0 vendor research become Bucket 1 in a follow-up."

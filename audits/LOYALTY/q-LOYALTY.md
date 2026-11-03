@@ -7,12 +7,12 @@ Enroll members and keep their profiles current, then move them up tiers as they 
 
 ---
 
-q1: (answer this first) Four follow-up loaders (member and master aliases, intra-domain relationships, the users / actor edges, and the cross-domain edges that mirror your four outbound handoffs) need the exact tuples authored before they can run. Who should write those cluster-drafts?
+q1: (answer this first) Four follow-up loaders (member and master aliases, intra-domain relationships, the users / actor relationships, and the cross-domain relationships that mirror your four outbound handoffs) need the exact tuples authored before they can run. Who should write those cluster-drafts?
 
 - a) Delegate to an agent Phase-B draft, which returns the proposed tuples for your review before anything loads.
 - b) You author the cluster-drafts markdown yourself.
 
-Recommended: a. The agent can draft all four sets and bring them back for sign-off, which unblocks the bulk of the remaining build without putting authoring work on you. This decision feeds the alias, relationship, users-edge, and cross-domain-edge loaders, so it unlocks the most downstream work.
+Recommended: a. The agent can draft all four sets and bring them back for sign-off, which unblocks the bulk of the remaining build without putting authoring work on you. This decision feeds the alias, relationship, relationship to `users`, and cross-domain-relationship loaders, so it unlocks the most downstream work.
 
 a1:
 

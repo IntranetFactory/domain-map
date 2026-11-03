@@ -37,13 +37,13 @@ b1a:
 
   - id: B1A-PHASE-P
     summary: "DEFER - Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. Personas are deferred per Rule #21 SURFACE/DEFER policy."
-    finding: "Live triage 2026-06-02 (re-confirmed 2026-06-07): 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "DEFER. Candidate operational personas (from the 2026-05-30 audit) for when the persona layer is authored: EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER (owns listening cycles + action planning), HR-BUSINESS-PARTNER (cross-functional, consumes engagement_drivers, runs action planning per org_unit), PEOPLE-MANAGER (cross-functional, owns action_plans for their team). Wire role_modules across modules 64/65, add process_raci rows, wire data_object_lifecycle_states.process_id. ATS reference: scripts/loaders/load_ats_personas_pilot.ts."
+    finding: "Live triage 2026-06-02 (re-confirmed 2026-06-07): 2 domain_modules and 0 personas reaching this domain via persona_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "DEFER. Candidate operational personas (from the 2026-05-30 audit) for when the persona layer is authored: EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER (owns listening cycles + action planning), HR-BUSINESS-PARTNER (cross-functional, consumes engagement_drivers, runs action planning per org_unit), PEOPLE-MANAGER (cross-functional, owns action_plans for their team). Wire persona_modules across modules 64/65, add process_raci rows, wire data_object_lifecycle_states.process_id. ATS reference: scripts/loaders/load_ats_personas_pilot.ts."
     extra_phase_p_triage: "2026-06-02"
 
   - id: B1A-SELF-CONTAIN
     summary: "DESTRUCTIVE (M9) - 1 contributor/required-consumer row breaks module self-containment: embed or relax it. Surfaced, not executed (rewrites role/necessity on an existing DMDO row)."
-    finding: "DMDO row 293 (domain_module_id=64 EMP-EXP-CONTINUOUS-LISTEN) is role=consumer necessity=required on onboarding_journeys (data_object_id=16), mastered by ONBOARDING and not embedded_master here. That is an M9 self-containment violation."
+    finding: "DMDO row 293 (domain_module_id=64 EMP-EXP-CONTINUOUS-LISTEN) is held_as=consumer necessity=required on onboarding_journeys (data_object_id=16), mastered by ONBOARDING and not embedded_master here. That is an M9 self-containment violation."
     action: "SURFACE only. Recommended fix - either convert DMDO 293 to embedded_master (carry a local shell of onboarding_journeys on module 64) OR set necessity='optional' (presence-conditional). Either is a rewrite of role/necessity on an existing row, so it needs user sign-off."
     blocked_by:
       - {type: user_decision, ref: m9_embed_or_relax_dmdo_293}
@@ -53,8 +53,8 @@ b1a:
 
 b1b:
   - id: B1B-S1
-    summary: Author 3 roles for EMP-EXP plus role_modules and role_permissions to close E1-E5 hard-fail; blocked on user role-design direction (and entangled with the persona DEFER under B1A-PHASE-P).
-    finding: role_modules?domain_module_id=in.(64,65) returns 0. Domain has 2 modules and 5 capabilities (multi-module true), so E1 requires >=3 roles with the 2-module floor. The 2026-05-30 audit proposed EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER, HR-BUSINESS-PARTNER, PEOPLE-MANAGER.
+    summary: Author 3 roles for EMP-EXP plus persona_modules and role_permissions to close E1-E5 hard-fail; blocked on user role-design direction (and entangled with the persona DEFER under B1A-PHASE-P).
+    finding: persona_modules?domain_module_id=in.(64,65) returns 0. Domain has 2 modules and 5 capabilities (multi-module true), so E1 requires >=3 roles with the 2-module floor. The 2026-05-30 audit proposed EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER, HR-BUSINESS-PARTNER, PEOPLE-MANAGER.
     blocked_by:
       - {type: user_decision, ref: role_design_direction}
     affected_modules: [64, 65]
@@ -99,7 +99,7 @@ b2:
     why: Architectural intent question. May inform B3-S5 / B3-S9 vendor research. (No longer gates handoff 116 tagging - 116 is already tagged via handoff_processes id 1112.)
 
   - id: B2-S5
-    summary: Duplicate user-edges (data_object_relationships rows 151 and 152) on (users, survey_campaigns).
+    summary: Duplicate relationships to users (data_object_relationships rows 151 and 152) on (users, survey_campaigns).
     question: Row 151 (users owns survey_campaigns) and row 152 (users creates survey_campaigns) both target the same pair. Is owner/creator semantically distinct enough to keep as two rows or is one redundant?
     options: [a-DELETE-152-owner-subsumes-creator, b-rename-152-verb-to-authors-distinct-lifecycle-role, c-leave-both-duplication-intentional]
     why: Editorial decision; catalog convention elsewhere preferred a single actor-role row. DELETE / rename is destructive, so it stays surfaced.
@@ -152,7 +152,7 @@ b3:
 
   - id: B3-S2
     candidate: engagement_themes
-    rationale: Themes (Belonging, Wellbeing, Manager Effectiveness, Recognition) group drivers and are the unit of cross-time-period reporting. Distinct from drivers (themes are higher-level taxonomy, drivers are individual signals).
+    rationale: Themes (Belonging, Well-being, Manager Effectiveness, Recognition) group drivers and are the unit of cross-time-period reporting. Distinct from drivers (themes are higher-level taxonomy, drivers are individual signals).
     vendor_evidence:
       - {vendor: Culture Amp, evidence: 1st_class}
       - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}

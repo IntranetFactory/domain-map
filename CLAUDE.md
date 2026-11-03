@@ -42,13 +42,42 @@ En-dashes (`–`, U+2013) and ASCII hyphens (`-`) are fine. The rule is specific
 
 ## American English only
 
-Write in **American English** for every artifact in this project (prose, code comments, docs, commit messages, plan files). No British spellings. Common ones to remember: `normalize` (not normalise), `analyze` (not analyse), `organize` (not organise), `materialize` (not materialise), `categorize` (not categorise), `behavior` (not behaviour), `color` (not colour), `center` (not centre), `catalog` (not catalogue), `modeled`/`labeled`/`canceled` (single-l), `program` (not programme), `license` (verb and noun, not licence), `defense` (not defence), `optimize` (not optimise), `recognize` (not recognise). When in doubt, check.
+Write in **American English** for every artifact in this project (prose, code comments, docs, commit messages, plan files, and all catalog data written via `semantius`: descriptions, notes, labels, names, identifiers). No British spellings, including in text taken from a vendor's site. Common ones to remember: `normalize` (not normalise), `analyze` (not analyse), `organize` (not organise), `materialize` (not materialise), `categorize` (not categorise), `behavior` (not behaviour), `color` (not colour), `center` (not centre), `catalog` (not catalogue), `modeled`/`labeled`/`canceled` (single-l), `program` (not programme), `license` (verb and noun, not licence), `defense` (not defence), `optimize` (not optimise), `recognize` (not recognise). When in doubt, check.
+
+## "Relationship", never "link", "edge" or "connection"
+
+A defined relationship between two entities (a row in `data_object_relationships`, a `reference` or `parent` field, a blueprint §5 row, a spec §6 row) is called a **relationship**. Never call it a link (link, links, linked, linking, linkage, or an identifier that contains them), an edge or a connection. Do not introduce a synonym either: write "relationship" or "relate". A junction is a "junction"; in user-facing text it is a "connecting record".
+
+These words may stay only where they are not a relationship at all:
+
+- "link": web and UI hyperlinks (deep, open, download, sign-in and UI links, markdown links); file-system senses (symlink, unlink, the `WinGet\Links` path); `lucide-icon-tags.json`; brand names such as LinkedIn; a domain thing that really is a URL (`broken_link_findings`).
+- "edge": a line in a Mermaid diagram when the text is about the diagram ("diagram edge", "dotted edge"); unrelated senses such as edge case, edge computing and vendor names.
+- "connect": CLI, MCP, OAuth, database or server sessions; `*_connector` entities; "connecting record".
+
+`scripts/lib/__tests__/terminology.test.ts` enforces this; its allow-list names the permitted senses and the named exceptions. The same rule applies to live catalog rows.
+
+## Data model decisions need the owner's approval
+
+**Never decide or change a fundamental data model convention on your own.** That covers what a table or column means, the direction relationships are stored in, what things are named, and the blueprint or spec file format. Before anything is written, present the decision in plain language with the alternatives, how the Semantius platform and market products such as Salesforce and ServiceNow handle it, and a recommendation. Then wait for the owner's explicit approval. Never call something a standard or a convention without checking it, and never defend an existing design just because it exists. This binds every subagent too.
+
+## "Persona", "held_as" and "role"
+
+- A **persona** is a job type that spans 2+ modules (`personas`, `persona_modules`, `process_raci.persona_id`).
+- **`held_as`** is how a module holds an entity: `master`, `embedded_master`, `contributor`, `consumer` or `derived` (`domain_module_data_objects.held_as`, and the blueprint column in §3, §6.1 and §6.4).
+- **"Role" means a permission role only** (`roles`, `user_roles`, `role_permissions`, blueprint §9.1). `handoff_processes.role` is the one named exception.
+- An **actor** is a persona or a skill in a RACI row, and nothing else.
+
+`scripts/lib/__tests__/terminology.test.ts` fails on the old table and column names.
 
 ## Semantius CLI cwd
 
 The `semantius` CLI reads `.env` from the **current working directory**. Always invoke it from the project root (`c:/dev/domain-map`). Never `cd` into a subfolder (`.claude/skills/...`, `.tmp_deploy/`, etc.) before running `semantius` or a loader script that spawns it: the CLI silently falls back to a default config pointing at a different tenant. See [.claude/skills/domain-map-analyst/SKILL.md](.claude/skills/domain-map-analyst/SKILL.md) rule #6 for the full symptom list.
 
 **Equally important: do not `cd` *into* the project root either.** Your shell's cwd is **already** `c:/dev/domain-map`. Never prefix Bash commands with `cd c:/dev/domain-map &&`, `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, `cd /c/dev/domain-map &&`, or any case/quoting/slash variant. This prefix is ceremony, adds nothing, and forces a permission prompt for the user. Call `semantius`, `bun`, `yq`, `git`, `grep`, etc. directly with no `cd` prefix. The same applies inside any subagent you dispatch.
+
+## Semantius skill source
+
+The `semantius-*` and `use-semantius` skills are maintained in `C:\dev\semantius-agent\semantius-plugin\skills`. Read them and make skill edits there. The copies under `.agents/skills/` can differ from that source, and the `source` recorded in `skills-lock.json` is not where they are edited.
 
 ## Review, audit and validate never change catalog data
 

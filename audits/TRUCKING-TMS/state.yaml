@@ -1,0 +1,368 @@
+schema_version: 2
+domain: TRUCKING-TMS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-11-03"
+b1a:
+  - id: B1A-COPY-DOMAIN
+    summary: Write the approved catalog copy for Trucking Transportation Management.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domains
+        natural_key: TRUCKING-TMS
+        field: catalog_tagline
+        to: >-
+          Run your trucking company from one system: book loads, dispatch trucks, bill customers,
+          and settle with drivers.
+      - table: domains
+        natural_key: TRUCKING-TMS
+        field: catalog_description
+        to: >-
+          Take loads from customers by phone, email, or EDI, and plan them onto your trucks. Assign
+          drivers and equipment, see who is available, and keep customers updated as freight moves.
+          When a load delivers, rate it, pull the paperwork together, and get the invoice out the
+          same day.
+
+
+          Pay drivers and owner-operators correctly, with deductions and escrow handled. Add partner
+          carriers when your own trucks are full, and switch on less-than-truckload or drayage when
+          your business runs them.
+  - id: B1A-COPY-TRK-LOADS
+    summary: Write the approved catalog copy for Freight Load Management.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-LOADS
+        field: catalog_tagline
+        to: >-
+          Capture loads from customers and answer tenders, with every stop and requirement in one
+          place.
+      - table: domain_modules
+        natural_key: TRK-LOADS
+        field: catalog_description
+        to: >-
+          Book loads by phone, email, or EDI, and accept or decline tendered freight quickly. Keep
+          stops, appointment times, commodities, and equipment needs on the load, and save templates
+          for regular work.
+
+
+          Handle cargo claims within the required time limits, and keep your operating authority and
+          insurance filings on record.
+  - id: B1A-COPY-TRK-DISPATCH
+    summary: Write the approved catalog copy for Truck and Driver Dispatch.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-DISPATCH
+        field: catalog_tagline
+        to: >-
+          Match trucks, trailers, and drivers to loads, and follow every trip from dispatch to
+          delivery.
+      - table: domain_modules
+        natural_key: TRK-DISPATCH
+        field: catalog_description
+        to: >-
+          See your loads and available drivers side by side, plan trips, and assign equipment.
+          Release the trip to the driver, record arrivals and delays at each stop, and catch
+          problems while there is still time to fix them.
+
+
+          Works on its own or alongside fleet and telematics systems, reading hours of service,
+          location, and maintenance when they are available.
+  - id: B1A-COPY-TRK-BILLING
+    summary: Write the approved catalog copy for Freight Billing and Rating.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-BILLING
+        field: catalog_tagline
+        to: Rate delivered loads, assemble the paperwork, and get accurate invoices out fast.
+      - table: domain_modules
+        natural_key: TRK-BILLING
+        field: catalog_description
+        to: >-
+          Price each load from your tariffs and customer rates, add fuel surcharges and extra
+          charges, and attach proof of delivery. Issue invoices one at a time or grouped on a master
+          bill, send them by EDI, and pass them to factoring when you use it.
+
+
+          Faster, cleaner invoices mean fewer disputes and quicker cash.
+  - id: B1A-COPY-TRK-SETTLEMENT
+    summary: Write the approved catalog copy for Driver and Owner-Operator Settlement.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-SETTLEMENT
+        field: catalog_tagline
+        to: Pay drivers and owner-operators accurately, with deductions, escrow, and leases handled.
+      - table: domain_modules
+        natural_key: TRK-SETTLEMENT
+        field: catalog_description
+        to: >-
+          Calculate pay from completed trips and each driver's pay plan, whether per mile,
+          percentage, or flat rate. Apply advances and charge-backs, keep owner-operator leases and
+          escrow balances in order, and give drivers a clear statement they can trust.
+  - id: B1A-COPY-TRK-BROKERAGE
+    summary: Write the approved catalog copy for Freight Brokerage and Road Forwarding.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-BROKERAGE
+        field: catalog_tagline
+        to: >-
+          Move freight on partner carriers when your own trucks are full, and settle with them
+          cleanly.
+      - table: domain_modules
+        natural_key: TRK-BROKERAGE
+        field: catalog_description
+        to: >-
+          Keep a vetted list of partner carriers with their authority and insurance checked. Post
+          loads to boards, cover them with a partner, and approve what you owe. Works for road
+          forwarders and for carriers who broker alongside their own fleet.
+  - id: B1A-COPY-TRK-LTL
+    summary: Write the approved catalog copy for LTL Terminal Operations.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-LTL
+        field: catalog_tagline
+        to: "Run a less-than-truckload network: freight bills, terminals, dock doors, and linehaul."
+      - table: domain_modules
+        natural_key: TRK-LTL
+        field: catalog_description
+        to: >-
+          Enter and rate freight bills by class and weight, plan pickup and delivery routes around
+          each terminal, assign trailers to dock doors, and schedule linehaul runs between
+          terminals, so each shipment stays visible as it moves across your network.
+  - id: B1A-COPY-TRK-DRAYAGE
+    summary: Write the approved catalog copy for Drayage Container Operations.
+    finding: >-
+      catalog_tagline and catalog_description are empty (A4 or M8, Rule #20). The wording is drafted
+      and waits for approval.
+    action: >-
+      Write these two values once approved, or the user's correction, at record_status='new'. Fill
+      empty columns only.
+    extra_rows:
+      - table: domain_modules
+        natural_key: TRK-DRAYAGE
+        field: catalog_tagline
+        to: Track port containers and chassis, and stop per diem charges before they add up.
+      - table: domain_modules
+        natural_key: TRK-DRAYAGE
+        field: catalog_description
+        to: >-
+          Follow each container from terminal pickup through delivery and empty return. Watch
+          free-time dates, record the chassis used, and see per diem charges as they build, so you
+          can act before they cost you and bill them correctly when they apply.
+b1b:
+  - id: B1B-FLEET-COMPLIANCE-RECORDS
+    summary: Records this domain reads but FLEET-MGMT should own do not exist yet.
+    finding: >-
+      Phase 0 assigns driver_qualification_records (49 CFR 391.51), clearinghouse_queries (49 CFR
+      382.701), and ucr_registrations (49 USC 14504a, low confidence) to FLEET-MGMT, because private
+      fleets owe them too. toll_transactions and vehicle_permits are FLEET-MGMT candidates on vendor
+      evidence. None exists in the catalog. The regulations are seeded and tagged here.
+    action: >-
+      Report-only here. Raise on the next FLEET-MGMT audit; this domain is a consumer once they
+      exist.
+    blocked_by:
+      - type: domain_audit
+        blocking_domain: FLEET-MGMT
+        milestone: carrier compliance records
+    affected_entities:
+      - driver_qualification_records
+      - clearinghouse_queries
+      - ucr_registrations
+      - toll_transactions
+      - vehicle_permits
+  - id: B1B-ELD-COMPLIANCE-OVERLAP
+    summary: The ELD-COMPLIANCE candidate overlaps live owners, and EU tachograph records have no owner.
+    finding: >-
+      ELD-COMPLIANCE claims hours of service, DVIR, and IFTA. Live data gives eld_logs to TELEMATICS
+      and vehicle_inspections to FLEET-MGMT, and ifta_quarterly_returns now sits in FLEET-MGMT.
+      tachograph_records and driving_rest_records belong to TELEMATICS or ELD-COMPLIANCE, and this
+      domain only consumes them. They were not loaded.
+    action: >-
+      Report-only here. Settle when ELD-COMPLIANCE gets its point-solution review, including whether
+      IFTA moves.
+    blocked_by:
+      - type: catalog_addition
+        scope: domains
+        trigger: ELD-COMPLIANCE point-solution review
+    affected_entities:
+      - eld_logs
+      - vehicle_inspections
+      - ifta_quarterly_returns
+      - tachograph_records
+      - driving_rest_records
+  - id: B1B-DRAYAGE-RECHECK
+    summary: Drayage was loaded as a module on marketing evidence, and may still pass as its own domain.
+    finding: >-
+      The user chose a domain module over install-optional records. PortPro drayOS and CargoWise
+      Landside are specialists, and only marketing pages were read, so the three masters are a first
+      cut. Specialist records terminal_appointments, plus LTL interline_partner_splits and
+      tank_wash_records, were skipped.
+    action: >-
+      Re-check against a schema if a drayage vendor publishes one. Surface a promotion to its own
+      domain only with that evidence.
+    blocked_by:
+      - type: depends_on
+        ref: drayage vendor schema
+        reason: marketing evidence only so far
+    affected_entities:
+      - intermodal_containers
+      - container_per_diem_charges
+      - chassis_usages
+  - id: B1B-PLATFORM-SCIENCE
+    summary: Platform Science, which now owns Trimble's telematics units, is not in the catalog.
+    finding: >-
+      The Trimble Transportation row no longer claims those units, so TELEMATICS may be missing a
+      vendor. Adding it was not part of the approved answers.
+    action: Raise on the next TELEMATICS audit.
+    blocked_by:
+      - type: domain_audit
+        blocking_domain: TELEMATICS
+        milestone: solutions refresh
+b2: []
+b3:
+  - id: B3-RATE-CONFIRMATIONS
+    candidate: rate_confirmations
+    rationale: >-
+      Alvys documents outbound to a carrier and inbound from a customer. Truckbase has a PDF load
+      importer and mentions rate cons in a blog. One confirmed vendor understates it.
+    vendor_evidence:
+      - Alvys
+      - Truckbase
+    proposed_module: TRK-LOADS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-TRIP-LEGS
+    candidate: trip_legs
+    rationale: Confirmed in TMW.Suite docs only.
+    vendor_evidence:
+      - Trimble TMW.Suite
+    proposed_module: TRK-DISPATCH
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-CHECK-CALLS
+    candidate: trip_check_calls
+    rationale: Confirmed in Alvys docs only.
+    vendor_evidence:
+      - Alvys
+    proposed_module: TRK-DISPATCH
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-SETTLEMENT-PAYEES
+    candidate: settlement_payees
+    rationale: Confirmed in TMW.Suite docs only.
+    vendor_evidence:
+      - Trimble TMW.Suite
+    proposed_module: TRK-SETTLEMENT
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+  - id: B3-LOAD-REQUIREMENTS
+    candidate: load_requirements
+    rationale: Confirmed in TMW.Suite docs only. Could fold into equipment types.
+    vendor_evidence:
+      - Trimble TMW.Suite
+    proposed_module: TRK-LOADS
+    extra_answer: "Approved 2026-11-03: research and add after the modules exist."
+
+checks:
+  # generated by scripts/analytics/domain_health.ts --record; do not hand-edit
+  checklist_version: 2
+  run_at: "2026-11-03T11:19:02.740Z"
+  results:
+    - {id: S1, result: pass, rows: []}
+    - {id: S2, result: pass, rows: []}
+    - {id: S3, result: warn, rows: [1435, 1436, 1449, 1461, 1472]}
+    - {id: A1, result: pass, rows: []}
+    - {id: A2, result: pass, rows: []}
+    - {id: A3, result: pass, rows: []}
+    - {id: A4, result: fail, rows: ["catalog_description", "catalog_tagline"]}
+    - {id: A5, result: agent, rows: []}
+    - {id: M1, result: pass, rows: []}
+    - {id: M2, result: pass, rows: []}
+    - {id: M4, result: pass, rows: []}
+    - {id: M5, result: pass, rows: []}
+    - {id: M6, result: pass, rows: []}
+    - {id: M7, result: pass, rows: []}
+    - {id: M8, result: fail, rows: [427, 428, 429, 430, 431, 432, 433]}
+    - {id: M9, result: pass, rows: []}
+    - {id: M10, result: agent, rows: []}
+    - {id: B1, result: pass, rows: []}
+    - {id: B2, result: pass, rows: []}
+    - {id: B3, result: pass, rows: []}
+    - {id: B4, result: agent, rows: []}
+    - {id: B5, result: pass, rows: []}
+    - {id: B6, result: agent, rows: []}
+    - {id: B6b, result: pass, rows: []}
+    - {id: B7, result: warn, rows: [1435, 1439, 1441, 1445, 1446, 1447, 1451, 1452, 1458, 1459, 1460, 1461, 1469, 1470, 1471, 1473, 1474, 1477, 1478, 1479]}
+    - {id: B7b, result: pass, rows: []}
+    - {id: B8, result: pass, rows: []}
+    - {id: B9, result: pass, rows: []}
+    - {id: B9b, result: pass, rows: []}
+    - {id: B9c, result: pass, rows: []}
+    - {id: B9d, result: delegated, rows: []}
+    - {id: B9e, result: delegated, rows: []}
+    - {id: B9f, result: pass, rows: []}
+    - {id: B10, result: warn, rows: [97, 107, 195, 370, 371, 372, 373, 375, 379, 731, 1409, 1421, 1480, 1481]}
+    - {id: B10b, result: pass, rows: []}
+    - {id: B11, result: warn, rows: [1435, 1436, 1438, 1439, 1440, 1441, 1442, 1443, 1445, 1446, 1447, 1449, 1450, 1451, 1452, 1453, 1456, 1457, 1458, 1459, 1460, 1461, 1463, 1464, 1465, 1469, 1470, 1472, 1473, 1474, 1475, 1476, 1477, 1479]}
+    - {id: B12, result: pass, rows: []}
+    - {id: B13, result: pass, rows: []}
+    - {id: B14, result: agent, rows: []}
+    - {id: B15, result: pass, rows: []}
+    - {id: B16, result: pass, rows: []}
+    - {id: C1, result: pass, rows: []}
+    - {id: C2, result: agent, rows: []}
+    - {id: D1, result: agent, rows: []}
+    - {id: E1, result: pass, rows: []}
+    - {id: E2, result: pass, rows: []}
+    - {id: E3, result: pass, rows: []}
+    - {id: E4, result: pass, rows: []}
+    - {id: E4b, result: pass, rows: []}
+    - {id: E4c, result: pass, rows: []}
+    - {id: E4d, result: pass, rows: []}
+    - {id: E5, result: skipped, rows: []}
+    - {id: E6, result: warn, rows: ["R6:1191", "R6:1194", "R6:1214", "R6:1215", "R6:1574", "R6:203", "R6:269", "R6:512", "R6:527", "R6:64", "R6:66", "R6:874", "R6:875", "R6:876"]}
+    - {id: F1, result: pass, rows: []}
+    - {id: F2, result: pass, rows: []}
+    - {id: F3, result: pass, rows: []}
+    - {id: F4, result: pass, rows: []}
+    - {id: F5, result: pass, rows: []}
+    - {id: F6, result: skipped, rows: []}
+    - {id: F7, result: agent, rows: []}
+    - {id: F8, result: agent, rows: []}
+    - {id: H1, result: pass, rows: []}

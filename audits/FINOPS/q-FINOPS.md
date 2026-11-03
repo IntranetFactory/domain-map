@@ -1,7 +1,7 @@
 # Cloud Financial Operations (FINOPS): questions waiting for you
 
 ## What this domain is
-Cloud Financial Operations (FinOps) gives engineering, finance, and product teams the visibility, allocation, and accountability to keep cloud spend under control. It ingests raw cost data from every cloud provider, attributes that spend to the teams, products, and units that caused it, flags anomalies, and surfaces rightsizing and commitment signals before the next billing cycle closes. Today it is a deploy-target stub: it has linked vendor solutions and cross-domain handoffs, but no modules, capabilities, or mastered cost data yet, so it cannot be built without your decisions below.
+Cloud Financial Operations (FinOps) gives engineering, finance, and product teams the visibility, allocation, and accountability to keep cloud spend under control. It ingests raw cost data from every cloud provider, attributes that spend to the teams, products, and units that caused it, flags anomalies, and surfaces rightsizing and commitment signals before the next billing cycle closes. Today it is a deploy-target stub: it has related vendor solutions and cross-domain handoffs, but no modules, capabilities, or mastered cost data yet, so it cannot be built without your decisions below.
 
 ---
 
@@ -41,7 +41,7 @@ a3:
 
 ---
 
-q4: Should the FinOps cost-data interchange spec (the FOCUS billing-data normalization standard) be added as an industry-standard regulation linked to FINOPS? (yes/no)
+q4: Should the FinOps cost-data interchange spec (the FOCUS billing-data normalization standard) be added as an industry-standard regulation related to FINOPS? (yes/no)
 
 Recommended: yes. The catalog already records industry standards alongside statutory ones (for example PCI-DSS and FedRAMP), so this is consistent.
 
@@ -63,7 +63,7 @@ a5:
 
 ## Optional (will not hold up the build)
 
-q6: FINOPS already meets the solutions floor at five linked vendors. Should the surface be widened with additional FinOps tools (Vantage, CloudZero, Kubecost, AWS Cost Explorer, Azure Cost Management, GCP Billing)? (yes/no)
+q6: FINOPS already meets the solutions floor at five related vendors. Should the surface be widened with additional FinOps tools (Vantage, CloudZero, Kubecost, AWS Cost Explorer, Azure Cost Management, GCP Billing)? (yes/no)
 
 Recommended: yes, but additive and non-blocking. Verify Kubecost vendor ownership first (IBM acquired Apptio and Kubecost in late 2024).
 

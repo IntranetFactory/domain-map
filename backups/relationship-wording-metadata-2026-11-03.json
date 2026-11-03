@@ -1,0 +1,180 @@
+{
+ "taken_at": "2026-11-03T14:38:17.358Z",
+ "plan": [
+  {
+   "kind": "entity",
+   "key": "process_raci",
+   "column": "description",
+   "from": "Authored RACI assignment linking a process to a polymorphic actor (a domain_role persona XOR an agent skill), with the raci letter and consultation_blocking. Exactly one actor per row.",
+   "to": "Authored RACI assignment relating a process to a polymorphic actor (a persona XOR an agent skill), with the raci letter and consultation_blocking. Exactly one actor per row."
+  },
+  {
+   "kind": "entity",
+   "key": "business_function_domains",
+   "column": "description",
+   "from": "Junction table connecting business functions to the domains they operate in, with a responsibility qualifier so the same domain can be shared across functions without ambiguity. Useful as a coarse-grained shortcut; the capability layer (business-function-capabilities + capability-domains) materializes the same mapping at finer granularity.",
+   "to": "Junction table relating business functions to the domains they operate in, with a responsibility qualifier so the same domain can be shared across functions without ambiguity. Useful as a coarse-grained shortcut; the capability layer (business-function-capabilities + capability-domains) materializes the same mapping at finer granularity."
+  },
+  {
+   "kind": "entity",
+   "key": "industry_business_functions",
+   "column": "description",
+   "from": "Junction table connecting industries to the business functions typically present in them. Records that Manufacturing has Production but typically not Trading; that Banking has Treasury but typically not Production.",
+   "to": "Junction table relating industries to the business functions typically present in them. Records that Manufacturing has Production but typically not Trading; that Banking has Treasury but typically not Production."
+  },
+  {
+   "kind": "entity",
+   "key": "domain_data_objects",
+   "column": "description",
+   "from": "Junction table connecting domains to the data objects they hold, with a mastery qualifier. Captures the observation that Customer lives in CRM (primary), Billing (secondary), and Support (secondary), the seed of the data-silo map.",
+   "to": "Junction table relating domains to the data objects they hold, with a mastery qualifier. Captures the observation that Customer lives in CRM (primary), Billing (secondary), and Support (secondary), the seed of the data-silo map."
+  },
+  {
+   "kind": "entity",
+   "key": "solution_domains",
+   "column": "description",
+   "from": "Junction table connecting solutions to the domains they cover, with a coverage-level qualifier. Captures that Salesforce primarily covers CRM and secondarily covers Service Management and Marketing.",
+   "to": "Junction table relating solutions to the domains they cover, with a coverage-level qualifier. Captures that Salesforce primarily covers CRM and secondarily covers Service Management and Marketing."
+  },
+  {
+   "kind": "entity",
+   "key": "business_function_capabilities",
+   "column": "description",
+   "from": "Junction table connecting business functions to the capabilities they require to perform their role, with a responsibility qualifier. Captures that Sales requires Lead Management (owner) and Customer Communication (contributor), that Finance requires Invoice Processing (owner) and Procurement Catalog (consumer).",
+   "to": "Junction table relating business functions to the capabilities they require to perform their role, with a responsibility qualifier. Captures that Sales requires Lead Management (owner) and Customer Communication (contributor), that Finance requires Invoice Processing (owner) and Procurement Catalog (consumer)."
+  },
+  {
+   "kind": "entity",
+   "key": "capability_domains",
+   "column": "description",
+   "from": "Junction table connecting capabilities to the domains they live in. A capability may span multiple domains (Customer 360 spans CRM and Data Platform; Workforce Scheduling spans HR Operations and Field Service). Captures the semantic home of a capability, independent of which solutions deliver it.",
+   "to": "Junction table relating capabilities to the domains they live in. A capability may span multiple domains (Customer 360 spans CRM and Data Platform; Workforce Scheduling spans HR Operations and Field Service). Captures the semantic home of a capability, independent of which solutions deliver it."
+  },
+  {
+   "kind": "entity",
+   "key": "domain_modules",
+   "column": "description",
+   "from": "Autonomous, independently-deployable unit between capabilities (market-analysis layer) and the live Semantius semantic models. Each module is self-contained: it owns its own data_objects, lifecycle states, edges, and tool surface, and composes with other modules at deploy time via the existing master / embedded_master demotion mechanism (no dependency tree). See plan-modules.md for the design intent.",
+   "to": "Autonomous, independently-deployable unit between capabilities (market-analysis layer) and the live Semantius semantic models. Each module is self-contained: it owns its own data_objects, lifecycle states, relationships, and tool surface, and composes with other modules at deploy time via the existing master / embedded_master demotion mechanism (no dependency tree). See plan-modules.md for the design intent."
+  },
+  {
+   "kind": "entity",
+   "key": "handoff_processes",
+   "column": "singular_label",
+   "from": "Handoff Process Link",
+   "to": "Handoff Process"
+  },
+  {
+   "kind": "entity",
+   "key": "handoff_processes",
+   "column": "plural_label",
+   "from": "Handoff Process Links",
+   "to": "Handoff Processes"
+  },
+  {
+   "kind": "entity",
+   "key": "handoff_processes",
+   "column": "description",
+   "from": "Junction between `handoffs` and `business_processes`. Links a directional event-driven handoff to the APQC PCF activity (or custom process) it realizes. Populated by discovery (`discovery_query.ts` substring matcher fan-out) with `record_status='new'`; promoted to `approved` by user review per SKILL.md Rule #1. Sub-clusters trigger-event-prefix buckets in Phase D discovery and connects handoffs across different prefixes that share a process. See plan-handoff-processes.md.",
+   "to": "Junction between `handoffs` and `business_processes`. Relates a directional event-driven handoff to the APQC PCF activity (or custom process) it realizes. Populated by discovery (`discovery_query.ts` substring matcher fan-out) with `record_status='new'`; promoted to `approved` by user review per SKILL.md Rule #1. Sub-clusters trigger-event-prefix buckets in Phase D discovery and relates handoffs across different prefixes that share a process. See plan-handoff-processes.md."
+  },
+  {
+   "kind": "entity",
+   "key": "solutions",
+   "column": "description",
+   "from": "Specific point solutions, platforms, internal builds, or manual processes (Salesforce, Workday, ServiceNow, SAP S/4HANA, an internal build, a spreadsheet-driven manual process). One record per distinct solution; vendor-supplied products link to their vendor.",
+   "to": "Specific point solutions, platforms, internal builds, or manual processes (Salesforce, Workday, ServiceNow, SAP S/4HANA, an internal build, a spreadsheet-driven manual process). One record per distinct solution; vendor-supplied products relate to their vendor."
+  },
+  {
+   "kind": "entity",
+   "key": "trigger_events",
+   "column": "description",
+   "from": "Controlled vocabulary of state-change events on data_objects. Referenced by cross_domain_handoffs.trigger_event_id. One row per event; multiple handoff subscribers reference the same row (the 'one event, many subscribers' pattern — see SKILL.md Phase D section). Event semantics (publisher, data_object, state transition, description) live here; integration metadata (friction_level, integration_pattern, notes) lives on the per-edge handoff row.",
+   "to": "Controlled vocabulary of state-change events on data_objects. Referenced by cross_domain_handoffs.trigger_event_id. One row per event; multiple handoff subscribers reference the same row (the 'one event, many subscribers' pattern, see SKILL.md Phase D section). Event semantics (publisher, data_object, state transition, description) live here; integration metadata (friction_level, integration_pattern, notes) lives on the handoff row."
+  },
+  {
+   "kind": "entity",
+   "key": "tool_solutions",
+   "column": "description",
+   "from": "A junction record linking one Tool to one Solution that delivers it, with delivery strength, delivery method, and an optional endpoint URL. A single tool typically has many tool_solution rows (M365 + Gmail + AWS SES all deliver send_email); a single solution may deliver many tools (Microsoft 365 covers send_email, create_calendar_event, post_chat_message, and more).",
+   "to": "A junction record relating one Tool to one Solution that delivers it, with delivery strength, delivery method, and an optional endpoint URL. A single tool typically has many tool_solution rows (M365 + Gmail + AWS SES all deliver send_email); a single solution may deliver many tools (Microsoft 365 covers send_email, create_calendar_event, post_chat_message, and more)."
+  },
+  {
+   "kind": "entity",
+   "key": "process_tools",
+   "column": "description",
+   "from": "Junction between `business_processes` and `tools`. Records that a cross-domain value-stream process requires (or optionally uses) an atomic tool. A tool is atomic and lives once in `tools`; this row only references `tool_id`. A `process` skill (linked via `skills.process_id`) derives its toolset from these rows. Replaces the retired process-skill `skill_tools` grain per plans/per-domain-skill-restoration.md.",
+   "to": "Junction between `business_processes` and `tools`. Records that a cross-domain value-stream process requires (or optionally uses) an atomic tool. A tool is atomic and lives once in `tools`; this row only references `tool_id`. A `process` skill (related via `skills.process_id`) derives its toolset from these rows. Replaces the retired process-skill `skill_tools` grain per plans/per-domain-skill-restoration.md."
+  },
+  {
+   "kind": "field",
+   "key": "handoff_processes.label",
+   "column": "title",
+   "from": "Handoff Process Link",
+   "to": "Handoff Process"
+  },
+  {
+   "kind": "field",
+   "key": "data_object_relationships.owner_side",
+   "column": "description",
+   "from": "The parent side of the link: the lifecycle owner, and the end without the foreign key. Derived from relationship_type for one_to_many (source) and many_to_one (target). Set by hand only for one_to_one.",
+   "to": "The parent side of the relationship: the lifecycle owner, and the end without the foreign key. Derived from relationship_type for one_to_many (source) and many_to_one (target). Set by hand only for one_to_one."
+  },
+  {
+   "kind": "field",
+   "key": "data_object_lifecycle_states.process_id",
+   "column": "description",
+   "from": "The process this lifecycle state's transition belongs to, which puts the process's RACI rows in the blueprint. On a gated state it is also the process-to-permission edge; a process does not need a gated state.",
+   "to": "The process this lifecycle state's transition belongs to, which puts the process's RACI rows in the blueprint. On a gated state it is also the process-to-permission relationship; a process does not need a gated state."
+  },
+  {
+   "kind": "field",
+   "key": "data_objects.entity_type",
+   "column": "description",
+   "from": "Classification of what kind of entity this is. Drives the Rule #12 lifecycle-state audit: only operational_workflow without lifecycle states surfaces as a gap; everything else passes whether stateful or stateless. Values: operational_workflow (has business workflow, needs lifecycle states + gates), operational_record (per-X record without workflow, e.g. notes, files, acknowledgements, log entries), catalog (config / template / taxonomy referenced by other entities; may carry a publishing lifecycle), junction (N:M link, may carry a qualifier and its own lifecycle), computed (derived rollup; lifecycle implicit in source), unclassified (default; surfaces to audit until set).",
+   "to": "Classification of what kind of entity this is. Drives the Rule #12 lifecycle-state audit: only operational_workflow without lifecycle states surfaces as a gap; everything else passes whether stateful or stateless. Values: operational_workflow (has business workflow, needs lifecycle states + gates), operational_record (per-X record without workflow, e.g. notes, files, acknowledgements, log entries), catalog (config / template / taxonomy referenced by other entities; may carry a publishing lifecycle), junction (N:M relationship, may carry a qualifier and its own lifecycle), computed (derived rollup; lifecycle implicit in source), unclassified (default; surfaces to audit until set)."
+  },
+  {
+   "kind": "field",
+   "key": "data_objects.notes",
+   "column": "description",
+   "from": "Free-form catalog-curator notes on this data_object. Empty by default per Rule #15; populate only with explicit per-row user approval. Acceptable content when authored: (1) isolated-master justification when this master legitimately has no edges to other masters in its domain (B6 exemption); (2) self-explanatory-name justification when a master is intentionally aliased-free (B11 exemption); (3) any other catalog-quality annotation that does not fit description / minimum_embedded_shape / naming_authority_rationale. The config-shape exemption for masters with no real workflow has moved to data_objects.entity_type (Rule #12); do not record it here. Per-domain notes belong on domain_data_objects.notes, not here.",
+   "to": "Free-form catalog-curator notes on this data_object. Empty by default per Rule #15; populate only with explicit per-row user approval. Acceptable content when authored: (1) isolated-master justification when this master legitimately has no relationships to other masters in its domain (B6 exemption); (2) self-explanatory-name justification when a master is intentionally aliased-free (B11 exemption); (3) any other catalog-quality annotation that does not fit description / minimum_embedded_shape / naming_authority_rationale. The config-shape exemption for masters with no real workflow has moved to data_objects.entity_type (Rule #12); do not record it here. Per-domain notes belong on domain_data_objects.notes, not here."
+  },
+  {
+   "kind": "field",
+   "key": "handoff_processes.handoff_id",
+   "column": "description",
+   "from": "The handoff edge being linked to a process activity.",
+   "to": "The handoff being related to a process activity."
+  },
+  {
+   "kind": "field",
+   "key": "handoffs.key",
+   "column": "description",
+   "from": "Computed 6-tuple natural key for the handoff edge: source_domain_id.target_domain_id.source_domain_module_id.target_domain_module_id.trigger_event_id.data_object_id, joined with `.` separators. Materialized by a BEFORE INSERT/UPDATE trigger from the entity computed_fields JsonLogic, which uses the platform concat operator (SQL CONCAT semantics: NULL becomes empty string). Marked unique_value=true; the partial unique index enforces idempotency on the 6-tuple at the database layer.",
+   "to": "Computed 6-tuple natural key for the handoff: source_domain_id.target_domain_id.source_domain_module_id.target_domain_module_id.trigger_event_id.data_object_id, joined with `.` separators. Materialized by a BEFORE INSERT/UPDATE trigger from the entity computed_fields JsonLogic, which uses the platform concat operator (SQL CONCAT semantics: NULL becomes empty string). Marked unique_value=true; the partial unique index enforces idempotency on the 6-tuple at the database layer."
+  },
+  {
+   "kind": "field",
+   "key": "domain_module_data_objects.is_install_optional",
+   "column": "description",
+   "from": "True when the module can be installed without this entity. False, the default, means every install of the module includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in.",
+   "to": "True when the module can be installed without this entity. False, the default, means every install of the module includes it. Not related to `data_object_relationships.is_required`, which says whether a relationship's field must be filled in."
+  },
+  {
+   "kind": "field",
+   "key": "domain_data_objects.is_install_optional",
+   "column": "description",
+   "from": "True when the domain can be installed without this entity. False, the default, means every install of the domain includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in.",
+   "to": "True when the domain can be installed without this entity. False, the default, means every install of the domain includes it. Not related to `data_object_relationships.is_required`, which says whether a relationship's field must be filled in."
+  },
+  {
+   "kind": "field",
+   "key": "data_object_relationships.is_required",
+   "column": "description",
+   "from": "True when a link's field must be filled in once both entities exist. It never makes an entity required: whether an entity installs is is_install_optional on domain_module_data_objects (SKILL.md Rule #16). A required link to an absent entity carries no constraint.",
+   "to": "True when a relationship's field must be filled in once both entities exist. It never makes an entity required: whether an entity installs is is_install_optional on domain_module_data_objects (SKILL.md Rule #16). A required relationship to an absent entity carries no constraint."
+  }
+ ]
+}

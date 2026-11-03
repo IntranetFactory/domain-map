@@ -94,10 +94,10 @@ a9:
 
 ---
 
-q10: Why is the HVAC field-service starter hosted on Subscription Management, and what should happen to that link?
+q10: Why is the HVAC field-service starter hosted on Subscription Management, and what should happen to that relationship?
 
 - a) It is intentional: the HVAC starter ships with the subscription billing flow embedded. Keep it.
-- b) It is a mis-attribution from load time. Remove the host link.
+- b) It is a mis-attribution from load time. Remove the host relationship.
 - c) Refactor it: the starter should consume the Billing module as a dependency rather than embedding the invoice record directly.
 
 Recommended: not pre-set. The starter embeds ten objects but overlaps with Subscription Management only on the invoice record, so this is an editorial intent call only you can make. Note that (b) and (c) are destructive or restructuring changes and would only be applied after you choose them.

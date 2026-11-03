@@ -30,7 +30,7 @@ export const A_CHECKS: Check[] = [
     id: "A2",
     band: "A",
     kind: "mechanical",
-    title: "capabilities linked",
+    title: "capabilities related",
     run: async (ctx) => {
       const n = (await ctx.query(CAPABILITY_DOMAINS_PATH)).filter((r: any) => r.domain_id === ctx.domainId).length;
       return checkCapabilityFloor(n, ctx.domain.domain_kind);
@@ -40,7 +40,7 @@ export const A_CHECKS: Check[] = [
     id: "A3",
     band: "A",
     kind: "mechanical",
-    title: "solutions linked with coverage_level",
+    title: "solutions related with coverage_level",
     run: async (ctx) => {
       const rows = (await ctx.query(SOLUTION_DOMAINS_PATH))
         .filter((r: any) => r.domain_id === ctx.domainId)

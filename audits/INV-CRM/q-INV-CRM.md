@@ -32,7 +32,7 @@ a2:
 
 ---
 
-q3: Which regulations are in scope for Investment CRM and should be linked? CAN-SPAM is already linked.
+q3: Which regulations are in scope for Investment CRM and should be related? CAN-SPAM is already related.
 
 - a) All four: add GDPR, CCPA, and SEC Investment Advisers Act (Rule 204-2), and keep CAN-SPAM.
 - b) Keep GDPR, CCPA, and SEC IAA, but drop CAN-SPAM as out of scope.
@@ -52,7 +52,7 @@ q4: What should the four personas be named?
 - c) Add a Principal persona between Partner and Associate.
 - d) Provide a custom persona list.
 
-Recommended: a. The proposed four cover deal leadership, diligence support, LP fundraising, and cross-module admin; the role layer is empty today, so this naming unblocks the persona build.
+Recommended: a. The proposed four cover deal leadership, diligence support, LP fundraising, and cross-module admin; the persona layer is empty today, so this naming unblocks the persona build.
 
 a4:
 
@@ -64,7 +64,7 @@ q5: Should the two adjacent domains be scheduled as their own full audit runs ne
 - b) Schedule FUND-ADMIN only (PORT-MONIT defers).
 - c) Defer both.
 
-Recommended: a. FUND-ADMIN carries the heaviest edge weight (3) and PORT-MONIT the next (2), and both were only covered inline or in light summary so far, so each warrants a dedicated pass.
+Recommended: a. FUND-ADMIN carries the heaviest relationship weight (3) and PORT-MONIT the next (2), and both were only covered inline or in light summary so far, so each warrants a dedicated pass.
 
 a5:
 

@@ -10,7 +10,7 @@ q1: (answer this first) How should the Rationalization module handle the applica
 - a) Delete the duplicate "consumer" copies in Rationalization. Rationalization always installs alongside Portfolio Registry, so the registry's records are the single source of truth.
 - b) Promote the Rationalization copies to embedded masters. Rationalization can be deployed standalone with its own shells of those records, which step aside when the registry is also installed.
 
-Recommended: a. Rationalization exists to score what the registry inventories, so standalone Rationalization with nothing to score is not a real deployment. This choice decides how the two modules connect and unblocks the cross-module handoffs that depend on it. Both options change existing records, so neither runs without your sign-off.
+Recommended: a. Rationalization exists to score what the registry inventories, so standalone Rationalization with nothing to score is not a real deployment. This choice decides how the two modules relate and unblocks the cross-module handoffs that depend on it. Both options change existing records, so neither runs without your sign-off.
 
 a1: b
 

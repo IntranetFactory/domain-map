@@ -17,13 +17,13 @@ last_audit: "2026-06-15"
 b1b:
   - id: B1B-PHASE-P
     summary: "Multi-module (5 modules) with 0 operational personas (E1): author persona / RACI layer. DEFERRED."
-    finding: "Post-build LSD has 5 domain_modules and 0 domain_roles. E1 fires. Per contract, personas/RACI deferred (Phase-P), not auto-authored."
-    action: "Author domain_roles (e.g. Legal Operations Manager, In-House Counsel, Legal Intake Coordinator, Outside-Counsel Manager) function-anchored, role_modules reach across the 5 modules, process_raci, and wire lifecycle.process_id. Author on explicit user go-ahead."
+    finding: "Post-build LSD has 5 domain_modules and 0 personas. E1 fires. Per contract, personas/RACI deferred (Phase-P), not auto-authored."
+    action: "Author personas (e.g. Legal Operations Manager, In-House Counsel, Legal Intake Coordinator, Outside-Counsel Manager) function-anchored, persona_modules reach across the 5 modules, process_raci, and wire lifecycle.process_id. Author on explicit user go-ahead."
 
   - id: B1B-TOOLS
     summary: "domain_module_tools authoring for the 5 LSD modules (modularization backlog); lsd-system skill (82) derives its toolset from them."
     finding: "lsd-system skill 82 is the correct domain-grain shape but the 5 new modules carry no domain_module_tools yet (F3 derived-toolset thin). Tracked in audits/_modularization-backlog.md."
-    action: "Author query_/mutate_ tools + workflow-gate tools per module (matters, intake, holds, ediscovery, engagements, inquiries, dockets, advice); link via domain_module_tools."
+    action: "Author query_/mutate_ tools + workflow-gate tools per module (matters, intake, holds, ediscovery, engagements, inquiries, dockets, advice); relate via domain_module_tools."
 
   - id: B1B-PAIRWISE-RERUN
     summary: "a9=a: rerun Pass-4 pairwise reconciliation for the 4 weight>=3 neighbors (ECM, AUDIT, HCM, GRC) now that LSD modules exist."
@@ -38,14 +38,14 @@ b1b:
 b2:
   - id: B2-LEGAL-CONTRACTS-NECESSITY
     summary: "Keep legal_contracts as a required consumer on LSD, or demote to optional? (user asked what a required consumer is; explained, re-asked.)"
-    question: "domain_data_objects row 110 (legal_contracts, data_object_id 66) on LSD is role=consumer, necessity=required, pointing at the CLM-mastered contract record. A 'required consumer' means LSD READS the contract master (it does not own it) and the workflow assumes that read is available. Demotion to optional says a matter can reference a contract concept without the CLM master being deployed. Keep required or demote?"
+    question: "domain_data_objects row 110 (legal_contracts, data_object_id 66) on LSD is held_as=consumer, necessity=required, pointing at the CLM-mastered contract record. A 'required consumer' means LSD READS the contract master (it does not own it) and the workflow assumes that read is available. Demotion to optional says a matter can reference a contract concept without the CLM master being deployed. Keep required or demote?"
     options: ["keep_required", "demote_to_optional"]
-    evidence: "ServiceNow LSD, LawVu, and Onit all surface contract data against matters as a first-class read (matter-linked contracts), so the read is workflow-bearing rather than convenience infrastructure; that supports keeping it required. Demotion is the narrower Rule #16 reading for deployments with no CLM master present. Demotion OVERWRITES a non-empty necessity (destructive), so it needs sign-off."
+    evidence: "ServiceNow LSD, LawVu, and Onit all surface contract data against matters as a first-class read (matter-related contracts), so the read is workflow-bearing rather than convenience infrastructure; that supports keeping it required. Demotion is the narrower Rule #16 reading for deployments with no CLM master present. Demotion OVERWRITES a non-empty necessity (destructive), so it needs sign-off."
     why: "Rule #16 explicit-necessity consideration on a consumer of an external master; user asked for the definition before deciding."
 
   - id: B2-KNOWLEDGE-SURFACE
     summary: "How to realize KNOWLEDGE-MGMT on LSD now that the 5-module shape is fixed (recommendation was 'a or b'; needs a pick)."
-    question: "KNOWLEDGE-MGMT (187) is provisionally linked to LSD-MATTER-MGMT. With the 5-module shape (no separate Knowledge module), realize it as: (a) a legal-specific legal_knowledge_articles MASTER inside LSD-MATTER-MGMT (new entity), or (b) consume the cross-cutting knowledge_articles master with legal-scoped article types (no new master), or (c) drop the capability link?"
+    question: "KNOWLEDGE-MGMT (187) is provisionally related to LSD-MATTER-MGMT. With the 5-module shape (no separate Knowledge module), realize it as: (a) a legal-specific legal_knowledge_articles MASTER inside LSD-MATTER-MGMT (new entity), or (b) consume the cross-cutting knowledge_articles master with legal-scoped article types (no new master), or (c) drop the capability relationship?"
     options: ["a_legal_specific_master", "b_consumer_of_cross_cutting", "c_drop_capability"]
     evidence: "In-house legal platforms (LawVu, Onit) often carry a distinct legal Knowledge surface (supports a); ServiceNow LSD reuses the shared ServiceNow Knowledge base with legal scoping (supports b). Since a1 chose 5 modules (the 6-module Knowledge-module path was declined), (b) consume cross-cutting is the consistent default; (a) authoring legal_knowledge_articles is an expansive addition that would ship only after this q is answered."
     why: "a3 recommendation was ambiguous ('a or b'); the 5-module decision narrows it but the master-vs-consume call is still the user's."
@@ -53,7 +53,7 @@ b2:
 b3:
   - id: B3-MATTER-ASSIGNMENTS
     candidate: "matter_assignments"
-    rationale: "Typed assignment row separating a matter's primary attorney from collaborators. Currently implicit via 'users leads matter' edge."
+    rationale: "Typed assignment row separating a matter's primary attorney from collaborators. Currently implicit via 'users leads matter' relationship."
     vendor_evidence: ["LawVu (Assignments)", "Onit (Matter Team)", "Litera (Matter Members)"]
     proposed_module: "LSD-MATTER-MGMT"
 

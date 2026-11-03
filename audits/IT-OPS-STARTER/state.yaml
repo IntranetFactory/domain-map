@@ -31,7 +31,7 @@ b3:
     candidate: "Optional domain_module_capabilities for IT-OPS-STARTER (Rule #19 invariant 5, marketing surface)."
     rationale: |
       A starter MAY realize a subset of capabilities (the discoverability surface); none were authored in the initial
-      build. Candidate cross-cutting capabilities to link if desired: SaaS renewal management, IT asset register,
+      build. Candidate cross-cutting capabilities to relate if desired: SaaS renewal management, IT asset register,
       contract/renewal tracking, internal helpdesk. Non-blocking; the build deploys without them.
     vendor_evidence: []
     proposed_module: null

@@ -13,7 +13,7 @@ q1: (answer this first) How should Master Data Management be split into modules 
 - b) Two modules: MDM-Golden-Records (the golden records and source records) and MDM-Match-and-Merge-Engine (the match and merge rules plus the stewardship workflow).
 - c) A larger split (three or more modules), separating stewardship workflow, data quality, and hierarchy management into their own modules.
 
-Recommended: a. The flagship MDM hubs (Informatica Intelligent MDM, Reltio Connected Data Platform, Profisee, Stibo STEP, Semarchy xDM) ship golden-record mastering and the match/merge/survivorship engine as facets of one unified hub product, not as separately-licensed modules, so a single MDM-Golden-Record-Management module mirrors how every flagship packages the market. The deeper substrate that would justify carving out separate modules (match candidates, survivorship rules, steward task queues, hierarchies) only becomes first-class in the larger vendors and stays a Bucket-3 candidate here, so the match-merge engine can split out later if its stewardship workflow diverges. This choice gates the whole build, so modules, lifecycle states, permissions, user edges, and handoff attribution all hang off it.
+Recommended: a. The flagship MDM hubs (Informatica Intelligent MDM, Reltio Connected Data Platform, Profisee, Stibo STEP, Semarchy xDM) ship golden-record mastering and the match/merge/survivorship engine as facets of one unified hub product, not as separately-licensed modules, so a single MDM-Golden-Record-Management module mirrors how every flagship packages the market. The deeper substrate that would justify carving out separate modules (match candidates, survivorship rules, steward task queues, hierarchies) only becomes first-class in the larger vendors and stays a Bucket-3 candidate here, so the match-merge engine can split out later if its stewardship workflow diverges. This choice gates the whole build, so modules, lifecycle states, permissions, relationships to `users`, and handoff attribution all hang off it.
 
 a1:
 
@@ -78,7 +78,7 @@ q7: What shape should the stewardship personas take?
 - b) A separate steward per master (three steward personas).
 - c) A different shape (describe it).
 
-Recommended: a. A single steward role with the specialized curator, approver, and admin roles around it is the common MDM pattern and keeps the persona set small. This drives the later persona pass and the user-edge wiring.
+Recommended: a. A single steward role with the specialized curator, approver, and admin roles around it is the common MDM pattern and keeps the persona set small. This drives the later persona pass and the relationship to `users` wiring.
 
 a7:
 
@@ -107,15 +107,15 @@ a9:
 
 ---
 
-q12: One outbound link to the Customer Data Platform (when a customer golden record is updated) is currently labeled with a generic "manage product and service master data" process. A more precise label, "manage customer master data," already exists for exactly that customer payload. Should I switch the label to the customer-specific one? (yes/no)
+q12: One outbound relationship to the Customer Data Platform (when a customer golden record is updated) is currently labeled with a generic "manage product and service master data" process. A more precise label, "manage customer master data," already exists for exactly that customer payload. Should I switch the label to the customer-specific one? (yes/no)
 
-Recommended: yes. The link carries customers, so the customer-specific label is the correct one and makes the cross-system picture line up. Switching it replaces the existing label, which is a change to an existing record, so it needs your sign-off.
+Recommended: yes. The relationship carries customers, so the customer-specific label is the correct one and makes the cross-system picture line up. Switching it replaces the existing label, which is a change to an existing record, so it needs your sign-off.
 
 a12:
 
 ---
 
-q13: One outbound link to HCM (when an employee golden record is created) carries two process labels: the correct "manage and maintain employee data," plus a redundant generic "maintain master data." How should the redundant one be handled?
+q13: One outbound relationship to HCM (when an employee golden record is created) carries two process labels: the correct "manage and maintain employee data," plus a redundant generic "maintain master data." How should the redundant one be handled?
 
 - a) Remove the redundant "maintain master data" label, keeping only "manage and maintain employee data."
 - b) Re-point the redundant label to "manage separation" instead of removing it.

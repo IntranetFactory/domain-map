@@ -59,7 +59,7 @@ export function checkFunctionOwnership(
   const otherText = others.length ? `; ${others.length} other: ${listOf(others.map((r) => `${fnLabel(r.business_function_id)} (${r.responsibility_type ?? "no type"})`))}` : "";
   if (domainKind === "bundle") return pass(`exempt: domain_kind='bundle' (${owners.length} owner rows${otherText})`);
   if (owners.length === 0) {
-    return fail(`no business_function_domains owner row (${rows.length} rows in total${otherText}); link the owning function from the function spine`, []);
+    return fail(`no business_function_domains owner row (${rows.length} rows in total${otherText}); relate the owning function from the function spine`, []);
   }
   return pass(`${owners.length} owner: ${listOf(owners.map(fnLabel))}${otherText}`);
 }
@@ -68,14 +68,14 @@ export function checkFunctionOwnership(
 
 export type PersonaRow = {
   id: number;
-  role_code?: string | null;
+  persona_code?: string | null;
   business_function_id: number | null;
   record_status?: string | null;
 };
 
-export type RoleModuleRow = {
+export type PersonaModuleRow = {
   id?: RowId;
-  role_id: number;
+  persona_id: number;
   domain_module_id: number;
   interaction_level?: string | null;
 };
@@ -88,24 +88,24 @@ export function isLivePersona(r: Pick<PersonaRow, "record_status">): boolean {
 }
 
 export type DomainPersonas = {
-  reach: number[]; // live personas with >= 1 role_modules row on the domain's modules
+  reach: number[]; // live personas with >= 1 persona_modules row on the domain's modules
   functionScoped: number[]; // live personas of an owning function of the domain
   all: number[]; // the union (SKILL.md E1), sorted
 };
 
-// SKILL.md E1: /domain_roles of the owning function UNION the personas touching any of the domain's
-// modules via role_modules. phase_p_triage.ts counted the reach half only (persona_count).
+// SKILL.md E1: /personas of the owning function UNION the personas touching any of the domain's
+// modules via persona_modules. phase_p_triage.ts counted the reach half only (persona_count).
 export function domainPersonas(opts: {
   moduleIds: Iterable<number>;
   ownerFunctionIds: Iterable<number>;
   personas: PersonaRow[];
-  roleModules: RoleModuleRow[];
+  personaModules: PersonaModuleRow[];
 }): DomainPersonas {
   const live = new Map(opts.personas.filter(isLivePersona).map((p) => [p.id, p]));
   const mods = new Set(opts.moduleIds);
   const fns = new Set(opts.ownerFunctionIds);
   const reach = new Set<number>();
-  for (const rm of opts.roleModules) if (mods.has(rm.domain_module_id) && live.has(rm.role_id)) reach.add(rm.role_id);
+  for (const rm of opts.personaModules) if (mods.has(rm.domain_module_id) && live.has(rm.persona_id)) reach.add(rm.persona_id);
   const functionScoped = new Set<number>();
   for (const p of live.values()) if (p.business_function_id != null && fns.has(p.business_function_id)) functionScoped.add(p.id);
   return {
@@ -139,14 +139,14 @@ export function checkPersonaCoverage(
   moduleCount: number,
   capabilityCount: number,
   p: DomainPersonas,
-  label: (roleId: number) => string = (id) => `role ${id}`,
+  label: (personaId: number) => string = (id) => `persona ${id}`,
 ): Verdict[] {
   const shape = personaShape(moduleCount, capabilityCount);
   const counts = `${moduleCount} modules, ${capabilityCount} capabilities`;
   if (shape === "single") {
     return [pass(`vacuous: single-module shape (${counts}); the 2-module floor blocks persona authoring (${p.all.length} personas)`)];
   }
-  // Reach-only: a persona counts when it reaches one of the domain's modules (role_modules), since
+  // Reach-only: a persona counts when it reaches one of the domain's modules (persona_modules), since
   // only those personas are provisioned for the modules. Owning-function personas that reach other
   // domains' modules only are named in the detail but do not satisfy E1.
   if (p.reach.length === 0) {
@@ -154,31 +154,31 @@ export function checkPersonaCoverage(
     const elsewhere = p.functionScoped.length ? `; ${p.functionScoped.length} owning-function personas reach other domains' modules only` : "";
     return [fail(`zero personas reaching the domain's modules (${counts})${elsewhere}${route}`, [])];
   }
-  return [pass(`${p.reach.length} personas reach the domain's modules (rows = domain_roles ids): ${listOf(p.reach.map(label))}`)];
+  return [pass(`${p.reach.length} personas reach the domain's modules (rows = personas ids): ${listOf(p.reach.map(label))}`)];
 }
 
-// E2: every E1 persona has >= 2 role_modules rows (any module, catalog-wide).
-export function checkPersonaFloor(personaIds: number[], roleModules: RoleModuleRow[], label: (roleId: number) => string = (id) => `role ${id}`): Verdict {
+// E2: every E1 persona has >= 2 persona_modules rows (any module, catalog-wide).
+export function checkPersonaFloor(personaIds: number[], personaModules: PersonaModuleRow[], label: (personaId: number) => string = (id) => `persona ${id}`): Verdict {
   if (personaIds.length === 0) return pass("vacuous: no personas (see E1)");
   const n = new Map<number, number>();
-  for (const rm of roleModules) n.set(rm.role_id, (n.get(rm.role_id) ?? 0) + 1);
+  for (const rm of personaModules) n.set(rm.persona_id, (n.get(rm.persona_id) ?? 0) + 1);
   const bad = personaIds.filter((id) => (n.get(id) ?? 0) < 2);
-  if (bad.length === 0) return pass(`${personaIds.length} personas, each with >= 2 role_modules rows`);
-  return fail(`${bad.length} of ${personaIds.length} personas below the 2-module floor (rows = domain_roles ids): ${listOf(bad.map((id) => `${label(id)}: ${n.get(id) ?? 0}`))}`, bad);
+  if (bad.length === 0) return pass(`${personaIds.length} personas, each with >= 2 persona_modules rows`);
+  return fail(`${bad.length} of ${personaIds.length} personas below the 2-module floor (rows = personas ids): ${listOf(bad.map((id) => `${label(id)}: ${n.get(id) ?? 0}`))}`, bad);
 }
 
 export const INTERACTION_LEVELS = new Set(["primary", "secondary"]);
 
-// E3: every role_modules row of an E1 persona has interaction_level primary / secondary.
-export function checkInteractionLevels(personaIds: number[], roleModules: RoleModuleRow[], label: (roleId: number) => string = (id) => `role ${id}`): Verdict {
+// E3: every persona_modules row of an E1 persona has interaction_level primary / secondary.
+export function checkInteractionLevels(personaIds: number[], personaModules: PersonaModuleRow[], label: (personaId: number) => string = (id) => `persona ${id}`): Verdict {
   if (personaIds.length === 0) return pass("vacuous: no personas (see E1)");
   const ids = new Set(personaIds);
-  const mine = roleModules.filter((rm) => ids.has(rm.role_id));
+  const mine = personaModules.filter((rm) => ids.has(rm.persona_id));
   const bad = mine.filter((rm) => !INTERACTION_LEVELS.has(String(rm.interaction_level ?? "")));
-  if (bad.length === 0) return pass(`${mine.length} role_modules rows of ${personaIds.length} personas, all primary / secondary`);
+  if (bad.length === 0) return pass(`${mine.length} persona_modules rows of ${personaIds.length} personas, all primary / secondary`);
   return fail(
-    `${bad.length} of ${mine.length} role_modules rows lack a valid interaction_level (rows = role_modules ids): ${listOf(bad.map((rm) => `${rm.id ?? "?"} ${label(rm.role_id)} -> module ${rm.domain_module_id}: ${rm.interaction_level == null ? "null" : JSON.stringify(rm.interaction_level)}`))}`,
-    bad.map((rm) => rm.id ?? `${rm.role_id}.${rm.domain_module_id}`),
+    `${bad.length} of ${mine.length} persona_modules rows lack a valid interaction_level (rows = persona_modules ids): ${listOf(bad.map((rm) => `${rm.id ?? "?"} ${label(rm.persona_id)} -> module ${rm.domain_module_id}: ${rm.interaction_level == null ? "null" : JSON.stringify(rm.interaction_level)}`))}`,
+    bad.map((rm) => rm.id ?? `${rm.persona_id}.${rm.domain_module_id}`),
   );
 }
 

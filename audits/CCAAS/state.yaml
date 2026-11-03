@@ -11,15 +11,15 @@ last_audit: "2026-06-13"
 # for inbound handoff payloads + work_schedules for WFM adherence), 2 new masters
 # (interaction_evaluations 1026, evaluation_forms 1027), lifecycle states (support_sessions,
 # ccaas_call_recordings, agent_states, interaction_evaluations), system-skill toolset (tools +
-# domain_module_tools incl. voice tools make_phone_call/transcribe_audio), 5 personas + role_modules,
+# domain_module_tools incl. voice tools make_phone_call/transcribe_audio), 5 personas + persona_modules,
 # 11 data_object_relationships (6 intra B6 + 2 users B7 + 3 cross-domain B8), 11 lifecycle-cover
 # trigger_events (B9), and the handoff module-FK backfill (B10b: 6 outbound source_module,
 # 5 inbound target_module). Only user-judgment + destructive steps remain.
 #
 # Resolved this pass (was b1b, now executed): B1B-M1-MODULES, B1B-A2-CAPABILITIES, B1B-A3-SOLUTIONS,
-# B1B-B6-INTRA-DOMAIN-EDGES, B1B-B12-LIFECYCLE, B1B-B10b-HANDOFF-MODULE-FK, B1B-UNIVERSAL-MASTERS
+# B1B-B6-INTRA-DOMAIN-RELATIONSHIPS, B1B-B12-LIFECYCLE, B1B-B10b-HANDOFF-MODULE-FK, B1B-UNIVERSAL-MASTERS
 # (interaction_evaluations + evaluation_forms; remaining universal masters parked as b3),
-# B1B-E-ROLES. The agent_schedules consumer link skipped earlier was resolved by linking the real
+# B1B-E-ROLES. The agent_schedules consumer relationship skipped earlier was resolved by relating the real
 # WFM master work_schedules (160) on CCAAS-DESKTOP instead (decision recorded in history).
 
 b1a: []
@@ -55,7 +55,7 @@ b2:
     summary: Keep workforce-engagement (recording, QM, adherence) inside CCAAS, or promote WEM to its own domain.
     question: "Should workforce engagement (the CCAAS-QUALITY recording/QM/coaching surface plus agent-state adherence) stay a CCAAS module, or be promoted to a standalone WEM domain (CCAAS-WEM is queued in _missing-domains.md)?"
     options: [keep-in-ccaas, promote-wem-standalone]
-    why: "Vendor evidence cuts both ways. Genesys Cloud CX and NICE CXone bundle WEM (recording, QM, WFM, coaching) inside the suite as a licensed tier, supporting keep-in-ccaas. But Verint and Calabrio sell WEM as a standalone platform that overlays any ACD, and NICE markets its WEM as a separable product line, so WEM is a genuine point-solution market in its own right. Promoting it would move ccaas_call_recordings, interaction_evaluations, and evaluation_forms out of CCAAS and free the Verint/Calabrio vendor surface to that domain. Trade-off: a standalone WEM domain models the market more faithfully but fragments the contact-center build and duplicates the agent_states adherence link across two domains."
+    why: "Vendor evidence cuts both ways. Genesys Cloud CX and NICE CXone bundle WEM (recording, QM, WFM, coaching) inside the suite as a licensed tier, supporting keep-in-ccaas. But Verint and Calabrio sell WEM as a standalone platform that overlays any ACD, and NICE markets its WEM as a separable product line, so WEM is a genuine point-solution market in its own right. Promoting it would move ccaas_call_recordings, interaction_evaluations, and evaluation_forms out of CCAAS and free the Verint/Calabrio vendor surface to that domain. Trade-off: a standalone WEM domain models the market more faithfully but fragments the contact-center build and duplicates the agent_states adherence relationship across two domains."
 
   - id: B2-NAMING-ARBITRATION
     summary: Per Rule #9, resolve the 5 bare-word CCAAS masters (prefix to ccaas_* or claim canonical bare-word). DESTRUCTIVE rename.

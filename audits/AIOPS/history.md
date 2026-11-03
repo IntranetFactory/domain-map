@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 7 mastered `data_objects` (event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, alert_suppression_rules, ml_model_training_records, incident_predictions), 5 consumer/contributor rows, 9 trigger_events, 8 outbound and 16 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 0 `data_object_relationships` involving any AIOPS master, 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 module-anchored system skills (1 legacy domain-level skill `aiops-system` at `skills.id=27`), 0 roles in `role_modules` (cannot exist without modules).
+- Current footprint: 7 mastered `data_objects` (event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, alert_suppression_rules, ml_model_training_records, incident_predictions), 5 consumer/contributor rows, 9 trigger_events, 8 outbound and 16 inbound cross-domain handoffs, 0 `domain_modules`, 0 `domain_module_data_objects`, 0 `data_object_relationships` involving any AIOPS master, 0 `data_object_lifecycle_states`, 0 `data_object_aliases`, 0 `domain_regulations`, 0 module-anchored system skills (1 legacy domain-level skill `aiops-system` at `skills.id=27`), 0 roles in `persona_modules` (cannot exist without modules).
 - Vendor surface basis (flagship vendors enumerated for the semantic pass): BigPanda AIOps, Moogsoft (Dell AIOps), ServiceNow ITOM Event Management, Splunk IT Service Intelligence, IBM Cloud Pak for AIOps, Dynatrace Davis AI, PagerDuty AIOps, Selector AI, Devo SOAR/AIOps. Compliance overlay is light, ML governance overlaps with the queued AI-GOV candidate.
 - **Bucket 1 (in-scope, agent fixable):** 16 items.
 - **Bucket 2 (surface-for-user, judgment):** 5 items.
@@ -63,8 +63,8 @@ Every master has zero lifecycle states (B12 fail across the board), zero aliases
 - **B3 PASS** every master is prefixed (no bare-word), `is_canonical_bare_word=false`, no rationale required.
 - **B4 FAIL** every master has all three pattern flags `false` by default; no positive audit re-evaluation has happened. `ml_model_training_records` plausibly has `has_submit_lock=true` (training run commits are immutable); `incident_predictions` plausibly has `has_single_approver=false` (machine output, not approved). Surface in Bucket 2 for the user to evaluate per master.
 - **B5 PASS** zero `embedded_master` rows, nothing to validate.
-- **B6 FAIL** zero `data_object_relationships` edges where both ends are AIOPS masters. The implied edges (`event_correlations spawns root_cause_analyses`, `event_correlations contains anomaly_detections`, `root_cause_analyses references event_correlations`, `incident_predictions references predictive_signals`, `ml_model_training_records calibrates anomaly_detections`, `alert_suppression_rules suppresses monitoring_events`, etc.) are all missing.
-- **B7 FAIL** zero `users` edges. Expected actors: incident analyst (assignee on RCAs), ML engineer (creator on `ml_model_training_records`), reviewer (approver on `alert_suppression_rules`).
+- **B6 FAIL** zero `data_object_relationships` rows where both ends are AIOPS masters. The implied relationships (`event_correlations spawns root_cause_analyses`, `event_correlations contains anomaly_detections`, `root_cause_analyses references event_correlations`, `incident_predictions references predictive_signals`, `ml_model_training_records calibrates anomaly_detections`, `alert_suppression_rules suppresses monitoring_events`, etc.) are all missing.
+- **B7 FAIL** zero relationships to `users`. Expected actors: incident analyst (assignee on RCAs), ML engineer (creator on `ml_model_training_records`), reviewer (approver on `alert_suppression_rules`).
 - **B8 FAIL** for outbound, zero cross-domain `data_object_relationships`. Every outbound handoff with a clean payload mapping (8 rows) is missing its mirror relationship row.
 - **B9 FAIL** every master has observable state transitions, but only 9 trigger_events exist across the 7 masters and most masters carry only one (no `published`, `resolved`, `expired`, `accepted_feedback`, `auto_remediated` events). `event_correlations` carries trigger 143 (`topology.published`) whose name and description suggest it belongs on `service_maps` (CMDB) or a separate topology entity, this is a B9 data-quality bug. Trigger 39 (`correlation.identified`) has a description string saying "Fired when a Incident is identified" which mis-references the entity, label-text bug, easy PATCH.
 - **B9b** vacuously passes (no modules, no intra-domain handoff surface to model).
@@ -75,13 +75,13 @@ Every master has zero lifecycle states (B12 fail across the board), zero aliases
 - **C1 PASS** 1 owner (`IT Infrastructure`) + 1 contributor (`Software Engineering`).
 - **C2 PASS** no overrides recorded, but with zero capabilities the check is vacuous.
 - **D1** UI spot-check, none of the data has been loaded with `record_status='approved'` (legacy seed data, all `new` by default).
-- **E1-E6 FAIL** vacuously, no modules means no `role_modules` rows can exist. No persona is bundled against AIOPS today.
+- **E1-E6 FAIL** vacuously, no modules means no `persona_modules` rows can exist. No persona is bundled against AIOPS today.
 - **F1 FAIL** legacy domain-level system skill `aiops-system` (id 27, `domain_module_id=null`) exists. Once modules ship, this must retire in favor of per-module system skills.
 - **F2 FAIL** module count is 0, expected skills count is 0, current is 1. Cannot satisfy F2 without M1.
 - **F3 PASS** the legacy skill has 9 `skill_tools` rows (4 query primitives on the 4 original masters, 4 query primitives on the 3 new masters added later, plus `send_email` and `post_chat_message` channels). Functionally adequate but anchored on the wrong skill (domain-level instead of module-level).
 - **F4 PASS** all 9 tools satisfy the `operation_kind` <-> `data_object_id` invariant.
 - **F5** computable on the legacy skill, `strict_score = 8/9 = 0.889` (post_chat_message is `external`), `operational_score = 8/9` (no `integration`-tier rows). Will need to be recomputed per module once the M-band lands.
-- **F7 FAIL** `send_email` (tool 37) and `post_chat_message` (tool 40) are channel primitives, both `requirement_level=required`, both with empty `notes`. Per the channel-vs-capability authoring rule the default for generic notifications is `notify_person` / `notify_team`. Fix: re-anchor on the abstraction tools unless the user can justify the channel-specific link.
+- **F7 FAIL** `send_email` (tool 37) and `post_chat_message` (tool 40) are channel primitives, both `requirement_level=required`, both with empty `notes`. Per the channel-vs-capability authoring rule the default for generic notifications is `notify_person` / `notify_team`. Fix: re-anchor on the abstraction tools unless the user can justify the channel-specific relationship.
 - **H1 FAIL** of 24 cross-domain handoffs (8 outbound + 16 inbound), only 4 have any `handoff_processes` tag (3 of those are `discovery_substring`, 1 is `agent_curated`). 20 are untagged. Coverage 4/24 = 17%, `approved` count 0. Expected throughput from this audit: 12 to 19 new `agent_curated` tags, 5 deferrals. See APQC TAGGING in Bucket 1.
 
 ### Pass 2, Market audit (semantic)
@@ -104,7 +104,7 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 | service_health_scores | Common | Splunk ITSI service scores, Dynatrace Davis severity, BigPanda environment health; MISSING |
 | alert_storms | Common | Storm / flapping detection result records; MISSING |
 | feedback_labels | Common | Analyst feedback on correlations to retrain the model (loved by BigPanda, Moogsoft); MISSING |
-| change_correlations | Specialist | Linking events to recent change_requests (correlation hint that a change caused the event); MISSING |
+| change_correlations | Specialist | Relating events to recent change_requests (correlation hint that a change caused the event); MISSING |
 | runbook_executions | Specialist | Auto-remediation executions triggered by AIOps; typically routed to SOAR/ITPA, scope question |
 | golden_signal_definitions | Specialist | SRE-style signal contracts (latency / errors / saturation / traffic); MISSING |
 | model_drift_alerts | Specialist | First-class drift alerts distinct from `ml_model_training_records.drift_detected` event |
@@ -117,9 +117,9 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 - **SCOPE-CREEP:** none currently in scope. The 5 consumer/contributor rows (`configuration_items`, `monitoring_events`, `monitoring_alerts`, `distributed_traces`, `data_pipelines`) are all legitimate dependencies for AIOps.
 - **MODULARIZATION-ISSUE (BLOCKING):** AIOPS has zero modules. The market shape implies at minimum 2 modules: AIOPS-EVENT-CORRELATION (event_correlations, correlation_rules, alert_suppression_rules, alert_storms, enrichment_pipelines) and AIOPS-PREDICTIVE-INTELLIGENCE (anomaly_detections, predictive_signals, incident_predictions, root_cause_analyses, ml_model_training_records, model_drift_alerts, feedback_labels). Possibly a third AIOPS-SERVICE-HEALTH (service_health_scores, golden_signal_definitions, escalation_policies). Surfaced as Bucket 2 (judgment call on the split).
 
-### Pass 3, Neighbor discovery (auto-derived edge weights)
+### Pass 3, Neighbor discovery (auto-derived relationship weights)
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO dependencies | Edge weight |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO dependencies | Relationship weight |
 | --- | --- | --- | --- | --- |
 | OBS | 1 | 6 | distributed_traces (consumer) | 8 |
 | ITOM | 3 | 2 | monitoring_events (consumer), monitoring_alerts (contributor) | 7 |
@@ -131,9 +131,9 @@ Vendor surface matrix (union, snake_case_plural names, classified):
 | DCIM | 0 | 1 | (none) | 1 |
 | NPMD | 0 | 1 | (none) | 1 |
 
-Heavy neighbors (edge >= 3): OBS, ITOM, ITSM. Pass 4 runs the four-leg analysis against each.
+Heavy neighbors (relationship >= 3): OBS, ITOM, ITSM. Pass 4 runs the four-leg analysis against each.
 
-### Pass 4, Pairwise reconciliation per neighbor (edge weight >= 3)
+### Pass 4, Pairwise reconciliation per neighbor (relationship weight >= 3)
 
 #### AIOPS <-> OBS (weight 8)
 
@@ -164,19 +164,19 @@ Heavy neighbors (edge >= 3): OBS, ITOM, ITSM. Pass 4 runs the four-leg analysis 
 | Item | Type | Description |
 | --- | --- | --- |
 | B1-S1 | STRUCTURAL (CLAUDE.md violation) | PATCH `domains.business_logic` (id=6) to remove the U+2014 em-dash. Proposed: "Event correlation, deduplication, anomaly detection, and root-cause analysis: ML and statistical algorithms across high-volume telemetry." |
-| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for AIOPS and link via `capability_domains`. Proposed codes: AIOPS-EVENT-CORRELATION, AIOPS-ANOMALY-DETECTION, AIOPS-ROOT-CAUSE-ANALYSIS, AIOPS-PREDICTIVE-INSIGHTS, AIOPS-ALERT-NOISE-REDUCTION, AIOPS-ML-MODEL-OPS, AIOPS-SERVICE-HEALTH-SCORING. |
+| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for AIOPS and relate via `capability_domains`. Proposed codes: AIOPS-EVENT-CORRELATION, AIOPS-ANOMALY-DETECTION, AIOPS-ROOT-CAUSE-ANALYSIS, AIOPS-PREDICTIVE-INSIGHTS, AIOPS-ALERT-NOISE-REDUCTION, AIOPS-ML-MODEL-OPS, AIOPS-SERVICE-HEALTH-SCORING. |
 | B1-A4 | STRUCTURAL | Draft `catalog_tagline` and `catalog_description` per Rule #20 (buyer voice). Surface drafts to user before writing. |
 | B1-M1 | STRUCTURAL (BLOCKING) | Author at least 2 `domain_modules` rows (the 2+ floor applies once capabilities >= 3): AIOPS-EVENT-CORRELATION and AIOPS-PREDICTIVE-INTELLIGENCE as the minimal split. Optionally a 3rd AIOPS-SERVICE-HEALTH. Every other M-band, B-band module-anchored, E-band, F2 fix depends on this. |
 | B1-B4 | STRUCTURAL | Re-evaluate pattern flags on all 7 masters. Author proposal: set `has_submit_lock=true` on `ml_model_training_records`, `root_cause_analyses` (when published, immutable), `alert_suppression_rules` (once activated). |
-| B1-B6 | STRUCTURAL | Author intra-domain `data_object_relationships`: `event_correlations contains anomaly_detections`, `event_correlations spawns root_cause_analyses`, `root_cause_analyses references event_correlations`, `incident_predictions references predictive_signals`, `ml_model_training_records calibrates anomaly_detections`, `alert_suppression_rules suppresses event_correlations`, `feedback_labels improves anomaly_detections` (once feedback_labels exists). Approx 7 edges. |
-| B1-B7 | STRUCTURAL | Author users edges per Rule #10. Expected: `users authors root_cause_analyses`, `users reviews alert_suppression_rules`, `users creates ml_model_training_records`, `users acknowledges incident_predictions`. 4+ rows. |
+| B1-B6 | STRUCTURAL | Author intra-domain `data_object_relationships`: `event_correlations contains anomaly_detections`, `event_correlations spawns root_cause_analyses`, `root_cause_analyses references event_correlations`, `incident_predictions references predictive_signals`, `ml_model_training_records calibrates anomaly_detections`, `alert_suppression_rules suppresses event_correlations`, `feedback_labels improves anomaly_detections` (once feedback_labels exists). Approx 7 relationships. |
+| B1-B7 | STRUCTURAL | Author relationships to `users` per Rule #10. Expected: `users authors root_cause_analyses`, `users reviews alert_suppression_rules`, `users creates ml_model_training_records`, `users acknowledges incident_predictions`. 4+ rows. |
 | B1-B8 | STRUCTURAL | Author outbound cross-domain `data_object_relationships` (mirrors of the 8 outbound handoffs). Examples: `event_correlations triggers service_incidents`, `root_cause_analyses informs service_problems`, `predictive_signals warns service_incidents`, `incident_predictions forecasts service_incidents`, `alert_suppression_rules suppresses monitoring_events`. 8 rows. |
 | B1-B9 | STRUCTURAL | Add missing trigger_events on each master to cover the published lifecycle. Expected new rows: `event_correlation.published`, `event_correlation.resolved`, `anomaly_detection.confirmed`, `anomaly_detection.dismissed`, `root_cause_analysis.reviewed`, `predictive_signal.expired`, `incident_prediction.realized`, `incident_prediction.dismissed`. Also: PATCH trigger 39 description (no "Incident" word, replace with "Event Correlation"); DELETE or re-attribute trigger 143 `topology.published` on event_correlations (likely re-anchor to a CMDB or SRE entity, see Bucket 2). |
 | B1-B10b | STRUCTURAL | After M1 lands, run a B10b backfill to set `source_domain_module_id` on the 8 outbound handoffs and `target_domain_module_id` on the 16 inbound handoffs. Deterministic derivation per the reference loader [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts). |
 | B1-B11 | STRUCTURAL | Author `data_object_aliases` for the 5 non-self-explanatory masters: event_correlations (alert clustering, event grouping), anomaly_detections (outlier detection, baseline deviation), root_cause_analyses (RCA, probable cause inference), predictive_signals (leading indicator, forecast indicator), incident_predictions (proactive incident, predicted incident). ~10 alias rows. |
 | B1-B12 | STRUCTURAL | Author `data_object_lifecycle_states` per master, with `domain_module_id` set after M1: event_correlations (open / investigating / resolved / closed), root_cause_analyses (draft / reviewed / published), alert_suppression_rules (proposed / activated / expired), ml_model_training_records (started / completed / failed / deployed), incident_predictions (predicted / confirmed / dismissed / realized), anomaly_detections (detected / confirmed / dismissed), predictive_signals (active / expired). Approx 24 state rows. |
 | B1-F1 | STRUCTURAL | Retire the legacy `aiops-system` skill row (`skills.id=27`, `domain_module_id=null`) once module-level system skills ship. |
-| B1-F7 | STRUCTURAL | Re-anchor `send_email` (tool_id=37) and `post_chat_message` (tool_id=40) `skill_tools` rows to `notify_person` (or `notify_team` for broadcasts) on whichever module-level skill ships. Both channel-specific links lack workflow-specific justification. |
+| B1-F7 | STRUCTURAL | Re-anchor `send_email` (tool_id=37) and `post_chat_message` (tool_id=40) `skill_tools` rows to `notify_person` (or `notify_team` for broadcasts) on whichever module-level skill ships. Both channel-specific relationships lack workflow-specific justification. |
 | B1-H1 | APQC TAGGING | Author 12 to 19 new `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status='new'`. Per-handoff classifications: |
 
 #### B1-H1, APQC TAGGING proposals
@@ -223,11 +223,11 @@ Deferred to Discover Pass 3: handoffs 649 (NPMD network flow anomaly, security o
 
 4. **Pattern flags per master.** B4 audit: confirm `has_submit_lock=true` on `ml_model_training_records` (training runs are immutable artifacts), `root_cause_analyses` (published RCAs are immutable), `alert_suppression_rules` (once activated, change requires a new rule). User to confirm, no notes column writes per Rule #15.
 
-5. **Channel primitives on the system skill.** F7 finding: `send_email` and `post_chat_message` are linked as required tools on `aiops-system`. Are these workflow-specific (the user can name the workflow) or generic notifications (default to `notify_person` / `notify_team`)? If generic, the fix is a swap.
+5. **Channel primitives on the system skill.** F7 finding: `send_email` and `post_chat_message` are related as required tools on `aiops-system`. Are these workflow-specific (the user can name the workflow) or generic notifications (default to `notify_person` / `notify_team`)? If generic, the fix is a swap.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
-1. **Missing market-surface entities** (need a formal Phase 0 vendor-surface document before loading): `correlation_rules` (rule-based correlation, complementary to ML), `enrichment_pipelines` (CMDB / topology enrichment of inbound events), `service_health_scores` (Splunk ITSI, Dynatrace Davis severity), `alert_storms` (storm / flapping detection result records), `feedback_labels` (analyst feedback for retraining), `change_correlations` (linking events to recent change_requests), `model_drift_alerts` (first-class drift alerts distinct from training-record events), `escalation_policies` (confidence-based escalation), `golden_signal_definitions` (SRE-style latency / errors / saturation / traffic). Vendor knowledge basis: BigPanda, Moogsoft, ServiceNow ITOM Event Mgmt, Splunk ITSI, Dynatrace Davis, PagerDuty AIOps. Recommended verification: focused Phase 0 pass on AIOps category leaders for entity surface; survivors become Bucket 1 in a follow-up audit.
+1. **Missing market-surface entities** (need a formal Phase 0 vendor-surface document before loading): `correlation_rules` (rule-based correlation, complementary to ML), `enrichment_pipelines` (CMDB / topology enrichment of inbound events), `service_health_scores` (Splunk ITSI, Dynatrace Davis severity), `alert_storms` (storm / flapping detection result records), `feedback_labels` (analyst feedback for retraining), `change_correlations` (relating events to recent change_requests), `model_drift_alerts` (first-class drift alerts distinct from training-record events), `escalation_policies` (confidence-based escalation), `golden_signal_definitions` (SRE-style latency / errors / saturation / traffic). Vendor knowledge basis: BigPanda, Moogsoft, ServiceNow ITOM Event Mgmt, Splunk ITSI, Dynatrace Davis, PagerDuty AIOps. Recommended verification: focused Phase 0 pass on AIOps category leaders for entity surface; survivors become Bucket 1 in a follow-up audit.
 
 2. **Symmetric AIOPS -> OBS feedback handoff.** The OBS -> AIOPS direction is heavily modeled (6 inbound). The reverse direction (AIOPS feeds back a threshold recommendation to OBS, e.g. "raise this alert threshold to reduce noise") is not modeled. Worth checking whether any flagship vendor publishes this back-pressure event. Discovery, not certainty.
 
@@ -270,7 +270,7 @@ Loader: [.tmp_deploy/fix_aiops_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ai
 | --- | --- | --- |
 | B1-S1 | PATCH `domains.id=6` `business_logic`, removed the U+2014 em-dash, replaced ` — ` with `: ` per CLAUDE.md. New text: `Event correlation, deduplication, anomaly detection, and root-cause analysis: ML and statistical algorithms across high-volume telemetry.` | 1 |
 | B1-B9 (partial: trigger 39 naming PATCH only) | PATCH `trigger_events.id=39` `description`, rewrote `Fired when a Incident is identified...` to `Fired when an Event Correlation is identified...`. Trigger 143 re-attribution remains a Bucket 2 judgment, untouched. New trigger inserts deferred (new entities). | 1 |
-| B1-B7 | INSERT `data_object_relationships` per Rule #10 user-edges (audit pre-specified the four edges). All four use `data_object_id=748` (users platform_builtin), `owner_side=target`, `relationship_kind=reference`, `relationship_type=one_to_many`. New row ids 1741-1744: `authored root cause analyses` -> 95, `reviewed suppression rules` -> 722, `created training records` -> 723, `acknowledged predictions` -> 724. | 4 |
+| B1-B7 | INSERT `data_object_relationships` per Rule #10 relationships to `users` (audit pre-specified the four relationships). All four use `data_object_id=748` (users platform_builtin), `owner_side=target`, `relationship_kind=reference`, `relationship_type=one_to_many`. New row ids 1741-1744: `authored root cause analyses` -> 95, `reviewed suppression rules` -> 722, `created training records` -> 723, `acknowledged predictions` -> 724. | 4 |
 | B1-B11 | INSERT `data_object_aliases` for the 5 non-self-explanatory masters (exact tuples in the audit). All `alias_type=synonym`, `is_preferred=false`, `notes=''`. New row ids 975-984. Covers event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, incident_predictions, two aliases each. | 10 |
 | B1-H1 | INSERT `handoff_processes` for the 15 confident-L4 pairs the audit pre-specifies, skipping any handoff_id already tagged (57, 58, 53, 603, 628, 154 are all left as-is; 154's existing process_id=272 differs from the audit proposal 1302 and is left for user judgment). All inserts: `role=implements`, `proposal_source=agent_curated`, `record_status=new`, `notes=''`. New tags on handoffs 56, 59, 141, 604, 605, 606, 607, 608, 609, 610, 612, 613, 619, 665, 667. | 15 |
 
@@ -284,7 +284,7 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 | B1-A4 | `catalog_tagline` / `catalog_description` are Rule #20 buyer-voice content; explicitly deferred per the run prompt. |
 | B1-M1 | New `domain_modules` rows. Out of scope per "new entities/DMDOs/modules" and gated on Bucket 2 item #1 user pick of the module split (a / b / c). |
 | B1-B4 | Pattern flag flips on the 7 masters. Explicitly deferred per the run prompt; also a Bucket 2 confirm. |
-| B1-B6 | Intra-domain `data_object_relationships` between AIOPS domain-owned masters. The run prompt limits relationship inserts to Rule #10 user-edges only. |
+| B1-B6 | Intra-domain `data_object_relationships` between AIOPS domain-owned masters. The run prompt limits relationship inserts to Rule #10 relationships to `users` only. |
 | B1-B8 | Outbound cross-domain `data_object_relationships` (mirrors of the 8 outbound handoffs). Same scope restriction as B6. |
 | B1-B9 (rest) | New `trigger_events` inserts (`event_correlation.published`, `event_correlation.resolved`, etc.) are new entities, deferred. Trigger 143 `topology.published` re-attribution is a Bucket 2 judgment ("Awaiting user call"), untouched. |
 | B1-B10b | Per-module FKs on outbound (8) and inbound (16) handoffs. Audit explicitly notes these are blocked by M1 (no AIOPS modules exist); FKs are not derivable from existing modules on the AIOPS side. |
@@ -303,7 +303,7 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 
 ### Summary
 
-- Fresh Validate b1 audit against live state. Confirmed the 5 applied technical fixes from the 2026-05-31 continuation: business_logic em-dash stripped, trigger 39 description repaired, 4 users edges in place (rel ids 1741-1744), 10 aliases in place (alias ids 975-984, plus a pre-existing alias 986 on anomaly_detections), 15 new `agent_curated` handoff_processes plus the 3 prior `discovery_substring` and 3 prior `agent_curated` rows. Net: 23 cross-domain handoffs, 24 handoff_processes rows (handoffs 665 and 667 carry two PCF rows each, the second being process 295 "Operate IT user support" at L3).
+- Fresh Validate b1 audit against live state. Confirmed the 5 applied technical fixes from the 2026-05-31 continuation: business_logic em-dash stripped, trigger 39 description repaired, 4 relationships to `users` in place (rel ids 1741-1744), 10 aliases in place (alias ids 975-984, plus a pre-existing alias 986 on anomaly_detections), 15 new `agent_curated` handoff_processes plus the 3 prior `discovery_substring` and 3 prior `agent_curated` rows. Net: 23 cross-domain handoffs, 24 handoff_processes rows (handoffs 665 and 667 carry two PCF rows each, the second being process 295 "Operate IT user support" at L3).
 - Current footprint unchanged otherwise: 7 mastered data_objects, 5 consumer/contributor rows, 9 trigger_events, 8 outbound + 15 inbound cross-domain handoffs, 0 `domain_modules`, 0 lifecycle states, 0 capability_domains, 0 module-anchored skills (legacy `aiops-system` skill id 27 still in place with 9 skill_tools).
 - M1 remains the BLOCKING failure. B-band, E-band, F-band, H-band module attribution all stay degraded until at least one `domain_modules` row exists.
 - Bucket 1 carry-over from prior audit: 11 items still pending (B1-A2, B1-A4, B1-M1, B1-B4, B1-B6, B1-B8, B1-B9-rest, B1-B10b, B1-B12, B1-F1, B1-F7).
@@ -316,7 +316,7 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 
 - **A1 PASS** business_logic em-dash gone, replaced by colon per 2026-05-31 continuation. crud_percentage=20, min_org_size=`30 m <2500`, cost_band=`$$$$`, certification_required=false, usa_market_size_usd_m=1500, market_size_source_year=2025.
 - **A2 FAIL** still 0 capability_domains rows.
-- **A3 PASS** 5 solutions linked, 2 primary (BigPanda AIOps, ServiceNow AIOps), 3 secondary (ServiceNow ITOM, Datadog Platform, Dynatrace Platform).
+- **A3 PASS** 5 solutions related, 2 primary (BigPanda AIOps, ServiceNow AIOps), 3 secondary (ServiceNow ITOM, Datadog Platform, Dynatrace Platform).
 - **A4 FAIL** `catalog_tagline` and `catalog_description` both empty.
 - **A5** not run (opt-in only).
 
@@ -332,8 +332,8 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 - **B3 PASS** no bare-word masters, no canonical claims required.
 - **B4 FAIL** all 7 masters still carry `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false`. The proposed flag flips from the prior audit (submit_lock on `ml_model_training_records`, `root_cause_analyses` once published, `alert_suppression_rules` once activated) are still on the Bucket 2 confirmation queue.
 - **B5 PASS** vacuous, zero `embedded_master` rows in `domain_data_objects`.
-- **B6 FAIL** zero intra-domain `data_object_relationships` rows where both ends are AIOPS masters. Implied edges from the prior audit (event_correlations contains anomaly_detections, event_correlations spawns root_cause_analyses, root_cause_analyses references event_correlations, incident_predictions references predictive_signals, ml_model_training_records calibrates anomaly_detections, alert_suppression_rules suppresses event_correlations) still missing.
-- **B7 PASS** 4 `users` edges in place per Rule #10 (rel ids 1741=authored RCA, 1742=reviewed suppression rule, 1743=created training record, 1744=acknowledged prediction). A pre-existing fifth `users` row 1755 also references anomaly_detections (id 94), `owner_side=source`, present prior to the continuation.
+- **B6 FAIL** zero intra-domain `data_object_relationships` rows where both ends are AIOPS masters. Implied relationships from the prior audit (event_correlations contains anomaly_detections, event_correlations spawns root_cause_analyses, root_cause_analyses references event_correlations, incident_predictions references predictive_signals, ml_model_training_records calibrates anomaly_detections, alert_suppression_rules suppresses event_correlations) still missing.
+- **B7 PASS** 4 relationships to `users` in place per Rule #10 (rel ids 1741=authored RCA, 1742=reviewed suppression rule, 1743=created training record, 1744=acknowledged prediction). A pre-existing fifth `users` row 1755 also references anomaly_detections (id 94), `owner_side=source`, present prior to the continuation.
 - **B8 FAIL** zero outbound cross-domain `data_object_relationships` mirrors of the 8 outbound handoffs. Same 8-row gap as last audit.
 - **B9 PARTIAL FAIL** 9 trigger_events on AIOPS masters. Trigger 39 description repaired (continuation). Trigger 143 `topology.published` still anchored on event_correlations (Bucket 2 judgment). Triggers 645, 646, 647, 648, 649, 650 carry empty `event_category` (`""`), a B9 data-quality drift not flagged before, should be one of `lifecycle`, `state_change`, `threshold`, `signal` per Rule #13. Likely values: 645 `state_change`, 646 `threshold`, 647 `state_change`, 648 `lifecycle`, 649 `signal`, 650 `signal`. Missing lifecycle-cover events per master (`event_correlation.resolved`, `anomaly_detection.confirmed`, `anomaly_detection.dismissed`, `root_cause_analysis.reviewed`, `predictive_signal.expired`, `incident_prediction.realized`, `incident_prediction.dismissed`) remain deferred (new entities).
 - **B9b** vacuous (no modules, no intra-domain handoffs).
@@ -352,7 +352,7 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 
 #### E-band
 
-- **E1-E5 FAIL** vacuous, no modules means no `role_modules` rows possible. Blocked by M1.
+- **E1-E5 FAIL** vacuous, no modules means no `persona_modules` rows possible. Blocked by M1.
 
 #### F-band
 
@@ -371,11 +371,11 @@ Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
 
 | Item | Type | Description |
 | --- | --- | --- |
-| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for AIOPS and link via `capability_domains`. Proposed codes carried from prior audit. Still pending. |
+| B1-A2 | STRUCTURAL | Author 5 to 7 `capabilities` for AIOPS and relate via `capability_domains`. Proposed codes carried from prior audit. Still pending. |
 | B1-A4 | STRUCTURAL | Draft `catalog_tagline` and `catalog_description`. Rule #20 requires user approval before write. |
 | B1-M1 | STRUCTURAL (BLOCKING) | Author at least 2 `domain_modules` rows. Gated on Bucket 2 item #1 (module split). |
 | B1-B4 | STRUCTURAL | Pattern flag re-evaluation on 7 masters. Bucket 2 item #4 confirms specifics. |
-| B1-B6 | STRUCTURAL | Author ~7 intra-domain `data_object_relationships` edges. |
+| B1-B6 | STRUCTURAL | Author ~7 intra-domain `data_object_relationships` rows. |
 | B1-B8 | STRUCTURAL | Author 8 outbound cross-domain `data_object_relationships` mirrors. |
 | B1-B9-rest | STRUCTURAL | (a) Backfill `event_category` on triggers 645-650 (currently `""`). (b) Add missing lifecycle-cover trigger_events (~7 new rows). (c) Trigger 143 `topology.published` re-attribution is Bucket 2 #2. |
 | B1-B10b | STRUCTURAL | Backfill `source_domain_module_id` on 8 outbound and `target_domain_module_id` on 14 inbound handoffs. Blocked by M1. |
@@ -476,7 +476,7 @@ Executed (all record_status=new):
 - Phase M: 2 full modules — AIOPS-EVENT-CORRELATION (324), AIOPS-PREDICTIVE-INTELLIGENCE (325) — + domain_module_capabilities; all 7 existing masters assigned to modules, plus 9 telemetry consumer rows on 324 (metric_series, log_entries, capacity_records, service_maps, network_flow_records, endpoint_anomaly_findings, real_user_sessions, dc_power_distribution_units, network_paths).
 - Phase B completion: root_cause_analyses lifecycle states (B12); intra-domain + users + cross-domain data_object_relationships (B6/B7/B8, 9 rows); 7 lifecycle-cover trigger_events (B9); handoff module-FK backfill (B10b) — 8 outbound source_domain_module_id, 16 inbound target_domain_module_id.
 - Phase S: tool rows + domain_module_tools wired so aiops-system derives a non-empty toolset.
-- Phase E: 4 personas + role_modules.
+- Phase E: 4 personas + persona_modules.
 
 Left for the user (q-AIOPS.md): module-split confirmation (built as 2-module), the destructive topology.published re-attribution, MLOps ownership, three pattern-flag freezes (overwrites), the channel-vs-abstraction swap, and APQC tag promotion / handoff-154 PCF reconcile. B3 ideas (market-surface objects, OBS feedback loop, SOAR/ITPA remediation) parked as non-blocking.
 
@@ -490,7 +490,7 @@ Ran `scripts/analytics/b9d_resolver.ts AIOPS --dry-run` to resolve the open `B1A
 
 ### AIOPS-owned ORPHANs (recorded as new b2 items this pass)
 
-These three processes are realized nowhere on AIOPS (no `process_id`-wired lifecycle gate and no `process_raci`). AIOPS has 4 personas (IT-INFRA-SRE id 35, IT-INFRA-NOC-ANALYST id 36, IT-INFRA-OPS-MANAGER id 37, SW-ENG-AIOPS-ML-ENGINEER id 38) with `role_modules` reach on modules 324/325, but none is assigned to these processes (cold-start on RACI). The persona is part of the question, so each is a `b2` (not auto-realized):
+These three processes are realized nowhere on AIOPS (no `process_id`-wired lifecycle gate and no `process_raci`). AIOPS has 4 personas (IT-INFRA-SRE id 35, IT-INFRA-NOC-ANALYST id 36, IT-INFRA-OPS-MANAGER id 37, SW-ENG-AIOPS-ML-ENGINEER id 38) with `persona_modules` reach on modules 324/325, but none is assigned to these processes (cold-start on RACI). The persona is part of the question, so each is a `b2` (not auto-realized):
 
 | PCF | process name | payload / handoff | recommended owner | state.yaml id |
 | --- | --- | --- | --- | --- |

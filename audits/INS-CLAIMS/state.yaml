@@ -35,7 +35,7 @@ b1b:
     action: >
       Once B2-MOD-SPLIT resolves, run Phase A (solutions) + M (modules) + B (lifecycle states,
       aliases, DMDOs) + the single domain-grain system skill. If the result is multi-module, run
-      Phase P (personas, role_modules, process_raci) afterward.
+      Phase P (personas, persona_modules, process_raci) afterward.
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SPLIT}
     extra_phase_p_triage: "2026-06-02"
@@ -96,7 +96,7 @@ b1b:
       INS-CLAIMS needs a consumer DMDO on the realizing module (probable INS-CLAIMS-INTAKE) once it exists.
     action: >
       Once B1A-BUILD lands and INS-CLAIMS-INTAKE exists, INSERT one domain_module_data_objects row
-      (domain_module_id=INS-CLAIMS-INTAKE, data_object_id=378, role=consumer, necessity=optional).
+      (domain_module_id=INS-CLAIMS-INTAKE, data_object_id=378, held_as=consumer, necessity=optional).
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-BUILD}
 
@@ -125,7 +125,7 @@ b1b:
       - {handoff_id: 907, direction: outbound, source_domain: INS-CLAIMS, target_domain: GRC, trigger_event: "siu_case.opened", payload: "siu_cases", null_field: both}
       - {handoff_id: 908, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.closed", payload: "insurance_claims", null_field: both}
       - {handoff_id: 909, direction: outbound, source_domain: INS-CLAIMS, target_domain: FIN, trigger_event: "salvage_recovery.posted", payload: "salvage_recovery_records", null_field: both}
-      - {handoff_id: 910, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_policy.cancelled", payload: "insurance_policies", null_field: both}
+      - {handoff_id: 910, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_policy.canceled", payload: "insurance_policies", null_field: both}
 
   - id: B1B-B11-ALIASES
     summary: "Zero data_object_aliases on every master; per-master alias tuples not yet enumerated"
@@ -173,7 +173,7 @@ b1b:
       - {type: user_decision, ref: B2-B12-VERBS}
     affected_masters:
       - {data_object_id: 623, name: insurance_claims, workflow: "Reported, FNOL Received, Assigned, Under Investigation, Settled, Closed, Denied, Withdrawn"}
-      - {data_object_id: 624, name: insurance_policies, workflow: "Quoted, Bound, In Force, Lapsed, Cancelled, Reinstated, Expired"}
+      - {data_object_id: 624, name: insurance_policies, workflow: "Quoted, Bound, In Force, Lapsed, Canceled, Reinstated, Expired"}
       - {data_object_id: 628, name: claim_settlements, workflow: "Drafted, Pending Approval, Approved, Rejected, Issued"}
       - {data_object_id: 629, name: claim_payments, workflow: "Pending, Issued, Voided, Reissued"}
       - {data_object_id: 631, name: subrogation_cases, workflow: "Open, In Recovery, Recovered, Closed Unrecovered"}
@@ -201,7 +201,7 @@ b1b:
       - {handoff_id: 907, trigger_event: "siu_case.opened", confidence: high}
       - {handoff_id: 908, trigger_event: "insurance_claim.closed", confidence: medium}
       - {handoff_id: 909, trigger_event: "salvage_recovery.posted", confidence: low}
-      - {handoff_id: 910, trigger_event: "insurance_policy.cancelled", confidence: defer-to-discover}
+      - {handoff_id: 910, trigger_event: "insurance_policy.canceled", confidence: defer-to-discover}
       - {handoff_id: 315, trigger_event: "dashcam_event.collision", confidence: defer-to-discover}
 
   - id: B1B-SKILL-RETIRED

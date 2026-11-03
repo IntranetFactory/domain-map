@@ -38,10 +38,10 @@ a3:
 
 ---
 
-q4: The link from enterprise applications to configuration items exists twice, once as "mapped to" and once as "onboards into". How should that be handled?
+q4: The relationship from enterprise applications to configuration items exists twice, once as "mapped to" and once as "onboards into". How should that be handled?
 
-- a) Keep both rows (they encode genuinely different edges).
-- b) Collapse to the "mapped to" row only (mapping is the persistent edge; onboarding is a one-time transition already captured by a trigger event).
+- a) Keep both rows (they encode genuinely different relationships).
+- b) Collapse to the "mapped to" row only (mapping is the persistent relationship; onboarding is a one-time transition already captured by a trigger event).
 - c) Drop the "onboards into" row only.
 
 Recommended: b. The mapping is the lasting relationship, and the onboarding moment is already captured as an event, so the second row is redundant. Collapsing or dropping a row is destructive, so it needs your sign-off.

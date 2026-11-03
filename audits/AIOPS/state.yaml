@@ -18,8 +18,8 @@ last_audit: "2026-06-13"
 # 2026-06-07 build executed all agent-solvable items (record_status='new'):
 # 6 capabilities + capability_domains, 2 full modules + domain_module_capabilities,
 # masters-into-modules (incl. 9 telemetry consumers), root_cause_analyses lifecycle,
-# system-skill toolset, 4 personas + role_modules, intra/cross-domain relationships +
-# users edges, lifecycle-cover trigger_events, handoff module-FK backfill.
+# system-skill toolset, 4 personas + persona_modules, intra/cross-domain relationships +
+# relationships to users, lifecycle-cover trigger_events, handoff module-FK backfill.
 # Only user-judgment decisions (b2) remain.
 
 b1a: []

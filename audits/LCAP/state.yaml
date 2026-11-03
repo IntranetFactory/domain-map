@@ -94,9 +94,9 @@ b2:
   - id: B2-S5
     summary: "domains.business_logic carries U+2014 em-dash (CLAUDE.md violation)."
     question: >
-      Current text: 'Runtime, compiler, and visual modeller [U+2014] the entire platform is
+      Current text: 'Runtime, compiler, and visual modeler [U+2014] the entire platform is
       code. The end-user app surface is whatever the customer builds; the LCAP itself is
-      platform.' Suggested rewrite: 'Runtime, compiler, and visual modeller. The entire
+      platform.' Suggested rewrite: 'Runtime, compiler, and visual modeler. The entire
       platform is code, the end-user app surface is whatever the customer builds, and the
       LCAP itself is platform.'
     options:

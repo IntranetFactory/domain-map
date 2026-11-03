@@ -120,7 +120,7 @@
         "compliance_training_campaigns",
         "fda_part11_audit_trails",
         "gxp_training_signoffs",
-        "harassment_training_acknowledgements",
+        "harassment_training_acknowledgments",
         "phishing_simulation_results",
         "phishing_simulations",
         "recertification_schedules",
@@ -1247,7 +1247,7 @@
       "name": "data_deletion_requests",
       "singular_label": "Data Deletion Request",
       "plural_label": "Data Deletion Requests",
-      "description": "GDPR Article 17 right-to-erasure request: scope, anonymisation policy, regulator deadline, fulfillment status.",
+      "description": "GDPR Article 17 right-to-erasure request: scope, anonymization policy, regulator deadline, fulfillment status.",
       "is_canonical_bare_word": false,
       "has_personal_content": true,
       "aliases": [
@@ -1450,7 +1450,7 @@
       ]
     },
     {
-      "name": "harassment_training_acknowledgements",
+      "name": "harassment_training_acknowledgments",
       "singular_label": "Harassment Training Acknowledgment",
       "plural_label": "Harassment Training Acknowledgments",
       "description": "Statutory acknowledgment of harassment training completion per CA SB-1343, NY 201-g, IL 2-109; carries signed timestamp and IP.",
@@ -2519,7 +2519,7 @@
     {
       "from": "compliance_assignments",
       "verb": "acknowledged_via",
-      "to": "harassment_training_acknowledgements",
+      "to": "harassment_training_acknowledgments",
       "cardinality": "one_to_many",
       "required": false
     },
@@ -3072,7 +3072,7 @@
     {
       "from": "users",
       "verb": "acknowledges",
-      "to": "harassment_training_acknowledgements",
+      "to": "harassment_training_acknowledgments",
       "cardinality": "one_to_many",
       "required": true
     },
@@ -3672,7 +3672,7 @@
           "required": true
         },
         {
-          "name": "query_harassment_training_acknowledgements",
+          "name": "query_harassment_training_acknowledgments",
           "kind": "query",
           "required": true
         },
@@ -3882,7 +3882,7 @@
           "required": true
         },
         {
-          "name": "sign_harassment_training_acknowledgement",
+          "name": "sign_harassment_training_acknowledgment",
           "kind": "mutate",
           "required": true
         },
@@ -3959,7 +3959,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "GRC-COMPLIANCE-TRAINING-MANAGER",
       "business_function": "Governance, Risk and Compliance",
@@ -4109,7 +4109,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

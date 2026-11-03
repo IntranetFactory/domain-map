@@ -22,7 +22,7 @@ b1b:
 
 b2:
   - id: B2-M9-COMPOSED-CHILDREN
-    summary: "Six required composition edges point at child records that most ATS modules do not carry (M9 fail on 7 modules); relax the four optional children, embed the two core ones"
+    summary: "Six required composition relationships point at child records that most ATS modules do not carry (M9 fail on 7 modules); relax the four optional children, embed the two core ones"
     question: >
       Make the four sector- or deployment-optional children not required (candidate_consents,
       fcra_disclosures, interview_panels, applicant_flow_records), and embed the two core children
@@ -31,24 +31,24 @@ b2:
     options:
       - "relax 4 + embed 2: set is_required=false on rel 1300, 1310, 1325, 1337; add embedded_master (necessity required) rows for application_stage_transitions and offer_versions on the listed modules"
       - "embed all six on every module that carries the parent (up to 8 modules each), with necessity optional for the four sector children"
-      - "relax all six edges; embed nothing"
+      - "relax all six relationships; embed nothing"
     why: >
       SKILL.md Rule #16 lists fcra_disclosures and applicant_flow_records (US statutes) and
       candidate_consents (vendor-optional) as optional entities, and not every interview has a panel
-      object, so a required composition edge to them is wrong data rather than a missing embed: relaxing
-      the edge fixes every module at once. Stage history and offer versions are part of every
-      application and offer, so they are embedded. Lacking modules per edge (2026-11-01): 1300 and
+      object, so a required composition relationship to them is wrong data rather than a missing embed: relaxing
+      the relationship fixes every module at once. Stage history and offer versions are part of every
+      application and offer, so they are embedded. Lacking modules per relationship (2026-11-01): 1300 and
       1310 lack in 8 modules; 1315 in ATS-INTERVIEWS, ATS-OFFERS, HIRING-STARTER; 1325 in
       HIRING-STARTER; 1329 in ATS-PRE-EMPLOYEE-RECORD, HIRING-STARTER;
       1337 in ATS-INTERVIEWS, ATS-OFFERS, HIRING-STARTER. Recorded by domain_health.ts (checks: M9).
     affected_entities: [candidate_consents, fcra_disclosures, application_stage_transitions, interview_panels, offer_versions, applicant_flow_records]
-    extra_edges:
-      - {rel: 1300, edge: "candidates consents_via candidate_consents", owner: ATS-CANDIDATE-CRM}
-      - {rel: 1310, edge: "candidates discloses_via fcra_disclosures", owner: BGV-ADJUDICATION-COMPLIANCE}
-      - {rel: 1315, edge: "job_applications transitions_via application_stage_transitions", owner: ATS-RECRUITMENT-PIPELINE}
-      - {rel: 1325, edge: "interviews convenes interview_panels", owner: ATS-INTERVIEWS}
-      - {rel: 1329, edge: "job_offers evolves_through offer_versions", owner: ATS-OFFERS}
-      - {rel: 1337, edge: "job_applications logged_via applicant_flow_records", owner: ATS-RECRUITMENT-PIPELINE}
+    extra_relationships:
+      - {rel: 1300, relationship: "candidates consents_via candidate_consents", owner: ATS-CANDIDATE-CRM}
+      - {rel: 1310, relationship: "candidates discloses_via fcra_disclosures", owner: BGV-ADJUDICATION-COMPLIANCE}
+      - {rel: 1315, relationship: "job_applications transitions_via application_stage_transitions", owner: ATS-RECRUITMENT-PIPELINE}
+      - {rel: 1325, relationship: "interviews convenes interview_panels", owner: ATS-INTERVIEWS}
+      - {rel: 1329, relationship: "job_offers evolves_through offer_versions", owner: ATS-OFFERS}
+      - {rel: 1337, relationship: "job_applications logged_via applicant_flow_records", owner: ATS-RECRUITMENT-PIPELINE}
 
   - id: B2-M5-STATE-221
     summary: "job_applications.hired (state 221) is realized on ATS-PRE-EMPLOYEE-RECORD, a module that does not carry job_applications"
@@ -110,7 +110,7 @@ b2:
     question: "Re-add salary_bands (154) as an optional consumer on ATS-OFFERS and ATS-RECRUITMENT-PIPELINE (this reverses the 2026-05-28 removal)?"
     options: ["yes", "no, keep it removed"]
     evidence: "Lever postings carry salaryRange and Ashby postings carry compensation (2026-11-01); the EU Pay Transparency Directive (mandatory on ATS) requires a pay range before the interview. Re-adding also fixes the consumer leg of inbound handoff 425."
-    why: "The 2026-05-28 removal predates the pay-transparency regulation link on ATS."
+    why: "The 2026-05-28 removal predates the pay-transparency regulation relationship on ATS."
 
   - id: B2-X2-BENADMIN-H395
     summary: "Handoff 395 to BEN-ADMIN carries candidates, which BEN-ADMIN does not consume"
@@ -210,7 +210,7 @@ checks:
     - {id: E4c, result: pass, rows: []}
     - {id: E4d, result: warn, rows: [210]}
     - {id: E5, result: skipped, rows: []}
-    - {id: E6, result: warn, rows: ["R6:1033", "R6:1034", "R6:1035", "R6:1061", "R6:1062", "R6:1064", "R6:1065", "R6:1066", "R6:1067", "R6:1070", "R6:1071", "R6:1172", "R6:1174", "R6:1175", "R6:1223", "R6:1224", "R6:1225", "R6:1226", "R6:1281", "R6:1282", "R6:14", "R6:385", "R6:387", "R6:388", "R6:389", "R6:390", "R6:391", "R6:392", "R6:398", "R6:401", "R6:402", "R6:403", "R6:404", "R7:description", "R7:hiring-starter:approve_offer", "R7:hiring-starter:flag_do_not_hire", "R7:hiring-starter:hire_candidate", "R7:hiring-starter:publish_posting", "R7:hiring-starter:rescind_offer", "R7:hiring-starter:submit_scorecard", "R8:adverse_action_notice_edit_scope", "R8:adverse_action_notices", "R8:applicant_flow_record_edit_scope", "R8:applicant_flow_records", "R8:application_edit_scope", "R8:application_screening_answer_edit_scope", "R8:application_screening_answers", "R8:background_check_adjudication_edit_scope", "R8:background_check_adjudications", "R8:background_check_component_edit_scope", "R8:background_check_components", "R8:background_check_dispute_edit_scope", "R8:background_check_disputes", "R8:background_check_edit_scope", "R8:background_checks", "R8:candidate_consent_edit_scope", "R8:candidate_consents", "R8:candidate_edit_scope", "R8:candidate_email_edit_scope", "R8:candidate_emails", "R8:candidate_engagement_edit_scope", "R8:candidate_engagements", "R8:candidates", "R8:data_subject_request_edit_scope", "R8:data_subject_requests", "R8:drug_and_health_screening_edit_scope", "R8:drug_health_screenings", "R8:eeo_response_edit_scope", "R8:eeo_responses", "R8:fcra_disclosure_edit_scope", "R8:fcra_disclosures", "R8:fcra_summary_of_rights_acknowledgements", "R8:fcra_summary_of_rights_acknowledgment_edit_scope", "R8:interview_scorecard_edit_scope", "R8:interview_scorecards", "R8:job_applications", "R8:job_offers", "R8:offer_edit_scope", "R8:offer_letter_document_edit_scope", "R8:offer_letter_documents", "R8:offer_version_edit_scope", "R8:offer_versions", "R8:pre_adverse_action_notice_edit_scope", "R8:pre_adverse_action_notices", "R8:pre_employee_edit_scope", "R8:pre_employees", "R8:recruiter_interaction_edit_scope", "R8:recruiter_interactions", "R8:right_to_work_verification_edit_scope", "R8:right_to_work_verifications", "R8:voluntary_self_identification_edit_scope", "R8:voluntary_self_identifications"]}
+    - {id: E6, result: warn, rows: ["R6:1033", "R6:1034", "R6:1035", "R6:1061", "R6:1062", "R6:1064", "R6:1065", "R6:1066", "R6:1067", "R6:1070", "R6:1071", "R6:1172", "R6:1174", "R6:1175", "R6:1223", "R6:1224", "R6:1225", "R6:1226", "R6:1281", "R6:1282", "R6:14", "R6:385", "R6:387", "R6:388", "R6:389", "R6:390", "R6:391", "R6:392", "R6:398", "R6:401", "R6:402", "R6:403", "R6:404", "R7:description", "R7:hiring-starter:approve_offer", "R7:hiring-starter:flag_do_not_hire", "R7:hiring-starter:hire_candidate", "R7:hiring-starter:publish_posting", "R7:hiring-starter:rescind_offer", "R7:hiring-starter:submit_scorecard", "R8:adverse_action_notice_edit_scope", "R8:adverse_action_notices", "R8:applicant_flow_record_edit_scope", "R8:applicant_flow_records", "R8:application_edit_scope", "R8:application_screening_answer_edit_scope", "R8:application_screening_answers", "R8:background_check_adjudication_edit_scope", "R8:background_check_adjudications", "R8:background_check_component_edit_scope", "R8:background_check_components", "R8:background_check_dispute_edit_scope", "R8:background_check_disputes", "R8:background_check_edit_scope", "R8:background_checks", "R8:candidate_consent_edit_scope", "R8:candidate_consents", "R8:candidate_edit_scope", "R8:candidate_email_edit_scope", "R8:candidate_emails", "R8:candidate_engagement_edit_scope", "R8:candidate_engagements", "R8:candidates", "R8:data_subject_request_edit_scope", "R8:data_subject_requests", "R8:drug_and_health_screening_edit_scope", "R8:drug_health_screenings", "R8:eeo_response_edit_scope", "R8:eeo_responses", "R8:fcra_disclosure_edit_scope", "R8:fcra_disclosures", "R8:fcra_summary_of_rights_acknowledgments", "R8:fcra_summary_of_rights_acknowledgment_edit_scope", "R8:interview_scorecard_edit_scope", "R8:interview_scorecards", "R8:job_applications", "R8:job_offers", "R8:offer_edit_scope", "R8:offer_letter_document_edit_scope", "R8:offer_letter_documents", "R8:offer_version_edit_scope", "R8:offer_versions", "R8:pre_adverse_action_notice_edit_scope", "R8:pre_adverse_action_notices", "R8:pre_employee_edit_scope", "R8:pre_employees", "R8:recruiter_interaction_edit_scope", "R8:recruiter_interactions", "R8:right_to_work_verification_edit_scope", "R8:right_to_work_verifications", "R8:voluntary_self_identification_edit_scope", "R8:voluntary_self_identifications"]}
     - {id: F1, result: pass, rows: []}
     - {id: F2, result: pass, rows: []}
     - {id: F3, result: pass, rows: []}

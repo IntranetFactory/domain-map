@@ -36,7 +36,7 @@ q3: Social Media Management is currently filed as a child of CRM. Flagship socia
 - b) Re-parent it under a marketing-leadership domain, if one exists.
 - c) Keep CRM as the parent (it is intentional).
 
-Recommended: a. The major vendors position social as a peer of CRM, and the current link looks like a leftover from before the domain was split out. Detaching overwrites the current parent, so it needs your sign-off.
+Recommended: a. The major vendors position social as a peer of CRM, and the current relationship looks like a leftover from before the domain was split out. Detaching overwrites the current parent, so it needs your sign-off.
 
 a3:
 

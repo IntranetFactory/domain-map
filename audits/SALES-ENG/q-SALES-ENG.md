@@ -1,7 +1,7 @@
 # Sales Engagement (SALES-ENG): questions waiting for you
 
 ## What this domain is
-Run high-volume outbound sales from one place: multi-step cadences and sequences across email, phone, and tasks, with reps working from one queue. Track every email send, open, and reply, place and record dialler calls, book meetings, and feed real intent signals back into who to contact next. Capture and analyze the conversations themselves so reps get coaching and deals get clearer signals.
+Run high-volume outbound sales from one place: multi-step cadences and sequences across email, phone, and tasks, with reps working from one queue. Track every email send, open, and reply, place and record dialer calls, book meetings, and feed real intent signals back into who to contact next. Capture and analyze the conversations themselves so reps get coaching and deals get clearer signals.
 
 ---
 
@@ -106,7 +106,7 @@ a14:
 
 ## Optional (will not hold up the build)
 
-q11: Flagship cadence vendors model several entities Sales Engagement does not have yet: typed cadence steps, a native prospect record (separate from CRM), reusable email templates, dialler phone-number pools and sessions, and conversation-intelligence topics and trackers. Should I research and add the ones that hold up into the existing modules? (yes/no)
+q11: Flagship cadence vendors model several entities Sales Engagement does not have yet: typed cadence steps, a native prospect record (separate from CRM), reusable email templates, dialer phone-number pools and sessions, and conversation-intelligence topics and trackers. Should I research and add the ones that hold up into the existing modules? (yes/no)
 
 Recommended: yes, but additive and can happen after a verification pass. These are common across the vendor set (Outreach, Salesloft, Apollo, Gong, Chorus) but want a check first.
 
@@ -122,7 +122,7 @@ a12:
 
 ---
 
-q13: Sales engagement with dialling and outbound email carries regulatory exposure (TCPA, CAN-SPAM, CASL, GDPR consent), but no compliance or consent entities are linked today. Should I research and add the consent and regulation coverage that applies? (yes/no)
+q13: Sales engagement with dialing and outbound email carries regulatory exposure (TCPA, CAN-SPAM, CASL, GDPR consent), but no compliance or consent entities are related today. Should I research and add the consent and regulation coverage that applies? (yes/no)
 
 Recommended: yes, pending a compliance scoping pass against the confirmed vendor surface. Additive and non-blocking.
 

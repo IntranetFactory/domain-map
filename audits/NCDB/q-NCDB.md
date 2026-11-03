@@ -3,7 +3,7 @@
 ## What this domain is
 Build a database without code. Model your data, capture it through forms, view it your way, and automate the rest.
 
-Spreadsheet-database hybrids that let non-developers model structured data, link records across tables, build forms, views, and dashboards, and automate work without writing code. Citizen developers in marketing, ops, HR, and PMO buy it self-serve and grow into Business and Enterprise tiers. It is deliberately distinct from a low-code app platform (no managed app runtime), from BI (no warehouse or analytical semantic layer), and from work management (the data model itself is the reason to buy).
+Spreadsheet-database hybrids that let non-developers model structured data, relate records across tables, build forms, views, and dashboards, and automate work without writing code. Citizen developers in marketing, ops, HR, and PMO buy it self-serve and grow into Business and Enterprise tiers. It is deliberately distinct from a low-code app platform (no managed app runtime), from BI (no warehouse or analytical semantic layer), and from work management (the data model itself is the reason to buy).
 
 ---
 
@@ -35,7 +35,7 @@ a3:
 
 ---
 
-q4: Which compliance frameworks should be linked to No-Code Database as mandatory?
+q4: Which compliance frameworks should be related to No-Code Database as mandatory?
 
 - a) GDPR plus CCPA
 - b) GDPR plus CCPA plus HIPAA
@@ -65,7 +65,7 @@ q6: No-Code Database ships zero inbound handoffs even though it is a natural tar
 - b) Treat it as report-only; each source domain owes the outbound on its own next audit.
 - c) Mixed: confirm the obvious iPaaS and data-catalog owners now, defer the rest.
 
-Recommended: b. The cleanest convention is for each source domain to author its own outbound handoff, so this domain does not absorb edges it does not own; pick (c) if you want the obvious integrations modeled sooner.
+Recommended: b. The cleanest convention is for each source domain to author its own outbound handoff, so this domain does not absorb relationships it does not own; pick (c) if you want the obvious integrations modeled sooner.
 
 a6:
 
@@ -84,7 +84,7 @@ a7:
 
 q8: The form-submitted trigger event still has no category. Should it be set to "state change"?
 
-- a) State change (the submission materializes a new row in the linked record definition).
+- a) State change (the submission materializes a new row in the related record definition).
 - b) Signal (treat it as a notification for downstream observers).
 
 Recommended: a. It mirrors the record-definition-changed event on the same substrate and reflects that a form submission advances the target record's state.

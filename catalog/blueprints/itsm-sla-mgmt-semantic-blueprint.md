@@ -7,7 +7,7 @@ tagline: Set service-level targets, track them in real time, and account for the
 description: |
   SLA and Chargeback Management defines the response and resolution commitments your service desk operates to, then measures every ticket against them so breaches are caught before they become escalations. Targets are explicit and performance is visible.
 
-  Linking service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around.
+  Relating service consumption back to cost lets you show what IT delivers and what it costs to deliver, turning the service desk from a black box into an accountable function the business can plan around.
 system_slug: itsm-sla-mgmt
 domain_modules:
   - itsm-sla-mgmt
@@ -30,7 +30,7 @@ SLA / OLA definitions, breach tracking, escalation rules, service-cost tracking,
 | --- | --- | --- |
 | SLAs | `service_slas` | Service-level agreements setting response, resolution, and availability targets by priority, category, or customer tier. |
 | Cost Centers | `cost_centers` | Organizational units for cost allocation, with code, manager, hierarchy, and currency, driving variance and departmental reporting. |
-| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links. |
+| Org Units | `org_units` | Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child relationships. |
 
 ```mermaid
 flowchart TD
@@ -58,7 +58,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `service_slas` | `service_slas` | SLA | SLAs | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `cost_centers` | `cost_centers` | Cost Center | Cost Centers | embedded_master | `fin-gl-close` | General Ledger and Close | optional | - | catalog | `:admin` | - |
@@ -70,7 +70,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -78,7 +78,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `org_units` | maps_to | `cost_centers` | one_to_one | reference | optional | source | clear | reference | - |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -87,7 +87,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | owned SLAs | `service_slas` | one_to_many | optional | source | clear | reference | - |
 | `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -99,7 +99,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `service_slas` | governs request | `service_requests` | one_to_many | required | none (required-if-present) | n/a | - |
 | `service_slas` | aligns_with | `service_level_objectives` | many_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
@@ -121,7 +121,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `service_slas` | ITSM-STARTER (IT Service Desk Starter) - ITSM | embedded_master | optional | - |
 
@@ -149,7 +149,7 @@ _(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `cost_centers` | embedded_master | optional | FIN-GL-CLOSE (FIN) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
@@ -163,7 +163,7 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `itsm-sla-mgmt:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 2 | `active` | - | - | ✓ | `itsm-sla-mgmt:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
 | 3 | `reorganized` | - | ✓ | ✓ | `itsm-sla-mgmt:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
 | 4 | `closed` | - | ✓ | ✓ | `itsm-sla-mgmt:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 

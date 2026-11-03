@@ -41,7 +41,7 @@
 # 711 source DCG: 8.4.4 -> 8.4.4.1) are SOURCE-owned destructive sign-off items, NOT BI's.
 # 3 UNOWNED (bi_subscriptions->SUB-MGMT, bi_reports/bi_dashboards->DCG, bi_queries->FINOPS) are a
 # FALSE NEGATIVE from BI being unbuilt: BI masters all three at the legacy domain_data_objects
-# grain (230/691/692/693/694 role=master) but has 0 domain_module_data_objects (M1 unbuilt), so
+# grain (230/691/692/693/694 held_as=master) but has 0 domain_module_data_objects (M1 unbuilt), so
 # the resolver cannot see module-grain mastery. Their owner-side realization (lifecycle states +
 # process_raci) is BI's own work, gated on the BI build (B1A-BUILD), itself gated on B2-S1. No
 # catalog writes, no record_status touched. next_action_by flips agent -> user: only B1A-BUILD
@@ -68,7 +68,7 @@ b1a:
       After B2-S1 resolves, run Phase A then M then B then S to author the
       module set, capabilities, masters-as-DMDOs, and the domain-grain system
       skill (id 33 already serves this role; see B2-S4). If multi-module, run
-      Phase P (personas, role_modules, process_raci) afterward. SURFACE: blocked
+      Phase P (personas, persona_modules, process_raci) afterward. SURFACE: blocked
       on B2-S1.
     extra_phase_p_triage: "2026-06-02"
     blocked_by:
@@ -94,7 +94,7 @@ b1b:
     summary: "Author 4-6 outbound cross-domain B8 data_object_relationships (target masters need identification at fix time)."
     finding: >-
       Zero outbound cross-domain data_object_relationships. 6 outbound
-      cross-domain handoffs imply candidate edges: bi_reports to ITSM
+      cross-domain handoffs imply candidate relationships: bi_reports to ITSM
       service_incidents on bi_report.failed (handoff 689); bi_subscriptions to
       SUB-MGMT on bi_subscription.delivery_failed (handoff 687, target master
       pending); bi_dashboards to DLP on bi_dashboard.shared_externally (handoff
@@ -132,14 +132,14 @@ b1b:
       semantic_metrics is computed (lifecycle not required). State machines:
       bi_reports (draft to published to deprecated to archived); bi_dashboards
       (draft to published to shared_externally to archived); bi_subscriptions
-      (active to paused to failed to cancelled). Workflow gates need
+      (active to paused to failed to canceled). Workflow gates need
       domain_module_id per Rule #14 permission-prefix policy.
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "states need domain_module_id; modules must exist first"}
     affected_masters:
       - {data_object_id: 691, name: bi_reports, entity_type: operational_workflow, target_module_id: null, workflow: "draft, published, deprecated, archived"}
       - {data_object_id: 692, name: bi_dashboards, entity_type: operational_workflow, target_module_id: null, workflow: "draft, published, shared_externally, archived"}
-      - {data_object_id: 694, name: bi_subscriptions, entity_type: operational_workflow, target_module_id: null, workflow: "active, paused, failed, cancelled"}
+      - {data_object_id: 694, name: bi_subscriptions, entity_type: operational_workflow, target_module_id: null, workflow: "active, paused, failed, canceled"}
 
   - id: B1B-N1
     summary: "Backfill target_domain_module_id on 5 METRICS-LAYER inbound handoffs into BI."
@@ -177,7 +177,7 @@ b1b:
   - id: B1B-N3
     summary: "Missing consumer DMDOs on 5 BI-target domains (report-only; owed by other domains' audits)."
     finding: >-
-      Catalog-wide M7 returned ZERO non-BI modules declaring role IN (consumer,
+      Catalog-wide M7 returned ZERO non-BI modules declaring held_as IN (consumer,
       contributor, embedded_master) on any of BI's 5 masters. Each BI-target
       should declare a consumer DMDO: ITSM-INCIDENT-MGMT on bi_reports;
       SUB-MGMT on bi_subscriptions; DCG on bi_reports and bi_dashboards; DLP on
@@ -281,7 +281,7 @@ b3:
   - id: B3-2
     candidate: bi_data_sources
     rationale: >-
-      Universal published, governed link to a warehouse / database / SaaS
+      Universal published, governed relate to a warehouse / database / SaaS
       source, distinct from semantic_metrics. Phase 0 verifies whether this
       collapses into METRICS-LAYER's dimensional_models or is BI-owned at the
       connection-pool layer. Probably BI-owned.

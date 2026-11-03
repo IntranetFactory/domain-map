@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: 47 entities across 9 modules (8 full + 1 starter `HIRING-STARTER`); 7 capabilities; 10 solutions; 9 regulations; 26 trigger events; 38 outbound handoffs + 38 inbound handoffs; 5 roles + 26 role_modules + 34 role_permissions; 9 system skills + ~70 skill_tools links.
+- Current footprint: 47 entities across 9 modules (8 full + 1 starter `HIRING-STARTER`); 7 capabilities; 10 solutions; 9 regulations; 26 trigger events; 38 outbound handoffs + 38 inbound handoffs; 5 roles + 26 persona_modules + 34 role_permissions; 9 system skills + ~70 skill_tools relationships.
 - Market surface (subagent): 62 entities suggested.
 - Flagship vendors enumerated: Greenhouse, Lever, Ashby, SmartRecruiters, iCIMS, Checkr (Checkr anchors FCRA-regulated background-check leg).
 - **Bucket 1 (in-scope, agent fixable):** 14 items.
@@ -29,7 +29,7 @@ Pure-play ATS specialists chosen over diversified HCM suites: Greenhouse (Harves
 | B1-M2 | `applicant_flow_records` | ATS-RECRUITMENT-PIPELINE | OFCCP | Federal contractors must log every applicant per Internet Applicant Rule with disposition reason. `eeo_responses` does not cover this. |
 | B1-M3 | `application_dispositions` | ATS-RECRUITMENT-PIPELINE | OFCCP | Typed reason-for-non-selection codes; required for OFCCP reporting. `application_stage_transitions` carries the transition but not typed reason. |
 | B1-M4 | `data_subject_requests` | ATS-CANDIDATE-CRM | GDPR | Articles 15-22 erasure/access/rectification tracking. Surfaced by Lever, SmartRecruiters, iCIMS. |
-| B1-M5 | `fcra_summary_of_rights_acknowledgements` | ATS-BACKGROUND-CHECKS | FCRA | Candidate acknowledgement of FCRA Summary of Rights at consent time. |
+| B1-M5 | `fcra_summary_of_rights_acknowledgments` | ATS-BACKGROUND-CHECKS | FCRA | Candidate acknowledgment of FCRA Summary of Rights at consent time. |
 | B1-M6 | `voluntary_self_identifications` | ATS-RECRUITMENT-PIPELINE | EEOC | Distinct from `eeo_responses` (the response is voluntary; this is the self-id form/audit trail). |
 | B1-M7 | `ofccp_audit_trails` | ATS-RECRUITMENT-PIPELINE | OFCCP | Federal-contractor audit log on every applicant action. |
 
@@ -43,9 +43,9 @@ Pure-play ATS specialists chosen over diversified HCM suites: Greenhouse (Harves
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S1 | B7 | Seven masters with user-typed actors lack explicit `→ users` edges in `data_object_relationships`: `candidates` (owning_recruiter), `job_postings` (publisher), `talent_pools` (pool_owner), `candidate_assessments` (invitation_author), `background_checks` (requester), `recruitment_agencies` (relationship_owner), `recruitment_events` (event_coordinator). | Author 7 edges per Rule #10; bundle into a focused loader. |
-| B1-S2 | E5 | `HIRING-MANAGER` (10007) has `role_permissions` reaching modules 35 (ONB-JOURNEY-MGMT) and 37 (ONB-WELCOME-EXPERIENCE) via `:read`, but `role_modules` lists only ATS modules 1/4/5/6. Path A != Path B. | Add 2 `role_modules` rows: `HIRING-MANAGER × ONB-JOURNEY-MGMT (secondary)` and `HIRING-MANAGER × ONB-WELCOME-EXPERIENCE (secondary)`. |
-| B1-S3 | A2/regulations | FCRA (Fair Credit Reporting Act) regulation is not present in `regulations` at all, despite ATS-BACKGROUND-CHECKS being FCRA-driven (carrying `fcra_disclosures`, `adverse_action_notices`, `background_check_disputes`). OFCCP is similarly absent. | Add 2 `regulations` rows + 2 `domain_regulations` links (mandatory). |
+| B1-S1 | B7 | Seven masters with user-typed actors lack explicit `→ relationships to `users` in `data_object_relationships`: `candidates` (owning_recruiter), `job_postings` (publisher), `talent_pools` (pool_owner), `candidate_assessments` (invitation_author), `background_checks` (requester), `recruitment_agencies` (relationship_owner), `recruitment_events` (event_coordinator). | Author 7 relationships per Rule #10; bundle into a focused loader. |
+| B1-S2 | E5 | `HIRING-MANAGER` (10007) has `role_permissions` reaching modules 35 (ONB-JOURNEY-MGMT) and 37 (ONB-WELCOME-EXPERIENCE) via `:read`, but `persona_modules` lists only ATS modules 1/4/5/6. Path A != Path B. | Add 2 `persona_modules` rows: `HIRING-MANAGER × ONB-JOURNEY-MGMT (secondary)` and `HIRING-MANAGER × ONB-WELCOME-EXPERIENCE (secondary)`. |
+| B1-S3 | A2/regulations | FCRA (Fair Credit Reporting Act) regulation is not present in `regulations` at all, despite ATS-BACKGROUND-CHECKS being FCRA-driven (carrying `fcra_disclosures`, `adverse_action_notices`, `background_check_disputes`). OFCCP is similarly absent. | Add 2 `regulations` rows + 2 `domain_regulations` relationships (mandatory). |
 | B1-S4 | F (naming convention) | 8 of 9 ATS system skills use kebab `ats-<module>-system`, the convention per Phase-S is snake `<module_code_lower>_agent`. Only `hiring_starter_agent` follows the convention. | Rename `skills` rows 127-134 (`ats_candidate_crm_agent`, `ats_talent_pools_agent`, …). Pure relabel; skill_tools FKs unaffected. |
 
 #### BOUNDARY
@@ -72,7 +72,7 @@ Pure-play ATS specialists chosen over diversified HCM suites: Greenhouse (Harves
 
 1. **FERPA scoping.** `domain_regulations` lists FERPA (Family Educational Rights and Privacy Act) as mandatory on ATS. FERPA governs student educational records; it applies to ATS only in K-12 / higher-ed recruiting contexts. **Is this intentional sector coverage, or scope creep from an earlier load?** Options: (a) keep — confirms ATS scope includes ed-sector recruiting, (b) remove — FERPA scope-creep, replace with EEO-Tax Credit / SOX if applicable. Independent of Bucket 3.
 2. **SCOPE-CREEP in ATS-OFFERS** (3 entities sitting in ATS but with stronger ownership claims elsewhere):
-   - `compensation_benchmarks` (192/3?) — currently `consumer + required`. Likely belongs in COMP-MGMT. Decide: keep dangling consumer link (then verify COMP-MGMT masters it) or remove.
+   - `compensation_benchmarks` (192/3?) — currently `consumer + required`. Likely belongs in COMP-MGMT. Decide: keep dangling consumer relationship (then verify COMP-MGMT masters it) or remove.
    - `salary_bands` (154) — `embedded_master + optional`. Canonical owner = COMP-MGMT or HCM. Keep, demote, or move.
    - `equity_grants` (158) — `embedded_master + optional`. Canonical owner = equity-management. Keep, demote, or fold as field on `offer_versions`.
 3. **B12 permission verb overrides.** Two workflow gates have empty `permission_verb_override` and auto-derive awkward verbs:
@@ -81,7 +81,7 @@ Pure-play ATS specialists chosen over diversified HCM suites: Greenhouse (Harves
 4. **Modularization recommendations (defer/accept):**
    - Rename `ATS-BACKGROUND-CHECKS` → `ATS-PRE-EMPLOYMENT-SCREENING` to also absorb drug screens, MVR, reference checks?
    - Split off `ATS-COMPLIANCE-REPORTING` (would host EEO/OFCCP entities) if Bucket 1 compliance MISSING items push past ~6 entities?
-5. **Cross-catalog: `notify_team` coverage_tier.** `notify_team` (id 914) has `coverage_tier='external'` while its sibling `notify_person` (id 913) is `platform`. Both are the abstraction layer for substitutable channels. Is this intentional (does the platform genuinely ship single-recipient outbound but not broadcast?), or catalog inconsistency? Not ATS-specific; surfaces here because `hiring_starter_agent` links the external one and pulls its score from 100% to 94%.
+5. **Cross-catalog: `notify_team` coverage_tier.** `notify_team` (id 914) has `coverage_tier='external'` while its sibling `notify_person` (id 913) is `platform`. Both are the abstraction layer for substitutable channels. Is this intentional (does the platform genuinely ship single-recipient outbound but not broadcast?), or catalog inconsistency? Not ATS-specific; surfaces here because `hiring_starter_agent` relates the external one and pulls its score from 100% to 94%.
 6. **Pairwise reconciliation scope.** ATS has 10 neighbors via handoffs: **HCM (heavy, ~30+ rows)**, **COMP-MGMT (weight 5)**, **SWP (4)**, **ONBOARDING (3)**, **BEN-ADMIN (3)**, **PAYROLL (2)**, **PA (2)**, **TALENT-MGMT (1)**, **HRSD (1)**, **PSA (1)**. Audit procedure says deep dive for weight ≥3. Decide: run pairwise reconciliation now for ATS↔HCM / ATS↔COMP-MGMT / ATS↔SWP / ATS↔ONBOARDING / ATS↔BEN-ADMIN inline, or defer per-neighbor passes as separate Validate runs.
 
 ### Bucket 3 — Phase 0 pending (speculative; vendor-research vetting needed)
@@ -106,7 +106,7 @@ Universal-or-near-universal vendor entities surfaced by the market subagent. Pha
 
 ### Decisions
 
-- **Bucket 1:** approved `all` — 14 items applied (E5 turned out to be a false positive; HIRING-MANAGER already has `role_modules` rows for ONB-JOURNEY-MGMT and ONB-WELCOME-EXPERIENCE — the earlier audit query was scoped to ATS module IDs only and missed them).
+- **Bucket 1:** approved `all` — 14 items applied (E5 turned out to be a false positive; HIRING-MANAGER already has `persona_modules` rows for ONB-JOURNEY-MGMT and ONB-WELCOME-EXPERIENCE — the earlier audit query was scoped to ATS module IDs only and missed them).
 - **Bucket 2:**
   1. FERPA removed (not intentional sector coverage).
   2. SCOPE-CREEP in ATS-OFFERS — all three removed (`compensation_benchmarks`, `salary_bands`, `equity_grants` DMDOs deleted; legacy `salary_bands` rollup row also cleaned).
@@ -123,11 +123,11 @@ Loader: [.tmp_deploy/fix_ats_audit_2026_05_28.ts](../.tmp_deploy/fix_ats_audit_2
 | Phase | Action | Row counts |
 |---|---|---|
 | 1 | INSERT `regulations` | 2 (FCRA id 84, OFCCP id 85) |
-| 2 | INSERT `data_objects` | 8 (pre_adverse_action_notices, applicant_flow_records, application_dispositions, data_subject_requests, fcra_summary_of_rights_acknowledgements, voluntary_self_identifications, ofccp_audit_trails, hiring_team_assignments) |
+| 2 | INSERT `data_objects` | 8 (pre_adverse_action_notices, applicant_flow_records, application_dispositions, data_subject_requests, fcra_summary_of_rights_acknowledgments, voluntary_self_identifications, ofccp_audit_trails, hiring_team_assignments) |
 | 3 | INSERT `domain_module_data_objects` | 8 master rows across modules 1 / 4 / 7 |
 | 4 | INSERT `domain_regulations` | 2 (ATS×FCRA, ATS×OFCCP, mandatory) |
 | 5 | INSERT `data_object_relationships` (new-entity wiring) | 10 |
-| 6 | INSERT `data_object_relationships` (B7 user-edges) | 7 |
+| 6 | INSERT `data_object_relationships` (B7 relationships to `users`) | 7 |
 | 7 | E5 — no-op (rows already present; my earlier audit query missed them) | 0 |
 | 8 | PATCH lifecycle states 210 + 191 verb overrides | 2 |
 | 9 | PATCH skill names (kebab+system → snake+agent) on skill ids 127-134 | 8 |
@@ -222,7 +222,7 @@ Loader: [.tmp_deploy/fix_ats_bucket3_2026_05_30.ts](../.tmp_deploy/fix_ats_bucke
 |---|---|---|
 | 1 | INSERT `data_objects` | 5 (candidate_documents 1000, candidate_notes 1001, candidate_tags 1002, candidate_tag_assignments 1003, offer_letter_templates 1004) |
 | 2 | INSERT `domain_module_data_objects` | 5 master rows (modules 1 / 2 / 6) |
-| 3 | INSERT `data_object_relationships` | 10 (5 entity edges + 5 user edges per Rule #10) |
+| 3 | INSERT `data_object_relationships` | 10 (5 entity relationships + 5 relationships to `users` per Rule #10) |
 | 4 | INSERT `data_object_lifecycle_states` on offer_letter_templates | 6 (draft, in_review, approved, active, superseded, retired) |
 | 5 | INSERT `data_object_aliases` on application_dispositions | 3 (synonym type) |
 
@@ -243,14 +243,14 @@ All open questions resolved (Bucket 1, Bucket 2, Bucket 3, B9 fan-out, HCM resci
 
 ### Summary
 
-- Current footprint: 87 data_objects across 9 modules (8 full + 1 starter `HIRING-STARTER`); 7 capabilities; 10 regulations (incl. FCRA + OFCCP added 2026-05-28); 51 trigger events relevant to ATS data_objects; 26 outbound cross-domain handoffs + 22 inbound cross-domain handoffs + ~15 intra-domain handoffs (B9b layer); 5 ATS roles + 26 role_modules; 49 ATS permissions + 53 role_permissions (incl. a SYSTEM role_id=2 mass-assignment); 9 system skills (1 per module, snake-case convention); ~70 skill_tools.
+- Current footprint: 87 data_objects across 9 modules (8 full + 1 starter `HIRING-STARTER`); 7 capabilities; 10 regulations (incl. FCRA + OFCCP added 2026-05-28); 51 trigger events relevant to ATS data_objects; 26 outbound cross-domain handoffs + 22 inbound cross-domain handoffs + ~15 intra-domain handoffs (B9b layer); 5 ATS roles + 26 persona_modules; 49 ATS permissions + 53 role_permissions (incl. a SYSTEM role_id=2 mass-assignment); 9 system skills (1 per module, snake-case convention); ~70 skill_tools.
 - Market surface basis: no new vendor-surface subagent pass this audit; structural-only Validate b1 against the snapshot left after the 2026-05-30 Phase 0 close-out (5 flagships Greenhouse, Lever, Ashby, SmartRecruiters, iCIMS plus Checkr for FCRA).
 - Bucket 1a (agent-solvable): 6 items.
 - Bucket 1b (blocked): 1 item.
 - Bucket 2 (user judgment): 4 items.
 - Bucket 3 (Phase 0 pending): 0 items.
 
-Structural pass: A-band passes (all 7 metadata fields populated, FCRA + OFCCP linked). M-band passes (8 full + 1 starter, all module_kind invariants honored, no host-domain conflicts). B10b passes (zero NULL source/target_domain_module_id on ATS-touching handoffs). E1-E5 mostly pass (HIRING-MANAGER E5 false positive already resolved on 2026-05-28). F1-F5 pass (9 system skills 1:1 with modules, snake convention applied, ≥1 skill_tool per skill). H-band gap (12 of ~48 cross-domain handoffs tagged with handoff_processes, 0 approved). B-band has residue from B12 work and event_category fill-in.
+Structural pass: A-band passes (all 7 metadata fields populated, FCRA + OFCCP related). M-band passes (8 full + 1 starter, all module_kind invariants honored, no host-domain conflicts). B10b passes (zero NULL source/target_domain_module_id on ATS-touching handoffs). E1-E5 mostly pass (HIRING-MANAGER E5 false positive already resolved on 2026-05-28). F1-F5 pass (9 system skills 1:1 with modules, snake convention applied, ≥1 skill_tool per skill). H-band gap (12 of ~48 cross-domain handoffs tagged with handoff_processes, 0 approved). B-band has residue from B12 work and event_category fill-in.
 
 ### Vendor surface basis
 
@@ -281,9 +281,9 @@ The 2026-05-30 load wrote `Archive Reason`, `Rejection Reason`, `Disposition Rea
 
 (Surfaced during the scan; resolved at audit-time.)
 
-#### B7 user-edge gaps on later-added masters
+#### B7 `users` relationship gaps on later-added masters
 
-39 ATS masters added since the original load (ids 866-905, 1000-1004) but only `hiring_team_assignments` (905) has an edge to `users` (748). Many of these carry user-typed actors per the column shapes (e.g. `recruiter_interactions.recruiter`, `candidate_consents.granted_by`, `recruiter_saved_searches.owner`, `requisition_approvals.approver`, `offer_approvals.approver`, `background_check_adjudications.adjudicator`, `data_subject_requests.requested_by/handled_by`, `applicant_flow_records.disposition_actor`, `ofccp_audit_trails.actor`, `candidate_notes.author`, `candidate_documents.uploaded_by`). Need a focused pass to enumerate the user-typed fields per entity and author the Rule #10 edges.
+39 ATS masters added since the original load (ids 866-905, 1000-1004) but only `hiring_team_assignments` (905) has a relationship to `users` (748). Many of these carry user-typed actors per the column shapes (e.g. `recruiter_interactions.recruiter`, `candidate_consents.granted_by`, `recruiter_saved_searches.owner`, `requisition_approvals.approver`, `offer_approvals.approver`, `background_check_adjudications.adjudicator`, `data_subject_requests.requested_by/handled_by`, `applicant_flow_records.disposition_actor`, `ofccp_audit_trails.actor`, `candidate_notes.author`, `candidate_documents.uploaded_by`). Need a focused pass to enumerate the user-typed fields per entity and author the Rule #10 relationships.
 
 Action: subagent-driven enumeration pass per entity → batch `data_object_relationships` insert (owner_side='source', is_required by column nullability).
 
@@ -295,17 +295,17 @@ Action: agent-curated `handoff_processes` insertion pass for the ~36 untagged ha
 
 #### M-band: ATS-CANDIDATE-CRM has an unexpected `consumer` row
 
-DMDO row 950: `talent_pools` (id 7) is `consumer + required` in ATS-CANDIDATE-CRM (module 1). Talent pools are mastered in ATS-TALENT-POOLS (module 2). A consumer linkage from CANDIDATE-CRM to talent_pools is plausible (recruiters reference pools while editing candidates) but `required` means CANDIDATE-CRM cannot deploy without ATS-TALENT-POOLS — which contradicts the modular split since CANDIDATE-CRM is meant to be installable standalone. Action: PATCH the row to `necessity='optional'` (deterministic, follows Rule #16 spirit for non-master rows).
+DMDO row 950: `talent_pools` (id 7) is `consumer + required` in ATS-CANDIDATE-CRM (module 1). Talent pools are mastered in ATS-TALENT-POOLS (module 2). A consumer relationship from CANDIDATE-CRM to talent_pools is plausible (recruiters reference pools while editing candidates) but `required` means CANDIDATE-CRM cannot deploy without ATS-TALENT-POOLS — which contradicts the modular split since CANDIDATE-CRM is meant to be installable standalone. Action: PATCH the row to `necessity='optional'` (deterministic, follows Rule #16 spirit for non-master rows).
 
 ### Bucket 1b — Blocked
 
 #### Regulation codes empty on FCRA + OFCCP
 
-`regulations` rows 84 (Fair Credit Reporting Act) and 85 (Federal Contract Compliance Programs Regulations) were inserted 2026-05-28 with `regulation_code=""`. Other regulations in the catalog carry codes (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1, EU-PAY-TRANS, EU-AI-ACT). Standard short codes would be `FCRA` and `OFCCP`. Blocked on: regulations is a catalog-wide shared table; PATCH affects every domain that links to those rows. Owner: regulations master / cross-domain governance. Mark for cross-domain Validate.
+`regulations` rows 84 (Fair Credit Reporting Act) and 85 (Federal Contract Compliance Programs Regulations) were inserted 2026-05-28 with `regulation_code=""`. Other regulations in the catalog carry codes (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1, EU-PAY-TRANS, EU-AI-ACT). Standard short codes would be `FCRA` and `OFCCP`. Blocked on: regulations is a catalog-wide shared table; PATCH affects every domain that relates to those rows. Owner: regulations master / cross-domain governance. Mark for cross-domain Validate.
 
 ### Bucket 2 — Surface-for-user (judgment calls)
 
-1. **Lifecycle states audit on the 21 masters with no lifecycle rows.** The 2026-05-30 close-out recorded 4 entities (`candidate_documents`, `candidate_notes`, `candidate_tags`, `candidate_tag_assignments`) as config-shape exempt per Rule #12. But 17 other masters lack lifecycle states with mixed shapes: clear config-shape (`application_stages`, `interview_questions`, `application_screening_questions`, `recruiter_saved_searches`, `referral_rewards`, `background_check_packages`) vs workflow-bearing (`requisition_approvals` has lifecycle; but `pre_adverse_action_notices`, `applicant_flow_records`, `data_subject_requests`, `fcra_summary_of_rights_acknowledgements`, `voluntary_self_identifications`, `ofccp_audit_trails`, `hiring_team_assignments`, `application_dispositions` plausibly carry workflow). Each needs the user's call: config-exempt vs author lifecycle. Cannot be answered without user input on FCRA/OFCCP/GDPR workflow intent.
+1. **Lifecycle states audit on the 21 masters with no lifecycle rows.** The 2026-05-30 close-out recorded 4 entities (`candidate_documents`, `candidate_notes`, `candidate_tags`, `candidate_tag_assignments`) as config-shape exempt per Rule #12. But 17 other masters lack lifecycle states with mixed shapes: clear config-shape (`application_stages`, `interview_questions`, `application_screening_questions`, `recruiter_saved_searches`, `referral_rewards`, `background_check_packages`) vs workflow-bearing (`requisition_approvals` has lifecycle; but `pre_adverse_action_notices`, `applicant_flow_records`, `data_subject_requests`, `fcra_summary_of_rights_acknowledgments`, `voluntary_self_identifications`, `ofccp_audit_trails`, `hiring_team_assignments`, `application_dispositions` plausibly carry workflow). Each needs the user's call: config-exempt vs author lifecycle. Cannot be answered without user input on FCRA/OFCCP/GDPR workflow intent.
 
 2. **`offer_letter_templates` (1004) lifecycle gates have orphan verb_overrides.** States 1496 (`in_review`), 1497 (`approved`), 1498 (`active`), 1500 (`retired`) have `requires_permission=true` and verbs (`submit_offer_letter_template_for_review`, `approve_offer_letter_template`, `activate_offer_letter_template`, `retire_offer_letter_template`) but no matching workflow-gate permissions exist in ATS-OFFERS. Either (a) materialize the 4 workflow-gate permissions, (b) flip those `requires_permission` to false (config-shape master, only `record_status` matters), or (c) keep states as-is and accept the permission gap. Needs user judgment because the prior decision was `has_single_approver=true` (single approver, single verb shape) and 4 separate verbs may be more than intended.
 
@@ -320,7 +320,7 @@ None this pass. Bucket 3 was closed-out 2026-05-30 with formal Phase 0 vetting; 
 ### Bucket dependencies
 
 - Bucket 2 item 2 (`offer_letter_templates` lifecycle verbs) and Bucket 2 item 3 (newer masters with empty verb_overrides) share the same shape; user may want to resolve them together.
-- Bucket 1a item B7 user-edges depends on whether Bucket 2 item 1 (config-exempt vs workflow-bearing) reduces the entity count. Run user pass first, then enumerate.
+- Bucket 1a item B7 relationships to `users` depends on whether Bucket 2 item 1 (config-exempt vs workflow-bearing) reduces the entity count. Run user pass first, then enumerate.
 - H-band APQC tagging (Bucket 1a) is independent of Bucket 2.
 
 ### Decisions
@@ -342,7 +342,7 @@ _not yet written_
 | Item | Decision |
 |---|---|
 | B2-OLT-VERBS | (c) Keep 2 gates (approve_offer_letter_template + retire_offer_letter_template), flip 2 (in_review + active → requires_permission=false). |
-| B2-LFC-MASTERS-WITH-NO-STATES | Scope corrected from 17 to 5: only 5 of the 17 listed entities were actually `operational_workflow` without lifecycle states; the rest already passed B12 by `entity_type` classification (`catalog` / `operational_record` / `junction`). The 5 are FCRA / OFCCP / GDPR / EEOC compliance entities. Decision: flip all 5 to `master + optional` (sector-conditional); demote `fcra_summary_of_rights_acknowledgements` (902) + `voluntary_self_identifications` (903) to `entity_type='operational_record'` (no lifecycle authored — pure audit-trail acks). Author lifecycle on the 3 with real human gates: `pre_adverse_action_notices` (898), `applicant_flow_records` (899), `data_subject_requests` (901). |
+| B2-LFC-MASTERS-WITH-NO-STATES | Scope corrected from 17 to 5: only 5 of the 17 listed entities were actually `operational_workflow` without lifecycle states; the rest already passed B12 by `entity_type` classification (`catalog` / `operational_record` / `junction`). The 5 are FCRA / OFCCP / GDPR / EEOC compliance entities. Decision: flip all 5 to `master + optional` (sector-conditional); demote `fcra_summary_of_rights_acknowledgments` (902) + `voluntary_self_identifications` (903) to `entity_type='operational_record'` (no lifecycle authored — pure audit-trail acks). Author lifecycle on the 3 with real human gates: `pre_adverse_action_notices` (898), `applicant_flow_records` (899), `data_subject_requests` (901). |
 | B2-LFC-EMPTY-VERB-OVERRIDES | (c) Mixed mapping approved: 11 explicit verb_overrides on human gates + 3 flips to `requires_permission=false` on auto-progressed states. |
 | B2-ROLE-2-MASS-ASSIGNMENT | Left untouched at user direction. Pollution scope confirmed catalog-wide (881 → 900 role_permissions after this load); 895 of role 2's 900 grants are domain perms; **only 5 are legitimate platform grants**. Subsequently re-framed as a platform-layer architectural finding (see § Role / permission catalog extraction). |
 
@@ -424,7 +424,7 @@ Detailed migration plan written to [plans/extract-role-permission-catalog.md](..
 ### Status
 
 **ATS audit not yet closed.** Open items deferred until role / permission catalog extraction completes:
-- B1A-B7-USER-EDGES-NEWER (~25-35 user edges on later-added masters)
+- B1A-B7-USER-RELATIONSHIPS-NEWER (~25-35 relationships to `users` on later-added masters)
 - B1A-H-APQC-COVERAGE (~24 handoff_processes rows)
 - B1B-REG-CODES-EMPTY (FCRA / OFCCP regulation_code; awaits cross-domain regulations Validate)
 - Audit final close-out / `state.yaml` flip to `passed`
@@ -440,9 +440,9 @@ UI spot-checks:
 
 ### Summary
 
-- Current footprint: 60 master data_objects across 8 full modules + 1 starter (HIRING-STARTER); 7 capabilities; 10 solutions (9 primary); 10 regulations; 27 ATS-owned trigger events; 26 outbound + 24 inbound cross-domain handoffs + 18 intra-domain handoffs; 6 personas (`domain_roles`) + role_modules; 9 system skills + skill_tools.
-- **Prior blocker cleared.** The 2026-06-01 audit was blocked on the role/permission catalog extraction ([plans/extract-role-permission-catalog.md](../../plans/extract-role-permission-catalog.md)). Plan 3 (2026-06-02) executed it: deleted the `_core` roles / role_permissions / permission_hierarchy pollution and re-homed personas to `domain_roles`. ATS now carries 6 well-formed personas (RECRUITING-RECRUITER, RECRUITING-SOURCER, RECRUITING-COORDINATOR, RECRUITING-MANAGER, HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST), all reaching >=2 modules; E-band passes. The two deferred items (B7 user edges, H-APQC) are unblocked and completed this pass.
-- Bucket 1 (agent-fixable, all loaded): M7 fix + B7 (+22 user edges) + H-APQC (+37 tags) + M8 (+9 module copy).
+- Current footprint: 60 master data_objects across 8 full modules + 1 starter (HIRING-STARTER); 7 capabilities; 10 solutions (9 primary); 10 regulations; 27 ATS-owned trigger events; 26 outbound + 24 inbound cross-domain handoffs + 18 intra-domain handoffs; 6 personas (`personas`) + persona_modules; 9 system skills + skill_tools.
+- **Prior blocker cleared.** The 2026-06-01 audit was blocked on the role/permission catalog extraction ([plans/extract-role-permission-catalog.md](../../plans/extract-role-permission-catalog.md)). Plan 3 (2026-06-02) executed it: deleted the `_core` roles / role_permissions / permission_hierarchy pollution and re-homed personas to `personas`. ATS now carries 6 well-formed personas (RECRUITING-RECRUITER, RECRUITING-SOURCER, RECRUITING-COORDINATOR, RECRUITING-MANAGER, HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST), all reaching >=2 modules; E-band passes. The two deferred items (B7 relationships to `users`, H-APQC) are unblocked and completed this pass.
+- Bucket 1 (agent-fixable, all loaded): M7 fix + B7 (+22 relationships to `users`) + H-APQC (+37 tags) + M8 (+9 module copy).
 - Bucket 2 (user judgment, open): 2 items.
 - Bucket 3 (market, open): 4 high-confidence + ~6 judgment MISSING.
 
@@ -458,9 +458,9 @@ Structural pass (derived from the authoritative `domain_module_data_objects` jun
 
 `talent_pools` (id 7) was `master` in ATS-TALENT-POOLS (module 2) AND `consumer` in ATS-CANDIDATE-CRM (module 1). The 2026-06-01 pass flipped its necessity to optional but left the role incoherent (M7 hard-fail). Fix: PATCH DMDO row 950 `consumer` -> `embedded_master` (necessity stays `optional`). Now `master` + `embedded_master` = the autonomous-deployable PASS shape; B5 satisfied via the canonical master in module 2.
 
-#### STRUCTURAL / B7 — user edges (resolves prior B1A-B7-USER-EDGES-NEWER)
+#### STRUCTURAL / B7 — relationships to `users` (resolves prior B1A-B7-USER-RELATIONSHIPS-NEWER)
 
-Subagent enumerated user-typed actors across the 41 user-less masters. 22 staff-actor edges authored to `users` (#748), matching ATS convention (`relationship_kind='reference'`, `relationship_type='many_to_many'`, `owner_side='source'`, verb "has &lt;role&gt;"). 18 skipped: candidate-submitted records (eeo_responses, voluntary_self_identifications, candidate_consents, fcra_disclosures, fcra_summary_of_rights_acknowledgements, application_screening_answers) + pure-config (application_stages, candidate_tags, interview_kits, interview_questions, recruitment_sources, referral_rewards, talent_segments, candidate_assessment_templates, background_check_packages, application_screening_questions) + 2 uncertain left unedged (application_dispositions, job_posting_distributions). 4 optional edges flagged uncertain but loaded (background_check_components, background_check_disputes, applicant_flow_records, recruiting_event_attendances; all `is_required=false`). Masters with user edges now 41/60.
+Subagent enumerated user-typed actors across the 41 user-less masters. 22 staff-actor relationships authored to `users` (#748), matching ATS convention (`relationship_kind='reference'`, `relationship_type='many_to_many'`, `owner_side='source'`, verb "has &lt;role&gt;"). 18 skipped: candidate-submitted records (eeo_responses, voluntary_self_identifications, candidate_consents, fcra_disclosures, fcra_summary_of_rights_acknowledgments, application_screening_answers) + pure-config (application_stages, candidate_tags, interview_kits, interview_questions, recruitment_sources, referral_rewards, talent_segments, candidate_assessment_templates, background_check_packages, application_screening_questions) + 2 uncertain left without a relationship (application_dispositions, job_posting_distributions). 4 optional relationships flagged uncertain but loaded (background_check_components, background_check_disputes, applicant_flow_records, recruiting_event_attendances; all `is_required=false`). Masters with relationships to `users` now 41/60.
 
 #### H — APQC handoff tagging (resolves prior B1A-H-APQC-COVERAGE)
 
@@ -491,7 +491,7 @@ Subagent artifacts: [c:/tmp/ATS-market-surface-2026-06-02.json](c:/tmp/ATS-marke
 
 ### Decisions
 
-- **Bucket 1:** approved "all" — M7 fix + 22 user edges + 37 APQC tags loaded.
+- **Bucket 1:** approved "all" — M7 fix + 22 relationships to `users` + 37 APQC tags loaded.
 - **M8:** "load it" — 9 module copy blocks loaded.
 - **M7:** option (a) — `consumer` -> `embedded_master`.
 - **Bucket 2 (#3 rollup, C1) + Bucket 3:** pending user.
@@ -502,7 +502,7 @@ Subagent artifacts: [c:/tmp/ATS-market-surface-2026-06-02.json](c:/tmp/ATS-marke
 |---|---|---|
 | PATCH DMDO 950 `talent_pools` consumer -> embedded_master | inline CLI | 1 |
 | INSERT `handoff_processes` (APQC tags) | [.tmp_deploy/load_ats_b1_fixes_2026_06_02.ts](../../.tmp_deploy/load_ats_b1_fixes_2026_06_02.ts) | 37 |
-| INSERT `data_object_relationships` (user edges) | same loader | 22 |
+| INSERT `data_object_relationships` (relationships to `users`) | same loader | 22 |
 | PATCH `domain_modules` catalog_tagline + catalog_description | [.tmp_deploy/load_ats_m8_catalog_copy_2026_06_02.ts](../../.tmp_deploy/load_ats_m8_catalog_copy_2026_06_02.ts) | 9 |
 
 Read-only audit script: [.tmp_deploy/audit_ats_2026_06_02.ts](../../.tmp_deploy/audit_ats_2026_06_02.ts).
@@ -511,17 +511,17 @@ All inserts `record_status='new'` (Rule #1). No `notes` populated (Rule #15). No
 
 UI spot-checks:
 - https://tests.semantius.app/domain_map/handoff_processes (37 new tags)
-- https://tests.semantius.app/domain_map/data_object_relationships (22 new user edges)
+- https://tests.semantius.app/domain_map/data_object_relationships (22 new relationships to `users`)
 - https://tests.semantius.app/domain_map/domain_modules (9 catalog-copy backfills)
 - https://tests.semantius.app/domain_map/domain_module_data_objects (DMDO 950 role flip)
 
 ### Neighbor / pairwise
 
-Neighbors by edge weight: HCM 26 (dominant), COMP-MGMT 5, PA 4, SWP 4, BEN-ADMIN 3, ONBOARDING 3, PAYROLL 2, HRSD 1, TALENT-MGMT 1, PSA 1. The 15 inbound HCM org/position/profile lifecycle feeds are HCM's outbound (owed in HCM's B9); ATS's consumer side is wired via `embedded_master` shells of `hcm_positions` / `org_units` / `job_profiles`, and all 15 are now APQC-tagged. No new in-scope pairwise gaps this pass; the full five-neighbor pairwise (HCM / COMP-MGMT / SWP / ONBOARDING / BEN-ADMIN) ran clean 2026-05-28.
+Neighbors by relationship weight: HCM 26 (dominant), COMP-MGMT 5, PA 4, SWP 4, BEN-ADMIN 3, ONBOARDING 3, PAYROLL 2, HRSD 1, TALENT-MGMT 1, PSA 1. The 15 inbound HCM org/position/profile lifecycle feeds are HCM's outbound (owed in HCM's B9); ATS's consumer side is wired via `embedded_master` shells of `hcm_positions` / `org_units` / `job_profiles`, and all 15 are now APQC-tagged. No new in-scope pairwise gaps this pass; the full five-neighbor pairwise (HCM / COMP-MGMT / SWP / ONBOARDING / BEN-ADMIN) ran clean 2026-05-28.
 
 ### Status
 
-Bucket 1 closed; prior deferred items (B7 user edges, H-APQC) resolved. Open: Bucket 2 (rollup policy, C1) + Bucket 3 (market gaps) pending user. `status: feedback_needed`; `next_action_by: user`.
+Bucket 1 closed; prior deferred items (B7 relationships to `users`, H-APQC) resolved. Open: Bucket 2 (rollup policy, C1) + Bucket 3 (market gaps) pending user. `status: feedback_needed`; `next_action_by: user`.
 
 ### `domains.notes` pointer (if updated)
 
@@ -645,7 +645,7 @@ User renamed q-ATS.md -> a-ATS.md ("go"). Processed per Rule #22.
 
 - **a2** (B1B-B9D-RETAG-BENADMIN) = "yes" (destructive overwrite approved) -> PATCH handoff_processes #731 (handoff #120, job_offer.accepted -> BEN-ADMIN, payload benefit_enrollments) and #66 (handoff #395, candidate.hired -> BEN-ADMIN, payload candidates) process_id 41 -> 1052 (7.3 "Manage employee onboarding, training, and development" -> 7.5.2.2 "Administer benefit enrollment"). Both verified at 1052; record_status stayed new (Rule #1); the spurious mechanical roll-up to 7.3.3.2 "Develop employee career plans" was NOT applied. Resolved, removed from state.yaml. The 7.5.2.2 *realization* remains owed to BEN-ADMIN (tracked on BEN-ADMIN B2-B9D-OWN-1052, not reopened here).
 - **a1** (B2-ROLLUP-POLICY) = recommended (option a, deprecate) -> catalog-wide policy change, executed in committed files (no DB row deleted/overwritten). Per-domain checklist B1 + B5 in SKILL.md re-pointed to derive `<masters>` from the live `domain_module_data_objects` junction; added a Phase B header note declaring `domain_data_objects` deprecated as a masters source (an ATS pass found it carrying 15 of 60 ATS masters). domain-audit-procedure.md step 4 cross-check note marked deprecated/stale. `scripts/lib/catalog.ts` already retired the rollup (all.ddo = []); no code change needed. The stale `domain_data_objects` rows themselves are left in place (readers no longer trust them as the masters source). Resolved, removed from state.yaml.
-- **a3** (B3-RIGHT-TO-WORK) = recommended (yes) -> loaded `right_to_work_verifications` (id 1257): operational_workflow (6 lifecycle states: pending/in_progress/verified[gate verify_right_to_work]/tentative_nonconfirmation/final_nonconfirmation/closed), has_personal_content=true, master in ATS-PRE-EMPLOYEE-RECORD (module 8, optional per Rule #16 jurisdiction-conditional). The I-9/E-Verify verification *event*, distinct from the supporting `work_eligibility_documents` (id 1035, mastered in module 54, a non-ATS module - so no intra-domain edge authored to it). Rels: candidates->right_to_work_verifications + right_to_work_verifications->users (verifier); 3 aliases. record_status='new'. Resolved, removed from state.yaml.
+- **a3** (B3-RIGHT-TO-WORK) = recommended (yes) -> loaded `right_to_work_verifications` (id 1257): operational_workflow (6 lifecycle states: pending/in_progress/verified[gate verify_right_to_work]/tentative_nonconfirmation/final_nonconfirmation/closed), has_personal_content=true, master in ATS-PRE-EMPLOYEE-RECORD (module 8, optional per Rule #16 jurisdiction-conditional). The I-9/E-Verify verification *event*, distinct from the supporting `work_eligibility_documents` (id 1035, mastered in module 54, a non-ATS module - so no intra-domain relationship authored to it). Rels: candidates->right_to_work_verifications + right_to_work_verifications->users (verifier); 3 aliases. record_status='new'. Resolved, removed from state.yaml.
 - **a4** (B3-AGENCY-SUBMISSIONS) = "yes" -> loaded `agency_submissions` (id 1258): operational_record, has_personal_content=false, master in ATS-CANDIDATE-CRM (module 1, required). Records which agency submitted which candidate, carrying submission date, ownership/dedup window, and fee terms (fills the dangling recruitment_agencies submission junction). Rels: recruitment_agencies->agency_submissions + candidates->agency_submissions + agency_submissions->users (owner); 2 aliases. record_status='new'. Resolved, removed from state.yaml.
 - **a5** (B3-OUTREACH-SEQUENCES) = "yes" -> loaded `outreach_sequences` (id 1259, operational_workflow, 4 lifecycle states draft/active[gate activate_outreach_sequence]/paused/archived, master required in ATS-CANDIDATE-CRM) + `outreach_sequence_steps` (id 1260, entity_type=catalog, master required in ATS-CANDIDATE-CRM). The multi-step sourcing cadence definition + its ordered steps. Rels: outreach_sequences->outreach_sequence_steps (composition, owner_side=source, is_required) + outreach_sequences->users (owner); 3 aliases. record_status='new'. (Per-candidate enrollment records are out of scope; the b3 candidate named the two definition entities.) Resolved, removed from state.yaml.
 
@@ -663,7 +663,7 @@ UI spot-checks:
 
 ## 2026-11-01: health script recorded (domain_health.ts, checklist version 1)
 
-- First mechanical run of `scripts/analytics/domain_health.ts --domain ATS --record`; the `checks:` block in `state.yaml` records all 62 checks. Fails include B7b (users edges that are `many_to_many` references, e.g. rows 822-825, 1343, 1344), M5 (state 221 `job_applications.hired` realized by ATS-PRE-EMPLOYEE-RECORD, which does not carry the entity), M9 part 2 and H1 (handoff 1431 untagged); warns include B6b (edges 810, 812), B9c (event 81 `signed` plus blank `to_state`s), B9f (handoffs 121 / 398), E4b (`do_not_hire`, `rescinded` among 19 unwired gates), E4d (`submit_scorecard`) and E6 R7 (the HIRING-STARTER description says "no workflow gates" and "one system skill").
+- First mechanical run of `scripts/analytics/domain_health.ts --domain ATS --record`; the `checks:` block in `state.yaml` records all 62 checks. Fails include B7b (relationships to `users` that are `many_to_many` references, e.g. rows 822-825, 1343, 1344), M5 (state 221 `job_applications.hired` realized by ATS-PRE-EMPLOYEE-RECORD, which does not carry the entity), M9 part 2 and H1 (handoff 1431 untagged); warns include B6b (relationships 810, 812), B9c (event 81 `signed` plus blank `to_state`s), B9f (handoffs 121 / 398), E4b (`do_not_hire`, `rescinded` among 19 unwired gates), E4d (`submit_scorecard`) and E6 R7 (the HIRING-STARTER description says "no workflow gates" and "one system skill").
 - New open decision `B2-M9-HIRING-STARTER-CHILDREN` (q-ATS.md q2): embed the six HIRING-STARTER composed children (rel 1300, 1310, 1315, 1325, 1329, 1337) or leave them presence-conditional.
 - The other findings are not worked in this note; the next Validate pass on ATS works them per Rule #21.
 
@@ -675,9 +675,9 @@ UI spot-checks:
 
 **The report.** `state.yaml` carries 11 `b1a` approval batches (the exact rows, drafted in the three `.tmp_deploy/ats_validate_*_2026_11_01.ts` loaders, trimmed to what is approved before they run), 19 `b2` decisions and 7 `b3` ideas; `q-ATS.md` asks each as a question (q1-q31).
 
-**Judgment checks.** A4 / M8 pass (all taglines and descriptions filled, buyer voice, short). M10 pass (every module name reads standalone). C2 pass (every ATS capability sits with Recruiting, the owner). F7 pass (no channel primitive linked). B4: three masters proposed as personal content (q22). B6: `recruiter_saved_searches` is legitimately isolated (a per-user saved search, edge to users only). B9f: handoffs 398 / 121 and 400 / 12 share an event and module pair but carry different payloads, which is allowed. B7: `application_screening_answers`, `eeo_responses`, `voluntary_self_identifications` are candidate-submitted, so no internal users edge. B11: five masters self-explanatory. B9c blanks left on 363, 365, 368, 369 (no single target state or no lifecycle; 365, 368, 369 are in q8) and on 374 / 375 (BGV-mastered entity).
+**Judgment checks.** A4 / M8 pass (all taglines and descriptions filled, buyer voice, short). M10 pass (every module name reads standalone). C2 pass (every ATS capability sits with Recruiting, the owner). F7 pass (no channel primitive related). B4: three masters proposed as personal content (q22). B6: `recruiter_saved_searches` is legitimately isolated (a per-user saved search, relationship to users only). B9f: handoffs 398 / 121 and 400 / 12 share an event and module pair but carry different payloads, which is allowed. B7: `application_screening_answers`, `eeo_responses`, `voluntary_self_identifications` are candidate-submitted, so no internal relationship to `users`. B11: five masters self-explanatory. B9c blanks left on 363, 365, 368, 369 (no single target state or no lifecycle; 365, 368, 369 are in q8) and on 374 / 375 (BGV-mastered entity).
 
-**q3 drafted replacements (users edges).** Each many_to_many users reference becomes `users [<old inverse> / <old verb>] <entity>`, one_to_many, owner_side source, is_required kept: 822, 824, 825 (final approver; the step chain stays in offer_approvals), 826, 1339, 1343-1346, 1348, 1349, 1984, 1985, 1990-1996, 1999-2002, 2004, 2005, 2269, 2660, 2662; 1997 uses `users [records / is recorded by]`. Splits: 821 into `users [is recruiter for / has recruiter]` and `users [is hiring manager for / has hiring manager]` (the wider team stays in hiring_team_assignments); 823 keeps `users [coordinates / has coordinator] interviews`, panelists via interview_panels (2003 re-verbed `users [sits on / has panelist]`). Re-orient 900 to `users [owns pre-employee record / has owning HR coordinator] pre_employees`.
+**q3 drafted replacements (relationships to `users`).** Each many_to_many users reference becomes `users [<old inverse> / <old verb>] <entity>`, one_to_many, owner_side source, is_required kept: 822, 824, 825 (final approver; the step chain stays in offer_approvals), 826, 1339, 1343-1346, 1348, 1349, 1984, 1985, 1990-1996, 1999-2002, 2004, 2005, 2269, 2660, 2662; 1997 uses `users [records / is recorded by]`. Splits: 821 into `users [is recruiter for / has recruiter]` and `users [is hiring manager for / has hiring manager]` (the wider team stays in hiring_team_assignments); 823 keeps `users [coordinates / has coordinator] interviews`, panelists via interview_panels (2003 re-verbed `users [sits on / has panelist]`). Re-orient 900 to `users [owns pre-employee record / has owning HR coordinator] pre_employees`.
 
 **q4 drafted owner_side fixes.** Flip target -> source: 810, 812, 813, 814, 1295, 1297, 1299, 1303. 1316: flip and rewrite the forward verb (both verbs read child-voice). 811: re-orient to `candidates [is referred through / introduces] candidate_referrals`, one_to_many, owner_side source.
 
@@ -693,29 +693,29 @@ All 11 `b1a` batches were deleted from `state.yaml` at the user's request, and q
 
 ## 2026-11-02: q3 and q6 applied; `necessity` replaced by `is_install_optional`
 
-Part of `plans/blueprint-external-links-plan.md`, approved by the user. Script: `.tmp_deploy/necessity_step1_2026_11_02.ts`. Rows were backed up first to `backups/necessity-step1-2026-11-02.json`. `record_status` was not changed.
+Part of `plans/blueprint-external-relationships-plan.md`, approved by the user. Script: `.tmp_deploy/necessity_step1_2026_11_02.ts`. Rows were backed up first to `backups/necessity-step1-2026-11-02.json`. `record_status` was not changed.
 
-- **q3 (`B2-B7B-USER-EDGES`), answered yes, applied as drafted.** 34 `users` links restructured, and one new link added: `users [is hiring manager for / has hiring manager] job_requisitions`. Check B7b now passes for ATS.
+- **q3 (`B2-B7B-USER-RELATIONSHIPS`), answered yes, applied as drafted.** 34 `users` relationships restructured, and one new relationship added: `users [is hiring manager for / has hiring manager] job_requisitions`. Check B7b now passes for ATS.
 - **q6 (`B2-R7-HIRING-STARTER-DESCRIPTION`), answered yes, applied.** `domain_modules.description` of HIRING-STARTER replaced with the drafted text.
 - **ATS-BACKGROUND-CHECKS description reworded by the user's decision.** "Screening is necessity-scoped" became "Screening is scoped by jurisdiction" in `catalog_description`.
 - **New catalog column.** `is_install_optional` (boolean, default false) added to `domain_module_data_objects` and `domain_data_objects`, set true on the 623 and 94 rows where `necessity` is `optional`. `necessity` stays until the user confirms deleting it. The `data_object_relationships.is_required` field description was rewritten because it named `necessity`.
-- **M9 changed, `CHECKLIST_VERSION` 2.** A required composition link no longer fails. A link whose field sits on the absent entity is not reported, and one whose field sits on an in-scope entity warns, like every other link. The six links in q2 no longer appear in M9, so q2's warning is gone. q2 stays in `q-ATS.md` until the next ATS audit; leave `a2:` blank.
+- **M9 changed, `CHECKLIST_VERSION` 2.** A required composition relationship no longer fails. A relationship whose field sits on the absent entity is not reported, and one whose field sits on an in-scope entity warns, like every other relationship. The six relationships in q2 no longer appear in M9, so q2's warning is gone. q2 stays in `q-ATS.md` until the next ATS audit; leave `a2:` blank.
 
 ## 2026-11-02: `job_requisitions` added to HIRING-STARTER as install optional
 
 Requested by the user in the moment. `record_status` is not on this junction and was not touched on any other row.
 
-- **New row.** `domain_module_data_objects` id 2204: HIRING-STARTER (154) / `job_requisitions` (1), `role=embedded_master`, `necessity=optional`, `is_install_optional=true`. Rule #19 invariants 1 and 2 hold (domain-owned; canonical master is row 9 on ATS-RECRUITMENT-PIPELINE).
+- **New row.** `domain_module_data_objects` id 2204: HIRING-STARTER (154) / `job_requisitions` (1), `held_as=embedded_master`, `necessity=optional`, `is_install_optional=true`. Rule #19 invariants 1 and 2 hold (domain-owned; canonical master is row 9 on ATS-RECRUITMENT-PIPELINE).
 - **Description reworded, by the user's approval.** In `domain_modules.description` of HIRING-STARTER, "Leaves out requisitions and their approvals" became "Leaves out the requisition approval chain". This supersedes that sentence in the q6 text. `requisition_approvals` stays out of the starter, while the `approve_requisition` gate comes with the entity as `hiring-starter:approve_requisition`, so "approvals" alone would be wrong.
 - **Do not re-run `.tmp_deploy/necessity_step1_2026_11_02.ts --apply`.** It compares the description with the original q6 text and would overwrite this rewording.
-- **Not done, awaiting the user.** Rule #19 invariant 6 asks for `query_<entity>` on each embedded master, and `query_job_requisitions` (tool 15) is not yet in the starter's `domain_module_tools`. `create_requisition` (859) and `approve_requisition` (860) are also unlinked, and no tool exists for `close_requisition`. These links would change no generated output: the domain skill's toolset is the union of the domain's full modules only (`scripts/emit_skill_spec.ts`), although Rule #19 invariant 6 says a starter's tools roll up into it. The ATS-RECRUITMENT-PIPELINE blueprint is stale and was not regenerated. The ATS skill spec is not affected (a `--stdout` preview matches the file).
+- **Not done, awaiting the user.** Rule #19 invariant 6 asks for `query_<entity>` on each embedded master, and `query_job_requisitions` (tool 15) is not yet in the starter's `domain_module_tools`. `create_requisition` (859) and `approve_requisition` (860) are also unrelated, and no tool exists for `close_requisition`. These relationships would change no generated output: the domain skill's toolset is the union of the domain's full modules only (`scripts/emit_skill_spec.ts`), although Rule #19 invariant 6 says a starter's tools roll up into it. The ATS-RECRUITMENT-PIPELINE blueprint is stale and was not regenerated. The ATS skill spec is not affected (a `--stdout` preview matches the file).
 
-## 2026-11-02: catalog-wide link cleanup, q4 applied
+## 2026-11-02: catalog-wide relationship cleanup, q4 applied
 
-Part of `plans/blueprint-external-links-plan.md`; the user asked to apply all of step 6. Rows were backed up first to `backups/catalog-cleanup-step6-2026-11-02.json`. `record_status` was not changed. `necessity` was deleted from both tables, with its values in `backups/necessity-column-2026-11-02.json`.
+Part of `plans/blueprint-external-relationships-plan.md`; the user asked to apply all of step 6. Rows were backed up first to `backups/catalog-cleanup-step6-2026-11-02.json`. `record_status` was not changed. `necessity` was deleted from both tables, with its values in `backups/necessity-column-2026-11-02.json`.
 
 - **q4 (`B2-B6B-OWNER-SIDE`), applied as drafted,** as part of the catalog-wide `owner_side` fix. 1316 reads `application_stages [receives / moves_to] application_stage_transitions`, and 811 reads `candidates [is referred through / introduces] candidate_referrals`.
-- **Other ATS rows changed by the catalog-wide rules.** Optional composition links with a single parent became required, such as `candidates annotated_via candidate_notes`.
+- **Other ATS rows changed by the catalog-wide rules.** Optional composition relationships with a single parent became required, such as `candidates annotated_via candidate_notes`.
 
 ## 2026-11-02: q5 and q8 applied; headcount approval split between SWP and ATS
 
@@ -729,12 +729,12 @@ Answered by the user in the moment (q5 yes, q8 a), plus the user's "fix 1.4" fro
 
 ## 2026-11-02: q7 applied; q32 reworded
 
-- **q7 (`B2-HS-SOURCE-EDGE`), answered yes by the user in the moment, applied.** Relationship 812 `recruitment_sources attributes candidates`: `is_required` true -> false, so its derived delete mode becomes clear. The audit record named rel 810 by mistake; 810 is `candidates submits job_applications` and stays required. Script: `.tmp_deploy/ats_q7_source_edge_2026_11_02.ts`; backup: `backups/ats-q7-source-edge-2026-11-02.json`. `record_status` was not changed. All nine ATS blueprints regenerated. HCM-LIFECYCLE-WORKFLOWS also shows this link and was not regenerated (one of the stale non-ATS blueprints noted above). Finding 1.7, no source link on applications, stays open.
+- **q7 (`B2-HS-SOURCE-RELATIONSHIP`), answered yes by the user in the moment, applied.** Relationship 812 `recruitment_sources attributes candidates`: `is_required` true -> false, so its derived delete mode becomes clear. The audit record named rel 810 by mistake; 810 is `candidates submits job_applications` and stays required. Script: `.tmp_deploy/ats_q7_source_edge_2026_11_02.ts`; backup: `backups/ats-q7-source-edge-2026-11-02.json`. `record_status` was not changed. All nine ATS blueprints regenerated. HCM-LIFECYCLE-WORKFLOWS also shows this relationship and was not regenerated (one of the stale non-ATS blueprints noted above). Finding 1.7, no source relationship on applications, stays open.
 - **q32 reworded, still unanswered.** The first draft recommended clearing `process_id` on state 210 and understated the cost. Asked whether a process always needs a restricted step, the answer is no: the architect template (9.1) covers a process without a gate, and 14 of 81 processes with RACI rows have none. The warnings come from `deriveRaciRealization` in `scripts/lib/blueprint_derive.ts`, so the recommendation is now a generator change. No generator change has been made.
 
 ## 2026-11-02: q32 applied; a process no longer needs a restricted step in the blueprint
 
-Answered by the user in the moment (the generator change). `deriveRaciRealization` in `scripts/lib/blueprint_derive.ts` now follows the architect template: an Accountable row on a process with no gated state gets the write tier alone, and `⚠ no gate wired` stays only where a gated state is wired but the module mints no gate for it. Informed rows match events on every wired state, so `RECRUITING-COORDINATOR` is notified on `interview_scorecard.submitted`. Tests, `roles.md`, `module-shape.md`, the E6 wording in `SKILL.md` and the `data_object_lifecycle_states.process_id` field description were updated. No catalog row changed. HIRING-STARTER and ATS-INTERVIEWS regenerated.
+Answered by the user in the moment (the generator change). `deriveRaciRealization` in `scripts/lib/blueprint_derive.ts` now follows the architect template: an Accountable row on a process with no gated state gets the write tier alone, and `⚠ no gate wired` stays only where a gated state is wired but the module mints no gate for it. Informed rows match events on every wired state, so `RECRUITING-COORDINATOR` is notified on `interview_scorecard.submitted`. Tests, `personas.md`, `module-shape.md`, the E6 wording in `SKILL.md` and the `data_object_lifecycle_states.process_id` field description were updated. No catalog row changed. HIRING-STARTER and ATS-INTERVIEWS regenerated.
 
 ## 2026-11-02: ATS-BACKGROUND-CHECKS dissolved; q24 and q25 applied
 
@@ -745,7 +745,7 @@ Decided by the user in the moment (option B, then "apply the fix"). The module o
 - **States.** 190, 191 and 2060 moved to BGV-SCREENING-ORDERS; 1501-1506 to BGV-ADJUDICATION-COMPLIANCE.
 - **Events.** 373 `requested`, 374 `completed_clear`, 375 `completed_consider`, all on BGV-SCREENING-ORDERS.
 - **Notes (Rule #15), approved by the user.** Cleared on 401, 1068, 1070, 1071 and 1072. The text on the last four became their empty `description`.
-- **Moved to ATS-OFFERS.** Tool links 354, 355, 356, 586; capability link 47; Legal's persona link 437, now secondary. Deleted as duplicates: tool links 358, 359; persona links 412, 429.
+- **Moved to ATS-OFFERS.** Tool relationships 354, 355, 356, 586; capability relationship 47; Legal's persona relationship 437, now secondary. Deleted as duplicates: tool relationships 358, 359; persona relationships 412, 429.
 - **Generated files.** The module's blueprint removed; the 8 remaining ATS blueprints and the ATS skill spec regenerated.
 - **Corrections to the 2026-11-01 report.** q24 said the module holds two restricted steps; it held six. Its "orders and tracks screening" understated the full adjudication and adverse-action chain it carried. The recommendations on q24 and q25 assumed owning nothing was the problem; the generator already stands in for an absent owner.
 
@@ -754,8 +754,38 @@ Decided by the user in the moment (option B, then "apply the fix"). The module o
 - q26 is answered (merge) but not applied.
 - q2 lost only its reference to the deleted module. Its option a still conflicts with step 6, so it needs rewriting before anyone answers it.
 - `hcm-lifecycle-workflows`, `hrsd-case-mgmt`, `lms-compliance-training`, `lms-ct-gdpr` and `catalog/domain-map/domain-map.json` still name the module until they are regenerated.
-- Capability 519's description still mentions adverse-action workflows and "linked to ATS only".
+- Capability 519's description still mentions adverse-action workflows and "related to ATS only".
 - `domain_data_objects` row 12 still says ATS masters `background_checks` (the retired rollup).
 - Event 1208 `job_offer.rescinded` still has a blank `to_state`.
 - ATS customers have no adverse-action flow until BGV is released. BGV has zero personas (E1 fails) and 13 workflow masters without lifecycle states.
 - `checks:` in `state.yaml` was not re-recorded.
+
+
+## 2026-11-03: Hiring Starter review bugs 3, 50, 55 and 57 fixed in the catalog
+
+Requested by the user in the moment, naming the four bugs of [the review](hiring-starter-blueprint-review-2026-11-02.md). Script: `.tmp_deploy/hiring_starter_review_fixes_2026_11_03.ts`; backup: `backups/hiring-starter-review-fixes-2026-11-03.json`. `record_status` was not changed, and the new row is `new`.
+
+- **Bug-3.** Relationship 809 `job_postings is applied to via job_applications`: `is_required` true -> false, so its derived delete mode becomes clear. An application can now be saved without a posting. ATS M9 part 2 dropped from 18 to 17 warnings.
+- **Bug-50, finding 1.7.** New relationship 2740 `recruitment_sources attributes job_applications` (one_to_many, reference, optional, inverse "was attributed from"), mirroring 812. The review listed this as needing a decision; the relationship was added rather than dropping "source" from the description. Relationship 812 on candidates stays, so a candidate's source and an application's source are separate facts.
+- **Bug-55.** Relationship 1328 was `interviewer_availability_slots booked_for interviews`, one_to_one. It is now `interviews occupies interviewer_availability_slots`, one_to_many, still optional. The cardinality enum has no many_to_one and the source must be the parent, so the endpoints and verbs swapped on the same row. The field moves from the interview to the slot.
+- **Bug-57.** `job_requisitions` (1): "Approved request(s) to hire" became "Request(s) to hire" in `description` and `catalog_description`.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so they all still show the old values, including Hiring Starter (blob `51a15ed`). The review still lists these bugs, because it describes that build.
+- With no requisitions installed, an application can now be saved with no job relationship at all, since 809 was the only relate in that install that forced one.
+- The status list in `job_requisitions.description` omits `pending_approval`.
+- `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-03: status list fixed; Hiring Starter rebuilt; bugs 55 and 57 removed from the review
+
+Answered by the user in the moment. This supersedes the "left as is" items above on the blueprint and the status list.
+
+- **`job_requisitions.description`.** The status list now includes `pending_approval`, matching the live lifecycle.
+- **HIRING-STARTER regenerated** as blob `a84dc88`. The diff against `51a15ed` holds only the fixes for bugs 3, 50, 55 and 57. No other blueprint was regenerated.
+- **The review.** Bugs 55 and 57 were removed and its counts updated.
+- **Bugs 3 and 50 stay open.** The user asked for an explanation before deciding, so both stay listed in the review. Their fixes remain in the catalog until the user answers.
+
+## 2026-11-03: fixes for bugs 3 and 50 confirmed; finding 1.7 closed
+
+Answered by the user in the moment, after the problem and the options were explained. Relationship 809 stays optional, accepting that without requisitions an application can be saved with no job relationship. Relationship 2740 stays, rather than a wording-only fix, which closes finding 1.7. No catalog row changed in this step. Bugs 3 and 50 were removed from the review and its counts updated.

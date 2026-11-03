@@ -29,7 +29,7 @@ Discovery of sanctioned and shadow SaaS, app inventory, ownership, integrations,
 | App Lifecycle Stages | `smp_app_lifecycle_stages` | Portfolio-rationalization stages of a SaaS app such as evaluate, pilot, sanctioned, sunset, and retired. |
 | SaaS Alerts | `smp_alerts` | System-raised alerts on the SaaS portfolio: shadow-IT signups, projected license overages, opening renewals, or vendor-risk changes. |
 | SaaS App Integrations | `smp_app_integrations` | Configured connections between the SaaS management platform and an app's APIs for sign-on, provisioning, finance, and usage data. |
-| SaaS App Owners | `smp_app_owners` | Typed owner assignments linking a user to a SaaS app as its business, IT, finance, or security owner. |
+| SaaS App Owners | `smp_app_owners` | Typed owner assignments relating a user to a SaaS app as its business, IT, finance, or security owner. |
 | SaaS Applications | `saas_applications` | SaaS applications in the company portfolio, with vendor, category, criticality, owner, and whether each is sanctioned or shadow IT. |
 | Shadow IT Apps | `shadow_it_apps` | SaaS apps found in use but not officially sanctioned, discovered through expense data, sign-on logs, browser, or network signals. |
 
@@ -70,7 +70,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `smp_app_catalog_listings` | `smp_app_catalog_listings` | App Catalog Listing | App Catalog Listings | master | - | - | required | - | catalog | `:admin` | - |
 | 2 | `smp_app_lifecycle_stages` | `smp_app_lifecycle_stages` | App Lifecycle Stage | App Lifecycle Stages | master | - | - | required | - | operational_workflow | `:manage` | - |
@@ -86,7 +86,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope edges
+### 5.1 Intra-scope relationships
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -98,7 +98,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `saas_applications` | tracks_stage | `smp_app_lifecycle_stages` | one_to_one | reference | required | target | restrict | reference | - |
 | `shadow_it_apps` | promotes_to | `saas_applications` | one_to_one | reference | optional | source | clear | reference | - |
 
-### 5.2 Built-in edges (`users` and other platform built-ins)
+### 5.2 Built-in relationships (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `users` | owns | `saas_applications` | one_to_many | required | target | restrict | reference | - |
 | `users` | triggered | `shadow_it_apps` | one_to_many | optional | target | clear | reference | - |
 
-### 5.3 Cross-scope edges
+### 5.3 Cross-scope relationships
 
 #### 5.3a Outbound from this scope's masters and contributors
 
@@ -133,17 +133,17 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_applications` | raises_incident | `service_incidents` | one_to_many | optional | none | n/a | - |
 | `shadow_it_apps` | triggers_requisition | `purchase_requisitions` | one_to_many | optional | none | n/a | - |
 
-#### 5.3b Context edges on embedded shells and consumed entities
+#### 5.3b Context relationships on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
+_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
+| data_object | other module / domain | held_as | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `saas_applications` | APM-PORTFOLIO-REGISTRY (Portfolio Registry) - APM | consumer | optional | - |
 | `saas_applications` | IGA-ENTITLEMENT-CATALOG (IGA Entitlement Catalog) - IGA | consumer | optional | Newly discovered or sanctioned SaaS apps trigger entitlement registration in IGA catalog. |

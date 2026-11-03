@@ -96,8 +96,8 @@ export function processLabel(ctx: HealthCtx, pid: number): string {
   return `${code}${p.process_name ?? ""} (process ${pid})`.trim();
 }
 
-export function personaLabel(ctx: HealthCtx, roleId: number | null | undefined): string {
-  if (roleId == null) return "(no persona)";
-  const r = ctx.all.domainRolesById.get(roleId);
-  return r ? `${r.role_name ?? r.role_code} (role ${roleId})` : `role ${roleId}`;
+export function personaLabel(ctx: HealthCtx, personaId: number | null | undefined): string {
+  if (personaId == null) return "(no persona)";
+  const r = ctx.all.personasById.get(personaId);
+  return r ? `${r.persona_name ?? r.persona_code} (persona ${personaId})` : `persona ${personaId}`;
 }

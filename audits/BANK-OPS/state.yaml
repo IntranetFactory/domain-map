@@ -66,7 +66,7 @@ last_audit: "2026-06-13"
 # boundary tags in BOTH directions; there are 0 inbound handoffs (target_domain_id=43 is empty).
 # Verdicts: 4 distinct (process, owner) findings, all UNOWNED -- but NOT genuine unowned dependencies.
 # BANK-OPS masters every carried payload (banking_kyc_reviews, wire_transfers, banking_transactions,
-# banking_cases, loan_disbursements, account_openings) via legacy domain_data_objects role=master rows,
+# banking_cases, loan_disbursements, account_openings) via legacy domain_data_objects held_as=master rows,
 # but has ZERO domain_module_data_objects master rows because the domain is unbuilt (0 modules). The
 # resolver reads ownership at module grain, finds no master DMDO row, and reports UNOWNED. So B9d
 # ownership routing for these payloads is blocked on B1A-BUILD (gated on B2-1), NOT a new finding to
@@ -81,7 +81,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains (A2 fail). The build is surfaced, not auto-scaffolded."
     finding: "Live 2026-06-07: 0 domain_modules rows and 0 capability_domains rows, so BANK-OPS is not deployable today. Per Rule #14 every domain needs >=1 module_kind='full' row. The build cannot be auto-run because its shape is a user decision (B2-1 module split). All build-independent fixes are already executed."
-    action: "After B2-1 is decided, run Phase A then M then B then S to author the module set, capabilities, masters, the domain-grain system skill, and domain_module_tools (new model). If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "After B2-1 is decided, run Phase A then M then B then S to author the module set, capabilities, masters, the domain-grain system skill, and domain_module_tools (new model). If multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
@@ -89,14 +89,14 @@ b1b:
   - id: B1B-S1
     summary: "Author the full domain_modules rows for BANK-OPS; M1 hard-fail."
     finding: "M1 HARD FAIL, zero domain_modules rows on BANK-OPS (domain_id=43). Cascades: F2 / F5 / E1-E6 / B9b / the domain-grain skill toolset are all blocked."
-    action: "Phase A loader, hand-authored after B2-1 decision. Insert domain_modules per chosen split, then domain_module_data_objects rows linking the 8 masters (and any new MISSING masters) to the right module."
+    action: "Phase A loader, hand-authored after B2-1 decision. Insert domain_modules per chosen split, then domain_module_data_objects rows relating the 8 masters (and any new MISSING masters) to the right module."
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
   - id: B1B-S2
     summary: "Author capability_domains rows for BANK-OPS (A2 fail)."
     finding: "A2 FAIL, zero capability_domains rows. Market shape suggests at minimum BANK-ORIGINATION, BANK-DEPOSIT-OPS, BANK-KYC-AML, BANK-PAYMENT-OPS, BANK-CASE-MGMT, BANK-LOAN-SERVICING, BANK-REGULATORY-REPORTING; some may rise to domain-neutral if cross-cutting markets are promoted."
-    action: "Phase A loader; insert capabilities + capability_domains; once modules ship, also link domain_module_capabilities. Module placement depends on B2-1."
+    action: "Phase A loader; insert capabilities + capability_domains; once modules ship, also relate domain_module_capabilities. Module placement depends on B2-1."
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
@@ -134,7 +134,7 @@ b1b:
 
   - id: B1B-B3
     summary: "Author 5 cross-domain mirror data_object_relationships on BANK-OPS outbound handoffs (886, 887, 888, 889, 892)."
-    finding: "B8 outbound, 5 of 7 cross-domain handoffs lack mirror data_object_relationships. 3 GRC-targeted handoffs (886 banking_kyc_review.flagged, 887 wire_transfer.sanctions_hit, 888 banking_transaction.suspicious) need an edge to GRC's compliance-alert master; 2 FIN-targeted handoffs (889 loan_disbursement.executed, 892 wire_transfer.initiated) need an edge to FIN's journal / payment master."
+    finding: "B8 outbound, 5 of 7 cross-domain handoffs lack mirror data_object_relationships. 3 GRC-targeted handoffs (886 banking_kyc_review.flagged, 887 wire_transfer.sanctions_hit, 888 banking_transaction.suspicious) need a relationship to GRC's compliance-alert master; 2 FIN-targeted handoffs (889 loan_disbursement.executed, 892 wire_transfer.initiated) need a relationship to FIN's journal / payment master."
     action: "Focused loader, INSERT 5 rows on data_object_relationships. Requires lookup of GRC's compliance-alert master id and FIN's payment / journal master id (owed by those domains' state)."
     affected_handoffs:
       - {handoff_id: 886, direction: outbound, target_domain: GRC, trigger_event: banking_kyc_review.flagged, payload: banking_kyc_reviews}

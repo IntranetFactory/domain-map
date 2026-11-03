@@ -41,13 +41,13 @@ a3:
 
 ---
 
-q4: There are two user-to-asset relationship edges with overlapping meaning: "assigned hardware" (the current end-user holder) and "custodian of assets" (the IT staffer managing it). How should they be modeled?
+q4: There are two user-to-asset relationships with overlapping meaning: "assigned hardware" (the current end-user holder) and "custodian of assets" (the IT staffer managing it). How should they be modeled?
 
-- a) Keep both as distinct edges and rewrite them to verb-shape (assigned-to and custodian-of).
-- b) Collapse them into one "owns hardware asset" edge and drop the other.
-- c) Keep both and add a third edge for the disposal approver.
+- a) Keep both as distinct relationships and rewrite them to verb-shape (assigned-to and custodian-of).
+- b) Collapse them into one "owns hardware asset" relationship and drop the other.
+- c) Keep both and add a third relationship for the disposal approver.
 
-Recommended: a. Assignee and custodian are genuinely different actors, so keeping both (in verb-shape) is the cleanest. Your answer here sets the verb-rewrite shape, and rewriting those existing edges is destructive, so the rewrite itself still needs your sign-off.
+Recommended: a. Assignee and custodian are genuinely different actors, so keeping both (in verb-shape) is the cleanest. Your answer here sets the verb-rewrite shape, and rewriting those existing relationships is destructive, so the rewrite itself still needs your sign-off.
 
 a4:
 
@@ -64,13 +64,13 @@ a5:
 
 ---
 
-q6: Which disposal compliance frameworks should be linked to this domain? Nothing is linked today.
+q6: Which disposal compliance frameworks should be related to this domain? Nothing is related today.
 
 - a) Conservative: RoHS, WEEE, and NIST 800-88 media sanitization only.
 - b) Comprehensive: all six (RoHS, WEEE, NIST 800-88, GDPR right-to-erasure, HIPAA, and recycler certifications).
 - c) Defer until the separate IT-asset-disposition market candidate is triaged.
 
-Recommended: c. The disposition-market triage may pull these frameworks onto a future disposal domain instead, so deferring avoids linking them twice. Low stakes, does not block the build.
+Recommended: c. The disposition-market triage may pull these frameworks onto a future disposal domain instead, so deferring avoids relating them twice. Low stakes, does not block the build.
 
 a6:
 
@@ -160,12 +160,12 @@ a17:
 
 ---
 
-q18: A facilities/HVAC field-service starter module is host-linked to this domain, but its entities are an HVAC servicing business (technician dispatch, servicing customer equipment, quoting), not IT hardware. Should I remove the link to this domain?
+q18: A facilities/HVAC field-service starter module is host-related to this domain, but its entities are an HVAC servicing business (technician dispatch, servicing customer equipment, quoting), not IT hardware. Should I remove the relationship to this domain?
 
-- a) Yes, remove the host-link (the starter belongs to field service; the link here looks like a mis-host).
+- a) Yes, remove the host-relationship (the starter belongs to field service; the relationship here looks like a mis-host).
 - b) No, keep it.
 
-Recommended: a. The starter's entities are a field-service market (ServiceTitan/Jobber-shaped), and no hardware-asset platform hosts an HVAC servicing business, so the link to Hardware Asset Management reads as a mis-host. Removing a host link is destructive, so it needs your sign-off.
+Recommended: a. The starter's entities are a field-service market (ServiceTitan/Jobber-shaped), and no hardware-asset platform hosts an HVAC servicing business, so the relationship to Hardware Asset Management reads as a mis-host. Removing a host relationship is destructive, so it needs your sign-off.
 
 a18:
 

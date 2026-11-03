@@ -1,22 +1,22 @@
 # Visitor Management (VIS-MGMT): questions waiting for you
 
 ## What this domain is
-Run the full visitor lifecycle for your sites: pre-register guests, check them in at the lobby or kiosk, issue badges, and notify their hosts. Cover the compliance side too: NDA acknowledgements, watchlist screening, sealed audit trails, and an evacuation roster of who is on site. The market reference is the pure-play visitor platforms (Envoy, Proxyclick, SwipedOn, iLobby).
+Run the full visitor lifecycle for your sites: pre-register guests, check them in at the lobby or kiosk, issue badges, and notify their hosts. Cover the compliance side too: NDA acknowledgments, watchlist screening, sealed audit trails, and an evacuation roster of who is on site. The market reference is the pure-play visitor platforms (Envoy, Proxyclick, SwipedOn, iLobby).
 
 ---
 
 q1: (answer this first) How should Visitor Management be split into modules (the sub-areas of the product)?
 
-- a) Two modules: Registration (visitor registrations, check-ins, badges, host assignments) and Compliance (NDA acknowledgements, watchlist screenings, audit logs, evacuation lists).
-- b) Three modules: Registration (registrations, check-ins, badges, host assignments), Compliance (NDA acknowledgements, watchlist screenings, audit logs), and Emergency (evacuation lists on its own).
+- a) Two modules: Registration (visitor registrations, check-ins, badges, host assignments) and Compliance (NDA acknowledgments, watchlist screenings, audit logs, evacuation lists).
+- b) Three modules: Registration (registrations, check-ins, badges, host assignments), Compliance (NDA acknowledgments, watchlist screenings, audit logs), and Emergency (evacuation lists on its own).
 
-Recommended: b. All the flagship vendors separate the emergency-roster surface, and a standalone Emergency module lines up with a future workplace-safety domain. This is the single decision that unblocks the whole build: every module, capability, lifecycle state, role, and per-module link below it depends on it.
+Recommended: b. All the flagship vendors separate the emergency-roster surface, and a standalone Emergency module lines up with a future workplace-safety domain. This is the single decision that unblocks the whole build: every module, capability, lifecycle state, role, and per-module relationship below it depends on it.
 
 a1:
 
 ---
 
-q2: Six masters carry visitor personal data directly (registrations, check-ins, badges, NDA acknowledgements, watchlist screenings, audit logs). Should they be flagged as containing personal data, and should the audit log be frozen once it is sealed? (yes/no)
+q2: Six masters carry visitor personal data directly (registrations, check-ins, badges, NDA acknowledgments, watchlist screenings, audit logs). Should they be flagged as containing personal data, and should the audit log be frozen once it is sealed? (yes/no)
 
 Recommended: yes. The six masters carry name, ID, photo, and signature, so flagging them scopes DSAR and retention correctly; sealing the audit log is a one-way step, so freezing it preserves an accurate trail. These flips are gated on your sign-off.
 
@@ -36,32 +36,32 @@ a3:
 
 ---
 
-q4: Visitor Management carries direct visitor personal data but has no privacy regulations linked. Which should I load and link?
+q4: Visitor Management carries direct visitor personal data but has no privacy regulations related. Which should I load and relate?
 
 - a) GDPR plus CCPA (covers EU and California visitors).
 - b) GDPR only (the broader scope), defer CCPA.
 - c) Defer to a future catalog-wide regulation backfill (none scheduled).
 
-Recommended: a. Both apply to visitor personal data, and linking now closes the regulations gap rather than leaving it for an unscheduled pass.
+Recommended: a. Both apply to visitor personal data, and relating now closes the regulations gap rather than leaving it for an unscheduled pass.
 
 a4:
 
 ---
 
-q5: Evacuation lists are mandated by OSHA emergency-action-plan rules. Should I add OSHA as a regulation and link it to Visitor Management? (yes/no)
+q5: Evacuation lists are mandated by OSHA emergency-action-plan rules. Should I add OSHA as a regulation and relate it to Visitor Management? (yes/no)
 
-Recommended: yes. The evacuation roster exists to satisfy OSHA 29 CFR 1910.38, so the link documents a real obligation.
+Recommended: yes. The evacuation roster exists to satisfy OSHA 29 CFR 1910.38, so the relationship documents a real obligation.
 
 a5:
 
 ---
 
-q6: Should per-visit NDA acknowledgements stay mastered in Visitor Management, or be promoted to the contract-lifecycle (CLM) domain?
+q6: Should per-visit NDA acknowledgments stay mastered in Visitor Management, or be promoted to the contract-lifecycle (CLM) domain?
 
-- a) Keep them in Visitor Management (a per-visit acknowledgement is operationally distinct from a negotiated corporate NDA).
+- a) Keep them in Visitor Management (a per-visit acknowledgment is operationally distinct from a negotiated corporate NDA).
 - b) Promote a slimmer NDA entity to CLM and consume it here.
 
-Recommended: a. The per-visit acknowledgement belongs to the visit workflow; CLM owns negotiated corporate NDAs, which is a different artifact.
+Recommended: a. The per-visit acknowledgment belongs to the visit workflow; CLM owns negotiated corporate NDAs, which is a different artifact.
 
 a6:
 
@@ -78,7 +78,7 @@ a7:
 
 ---
 
-q8: Two relationship rows linking visitors to the audit log use the verb "logged_in", which reads as incomplete and is not the catalog's audit-log idiom. Which wording should replace it?
+q8: Two relationship rows relating visitors to the audit log use the verb "logged_in", which reads as incomplete and is not the catalog's audit-log idiom. Which wording should replace it?
 
 - a) "audited_in" (inverse: audits)
 - b) "records_event_in" (inverse: records)

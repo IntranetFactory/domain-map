@@ -4,7 +4,7 @@ version: "3.1"
 license: MIT
 system_name: Job Offers
 tagline: Generate, approve, and send offers without losing a version.
-description: Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay linked to the offer record, so what was approved is exactly what was sent.
+description: Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay related to the offer record, so what was approved is exactly what was sent.
 system_slug: ats-offers
 domain_modules:
   - ats-offers
@@ -26,7 +26,7 @@ Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-M
 | Name | data_object | Description |
 | --- | --- | --- |
 | Offer Approvals | `offer_approvals` | Approval steps in the offer-approval chain, triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules. |
-| Offer Letter Documents | `offer_letter_documents` | Generated PDF letters of the offer terms, versioned alongside the structured offer and linked to the e-signature envelope. |
+| Offer Letter Documents | `offer_letter_documents` | Generated PDF letters of the offer terms, versioned alongside the structured offer and related to the e-signature envelope. |
 | Offer Letter Templates | `offer_letter_templates` | Reusable offer-letter templates with merge tokens for candidate, role, and pay terms, versioned by jurisdiction and language to render offer letters. |
 | Offer Versions | `offer_versions` | Versioned snapshots of a job offer during negotiation, each holding the structured terms and the author of the change, from initial through accepted. |
 | Offers | `job_offers` | Formal employment offers extended to candidates, with compensation, start date, terms, approval chain, and status. |
@@ -78,7 +78,7 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | catalog code | singular | plural | role | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `offer_approvals` | `offer_approvals` | Offer Approval | Offer Approvals | master | - | - | - | - | operational_workflow | `:manage` | - |
 | 2 | `offer_letter_documents` | `offer_letter_documents` | Offer Letter Document | Offer Letter Documents | master | - | - | - | yes | operational_workflow | `:manage` | - |
@@ -97,7 +97,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 _`field_required` applies only when both entities are installed. It never makes an entity required._
 
-### 5.1 Links between entities in this blueprint
+### 5.1 Relationships between entities in this blueprint
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -109,11 +109,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | yes | source | cascade | parent | - |
 | `offer_letter_templates` | rendered_as | `offer_letter_documents` | one_to_many | reference | no | source | clear | reference | - |
 
-### 5.2 Links to platform built-ins (`users`)
+### 5.2 Relationships to platform built-ins (`users`)
 
 | from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns as recruiter | `job_applications` | one_to_many | yes | source | restrict | reference | - |
+| `users` | owns as recruiter | `job_applications` | one_to_many | no | source | clear | reference | - |
 | `users` | approves | `job_offers` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
 | `users` | requests | `background_checks` | one_to_many | yes | source | restrict | reference | - |
@@ -123,11 +123,11 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | approves | `offer_approvals` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns | `offer_letter_documents` | one_to_many | no | source | clear | reference | - |
 
-### 5.3 Links to entities outside this blueprint
+### 5.3 Relationships to entities outside this blueprint
 
-_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-#### 5.3a Outgoing links: this blueprint's entity points to the external entity
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -141,7 +141,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `background_check_packages` | shapes | `background_checks` | one_to_many | yes | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
-#### 5.3b Incoming links: the external entity points to this blueprint's entity
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -168,11 +168,11 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `offer_versions` | proposes | `equity_grants` | one_to_many | no | - |
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
 | `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | yes | - |
-| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgements` | one_to_one | yes | - |
+| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgments` | one_to_one | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
@@ -185,9 +185,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._
+_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
 
-| data_object | other module / domain | role | install_optional | notes |
+| data_object | other module / domain | held_as | install_optional | notes |
 | --- | --- | --- | --- | --- |
 | `job_offers` | ATS-PRE-EMPLOYEE-RECORD (Pre-Employee Record) - ATS | embedded_master | - | - |
 | `job_offers` | COMP-STATEMENTS (Total Rewards Statements) - COMP-MGMT | consumer | - | - |
@@ -220,7 +220,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | install_optional | catalog owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `background_checks` | embedded_master | yes | BGV-SCREENING-ORDERS (BGV) | - |
 | `candidates` | embedded_master | - | ATS-CANDIDATE-CRM (ATS) | - |
@@ -431,6 +431,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
-| contributor | Human Resources | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Finance | `read` | `:read` |
+| contributor | Human Resources | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Finance | `viewer` | `:read` |

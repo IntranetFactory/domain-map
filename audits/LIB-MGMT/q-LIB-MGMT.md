@@ -7,13 +7,13 @@ Catalog books, journals, e-resources, and special collections in MARC21 or BIBFR
 
 ---
 
-q1: (answer this first) For library holdings (the record that links a title to the items a library owns), is it a config-shape master (no lifecycle) or a workflow master (with a lifecycle to author)?
+q1: (answer this first) For library holdings (the record that relates a title to the items a library owns), is it a config-shape master (no lifecycle) or a workflow master (with a lifecycle to author)?
 
 - a) Config-shape: treat it like reference data with no lifecycle (the Koha-style view).
-- b) Workflow with a simple 3-state lifecycle: new, then linked, then withdrawn (the Alma-style view).
+- b) Workflow with a simple 3-state lifecycle: new, then related, then withdrawn (the Alma-style view).
 - c) Workflow with a richer 5-state lifecycle (the fuller Alma-shaped machine).
 
-Recommended: b. Most platforms that treat holdings as a real object give it the new, linked, withdrawn flow, which is enough to track when a holding is attached to a title and when it is retired. This choice sets the object's type and whether a lifecycle gets built, which unblocks the holdings lifecycle work below it.
+Recommended: b. Most platforms that treat holdings as a real object give it the new, related, withdrawn flow, which is enough to track when a holding is attached to a title and when it is retired. This choice sets the object's type and whether a lifecycle gets built, which unblocks the holdings lifecycle work below it.
 
 a1:
 
@@ -52,13 +52,13 @@ a4:
 
 ---
 
-q5: Should the discovery module stay a thin OPAC (local catalog search only), or expand into a full discovery layer (federated indexes across publishers, link resolver, relevance)?
+q5: Should the discovery module stay a thin OPAC (local catalog search only), or expand into a full discovery layer (federated indexes across publishers, relationship resolver, relevance)?
 
 - a) Keep it as one module scoped tightly to OPAC / local catalog search.
-- b) Split into two modules: OPAC (local search) plus Discovery (federated indexes, link resolver, relevance).
+- b) Split into two modules: OPAC (local search) plus Discovery (federated indexes, relationship resolver, relevance).
 - c) Defer until the related entity research is done.
 
-Recommended: a. Splitting only pays off once the discovery-layer objects (federated indexes, link resolver, relevance) actually exist, so keeping one tightly scoped module is the right shape today. Academic libraries usually need both; small public libraries only need OPAC.
+Recommended: a. Splitting only pays off once the discovery-layer objects (federated indexes, relationship resolver, relevance) actually exist, so keeping one tightly scoped module is the right shape today. Academic libraries usually need both; small public libraries only need OPAC.
 
 a5:
 

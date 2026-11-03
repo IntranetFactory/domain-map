@@ -38,18 +38,18 @@ b1a:
 
 b1b:
   - id: B1B-S5
-    summary: "B7 hard fail, 0 users (id 748) edges on the 5 EPM masters. Awaits exact (relationship_verb, inverse_verb) tuples."
-    finding: "data_object_relationships with (data_object_id in (37,38,39,40,41) or related_data_object_id in (37,38,39,40,41)) returns 4 cross-domain edges and 0 user edges. Specifically zero edges where data_object_id=748 (users) or related_data_object_id=748. Rule #10 makes built-in edges first-class. Expected verbs: plan_owner / approver / controller on financial_plans; budget_owner / submitter / approver on financial_budgets; forecast_owner / fp_analyst on financial_forecasts; scenario_modeler / reviewer on financial_scenarios; analyst / reviewer / accountable_manager on variance_analyses."
+    summary: "B7 hard fail, 0 users (id 748) relationships on the 5 EPM masters. Awaits exact (relationship_verb, inverse_verb) tuples."
+    finding: "data_object_relationships with (data_object_id in (37,38,39,40,41) or related_data_object_id in (37,38,39,40,41)) returns 4 cross-domain relationships and 0 relationships to users. Specifically zero relationships where data_object_id=748 (users) or related_data_object_id=748. Rule #10 makes built-in relationships first-class. Expected verbs: plan_owner / approver / controller on financial_plans; budget_owner / submitter / approver on financial_budgets; forecast_owner / fp_analyst on financial_forecasts; scenario_modeler / reviewer on financial_scenarios; analyst / reviewer / accountable_manager on variance_analyses."
     blocked_by:
       - type: user_decision
-        ref: B2-user-edges
-        reason: "exact verb and inverse_verb tuples per edge not pre-specified"
+        ref: B2-relationships to users
+        reason: "exact verb and inverse_verb tuples per relationship not pre-specified"
     affected_masters:
-      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: user_edges_pending}
-      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: user_edges_pending}
-      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: user_edges_pending}
-      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: user_edges_pending}
-      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: user_edges_pending}
+      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: user_relationships_pending}
+      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: user_relationships_pending}
+      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: user_relationships_pending}
+      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: user_relationships_pending}
+      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: user_relationships_pending}
 
   - id: B1B-H1-flip
     summary: "APQC TAGGING, flip 4 discovery_substring rows to agent_curated where the proposed PCF matches."
@@ -184,7 +184,7 @@ b3:
 
   - id: B3-S2
     candidate: headcount_plans
-    rationale: "Every flagship has a headcount / position-level plan distinct from the dollar plan. Today EPM conflates this into financial_plans via the WORKFORCE-PLAN-EPM capability (now realized by module 239) with the line-item flow from SWP (workforce_cost_projections feeds financial_plans, edge id 1027). Either add the master to EPM-PLAN-BUDGET (239) or shift responsibility wholly to SWP."
+    rationale: "Every flagship has a headcount / position-level plan distinct from the dollar plan. Today EPM conflates this into financial_plans via the WORKFORCE-PLAN-EPM capability (now realized by module 239) with the line-item flow from SWP (workforce_cost_projections feeds financial_plans, relationship id 1027). Either add the master to EPM-PLAN-BUDGET (239) or shift responsibility wholly to SWP."
     vendor_evidence: [Workday Adaptive Workforce, Anaplan Connected Workforce, Pigment People]
     proposed_module: "EPM-PLAN-BUDGET (239) or SWP, pending B2-S2"
 

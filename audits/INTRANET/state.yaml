@@ -33,7 +33,7 @@ b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 8 capabilities awaiting a build. SURFACED: needs a build, gated on classification route."
     finding: "Live triage 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 8 capability_domains rows (ids 140-147), so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "On the chosen B2-CLASSIFICATION route, run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    action: "On the chosen B2-CLASSIFICATION route, run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, persona_modules, process_raci, lifecycle.process_id) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -63,7 +63,7 @@ b1b:
       INTRANET-FRONTLINE, INTRANET-ADVOCACY) has zero realizing modules. Both findings
       unblock the moment M1 is fixed.
     action: |
-      Loader-time: link each capability to the appropriate domain_module via
+      Loader-time: relate each capability to the appropriate domain_module via
       domain_module_capabilities once the module set lands.
     affected_entities:
       - INTRANET-PUBLISH
@@ -84,7 +84,7 @@ b2:
       Decide the build route. Phase 0 vendor research run 2026-06-13
       (audits/INTRANET/INTRANET-phase0-2026-06-13.md) verdict: master-bearing real market, but
       PARTIAL. INTRANET genuinely masters a spine no other catalog domain owns: spaces /
-      pages, news / announcements + targeting audiences + mandatory-acknowledgement receipts
+      pages, news / announcements + targeting audiences + mandatory-acknowledgment receipts
       (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news persist these as
       compliance-grade records), internal newsletters + editions + subscriptions (Poppulo
       Harmony / Workshop / ContactMonkey are newsletter systems of record with edition / send /
@@ -98,7 +98,7 @@ b2:
     options:
       - {key: a, label: "Confirm leadership-tier: M1 fix = one landing module, no Phase B; B / E / F / H pass by exception. (Phase 0 argues AGAINST this: the publish/news/newsletter spine is real owned data.)"}
       - {key: b, label: "Full real point-solution market: load Phase A / M / B / C / E / F / H across 5 to 8 modules (see B2-MODULARIZATION). Phase 0 caution: 3 of the proposed master modules (journey/frontline/advocacy) are really overlays on adjacent markets."}
-      - {key: c, label: "Hybrid (Phase 0 recommended): build ~3 entity-owning modules (INTRANET-PUBLISH, INTRANET-NEWS, INTRANET-NEWSLETTER) plus INTRANET-ANALYTICS as the receipt/event store; demote JOURNEY / FRONTLINE / ADVOCACY to capability overlays + cross-domain links, with FRONTLINE flagged as a possible standalone domain."}
+      - {key: c, label: "Hybrid (Phase 0 recommended): build ~3 entity-owning modules (INTRANET-PUBLISH, INTRANET-NEWS, INTRANET-NEWSLETTER) plus INTRANET-ANALYTICS as the receipt/event store; demote JOURNEY / FRONTLINE / ADVOCACY to capability overlays + cross-domain relationships, with FRONTLINE flagged as a possible standalone domain."}
     why: |
       Every remaining build item (B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4) and the b3
       candidate set are gated by this answer. UNBUILT: the agent will not scaffold until the
@@ -155,7 +155,7 @@ b2:
       - {key: full, label: "Above plus BetrVG / CSE works-council frameworks at applicability='recommended' (regional)."}
       - {key: none, label: "Leave empty (treat regulation exposure as out-of-scope for the catalog row)."}
     why: |
-      Compliance-axis filtering and downstream lifecycle gates (mandatory acknowledgement)
+      Compliance-axis filtering and downstream lifecycle gates (mandatory acknowledgment)
       read from domain_regulations.
 
   - id: B2-MODULARIZATION
@@ -163,7 +163,7 @@ b2:
     question: |
       Proposed 5-module split (only relevant on routes b or c):
         INTRANET-PUBLISH (publishing + spaces + governance)
-        INTRANET-NEWS (announcements + audiences + acknowledgements + newsletter)
+        INTRANET-NEWS (announcements + audiences + acknowledgments + newsletter)
         INTRANET-JOURNEY (journey definitions + steps + employee journeys)
         INTRANET-FRONTLINE (frontline shoutouts + push messaging + read receipts)
         INTRANET-SEARCH (federated indices + employee directory)
@@ -171,7 +171,7 @@ b2:
       cross-cutting, not a module. INTRANET-ADVOCACY likely drops if EMP-ADVOCACY promotes
       (B2-ADVOCACY-COLLISION).
     options:
-      - {key: 3-module, label: "Phase 0 recommended (route c): INTRANET-PUBLISH (spaces + pages/posts), INTRANET-NEWS (announcements + targeting + acknowledgements), INTRANET-NEWSLETTER (newsletters + editions + subscriptions), plus INTRANET-ANALYTICS as the receipt/event store; journey/frontline/advocacy become overlays/cross-domain links not master modules."}
+      - {key: 3-module, label: "Phase 0 recommended (route c): INTRANET-PUBLISH (spaces + pages/posts), INTRANET-NEWS (announcements + targeting + acknowledgments), INTRANET-NEWSLETTER (newsletters + editions + subscriptions), plus INTRANET-ANALYTICS as the receipt/event store; journey/frontline/advocacy become overlays/cross-domain relationships not master modules."}
       - {key: 5-module, label: "Adopt the 5-module split as proposed (Publish, News, Journey, Frontline, Search)."}
       - {key: 8-module, label: "1:1 with capabilities (8 modules; heavy)."}
       - {key: custom, label: "Specify an alternative module set."}
@@ -220,7 +220,7 @@ b3:
       - {type: user_decision, ref: B2-CLASSIFICATION}
 
   - id: B3-ANNOUNCEMENTS-TRIPLET
-    candidate: announcements + announcement_targeting_rules + announcement_acknowledgements
+    candidate: announcements + announcement_targeting_rules + announcement_acknowledgments
     rationale: |
       Read-receipt and mandatory-acknowledge flows are the differentiating workflow vs
       plain publishing. Lifecycle gates: published, mandatory_acknowledge_required,

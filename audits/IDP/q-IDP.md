@@ -13,7 +13,7 @@ q1: (answer this first) How should Intelligent Document Processing be split into
 - b) Three modules: same as (a) but pull the data-science workflow (extraction models, training datasets) out into its own Model Management module.
 - c) One module: the whole pipeline as a single module (this breaks the rule that a domain with 3 or more capabilities needs at least 2 modules, once the 7 capabilities land).
 
-Recommended: b. Hyperscience and Rossum both separate the model studio (where the data-scientist persona trains and tunes extraction models) from the operator workspace (where validators and ops staff work the runtime pipeline), so a dedicated Model Management module isolating the extraction models and training datasets mirrors how those specialist vendors actually package the two workflows. IDP is currently unbuilt, so this choice gates every module, capability, role, lifecycle state, and handoff link below it: it unlocks the rest of the build.
+Recommended: b. Hyperscience and Rossum both separate the model studio (where the data-scientist persona trains and tunes extraction models) from the operator workspace (where validators and ops staff work the runtime pipeline), so a dedicated Model Management module isolating the extraction models and training datasets mirrors how those specialist vendors actually package the two workflows. IDP is currently unbuilt, so this choice gates every module, capability, role, lifecycle state, and handoff relationship below it: it unlocks the rest of the build.
 
 a1:
 
@@ -22,7 +22,7 @@ a1:
 q2: Approve the proposed wording for the 7 internal relationships between IDP objects (for example, a capture batch yields classification results, a capture batch yields extracted records, an extracted record has many extracted fields, an extracted record has a validation result, a template is applied to extracted records, a model is used on extracted records, a training dataset trains a model)?
 
 - a) Approve the proposed verb wording as drafted.
-- b) Rewrite specific edges (tell me which).
+- b) Rewrite specific relationships (tell me which).
 - c) Defer.
 
 Recommended: a. The proposed wording reads naturally and is the minimum needed to wire up the object graph once modules land.
@@ -84,7 +84,7 @@ a7:
 
 ---
 
-q8: Two cross-domain relationships to the content-management domain carry forced verbs. Should I rewrite them as "extracted records derive from content documents" (row 585) and "document classification results apply document classifications" (row 586)?
+q8: Two cross-domain relates to the content-management domain carry forced verbs. Should I rewrite them as "extracted records derive from content documents" (row 585) and "document classification results apply document classifications" (row 586)?
 
 - a) Approve both rewrites.
 - b) Approve the extracted-records rewrite only (row 585).

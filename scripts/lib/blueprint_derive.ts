@@ -74,17 +74,17 @@ export type BusinessRule = { name: string; dataObject: string; sourceFlag: strin
 // B2 (plan-2-entity-type-tiers.md): the per-entity write tier, derived from `entity_type`.
 // Read is uniformly `:read`; the write tier selects which existing module baseline governs
 // mutations. No new permission is minted: `:manage` / `:admin` already exist per module.
-// `endpointEntityTypes` matters only for junctions (admin when a linked endpoint is a catalog).
+// `endpointEntityTypes` matters only for junctions (admin when a related endpoint is a catalog).
 // `unclassified` (and null / unknown) map to `:manage`, flagged pending (m2). This is now
 // defense-in-depth only: the emitter HARD-aborts any module carrying an unclassified entity_type
 // (B13 gate in emitBlueprint), so a real 3.1 file never ships a pending tier from a missing class.
 // The graceful default is kept so non-emit callers (e.g. audits) can derive a tier without crashing.
 export type WriteTier = { read: string; write: string | null; pending: boolean };
 
-// B4 (plan-2-entity-type-tiers.md): the resolved ON DELETE mode + Semantius FK format for a link
-// with both entities in the emitted scope (§5.1 / §5.2), derived from (relationship_kind,
-// is_required, relationship_type). A many_to_many link has no field on either entity, so its
-// values describe the two legs of its junction table, always `parent` + `cascade`. A link to an
+// B4 (plan-2-entity-type-tiers.md): the resolved ON DELETE mode + Semantius FK format for a
+// relationship with both entities in the emitted scope (§5.1 / §5.2), derived from (relationship_kind,
+// is_required, relationship_type). A many_to_many relationship has no field on either entity, so its
+// values describe the two legs of its junction table, always `parent` + `cascade`. A relationship to an
 // entity outside the scope (§5.3) has neither value: its field is only proposed at deploy.
 // `owner_side` names the PARENT endpoint (the lifecycle owner, the cascade root, the "one" side of
 // a one_to_many); the FK column lives on the other endpoint, the child. It does not change the
@@ -111,7 +111,7 @@ export type GateModel = {
 };
 
 export type BaselineRole = { code: string; grant: string };
-export type HierarchyEdge = { including: string; included: string };
+export type HierarchyRelationship = { including: string; included: string };
 export type RaciGrant = { actor: string; actorKind: string; raci: string; process: string; realization: string };
 export type FunctionalOwnership = { responsibility: string; func: string; defaultRole: string; defaultTier: string };
 export type WiredProcess = { name: string; key: string; code: string; pcfId: string; level: string; description: string };
@@ -123,10 +123,10 @@ export type WiredProcess = { name: string; key: string; code: string; pcfId: str
 export type EntityModel = ScopeRow & { writeTier: WriteTier };
 
 // §5.1 / §5.2: one relationship row plus its resolved ON DELETE mode.
-export type RelationshipModel = { edge: any; deleteMode: DeleteMode };
+export type RelationshipModel = { relationship: any; deleteMode: DeleteMode };
 
 export type RelationshipsModel = {
-  all: any[]; // every edge touching the scope (the §2 mermaid input)
+  all: any[]; // every relationship touching the scope (the §2 mermaid input)
   intra: RelationshipModel[]; // §5.1
   userRels: RelationshipModel[]; // §5.2
   outgoing: any[]; // §5.3a: this blueprint's entity points to the external entity
@@ -172,7 +172,7 @@ export type ModuleAccessModel = {
   permissions: Permission[]; // §8.1
   businessRules: BusinessRule[]; // §8.2
   baselineRoles: BaselineRole[]; // §9 baseline roles
-  hierarchy: HierarchyEdge[]; // §9 permission hierarchy
+  hierarchy: HierarchyRelationship[]; // §9 permission hierarchy
   wiredProcesses: WiredProcess[]; // §9 processes wired
   raci: RaciGrant[]; // §9 RACI realization
 };
@@ -212,17 +212,17 @@ export function deriveGate(
   const realizingId = state.domain_module_id as number | null;
   let gateModule = realizingId !== null
     ? ctx.index.modulesById.get(realizingId)
-    : scopeRows.find((r) => r.data_object_id === state.data_object_id && r.role === "master")?.modules[0];
+    : scopeRows.find((r) => r.data_object_id === state.data_object_id && r.held_as === "master")?.modules[0];
   // NULL realizer on an entity carried as `embedded_master` (Writing Convention 10): the canonical
   // gate module is the entity's catalog master, which is out of the emitted scope (a scope that
-  // installs the master holds the entity as `master`, strongest role wins). Resolve it so the
+  // installs the master holds the entity as `master`, strongest held_as wins). Resolve it so the
   // re-prefix below mints the gate under the installing unit, exactly as for a non-NULL realizer
   // that is out of scope. Without this the gate showed as `-` in §7 and was never minted.
   if (!gateModule && realizingId === null && reprefixModuleIdSet) {
     const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
-    if (here && here.role === "embedded_master" && here.modules.length > 0) {
+    if (here && here.held_as === "embedded_master" && here.modules.length > 0) {
       const owner = (ctx.all.dmdoByDataObjectId.get(obj.id) ?? [])
-        .find((r: any) => r.role === "master" && !reprefixModuleIdSet.has(r.domain_module_id as number));
+        .find((r: any) => r.held_as === "master" && !reprefixModuleIdSet.has(r.domain_module_id as number));
       gateModule = (owner ? ctx.index.modulesById.get(owner.domain_module_id as number) : undefined) ?? here.modules[0];
     }
   }
@@ -240,7 +240,7 @@ export function deriveGate(
   let reprefixed = false;
   if (reprefixModuleIdSet && !reprefixModuleIdSet.has(gateModule.id)) {
     const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
-    if (here && here.role === "embedded_master" && here.modules.length > 0) {
+    if (here && here.held_as === "embedded_master" && here.modules.length > 0) {
       prefixModule = here.modules[0];
       reprefixed = true;
     }
@@ -279,17 +279,17 @@ export function deriveDeleteMode(relationshipKind: string, isRequired: boolean, 
   }
 }
 
-// §5.3 direction: where the link's field sits and which way it points, not the from / to columns.
-// A link is incoming when the field sits on the external entity. Every other link is outgoing,
-// including a many_to_many link, whose new junction table points out to the external entity.
-export function isIncomingLink(edge: any, scopeRolesById: Map<number, string>): boolean {
-  const holder = fkHolderSide(edge);
+// §5.3 direction: where the relationship's field sits and which way it points, not the from / to columns.
+// A relationship is incoming when the field sits on the external entity. Every other relationship is outgoing,
+// including a many_to_many relationship, whose new junction table points out to the external entity.
+export function isIncomingRelationship(relationship: any, scopeHeldAsById: Map<number, string>): boolean {
+  const holder = fkHolderSide(relationship);
   if (holder === null) return false;
-  return !scopeRolesById.has(holder === "source" ? edge.data_object_id : edge.related_data_object_id);
+  return !scopeHeldAsById.has(holder === "source" ? relationship.data_object_id : relationship.related_data_object_id);
 }
 
 // B2: entity_types of a data_object's relationship neighbors. Used to resolve a junction's
-// write tier (a junction that links a catalog entity is admin-governed, else manage).
+// write tier (a junction with a relationship to a catalog entity is admin-governed, else manage).
 export function neighborEntityTypes(ctx: DeriveCtx, doId: number, rels: { all: any[] }): string[] {
   const types = new Set<string>();
   for (const r of rels.all) {
@@ -327,8 +327,8 @@ export function moduleLifecycleScope(
 ): any[] {
   return (lifecycleRows ?? []).filter((s: any) => {
     const here = moduleScopeRows.find((r) => r.data_object_id === s.data_object_id);
-    const masterHere = here?.role === "master";
-    const embeddedHere = here?.role === "embedded_master";
+    const masterHere = here?.held_as === "master";
+    const embeddedHere = here?.held_as === "embedded_master";
     const realizerOutOfScope = s.domain_module_id == null || !moduleIdSet.has(s.domain_module_id as number);
     return masterHere || s.domain_module_id === m.id || (embeddedHere && realizerOutOfScope);
   });
@@ -347,10 +347,10 @@ export function deriveWorkflowGatesAndRules(
   const baselineCodes = new Set([`${slug}:read`, `${slug}:manage`, `${slug}:admin`]);
 
   const moduleMasterIds = new Set(
-    moduleObjects.filter((r) => r.role === "master").map((r) => r.data_object_id as number),
+    moduleObjects.filter((r) => r.held_as === "master").map((r) => r.data_object_id as number),
   );
   const moduleEmbeddedIds = new Set(
-    moduleObjects.filter((r) => r.role === "embedded_master").map((r) => r.data_object_id as number),
+    moduleObjects.filter((r) => r.held_as === "embedded_master").map((r) => r.data_object_id as number),
   );
   // The gates this module mints, in lifecycle order, one entry per distinct code.
   const gateByCode = new Map<string, GateModel>();
@@ -389,7 +389,7 @@ export function deriveWorkflowGatesAndRules(
 
   // One permission set (gate-permission-model-plan.md section 5): every gate has its own
   // `workflow-gate (lifecycle)` row. The admin holds it through the hierarchy (`included in :admin?`
-  // ✓) unless it is high risk, which only the RACI Accountable role holds.
+  // ✓) unless it is high risk, which only the RACI Accountable persona holds.
   const anyHighRisk = gates.some((g) => g.highRisk);
   permissions.push({ code: `${slug}:read`, tier: "baseline-read", description: "Read access to every entity in the module", includedInAdmin: true });
   permissions.push({ code: `${slug}:manage`, tier: "baseline-manage", description: "Edit operational records", includedInAdmin: true });
@@ -412,12 +412,12 @@ export function deriveWorkflowGatesAndRules(
   }
 
   for (const r of moduleObjects) {
-    // Plan 4: personal_content overrides + business rules follow the ENTITY, not the role. A unit
+    // Plan 4: personal_content overrides + business rules follow the ENTITY, not its held_as value. A unit
     // carrying an entity as `embedded_master` is its local master when deployed standalone, so it
     // mints the same row-scope governance, re-prefixed to this unit (`slug`),
     // exactly as the gate mint above does. (Single-module blueprints are the only kind emitted, so
     // an `embedded_master` row here always means the canonical master is out of scope.)
-    if (r.role !== "master" && r.role !== "embedded_master") continue;
+    if (r.held_as !== "master" && r.held_as !== "embedded_master") continue;
     const o = r.data_object as DataObject;
     if (!o) continue;
     // M6 (plan-2-entity-type-tiers.md): personal_content overrides are valid only on operational
@@ -462,7 +462,7 @@ export function gateDescription(gate: GateModel): string {
 
 // ============================================================
 // §9 / §10 derivations (Plan 3, step B). All DERIVED + emitted, never stored:
-// a persona's bundle = f(role_modules reach, process_raci gates, the tier policy);
+// a persona's bundle = f(persona_modules reach, process_raci gates, the tier policy);
 // the hierarchy = f(tiers); the deployer provisions the tenant from the blueprint.
 // ============================================================
 
@@ -480,22 +480,22 @@ export function deriveBaselineRoles(slug: string, permissions: Permission[]): Ba
 
 // B2: hierarchy from the §8 permission set. admin includes manage includes read, and admin
 // includes every workflow gate / personal_content override whose §8.1 `included in :admin?` is ✓
-// (every one except a high-risk gate, which only the RACI Accountable role holds).
-export function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyEdge[] {
-  const edges: HierarchyEdge[] = [
+// (every one except a high-risk gate, which only the RACI Accountable persona holds).
+export function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyRelationship[] {
+  const relationships: HierarchyRelationship[] = [
     { including: `${slug}:admin`, included: `${slug}:manage` },
     { including: `${slug}:manage`, included: `${slug}:read` },
   ];
   for (const p of permissions) {
     if ((p.tier.startsWith("workflow-gate") || p.tier.startsWith("override")) && p.includedInAdmin) {
-      edges.push({ including: `${slug}:admin`, included: p.code });
+      relationships.push({ including: `${slug}:admin`, included: p.code });
     }
   }
-  return edges;
+  return relationships;
 }
 
 // B3: realize each process_raci row. The relevant processes are those wired to this module's
-// lifecycle states via data_object_lifecycle_states.process_id (the process-to-permission edge).
+// lifecycle states via data_object_lifecycle_states.process_id (the process-to-permission relationship).
 // Branch on the RACI letter and the actor kind (persona vs agent skill). The gate-permission
 // contract (gate-permission-model-plan.md section 5, architect template §9.1):
 //   - Accountable (exactly one per process) holds the process's gates: the gates this module mints
@@ -527,11 +527,11 @@ export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], ga
     }
     const events = [...eventNames].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     for (const row of arel.processRaciByProcessId.get(pid) ?? []) {
-      const isPersona = row.actor_role_id != null;
+      const isPersona = row.persona_id != null;
       const actorKind = isPersona ? "persona" : "skill";
       const actor = isPersona
-        ? (arel.domainRolesById.get(row.actor_role_id as number)?.role_code ?? `role#${row.actor_role_id}`)
-        : `skill#${row.actor_skill_id}`;
+        ? (arel.personasById.get(row.persona_id as number)?.persona_code ?? `persona#${row.persona_id}`)
+        : `skill#${row.skill_id}`;
       let realization = "";
       switch (row.raci) {
         case "responsible":
@@ -594,13 +594,13 @@ export function deriveWiredProcesses(ctx: DeriveCtx, moduleLifecycle: any[]): Wi
 // self-containment invariant is an audit-band check, not an emitted section.)
 
 // B5: market RACI (M11) + default grant (M13). From business_function_domains for the scope's
-// domain(s): owner -> admin, contributor -> manage, consumer -> read.
+// domain(s): owner -> admin, contributor -> manager, consumer -> viewer.
 export function deriveMarketRaci(ctx: DeriveCtx, parentDomains: Domain[]): FunctionalOwnership[] {
   const arel = ctx.all;
   const TIER: Record<string, { role: string; tier: string }> = {
     owner: { role: "admin", tier: ":admin" },
-    contributor: { role: "manage", tier: ":manage" },
-    consumer: { role: "read", tier: ":read" },
+    contributor: { role: "manager", tier: ":manage" },
+    consumer: { role: "viewer", tier: ":read" },
   };
   const out: FunctionalOwnership[] = [];
   const seen = new Set<string>();
@@ -664,7 +664,7 @@ function deriveLifecycleEntities(ctx: DeriveCtx, cat: ModuleCatalog, moduleIdSet
     // §7 is per master (architect template): a master or embedded_master shows its whole state
     // machine. Any other entity's lifecycle lives in its owner's blueprint; it appears here only
     // with the states this scope's own modules realize, since those are the gates §8.1 mints.
-    const ownsLifecycle = scopeRow?.role === "master" || scopeRow?.role === "embedded_master";
+    const ownsLifecycle = scopeRow?.held_as === "master" || scopeRow?.held_as === "embedded_master";
     const states = ownsLifecycle
       ? allStates
       : allStates.filter((s: any) => s.domain_module_id != null && moduleIdSet.has(s.domain_module_id as number));
@@ -694,7 +694,7 @@ function deriveLifecycleEntities(ctx: DeriveCtx, cat: ModuleCatalog, moduleIdSet
 function deriveHandoffs(ctx: DeriveCtx, cat: ModuleCatalog, moduleIdSet: Set<number>): { outbound: HandoffModel[]; inbound: HandoffModel[] } {
   const standInFor = new Map<number, ModuleRow>(); // played owner module id -> the installing unit
   for (const r of cat.scopeRows) {
-    if (r.role !== "embedded_master" || r.modules.length === 0) continue;
+    if (r.held_as !== "embedded_master" || r.modules.length === 0) continue;
     for (const o of cat.owners.get(r.data_object_id)?.modules ?? []) {
       if (!moduleIdSet.has(o.id) && !standInFor.has(o.id)) standInFor.set(o.id, r.modules[0]);
     }
@@ -706,7 +706,7 @@ function deriveHandoffs(ctx: DeriveCtx, cat: ModuleCatalog, moduleIdSet: Set<num
   const inbound = cat.inboundHandoffs.filter((h) => !internal(h));
   const attributed = new Set<any>([...cat.outboundHandoffs, ...cat.inboundHandoffs]);
   for (const h of ctx.all.handoffs) {
-    if (attributed.has(h) || cat.scopeRolesById.get(h.data_object_id as number) !== "embedded_master") continue;
+    if (attributed.has(h) || cat.scopeHeldAsById.get(h.data_object_id as number) !== "embedded_master") continue;
     const srcPlayed = played(h.source_domain_module_id ?? null);
     const tgtPlayed = played(h.target_domain_module_id ?? null);
     if (srcPlayed && !tgtPlayed) outbound.push(h);
@@ -756,7 +756,7 @@ function handoffOrder(a: any, b: any): number {
 }
 
 // The whole derived blueprint for a scope of one or more modules. Scope = union of the modules'
-// data_objects, strongest role wins per data_object (loadModuleCatalog). Pure: no IO, no output,
+// data_objects, strongest held_as wins per data_object (loadModuleCatalog). Pure: no IO, no output,
 // and every rule reads the catalog only through `ctx`.
 export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): BlueprintModel {
   if (modules.length === 0) throw new Error("deriveBlueprintModel requires at least one module");
@@ -770,7 +770,7 @@ export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): Blue
   relatedModules.sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code));
 
   const withDeleteMode = (rows: any[]): RelationshipModel[] =>
-    rows.map((r) => ({ edge: r, deleteMode: deriveDeleteMode(r.relationship_kind, Boolean(r.is_required), r.relationship_type) }));
+    rows.map((r) => ({ relationship: r, deleteMode: deriveDeleteMode(r.relationship_kind, Boolean(r.is_required), r.relationship_type) }));
 
   const perModule = modules.map((m) => deriveModuleAccess(ctx, m, cat, moduleIdSet));
 
@@ -791,8 +791,8 @@ export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): Blue
       all: rels.all,
       intra: withDeleteMode(rels.intra),
       userRels: withDeleteMode(rels.userRels),
-      outgoing: rels.cross.filter((r) => !isIncomingLink(r, cat.scopeRolesById)),
-      incoming: rels.cross.filter((r) => isIncomingLink(r, cat.scopeRolesById)),
+      outgoing: rels.cross.filter((r) => !isIncomingRelationship(r, cat.scopeHeldAsById)),
+      incoming: rels.cross.filter((r) => isIncomingRelationship(r, cat.scopeHeldAsById)),
     },
     handoffs: deriveHandoffs(ctx, cat, moduleIdSet),
     lifecycle: deriveLifecycleEntities(ctx, cat, moduleIdSet),

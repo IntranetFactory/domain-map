@@ -48,8 +48,8 @@ Vacuous (zero masters; B1 exemption).
 #### A-band
 
 - **A1, domains metadata.** Pass. All 7 business-meaningful columns populated and within enum bands.
-- **A2, capabilities linked.** Pass. 8 capabilities: `TERRITORY-DESIGN`, `QUOTA-ALLOCATION`, `INCENTIVE-COMP-MGMT`, `COMMISSION-CALCULATION`, `COMP-PLAN-MODELING`, `PAYEE-STATEMENTS`, `SALES-CAPACITY-PLANNING`, `SPIF-MGMT`.
-- **A3, solutions linked.** Pass. 12 solutions, all with coverage_level set, 9 primary plus 3 secondary.
+- **A2, capabilities related.** Pass. 8 capabilities: `TERRITORY-DESIGN`, `QUOTA-ALLOCATION`, `INCENTIVE-COMP-MGMT`, `COMMISSION-CALCULATION`, `COMP-PLAN-MODELING`, `PAYEE-STATEMENTS`, `SALES-CAPACITY-PLANNING`, `SPIF-MGMT`.
+- **A3, solutions related.** Pass. 12 solutions, all with coverage_level set, 9 primary plus 3 secondary.
 - **A4, catalog UX fields.** FAIL. Both `catalog_tagline` and `catalog_description` are empty strings. See Bucket 1 `B1-A1`.
 - **A5, vendor ownership refresh.** Skipped (opt-in, not requested).
 
@@ -130,7 +130,7 @@ The market surface for SALES-PERF (ICM / SPM) is unusually pure-play and tightly
 - `plan_approvals` (plan rollout sign-off)
 - `quota_assignments` (quota × payee × period)
 - `quota_change_requests` (mid-period quota adjustments)
-- `statement_acknowledgements` (e-sign on monthly statement)
+- `statement_acknowledgments` (e-sign on monthly statement)
 - `dispute_resolution_audit_trails`
 - `plan_change_audit_trails`
 
@@ -169,18 +169,18 @@ The market surface for SALES-PERF (ICM / SPM) is unusually pure-play and tightly
 
 ### Pass 3, Neighbor discovery
 
-Cross-edges with other domains, ranked by edge weight (handoff count + DMDO dependency count):
+Cross-domain relationships with other domains, ranked by relationship weight (handoff count + DMDO dependency count):
 
-| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Edge weight | Notes |
+| Neighbor | Outbound handoffs | Inbound handoffs | DMDO deps | Relationship weight | Notes |
 |---|---|---|---|---|---|
 | CRM | 0 | 2 (handoffs 202, 203) | n/a (no DMDO surface yet) | 2 | Inbound only; consumer side. |
 | REV-INTEL | 0 | 1 (handoff 208) | n/a | 1 | Peer leadership-tier domain with zero modules; pairwise reconciliation blocked until both sides modularize. |
-| COMP-MGMT | 0 | 0 | n/a | 0 | Conceptual overlap on incentive comp; no edges loaded. See Bucket 2 `B2-C1`. |
-| ACCT-PLAN | 0 | 0 | n/a | 0 | Account-tier-aware quota / territory implies an edge; not loaded. |
-| GTM-PLAN | 0 | 0 | n/a | 0 | Capacity planning implies an edge to GTM segmentation; not loaded. |
-| EPM | 0 | 0 | n/a | 0 | Commission expense (ASC 606) implies an edge to finance close; not loaded. |
+| COMP-MGMT | 0 | 0 | n/a | 0 | Conceptual overlap on incentive comp; no relationships loaded. See Bucket 2 `B2-C1`. |
+| ACCT-PLAN | 0 | 0 | n/a | 0 | Account-tier-aware quota / territory implies a relationship; not loaded. |
+| GTM-PLAN | 0 | 0 | n/a | 0 | Capacity planning implies a relationship to GTM segmentation; not loaded. |
+| EPM | 0 | 0 | n/a | 0 | Commission expense (ASC 606) implies a relationship to finance close; not loaded. |
 
-Default deep-dive threshold (edge weight ≥ 3) is not met for any neighbor. Per the prompt, lighter neighbors get a one-line summary instead of the full 5-section diff. The reconciliation surface is gated on `B1-M1` resolving: pairwise diff requires module FKs on both sides.
+Default deep-dive threshold (relationship weight ≥ 3) is not met for any neighbor. Per the prompt, lighter neighbors get a one-line summary instead of the full 5-section diff. The reconciliation surface is gated on `B1-M1` resolving: pairwise diff requires module FKs on both sides.
 
 ### Pass 4, Pairwise reconciliation per neighbor
 
@@ -249,7 +249,7 @@ Skipped (Pass 4 pairwise is blocked on `B1-M1`).
 
 4. **B2-H1, Existing `handoff_processes` row 203 → process 54.** The discovery_substring picked an accounting process for `account.tier_changed`, which is wrong. Options: (a) PATCH `record_status='rejected'` and let `B1-H1`'s agent_curated row supersede, (b) DELETE the discovery_substring row entirely (cleaner audit trail), (c) keep it (user disagrees with the audit's verdict on the substring match). Independent of Bucket 3.
 
-5. **B2-P1, Pairwise reconciliation timing.** Pass 4 is blocked on `B1-M1` (module FKs). When SALES-PERF, CRM, and REV-INTEL all have modules, the pairwise diff against CRM (weight 2, currently below the threshold but with both inbound handoffs sharing a payload class) and REV-INTEL (weight 1 today, expected to grow as REV-INTEL itself modularizes) becomes meaningful. Options: (a) schedule both pairwise passes immediately after `B1-M1` lands, (b) defer until edge weight independently crosses 3, (c) only run CRM since REV-INTEL is itself unmodularized. Independent of Bucket 3.
+5. **B2-P1, Pairwise reconciliation timing.** Pass 4 is blocked on `B1-M1` (module FKs). When SALES-PERF, CRM, and REV-INTEL all have modules, the pairwise diff against CRM (weight 2, currently below the threshold but with both inbound handoffs sharing a payload class) and REV-INTEL (weight 1 today, expected to grow as REV-INTEL itself modularizes) becomes meaningful. Options: (a) schedule both pairwise passes immediately after `B1-M1` lands, (b) defer until relationship weight independently crosses 3, (c) only run CRM since REV-INTEL is itself unmodularized. Independent of Bucket 3.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -358,8 +358,8 @@ Vacuous (B1 leadership-tier exemption; zero masters).
 #### A-band
 
 - A1, domains metadata: PASS. crud_percentage 60, business_logic populated, min_org_size `20 s <500`, cost_band `$$$`, usa_market_size_usd_m 2500, market_size_source_year 2024, certification_required false.
-- A2, capabilities linked: PASS, 8 rows.
-- A3, solutions linked: PASS, 12 rows with coverage_level set, 9 primary.
+- A2, capabilities related: PASS, 8 rows.
+- A3, solutions related: PASS, 12 rows with coverage_level set, 9 primary.
 - A4, catalog UX fields: FAIL (`catalog_tagline` and `catalog_description` both empty). Routed to B1-A1; draft wording in 2026-05-30 audit awaits user approval per Rule #20.
 - A5, vendor ownership refresh: skipped (opt-in, not requested).
 
@@ -376,7 +376,7 @@ Vacuous (B1 leadership-tier exemption; zero masters).
 #### B-band (structural sub-checks per brief)
 
 - B5, embedded_master integrity: vacuous (zero embedded_master rows on this domain).
-- B7, users edges populated: vacuous (zero masters).
+- B7, relationships to `users` populated: vacuous (zero masters).
 - B9, outbound trigger_events and handoffs: vacuous (zero masters, no events published).
 - B9b, intra-domain cross-module handoffs: vacuous (zero modules, no cross-module surface).
 - B10b, per-module attribution on handoffs:
@@ -395,7 +395,7 @@ Vacuous (B1 leadership-tier exemption; zero masters).
 
 #### E-band (E1-E5)
 
-Vacuous on every check: no modules implies no role_modules surface, no 2-module floor to test, no interaction_level rows, no role_permissions bundles to count, no Path A / Path B reconciliation. Will become applicable once B1-M1 lands and ≥2 modules ship.
+Vacuous on every check: no modules implies no persona_modules surface, no 2-module floor to test, no interaction_level rows, no role_permissions bundles to count, no Path A / Path B reconciliation. Will become applicable once B1-M1 lands and ≥2 modules ship.
 
 #### F-band (F1-F5)
 
@@ -425,13 +425,13 @@ No structural delta in catalog state since 2026-05-30; the Pass 2 market surface
 
 ### Pass 3, Neighbor discovery
 
-Carries over from 2026-05-30; no new handoffs or DMDO rows changed the edge-weight table.
+Carries over from 2026-05-30; no new handoffs or DMDO rows changed the relationship-weight table.
 
-| Neighbor | Outbound | Inbound | Edge weight | Deep dive? |
+| Neighbor | Outbound | Inbound | Relationship weight | Deep dive? |
 |---|---|---|---|---|
 | CRM | 0 | 2 (202, 203) | 2 | below threshold; both inbound; consumer side |
 | REV-INTEL | 0 | 1 (208) | 1 | below threshold; peer leadership-tier with zero modules |
-| COMP-MGMT, ACCT-PLAN, GTM-PLAN, EPM | 0 | 0 | 0 | conceptual edges only; no catalog edges yet |
+| COMP-MGMT, ACCT-PLAN, GTM-PLAN, EPM | 0 | 0 | 0 | conceptual relationships only; no catalog relationships yet |
 
 ### Pass 4, Pairwise reconciliation per neighbor
 

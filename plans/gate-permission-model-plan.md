@@ -146,7 +146,7 @@ Paths are relative to `semantius-plugin/skills`. "gated and raci" below means th
   - L76-77: a missing Accountable no longer locks non-high-risk gates.
   - New: verify the admin→gate rows.
 - **references/stage-3-plan.md** L87 (plain wording) and **references/conflict-resolution.md** L50 (orphan gate under `gated`).
-- **No code change** in `scaffold-lib.ts`, `deploy-lib.ts` or `deploy-script-template.md`. Gate permissions and admin→gate edges already land through the bespoke `ensurePairs` batch (template L142-147). Optionally, `verifyScaffold` (L576-585) also checks the admin→gate edges.
+- **No code change** in `scaffold-lib.ts`, `deploy-lib.ts` or `deploy-script-template.md`. Gate permissions and admin→gate relationships already land through the bespoke `ensurePairs` batch (template L142-147). Optionally, `verifyScaffold` (L576-585) also checks the admin→gate relationships.
 
 **semantius-optimizer**
 - **references/spec-extract-lib.ts** L672-673: the tier heuristic. Every gate is now cited by a rule, so "cited means `workflow-gate (rule)`" would misclass every lifecycle gate. Classify as `workflow-gate (lifecycle)` when the citing rule is a `workflow_state` transition rule (`value_changed` on `workflow_state`), or when the gate sits in the `has_permission` branch next to `is_raci_actor`.

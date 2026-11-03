@@ -8,7 +8,7 @@
 //
 // Default mode is dry-run: prints the parsed counts + the first few rows
 // from each cluster, validates every data_object_name resolves to an id,
-// validates no duplicate edges. Pass --execute to apply.
+// validates no duplicate relationships. Pass --execute to apply.
 //
 // Usage:
 //   bun run c:/dev/domain-map/.tmp_deploy/load_cluster_drafts.ts                # dry-run, all clusters
@@ -63,7 +63,7 @@ const allObjs: any[] = (await postgrest(
 const idByName = new Map<string, number>(allObjs.map((o) => [String(o.data_object_name), o.id as number]));
 
 // ----- parser -----
-type EdgeRow = {
+type DraftRelationshipRow = {
   from: string;
   verb: string;
   to: string;
@@ -113,7 +113,7 @@ function parseTable(lines: string[], startIdx: number): { rows: string[][]; endI
   return { rows, endIdx: i };
 }
 
-const edges: EdgeRow[] = [];
+const draftRelationships: DraftRelationshipRow[] = [];
 const aliases: AliasRow[] = [];
 const parseErrors: string[] = [];
 
@@ -142,7 +142,7 @@ for (const cluster of inScope) {
     if (!sectionMatch || !currentDomain) continue;
     const sectionNum = parseInt(sectionMatch[1], 10);
 
-    // Sections 2, 3, 4 = edges; section 5 = aliases. Section 1 = mermaid (skip).
+    // Sections 2, 3, 4 = relationships; section 5 = aliases. Section 1 = mermaid (skip).
     if (sectionNum === 1) continue;
 
     // find next table
@@ -153,7 +153,7 @@ for (const cluster of inScope) {
     const { rows } = parseTable(lines, j);
 
     if (sectionNum >= 2 && sectionNum <= 4) {
-      const sectionTag: EdgeRow["section"] = sectionNum === 2 ? "intra" : sectionNum === 3 ? "users" : "cross";
+      const sectionTag: DraftRelationshipRow["section"] = sectionNum === 2 ? "intra" : sectionNum === 3 ? "users" : "cross";
       for (const cells of rows) {
         if (cells.length < 9) {
           parseErrors.push(`${cluster}/${currentDomain} section ${sectionNum}: row has ${cells.length} cells, expected 9 — ${cells.join(" | ")}`);
@@ -162,7 +162,7 @@ for (const cluster of inScope) {
         const [from, verb, to, cardinality, kind, required, owner_side, inverse_verb, notes] = cells;
         // strip backticks
         const strip = (s: string) => s.replace(/^`(.+)`$/, "$1").trim();
-        edges.push({
+        draftRelationships.push({
           from: strip(from),
           verb: strip(verb),
           to: strip(to),
@@ -199,7 +199,7 @@ for (const cluster of inScope) {
   }
 }
 
-console.log(`parsed: ${edges.length} edges + ${aliases.length} aliases from ${inScope.length} cluster(s)`);
+console.log(`parsed: ${draftRelationships.length} relationships + ${aliases.length} aliases from ${inScope.length} cluster(s)`);
 if (parseErrors.length > 0) {
   console.log(`\nPARSE WARNINGS (${parseErrors.length}):`);
   for (const e of parseErrors.slice(0, 20)) console.log(`  ${e}`);
@@ -216,7 +216,7 @@ const validAliasType = new Set(["synonym", "industry_term", "solution_term"]);
 
 // Auto-flip many_to_one → one_to_many (swap sides, swap verbs, swap owner_side).
 let autoFlipped = 0;
-for (const e of edges) {
+for (const e of draftRelationships) {
   if (e.cardinality !== "many_to_one") continue;
   const oldFrom = e.from;
   const oldTo = e.to;
@@ -231,46 +231,46 @@ for (const e of edges) {
   e.notes = `${e.notes ? e.notes + " | " : ""}auto-flipped from many_to_one`;
   autoFlipped++;
 }
-if (autoFlipped > 0) console.log(`auto-flipped ${autoFlipped} many_to_one edges → one_to_many`);
+if (autoFlipped > 0) console.log(`auto-flipped ${autoFlipped} many_to_one relationships → one_to_many`);
 
 // Dedupe: keep first occurrence (alphabetical cluster order), drop subsequent duplicates.
-const seenEdges = new Map<string, string>(); // key → cluster/domain that first claimed it
-const dedupedEdges: EdgeRow[] = [];
+const seenRelationships = new Map<string, string>(); // key → cluster/domain that first claimed it
+const dedupedRelationships: DraftRelationshipRow[] = [];
 let droppedDupes = 0;
-for (const e of edges) {
+for (const e of draftRelationships) {
   const key = `${e.from}|${e.verb}|${e.to}`;
-  if (seenEdges.has(key)) {
-    console.log(`  · dropped cross-cluster duplicate: ${key} (kept ${seenEdges.get(key)}, dropped ${e.cluster}/${e.domain_code})`);
+  if (seenRelationships.has(key)) {
+    console.log(`  · dropped cross-cluster duplicate: ${key} (kept ${seenRelationships.get(key)}, dropped ${e.cluster}/${e.domain_code})`);
     droppedDupes++;
     continue;
   }
-  seenEdges.set(key, `${e.cluster}/${e.domain_code}`);
-  dedupedEdges.push(e);
+  seenRelationships.set(key, `${e.cluster}/${e.domain_code}`);
+  dedupedRelationships.push(e);
 }
-if (droppedDupes > 0) console.log(`dropped ${droppedDupes} duplicate edges`);
-edges.length = 0;
-edges.push(...dedupedEdges);
+if (droppedDupes > 0) console.log(`dropped ${droppedDupes} duplicate relationships`);
+draftRelationships.length = 0;
+draftRelationships.push(...dedupedRelationships);
 
-for (const e of edges) {
-  if (!idByName.has(e.from)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: unknown 'from' data_object '${e.from}'`);
-  if (!idByName.has(e.to)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: unknown 'to' data_object '${e.to}'`);
+for (const e of draftRelationships) {
+  if (!idByName.has(e.from)) validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: unknown 'from' data_object '${e.from}'`);
+  if (!idByName.has(e.to)) validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: unknown 'to' data_object '${e.to}'`);
   if (!validCardinality.has(e.cardinality)) {
-    validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid cardinality '${e.cardinality}'`);
+    validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: invalid cardinality '${e.cardinality}'`);
   }
-  if (!validKind.has(e.kind)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid kind '${e.kind}'`);
-  if (!validOwnerSide.has(e.owner_side)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid owner_side '${e.owner_side}'`);
-  if (!["true", "false"].includes(e.required)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid required '${e.required}'`);
+  if (!validKind.has(e.kind)) validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: invalid kind '${e.kind}'`);
+  if (!validOwnerSide.has(e.owner_side)) validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: invalid owner_side '${e.owner_side}'`);
+  if (!["true", "false"].includes(e.required)) validationErrors.push(`relationship ${e.cluster}/${e.domain_code}: invalid required '${e.required}'`);
 }
 
 // Step C: catalog invariant pre-flight, shared with the health check
 // (scripts/lib/catalog_invariants.ts; loader-idiom.md "Catalog invariant pre-flight").
-// Scope is ONLY this batch, plus the existing rows each new edge interacts with: the master rows
+// Scope is ONLY this batch, plus the existing rows each new relationship interacts with: the master rows
 // of its endpoints (for the B6b composition-coherence rule). Existing catalog drift never blocks.
-//   error (refuses --execute): B7b, a users edge that is many_to_many with kind reference
-//   warn (loads anyway):       B6b (m4b / m5 / M7, soft per SKILL.md), B7b verb naming two roles
+//   error (refuses --execute): B7b, a relationship to users that is many_to_many with kind reference
+//   warn (loads anyway):       B6b (m4b / m5 / M7, soft per SKILL.md), B7b verb naming two kinds of person
 const usersId = idByName.get("users") ?? -1;
 const nameById = new Map<number, string>(allObjs.map((o) => [o.id as number, String(o.data_object_name)]));
-const incomingRels: RelationshipRow[] = edges
+const incomingRels: RelationshipRow[] = draftRelationships
   .filter((e) => idByName.has(e.from) && idByName.has(e.to))
   .map((e) => ({
     id: `${e.cluster}/${e.domain_code}: ${e.from} ${e.verb} ${e.to}`,
@@ -288,7 +288,7 @@ for (let i = 0; i < endpointIds.length; i += 150) {
   const chunk = endpointIds.slice(i, i + 150);
   const masterRows: any[] = (await postgrest(
     "GET",
-    `/domain_module_data_objects?role=eq.master&data_object_id=in.(${chunk.join(",")})&select=data_object_id,domain_modules(domain_id)&limit=20000`,
+    `/domain_module_data_objects?held_as=eq.master&data_object_id=in.(${chunk.join(",")})&select=data_object_id,domain_modules(domain_id)&limit=20000`,
   )) ?? [];
   for (const m of masterRows) {
     const dom = m.domain_modules?.domain_id;
@@ -323,9 +323,9 @@ for (const a of aliases) {
 // ----- per-cluster summary -----
 console.log(`\nPER-CLUSTER SUMMARY`);
 for (const c of inScope) {
-  const e = edges.filter((x) => x.cluster === c);
+  const e = draftRelationships.filter((x) => x.cluster === c);
   const a = aliases.filter((x) => x.cluster === c);
-  console.log(`  ${c}: ${e.length} edges (${e.filter((x) => x.section === "intra").length} intra / ${e.filter((x) => x.section === "users").length} users / ${e.filter((x) => x.section === "cross").length} cross) + ${a.length} aliases`);
+  console.log(`  ${c}: ${e.length} relationships (${e.filter((x) => x.section === "intra").length} intra / ${e.filter((x) => x.section === "users").length} users / ${e.filter((x) => x.section === "cross").length} cross) + ${a.length} aliases`);
 }
 
 // Separate hard errors from soft warnings (the industry_term notes are informational).
@@ -337,7 +337,7 @@ if (softWarnings.length > 0) {
 }
 
 if (shapeWarnings.length > 0) {
-  console.log(`\nSHAPE WARNINGS (${shapeWarnings.length}), soft, do not block (B6b m4b/m5/M7, B7b two-role verb):`);
+  console.log(`\nSHAPE WARNINGS (${shapeWarnings.length}), soft, do not block (B6b m4b/m5/M7, B7b two-person verb):`);
   for (const w of shapeWarnings.slice(0, 30)) console.log(`  ${w}`);
   if (shapeWarnings.length > 30) console.log(`  …+${shapeWarnings.length - 30} more`);
 }
@@ -365,13 +365,13 @@ if (!EXECUTE) {
 // loader-idiom.md (`insert()` helper + chunked POST array body) — the
 // per-row pattern below was a mistake I caught after the fact.
 console.log("\nEXECUTING");
-let edgesDone = 0;
+let relationshipsDone = 0;
 const errors: string[] = [];
-for (const e of edges) {
+for (const e of draftRelationships) {
   const fromId = idByName.get(e.from);
   const toId = idByName.get(e.to);
   if (!fromId || !toId) {
-    errors.push(`skipped edge with unknown name: ${e.from} → ${e.to}`);
+    errors.push(`skipped relationship with unknown name: ${e.from} → ${e.to}`);
     continue;
   }
   const body = {
@@ -387,8 +387,8 @@ for (const e of edges) {
     record_status: "new",
   };
   await postgrest("POST", "/data_object_relationships", body);
-  edgesDone++;
-  if (edgesDone % 25 === 0) console.log(`  …${edgesDone} edges inserted`);
+  relationshipsDone++;
+  if (relationshipsDone % 25 === 0) console.log(`  …${relationshipsDone} relationships inserted`);
 }
 
 let aliasesDone = 0;
@@ -410,7 +410,7 @@ for (const a of aliases) {
   aliasesDone++;
 }
 
-console.log(`\n✓ batch complete: ${edgesDone} edges, ${aliasesDone} aliases`);
+console.log(`\n✓ batch complete: ${relationshipsDone} relationships, ${aliasesDone} aliases`);
 if (errors.length > 0) {
   console.log(`\nSKIPPED (${errors.length}):`);
   for (const e of errors) console.log(`  ${e}`);

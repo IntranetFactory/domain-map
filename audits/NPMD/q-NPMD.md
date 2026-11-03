@@ -23,7 +23,7 @@ q2: Where should SaaS application performance live?
 - b) Move it to DEM (the endpoint-experience view); NPMD becomes a contributor.
 - c) Split it into two entities: network-path-to-SaaS-performance in NPMD and SaaS-user-experience-sessions in DEM.
 
-Recommended: a. The NPMD view is genuinely network-path-to-SaaS, distinct from DEM's endpoint perspective, so keeping it here and letting DEM author its own parallel entity avoids a premature move. This choice sets the target for the SaaS-degradation cross-domain edge and the vendor research.
+Recommended: a. The NPMD view is genuinely network-path-to-SaaS, distinct from DEM's endpoint perspective, so keeping it here and letting DEM author its own parallel entity avoids a premature move. This choice sets the target for the SaaS-degradation cross-domain relationship and the vendor research.
 
 a2:
 
@@ -64,13 +64,13 @@ a5:
 
 ---
 
-q6: NPMD's owner (IT Infrastructure) is already recorded. Should I add more functional links?
+q6: NPMD's owner (IT Infrastructure) is already recorded. Should I add more functional relationships?
 
 - a) Add both: IT Operations / NOC as a contributor and Security as a consumer (NDR and threat-hunting on NetFlow).
 - b) Add the NOC contributor only.
 - c) Add neither (keep IT Infrastructure as sole owner).
 
-Recommended: a. Both functions really do touch NPMD (the NOC operates it, Security consumes NetFlow for detection), so recording both links reflects reality. I will resolve the exact NOC and Security function ids before writing.
+Recommended: a. Both functions really do touch NPMD (the NOC operates it, Security consumes NetFlow for detection), so recording both relationships reflects reality. I will resolve the exact NOC and Security function ids before writing.
 
 a6:
 

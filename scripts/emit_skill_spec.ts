@@ -223,7 +223,7 @@ const ENUM_SPEC: { key: string; table: string; field: string }[] = [
   { key: "trigger_event_category", table: "trigger_events", field: "event_category" },
   { key: "integration_pattern", table: "handoffs", field: "integration_pattern" },
   { key: "friction_level", table: "handoffs", field: "friction_level" },
-  { key: "role_dmdo", table: "domain_module_data_objects", field: "role" },
+  { key: "held_as", table: "domain_module_data_objects", field: "held_as" },
   { key: "record_status", table: "handoffs", field: "record_status" },
 ];
 
@@ -263,14 +263,14 @@ type Bulk = {
   handoffsBySourceModuleId: Map<number, any[]>;
   skillsByDomainId: Map<number, any[]>;
   moduleToolsByModuleId: Map<number, any[]>;
-  roleModulesByModuleId: Map<number, any[]>;
+  personaModulesByModuleId: Map<number, any[]>;
   dataObjectById: Map<number, any>;
   usersId: number | undefined;
   lifecycleByDataObjectId: Map<number, any[]>;
   doAliasesByDataObjectId: Map<number, any[]>;
   relationships: any[];
   toolById: Map<number, any>;
-  roleById: Map<number, any>;
+  personaById: Map<number, any>;
 };
 
 async function loadBulk(): Promise<Bulk> {
@@ -287,13 +287,13 @@ async function loadBulk(): Promise<Bulk> {
     handoffs,
     skills,
     moduleTools,
-    roleModules,
+    personaModules,
     dataObjects,
     lifecycle,
     doAliases,
     relationships,
     tools,
-    domainRoles,
+    personas,
     bfs,
     enumFields,
     org,
@@ -305,17 +305,17 @@ async function loadBulk(): Promise<Bulk> {
     get(`/capabilities?select=id,capability_code,capability_name&limit=${L}`),
     get(`/capability_domains?select=capability_id,domain_id&limit=${L}`),
     get(`/domain_module_capabilities?select=domain_module_id,capability_id&limit=${L}`),
-    get(`/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
+    get(`/domain_module_data_objects?select=domain_module_id,data_object_id,held_as,is_install_optional&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
     get(`/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,integration_pattern,friction_level,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes:business_processes(external_id,process_name))&order=id.asc&limit=${L}`),
     get(`/skills?skill_type=eq.domain&select=id,skill_name,description,trigger_keywords,domain_id&order=id.asc&limit=${L}`),
     get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${L}`),
-    get(`/role_modules?select=role_id,domain_module_id,interaction_level&limit=${L}`),
+    get(`/persona_modules?select=persona_id,domain_module_id,interaction_level&limit=${L}`),
     get(`/data_objects?select=id,data_object_name,singular_label,plural_label,description,is_canonical_bare_word,has_personal_content&limit=${L}`),
     get(`/data_object_lifecycle_states?select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override&order=data_object_id.asc,state_order.asc&limit=${L}`),
     get(`/data_object_aliases?select=data_object_id,alias_name,alias_type&order=alias_name.asc&limit=${L}`),
     get(`/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_verb,is_required&order=data_object_id.asc,related_data_object_id.asc&limit=${L}`),
     get(`/tools?select=id,tool_name,operation_kind&limit=${L}`),
-    get(`/domain_roles?select=id,role_code,business_function_id&limit=${L}`),
+    get(`/personas?select=id,persona_code,business_function_id&limit=${L}`),
     get(`/business_functions?select=id,business_function_name&limit=${L}`),
     get(`/fields?format=eq.enum&select=table_name,field_name,enum_values&limit=${L}`),
     orgSlug(),
@@ -364,14 +364,14 @@ async function loadBulk(): Promise<Bulk> {
     handoffsBySourceModuleId: groupBy(handoffs.filter((h: any) => h.source_domain_module_id != null), (h: any) => h.source_domain_module_id as number),
     skillsByDomainId: groupBy(skills.filter((s: any) => s.domain_id != null), (s: any) => s.domain_id as number),
     moduleToolsByModuleId: groupBy(moduleTools, (r: any) => r.domain_module_id as number),
-    roleModulesByModuleId: groupBy(roleModules, (r: any) => r.domain_module_id as number),
+    personaModulesByModuleId: groupBy(personaModules, (r: any) => r.domain_module_id as number),
     dataObjectById: new Map(dataObjects.map((d: any) => [d.id as number, d])),
     usersId: usersRow?.id as number | undefined,
     lifecycleByDataObjectId: groupBy(lifecycle, (r: any) => r.data_object_id as number),
     doAliasesByDataObjectId: groupBy(doAliases, (r: any) => r.data_object_id as number),
     relationships,
     toolById: new Map(tools.map((t: any) => [t.id as number, t])),
-    roleById: new Map(domainRoles.map((r: any) => [r.id as number, r])),
+    personaById: new Map(personas.map((r: any) => [r.id as number, r])),
   };
 }
 
@@ -403,7 +403,7 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
   );
   const systemSkills = (lk.skillsByDomainId.get(domainId) ?? []).slice();
   const moduleTools = moduleIds.flatMap((mid) => lk.moduleToolsByModuleId.get(mid) ?? []);
-  const roleModules = moduleIds.flatMap((mid) => lk.roleModulesByModuleId.get(mid) ?? []);
+  const personaModules = moduleIds.flatMap((mid) => lk.personaModulesByModuleId.get(mid) ?? []);
 
   // ----- data object detail (all masters + entities referenced in scope) -----
   const scopeObjectIds = [...new Set(dmdo.map((r) => r.data_object_id as number))];
@@ -412,7 +412,7 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
     const d = lk.dataObjectById.get(id);
     if (d) doById.set(id, d);
   }
-  const masterIds = [...new Set(dmdo.filter((r) => r.role === "master").map((r) => r.data_object_id as number))];
+  const masterIds = [...new Set(dmdo.filter((r) => r.held_as === "master").map((r) => r.data_object_id as number))];
   const masterIdSet = new Set(masterIds);
   const usersId = lk.usersId;
 
@@ -435,8 +435,8 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
     .sort((a, b) => (a.domain_module_code as string).localeCompare(b.domain_module_code as string))
     .map((m) => {
       const rows = dmdoByModule.get(m.id as number) ?? [];
-      const byRole = (role: string) =>
-        rows.filter((r) => r.role === role).map((r) => nameOf(r.data_object_id as number)).filter(Boolean).sort();
+      const byHeldAs = (heldAs: string) =>
+        rows.filter((r) => r.held_as === heldAs).map((r) => nameOf(r.data_object_id as number)).filter(Boolean).sort();
       const realizes = (capCodeByModule.get(m.id as number) ?? [])
         .map((r) => lk.capabilityById.get(r.capability_id as number)?.capability_code)
         .filter(Boolean)
@@ -446,9 +446,9 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
         name: m.domain_module_name,
         kind: m.module_kind,
         realizes_capabilities: realizes,
-        masters: byRole("master"),
-        embedded_masters: byRole("embedded_master"),
-        consumers: byRole("consumer"),
+        masters: byHeldAs("master"),
+        embedded_masters: byHeldAs("embedded_master"),
+        consumers: byHeldAs("consumer"),
       };
       if (m.description) out.description = clean(m.description);
       return out;
@@ -563,21 +563,21 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
       };
     });
 
-  // ----- roles (personas) -----
-  const roleIds = [...new Set(roleModules.map((r) => r.role_id as number))];
-  const roleById = lk.roleById;
-  const roleModulesByRole = groupBy(roleModules, (r) => r.role_id as number);
-  const rolesOut = roleIds
-    .map((rid) => {
-      const role = roleById.get(rid);
-      if (!role) return null;
-      const mods = (roleModulesByRole.get(rid) ?? [])
+  // ----- personas (spec.json key `personas`) -----
+  const personaIds = [...new Set(personaModules.map((r) => r.persona_id as number))];
+  const personaById = lk.personaById;
+  const personaModulesByPersona = groupBy(personaModules, (r) => r.persona_id as number);
+  const personasOut = personaIds
+    .map((id) => {
+      const persona = personaById.get(id);
+      if (!persona) return null;
+      const mods = (personaModulesByPersona.get(id) ?? [])
         .map((rm) => ({ code: lk.moduleCodeById.get(rm.domain_module_id as number) ?? null, interaction: rm.interaction_level }))
         .filter((m) => m.code)
         .sort((a, b) => (a.code as string).localeCompare(b.code as string));
       return {
-        code: role.role_code,
-        business_function: role.business_function_id != null ? lk.businessFunctionNameById.get(role.business_function_id as number) ?? null : null,
+        code: persona.persona_code,
+        business_function: persona.business_function_id != null ? lk.businessFunctionNameById.get(persona.business_function_id as number) ?? null : null,
         modules: mods,
       };
     })
@@ -639,7 +639,7 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
     relationships,
     apqc_processes_touched: apqcTouched,
     system_skills: systemSkillsOut,
-    roles: rolesOut,
+    personas: personasOut,
     enums,
   };
 
@@ -684,7 +684,7 @@ function buildBundleSpec(
   const caps = lk.moduleCapsByModuleId.get(moduleId) ?? [];
   const skillRows = mod.domain_id != null ? lk.skillsByDomainId.get(mod.domain_id as number) ?? [] : [];
   const moduleTools = lk.moduleToolsByModuleId.get(moduleId) ?? [];
-  const roleModules = lk.roleModulesByModuleId.get(moduleId) ?? [];
+  const personaModules = lk.personaModulesByModuleId.get(moduleId) ?? [];
   const outboundRaw = lk.handoffsBySourceModuleId.get(moduleId) ?? [];
 
   // After §3 the bundle is promoted to a domain_kind='bundle' domain that carries the buyer
@@ -703,7 +703,7 @@ function buildBundleSpec(
   const doById = lk.dataObjectById;
   const ownerDomainByDo = new Map<number, string | null>();
   for (const did of entityIds) {
-    const masterRow = (lk.dmdoByDataObjectId.get(did) ?? []).find((r) => r.role === "master");
+    const masterRow = (lk.dmdoByDataObjectId.get(did) ?? []).find((r) => r.held_as === "master");
     if (!masterRow) continue;
     const domId = lk.moduleDomainById.get(masterRow.domain_module_id as number);
     ownerDomainByDo.set(did, domId != null ? lk.domainCodeById.get(domId) ?? null : null);
@@ -716,7 +716,7 @@ function buildBundleSpec(
         name: d.data_object_name,
         singular_label: d.singular_label,
         plural_label: d.plural_label,
-        role: r.role,
+        held_as: r.held_as,
         owning_domain: ownerDomainByDo.get(r.data_object_id as number) ?? null,
       };
     })
@@ -776,17 +776,17 @@ function buildBundleSpec(
     .map(([external_id, name]) => ({ external_id, name }))
     .sort((a, b) => a.external_id.localeCompare(b.external_id, undefined, { numeric: true }));
 
-  // Roles (personas) on the bundle module.
-  const roleIds = [...new Set(roleModules.map((r) => r.role_id as number))];
-  const roleById = lk.roleById;
-  const roles = roleIds
-    .map((rid) => {
-      const role = roleById.get(rid);
-      if (!role) return null;
-      const rm = roleModules.find((x) => (x.role_id as number) === rid);
+  // Personas on the bundle module (spec.json key `personas`).
+  const personaIds = [...new Set(personaModules.map((r) => r.persona_id as number))];
+  const personaById = lk.personaById;
+  const personasOut = personaIds
+    .map((id) => {
+      const persona = personaById.get(id);
+      if (!persona) return null;
+      const rm = personaModules.find((x) => (x.persona_id as number) === id);
       return {
-        code: role.role_code,
-        business_function: role.business_function_id != null ? lk.businessFunctionNameById.get(role.business_function_id as number) ?? null : null,
+        code: persona.persona_code,
+        business_function: persona.business_function_id != null ? lk.businessFunctionNameById.get(persona.business_function_id as number) ?? null : null,
         interaction: rm?.interaction_level ?? null,
       };
     })
@@ -816,7 +816,7 @@ function buildBundleSpec(
     composes,
     apqc_processes_touched: apqcTouched,
     system_skill: systemSkill,
-    roles,
+    personas: personasOut,
     enums,
   };
 

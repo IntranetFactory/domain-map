@@ -4,7 +4,7 @@
 
 ### Summary
 
-- Current footprint: **headless `domains` row** (id 127, parent_domain_id 91 = ECM). Zero `domain_modules`, zero `domain_module_data_objects`, zero `domain_data_objects`, zero `data_objects` mastered, zero `handoffs` (outbound or inbound), zero `skills`, zero `domain_regulations`, zero `domain_aliases`, zero sub-domains, zero `data_object_lifecycle_states`, zero `trigger_events`. 7 capabilities linked, 11 solutions linked, 2 `business_function_domains` rows.
+- Current footprint: **headless `domains` row** (id 127, parent_domain_id 91 = ECM). Zero `domain_modules`, zero `domain_module_data_objects`, zero `domain_data_objects`, zero `data_objects` mastered, zero `handoffs` (outbound or inbound), zero `skills`, zero `domain_regulations`, zero `domain_aliases`, zero sub-domains, zero `data_object_lifecycle_states`, zero `trigger_events`. 7 capabilities related, 11 solutions related, 2 `business_function_domains` rows.
 - Vendor-surface basis: M365 / Google Workspace governance pure-plays already on `solution_domains` (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex) plus Microsoft Purview Information Protection (partial coverage). Microsoft-native (Syntex) plus 9 third-party governance specialists, with one cross-listed security platform.
 - SKILL.md line 789 lists COLLAB-GOV in the leadership-tier exception set (B1 expected zero masters). However the vendor surface is a real point-solution market with dedicated commerce: AvePoint Confidence Platform, ShareGate, Syskit Point, and CoreView are flagship products customers buy as their system of record for M365 / Google Workspace governance. This looks closer to a real point-solution market than to an aggregation-tier domain (REV-INTEL / SALES-PERF reads upstream from CRM / ERP; COLLAB-GOV writes lifecycle policies and runs sprawl-detection sweeps against the native repository). The classification flag in SKILL.md may have been carried over from an early load and warrants user adjudication. Sibling INTRANET is in the same shape (also on the leadership-tier list, also with a real specialist-vendor surface), and that audit (2026-05-30) raised the same question.
 - The classification decision is a Bucket 2 item and gates Bucket 3 (the candidate-master surface) entirely. Until it is settled, M1 / B-band / E / F / H findings are conditional.
@@ -46,7 +46,7 @@ If Bucket 2 item 1 flips COLLAB-GOV to "real point-solution market", the candida
 
 #### Vendor-surface basis (manual enumeration; replaces the subagent run for this audit)
 
-Pure-play M365 / Google Workspace governance specialists chosen from the 11 `solutions` rows already linked. The market is dominated by Microsoft ecosystem; Google Workspace governance is thinner (Bettercloud, Coreview Cloud Management have moved between markets).
+Pure-play M365 / Google Workspace governance specialists chosen from the 11 `solutions` rows already related. The market is dominated by Microsoft ecosystem; Google Workspace governance is thinner (Bettercloud, Coreview Cloud Management have moved between markets).
 
 - **AvePoint Confidence Platform** (`primary`) - the original M365 governance leader since SharePoint 2007; suite spans tenant migration, policy enforcement, backup, classification, records management. AvePoint owns the breadth axis.
 - **ShareGate** (`primary`, owned by Workleap) - lifecycle automation + permissions audit + content migration; SMB and mid-market focus. Migration was the original wedge (ShareGate Migrate), governance is the consolidation play (ShareGate Protect).
@@ -64,9 +64,9 @@ Compliance / regulatory specialists: GDPR (Article 30 processing records, DSAR-s
 
 ### Pass 3 - Neighbor discovery
 
-Zero outbound and zero inbound handoffs in the catalog mean the catalog has no edges from which to auto-derive the neighbor set for COLLAB-GOV today. Manually-derived neighbor list (based on the M365-governance vendor surface and the domain's described scope):
+Zero outbound and zero inbound handoffs in the catalog mean the catalog has no relationships from which to auto-derive the neighbor set for COLLAB-GOV today. Manually-derived neighbor list (based on the M365-governance vendor surface and the domain's described scope):
 
-| Neighbor (manually inferred) | Why | Edge weight signal |
+| Neighbor (manually inferred) | Why | Relationship weight signal |
 |---|---|---|
 | ECM (parent_domain_id=91) | Parent market: COLLAB-GOV governs sites / libraries / containers that ECM masters. Provisioning template + retention policy hand-offs. | Heavy (parent-child relationship). |
 | WSC (Workstream Collaboration, id 75) | Chat workspace inventory + Teams lifecycle policy + external-share controls on channels. | Heavy. |
@@ -121,7 +121,7 @@ Inbound handoff candidates the vendor surface implies (DLP publishing external-s
 
 5. **Modularization (only loadable on the Bucket 2 item 1 real-market route).** If the user picks (b) or (c), decide the module split. Proposed shape mirrors the 7 capabilities one-for-one (7 modules feels heavy); a tighter 4-module split that respects the Rule #14 ">=3 capabilities needs >=2 modules" floor: `COLLAB-GOV-INVENTORY` (inventory + ownership inference), `COLLAB-GOV-LIFECYCLE` (provisioning + archive + retention policy), `COLLAB-GOV-PERMS` (permission audit + access reviews + external-sharing controls), `COLLAB-GOV-STALE` (stale content detection + remediation). `COLLAB-GOV-BACKUP` and `COLLAB-GOV-MIGRATE` either fold into LIFECYCLE or get promoted out to their own SAAS-BACKUP / TENANT-MIGRATION domains (both queued in `_missing-domains.md`). Direct dependency on Bucket 2 item 1 and on the SAAS-BACKUP / TENANT-MIGRATION triage outcomes.
 
-6. **Existing `COLLAB-GOV-BACKUP` capability vs SAAS-BACKUP domain candidate (queued mention_count=1).** The capability is wired to COLLAB-GOV in `capability_domains`. The SAAS-BACKUP candidate (Veeam Backup for Microsoft 365, AvePoint Cloud Backup, Druva for Microsoft 365, Spanning, Keepit, HYCU, Barracuda Cloud-to-Cloud Backup) is a distinct market that backs up beyond M365 (Salesforce, Google Workspace, Microsoft Dynamics, Box, Slack), and several pure-play vendors (Druva, Spanning, Keepit) have no collaboration-governance offering. If SAAS-BACKUP gets promoted, COLLAB-GOV-BACKUP capability likely demotes (move under SAAS-BACKUP and add the `capability_domains` row to that domain) or stays as a partial-overlap link.
+6. **Existing `COLLAB-GOV-BACKUP` capability vs SAAS-BACKUP domain candidate (queued mention_count=1).** The capability is wired to COLLAB-GOV in `capability_domains`. The SAAS-BACKUP candidate (Veeam Backup for Microsoft 365, AvePoint Cloud Backup, Druva for Microsoft 365, Spanning, Keepit, HYCU, Barracuda Cloud-to-Cloud Backup) is a distinct market that backs up beyond M365 (Salesforce, Google Workspace, Microsoft Dynamics, Box, Slack), and several pure-play vendors (Druva, Spanning, Keepit) have no collaboration-governance offering. If SAAS-BACKUP gets promoted, COLLAB-GOV-BACKUP capability likely demotes (move under SAAS-BACKUP and add the `capability_domains` row to that domain) or stays as a partial-overlap relationship.
 
 7. **Existing `COLLAB-GOV-MIGRATE` capability vs TENANT-MIGRATION domain candidate (queued mention_count=1).** Same shape as item 6 but for migration. ShareGate Migrate, AvePoint Fly, Quest On Demand Migration, BitTitan MigrationWiz, and CloudM Migrate compete in tenant migration as a dedicated market; many M&A-shaped migrations are bought separately from the governance suite. If TENANT-MIGRATION gets promoted, COLLAB-GOV-MIGRATE capability likely demotes.
 
@@ -163,7 +163,7 @@ The 8 candidate masters below are speculative until vendor-research confirms the
 
 ### Report-only follow-ups (owed by other domains)
 
-Because COLLAB-GOV currently masters nothing and authors no handoffs, every potential cross-domain edge is owed by the partner domain's next B9 / B8 pass. These rows are informational only on this audit:
+Because COLLAB-GOV currently masters nothing and authors no handoffs, every potential cross-domain relationship is owed by the partner domain's next B9 / B8 pass. These rows are informational only on this audit:
 
 - **DLP B9 candidate (id 139):** `dlp_incident.external_share_violation_detected` -> COLLAB-GOV-EXTSHARE (governance-side remediation workflow). Only meaningful if Bucket 2 item 1 flips COLLAB-GOV to real-market and B3-4 (`external_sharing_policies`) lands.
 - **DSPM B9 candidate (id 140):** `data_asset.risk_score_elevated` -> COLLAB-GOV (permissions-audit remediation queue); `sensitive_data_incident.detected` on collaboration-resident data -> COLLAB-GOV-PERMS. Same condition.
@@ -203,14 +203,14 @@ SAAS-BACKUP and TENANT-MIGRATION at mention_count=1 are new today but the vendor
 | Band | Result | Evidence |
 |---|---|---|
 | A1 (domains metadata) | PASS | crud_percentage=80, business_logic populated, min_org_size='30 m <2500', cost_band='$$', usa_market_size_usd_m=800, market_size_source_year=2024, certification_required=false. |
-| A2 (capabilities) | PASS | 7 linked capabilities (above the 3-row floor). Note: 7 capabilities makes Rule #14's ">=3 capabilities needs >=2 modules" applicable on the real-market route. |
-| A3 (solutions) | PASS | 11 solutions linked, 10 primary + 1 partial. |
+| A2 (capabilities) | PASS | 7 related capabilities (above the 3-row floor). Note: 7 capabilities makes Rule #14's ">=3 capabilities needs >=2 modules" applicable on the real-market route. |
+| A3 (solutions) | PASS | 11 solutions related, 10 primary + 1 partial. |
 | A4 (catalog UX fields) | FAIL | catalog_tagline='' and catalog_description=''. Carries B1-S1 forward. |
 | M1 (>=1 module) | FAIL (or PASS by leadership-tier carve-out) | 0 modules. SKILL.md line 797 lists COLLAB-GOV in the leadership-tier exception set; SKILL.md line 243 says the M1 floor is unconditional. Until Bucket 2 item 1 settles, both readings stay open. |
 | M2 / M4 / M5 / M6 / M7 | N/A | gated on M1. |
 | B1 (>=1 master) | PASS-by-leadership-tier-exception | conditional on Bucket 2 item 1. |
 | B5 (embedded_master integrity) | N/A | no `embedded_master` rows to validate. |
-| B7 (users edges) | N/A | no data_objects mastered, no relationships to author. |
+| B7 (relationships to `users`) | N/A | no data_objects mastered, no relationships to author. |
 | B9 (outbound trigger_events + handoffs) | FAIL (on real-market route) / VACUOUS (on leadership route) | 0 trigger_events, 0 outbound handoffs. |
 | B9b (intra-domain cross-module handoffs) | N/A | requires >=2 modules. |
 | B10b (per-module attribution on handoffs) | N/A | no handoffs in scope. |
@@ -240,7 +240,7 @@ MISSING, WRONG-OWNERSHIP, SCOPE-CREEP, BOUNDARY, APQC TAGGING: zero (same as 202
 3. **Business-function ownership shift.** COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, and arguably COLLAB-GOV-STALE are Security-leaning. Options: (a) flip Security to owner and End-User Computing to contributor, (b) keep End-User Computing as owner and add `business_function_capabilities` overrides for the three Security-leaning capabilities, (c) leave as is.
 4. **Regulations scope.** `domain_regulations` empty. Candidates: GDPR (Articles 5 / 30 / 32), CCPA, SOX (records retention on financial libraries), HIPAA (sensitive-content controls), eDiscovery / FRCP. Decide which to attach at applicability='mandatory' or 'recommended'.
 5. **Modularization (only on real-market route).** Proposed 4-module split: COLLAB-GOV-INVENTORY, COLLAB-GOV-LIFECYCLE, COLLAB-GOV-PERMS, COLLAB-GOV-STALE. COLLAB-GOV-BACKUP / COLLAB-GOV-MIGRATE either fold into LIFECYCLE or get promoted out to SAAS-BACKUP / TENANT-MIGRATION.
-6. **COLLAB-GOV-BACKUP capability vs SAAS-BACKUP candidate** (mention_count=1). If SAAS-BACKUP promotes, COLLAB-GOV-BACKUP capability demotes (move to SAAS-BACKUP or stays as partial-overlap link).
+6. **COLLAB-GOV-BACKUP capability vs SAAS-BACKUP candidate** (mention_count=1). If SAAS-BACKUP promotes, COLLAB-GOV-BACKUP capability demotes (move to SAAS-BACKUP or stays as partial-overlap relationship).
 7. **COLLAB-GOV-MIGRATE capability vs TENANT-MIGRATION candidate** (mention_count=1). Same shape as item 6 but for migration.
 8. **`domain_aliases` empty.** Candidates: microsoft 365 governance, m365 management, sharepoint governance, teams governance, tenant administration, workspace governance, collaboration sprawl management. Decide which to load and which `alias_type` each is.
 

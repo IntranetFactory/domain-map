@@ -147,7 +147,7 @@
       "name": "saas_applications",
       "singular_label": "SaaS Application",
       "plural_label": "SaaS Applications",
-      "description": "Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and links to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity.",
+      "description": "Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and a relationship to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -199,7 +199,7 @@
       "name": "saas_subscriptions",
       "singular_label": "SaaS Subscription",
       "plural_label": "SaaS Subscriptions",
-      "description": "The contractual instance for a SaaS app: plan / tier, seat count, MRR or ARR, billing cadence, renewal date, primary owner. One app may have multiple subscriptions (BU, region, M&A-inherited free tier). Linked to a contract (CLM) and a PO (S2P).",
+      "description": "The contractual instance for a SaaS app: plan / tier, seat count, MRR or ARR, billing cadence, renewal date, primary owner. One app may have multiple subscriptions (BU, region, M&A-inherited free tier). Related to a contract (CLM) and a PO (S2P).",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -744,7 +744,7 @@
       "name": "smp_reclamation_actions",
       "singular_label": "Reclamation Action",
       "plural_label": "Reclamation Actions",
-      "description": "Executed reclamation against an smp_license_seat_assignment (revoke, downgrade, reassign) with savings_realized linkage. Tracks the operational payoff of the optimization workflow. BetterCloud License Recovery + Torii Reclaim workflows are the flagship.",
+      "description": "Executed reclamation against an smp_license_seat_assignment (revoke, downgrade, reassign) with a savings_realized relationship. Tracks the operational payoff of the optimization workflow. BetterCloud License Recovery + Torii Reclaim workflows are the flagship.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -1815,7 +1815,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "IT-SAAS-ADMIN",
       "business_function": "IT Operations",
@@ -1899,7 +1899,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

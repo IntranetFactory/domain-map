@@ -17,7 +17,7 @@ The four entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) now live 
 The v1 design proposed:
 - A Semantius solution row in `domain_map.solutions` with `solution_kind = 'semantius_native'`.
 - Three pseudo-tools (`semantius_crud`, `semantius_cube`, `semantius_jsonlogic`) as catalog entries.
-- Explicit `tool_solutions` rows linking Semantius to every Semantius-deliverable tool.
+- Explicit `tool_solutions` rows relating Semantius to every Semantius-deliverable tool.
 
 **All of that is out.** The arguments that killed it:
 
@@ -50,7 +50,7 @@ The unit of measurement is **the tool**, classified by its `operation_kind`. A s
 ```
 % = (count of Z's required tools where:
        tool's operation_kind is Semantius-covered  OR
-       at least one tool_solutions row links the tool to a solution Y has deployed)
+       at least one tool_solutions row relates the tool to a solution Y has deployed)
     / (total required tools)
 ```
 
@@ -309,7 +309,7 @@ Domains whose corresponding system skill would need **CRUD + analytics + JsonLog
 | **SPM** | Strategic portfolio, investment selection — internal |
 | **DCG / DQ / MDM** | Data catalog, data quality, master data — internal metadata |
 | **PA** | People analytics — internal aggregation |
-| **SWP** | Strategic workforce planning — internal modelling |
+| **SWP** | Strategic workforce planning — internal modeling |
 | **EPM** | Financial planning, consolidation — internal |
 | **ESG** | Sustainability reporting records — internal |
 
@@ -346,11 +346,11 @@ The full classification emerges from running the discovery procedure across ever
 | 1 | Design the `tool_catalog` semantic model (`tools` + `skills` entities; `tool_solutions` + `skill_tools` junctions). Use `semantic-model-analyst` to produce the `*-semantic-model.md` spec. Also include the `solution_kind` enum column addition for `domain_map.solutions`. | Schema spec | ~1 session |
 | 2 | Deploy the model. Use `semantic-model-deployer` against the spec from step 1. Apply the `solution_kind` enum addition to `domain_map.solutions` and backfill all existing rows to `solution_kind='standard_solution'`. | Live module | ~1 hr |
 | 3 | Load `tools` vocabulary (~40 rows) — JSON-RPC function signatures with `operation_kind` + optional `data_object_id`. Start from the verb list in the conceptual model above. Include the three Semantius pseudo-functions (`semantius_crud`, `semantius_cube`, `semantius_jsonlogic`) as `tools` rows so they participate in the matrix. | Tool vocabulary | ~1 session |
-| 4 | Load `tool_solutions` rows + promote relevant `solutions` to the right `solution_kind`. For each tool, identify the solutions that deliver it: M365 (action) for `send_email`, OpenAI Platform (compute_service) for `transcribe_audio`, NetSuite (external_connector) for `query_invoices`, Semantius (semantius_native) for any `query_<x>` where x is a Semantius-hosted data_object, etc. Cross-link to existing `domain_map.solutions` where the solution already exists. Add new solution rows for tool sources not yet in the catalog (AWS SES, Playwright, etc.). | Reference matrix | ~1 session |
+| 4 | Load `tool_solutions` rows + promote relevant `solutions` to the right `solution_kind`. For each tool, identify the solutions that deliver it: M365 (action) for `send_email`, OpenAI Platform (compute_service) for `transcribe_audio`, NetSuite (external_connector) for `query_invoices`, Semantius (semantius_native) for any `query_<x>` where x is a Semantius-hosted data_object, etc. Relate to existing `domain_map.solutions` where the solution already exists. Add new solution rows for tool sources not yet in the catalog (AWS SES, Playwright, etc.). | Reference matrix | ~1 session |
 | 5A | For each **system skill** (one per `domain_map` domain), draft the `skill_tools` rows. Derive from the domain's data_object masters + outbound handoffs + typical workflow patterns. **Runs independently of process-skill discovery** — only needs `domain_map` data that already exists. | System-skill tool requirements (~10-30 domains × 1-5 tools each) | ~3-5 sessions (one per cluster) |
 | 5B | For each **process skill** (from the top candidates surfaced by Plan 1 step 7), enumerate workflows and identify required tools. Insert `skill_tools` rows per process. **Depends on [`plan-process-skill-discovery.md`](plan-process-skill-discovery.md) step 7 being complete.** | Process-skill tool requirements | ~1 session per candidate process skill |
 | 6 | Run the "100% Semantius" query. Produce the certified list. Re-runnable any time; a preview after 5A alone is meaningful for system skills. | Strategic output | ~1 hr |
-| 7 | Identify the highest-impact tool gaps (tools needed by many skills but with few candidate solutions delivering them) and prioritise the next tool integrations. | Roadmap | ~1 session |
+| 7 | Identify the highest-impact tool gaps (tools needed by many skills but with few candidate solutions delivering them) and prioritize the next tool integrations. | Roadmap | ~1 session |
 
 ## Open questions
 
@@ -358,12 +358,12 @@ The full classification emerges from running the discovery procedure across ever
 
 ## Closed questions
 
-- **q1 — `skills` is a first-class entity.** Lives in `tool_catalog` (skill catalog is a planned site surface). Columns: `skill_name` (natural key), `skill_type` enum (`system` / `process` / `role`), `description`, optional `domain_id` FK to `domain_map.domains` for system skills, optional links to processes (FK or notes) for process skills. Lifecycle status (`proposed` / `in_design` / `built` / `deployed` / `deprecated`) added when needed; v1 can ship without.
+- **q1 — `skills` is a first-class entity.** Lives in `tool_catalog` (skill catalog is a planned site surface). Columns: `skill_name` (natural key), `skill_type` enum (`system` / `process` / `role`), `description`, optional `domain_id` FK to `domain_map.domains` for system skills, optional relationships to processes (FK or notes) for process skills. Lifecycle status (`proposed` / `in_design` / `built` / `deployed` / `deprecated`) added when needed; v1 can ship without.
 - **q2 — Tool ↔ solution is N:M via `tool_solutions` junction.** Resolved by your push: tools are abstract JSON-RPC functions; multiple solutions can provide the same tool (M365 / Gmail / SES all deliver `send_email`). Vendor is reachable via `domain_map.solutions.vendor_id` — no separate `tool_vendors` table, no redundant vendor FK on `tools`. The org's portfolio determines availability through a `tool_solutions` join.
 - **q3 — Semantius core = three special `tools` rows.** Load `semantius_crud`, `semantius_cube`, `semantius_jsonlogic` as `tools` entries. A "Semantius" solution row exists in `domain_map.solutions` (or is added if missing) with `solution_kind='semantius_native'`. The three tools each have a `tool_solutions` row pointing at it. The "100% Semantius" check then becomes a uniform query — no special-case logic.
-- **q4 — Operation-level granularity.** A skill that "sends onboarding kickoff email" is one `skill_tools` row pointing at the `send_email` tool with workflow context in `notes`. Templates / recipient resolution / personalisation are skill-internal concerns, not catalog concerns.
+- **q4 — Operation-level granularity.** A skill that "sends onboarding kickoff email" is one `skill_tools` row pointing at the `send_email` tool with workflow context in `notes`. Templates / recipient resolution / personalization are skill-internal concerns, not catalog concerns.
 - **q5 — Tool authentication: deferred.** Auth shape varies wildly per vendor (OAuth2 with different scope namespaces, API keys with different rotation rules, service accounts, webhooks). Capturing it at catalog level is premature bloat for v1. Auth is the integrator's runtime concern. The catalog records *that* a tool exists; the integrator handles *how* it authenticates.
-- **q6 — Tool tenancy: deferred.** Multi-tenant modelling (separate `tool_instance` per org tenant) is out of scope for v1. Tools are catalog-level abstract entries; tenant binding lives at deployment time.
+- **q6 — Tool tenancy: deferred.** Multi-tenant modeling (separate `tool_instance` per org tenant) is out of scope for v1. Tools are catalog-level abstract entries; tenant binding lives at deployment time.
 
 ## Success criteria
 
@@ -373,7 +373,7 @@ The full classification emerges from running the discovery procedure across ever
 - ≥100 `tool_solutions` rows across the loaded tools and the corresponding solutions
 - ≥50 `skill_tools` rows across ≥10 system skills
 - Running the "100% Semantius" query returns ≥5 system skills certified
-- Running "which tools have the most dependent skills?" + "which tools have many skills but few candidate solutions?" surfaces the prioritised integration roadmap
+- Running "which tools have the most dependent skills?" + "which tools have many skills but few candidate solutions?" surfaces the prioritized integration roadmap
 
 ## Out of scope for this plan
 
@@ -384,7 +384,7 @@ The full classification emerges from running the discovery procedure across ever
 
 ## Cross-reference
 
-- [`plan-process-skill-discovery.md`](plan-process-skill-discovery.md) feeds this plan: process skills surfaced there get their tool requirements modelled here.
+- [`plan-process-skill-discovery.md`](plan-process-skill-discovery.md) feeds this plan: process skills surfaced there get their tool requirements modeled here.
 - Combined: Plan 1 produces *which skills to build*; Plan 2 produces *what each skill needs*. Together they answer the build-sequence question (100% Semantius first → Semantius + basic tools next → vendor-specific integrations last).
 - **Cross-plan staging**: the dependency is asymmetric, not circular. Step 5A is independent of Plan 1; step 5B depends on Plan 1 step 7. See [`plan-master-tasks.md`](plan-master-tasks.md) for the staged, checklisted view across both plans.
 

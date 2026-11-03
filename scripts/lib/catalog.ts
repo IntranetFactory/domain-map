@@ -14,7 +14,7 @@
 // loadModuleCatalog accepts an array of module ids so the same path serves single-
 // module blueprints and multi-module aggregations (legacy starter-kit bundles). The
 // returned scope is the union of the input modules' data_objects with the strongest
-// role per data_object winning, matching generate_blueprints.ts's existing semantics.
+// held_as per data_object winning, matching generate_blueprints.ts's existing semantics.
 
 export type Row = Record<string, unknown>;
 
@@ -118,7 +118,7 @@ export type CatalogIndex = {
 
 export type ScopeRow = {
   data_object_id: number;
-  role: string;
+  held_as: string;
   is_install_optional: boolean;
   notes: string | null;
   data_object: DataObject;
@@ -129,7 +129,7 @@ export type CoMasterRow = {
   data_object_id: number;
   owner_module: ModuleRow | null;
   owner_domain: Domain | null;
-  role: string;
+  held_as: string;
   is_install_optional: boolean;
   notes: string | null;
 };
@@ -146,7 +146,7 @@ export type RelationshipBuckets = {
 export type ModuleCatalog = {
   modules: ModuleRow[];
   scopeRows: ScopeRow[];
-  scopeRolesById: Map<number, string>;
+  scopeHeldAsById: Map<number, string>;
   scopeInstallOptionalById: Map<number, boolean>;
   aliasRows: any[];
   relationships: RelationshipBuckets;
@@ -160,8 +160,8 @@ export type ModuleCatalog = {
   parentDomains: Domain[];
 };
 
-export const ROLE_ORDER = ["master", "embedded_master", "contributor", "consumer", "derived"] as const;
-export const ROLE_RANK: Record<string, number> = Object.fromEntries(ROLE_ORDER.map((r, i) => [r, i]));
+export const HELD_AS_ORDER = ["master", "embedded_master", "contributor", "consumer", "derived"] as const;
+export const HELD_AS_RANK: Record<string, number> = Object.fromEntries(HELD_AS_ORDER.map((r, i) => [r, i]));
 
 // ---------- release gate (shared across emitters) ----------
 //
@@ -241,8 +241,8 @@ export type AllRelationships = {
   lifecycle: any[]; // data_object_lifecycle_states
   handoffs: any[]; // handoffs (with trigger_events + data_objects joined)
   hostDomains: any[]; // domain_module_host_domains
-  domainRoles: any[]; // domain_roles (catalog personas, Plan 3)
-  roleModules: any[]; // role_modules (persona reach; role_id -> domain_roles)
+  personas: any[]; // personas (catalog personas, Plan 3)
+  personaModules: any[]; // persona_modules (persona reach; persona_id -> personas)
   processRaci: any[]; // process_raci (responsibility, Plan 3)
   businessFunctions: any[]; // business_functions
   businessFunctionDomains: any[]; // business_function_domains (market RACI)
@@ -260,12 +260,12 @@ export type AllRelationships = {
   relationshipsTouchingDataObjectId: Map<number, any[]>;
   lifecycleByDataObjectId: Map<number, any[]>;
   handoffsByDataObjectId: Map<number, any[]>;
-  roleModulesByModuleId: Map<number, any[]>;
-  roleModulesByRoleId: Map<number, any[]>;
+  personaModulesByModuleId: Map<number, any[]>;
+  personaModulesByPersonaId: Map<number, any[]>;
   processRaciByProcessId: Map<number, any[]>;
   handoffProcessesByProcessId: Map<number, any[]>;
   businessFunctionDomainsByDomainId: Map<number, any[]>;
-  domainRolesById: Map<number, any>;
+  personasById: Map<number, any>;
   businessFunctionsById: Map<number, any>;
   processesById: Map<number, any>;
   triggerEventsByDataObjectId: Map<number, any[]>;
@@ -279,8 +279,8 @@ export type RawRelationships = {
   lifecycle: any[];
   handoffs: any[];
   hostDomains: any[];
-  domainRoles: any[];
-  roleModules: any[];
+  personas: any[];
+  personaModules: any[];
   processRaci: any[];
   businessFunctions: any[];
   businessFunctionDomains: any[];
@@ -305,7 +305,7 @@ export function buildRelationshipIndices(raw: RawRelationships): AllRelationship
     ((a.state_order ?? -1) - (b.state_order ?? -1)) ||
     (String(a.state_name ?? "") < String(b.state_name ?? "") ? -1 : String(a.state_name ?? "") > String(b.state_name ?? "") ? 1 : 0),
   );
-  // The dmdo, relationship, process_raci, role_modules and business_processes queries carry no
+  // The dmdo, relationship, process_raci, persona_modules and business_processes queries carry no
   // `order=`, so PostgREST returns them in heap order, which can change between fetches. Sort them
   // here for the same reason as the lifecycle sort above.
   const byNum = (...keys: string[]) => (a: any, b: any): number => {
@@ -317,11 +317,11 @@ export function buildRelationshipIndices(raw: RawRelationships): AllRelationship
   };
   raw.dmdo.sort((a: any, b: any) =>
     byNum("domain_module_id", "data_object_id")(a, b) ||
-    (String(a.role ?? "") < String(b.role ?? "") ? -1 : String(a.role ?? "") > String(b.role ?? "") ? 1 : 0),
+    (String(a.held_as ?? "") < String(b.held_as ?? "") ? -1 : String(a.held_as ?? "") > String(b.held_as ?? "") ? 1 : 0),
   );
   raw.relationships.sort(byNum("id", "data_object_id", "related_data_object_id"));
   (raw.processRaci ?? []).sort(byNum("id"));
-  (raw.roleModules ?? []).sort(byNum("id"));
+  (raw.personaModules ?? []).sort(byNum("id"));
   (raw.processes ?? []).sort(byNum("id"));
   // trigger_events is fetched `order=id.asc`; sorted here too so the cache-read path and offline
   // fixtures see the same order as a fresh fetch.
@@ -358,8 +358,8 @@ export function buildRelationshipIndices(raw: RawRelationships): AllRelationship
     lifecycle: raw.lifecycle,
     handoffs: raw.handoffs,
     hostDomains: raw.hostDomains,
-    domainRoles: raw.domainRoles ?? [],
-    roleModules: raw.roleModules ?? [],
+    personas: raw.personas ?? [],
+    personaModules: raw.personaModules ?? [],
     processRaci: raw.processRaci ?? [],
     businessFunctions: raw.businessFunctions ?? [],
     businessFunctionDomains: raw.businessFunctionDomains ?? [],
@@ -375,12 +375,12 @@ export function buildRelationshipIndices(raw: RawRelationships): AllRelationship
     relationshipsTouchingDataObjectId,
     lifecycleByDataObjectId: groupBy(raw.lifecycle, (r: any) => r.data_object_id),
     handoffsByDataObjectId: groupBy(raw.handoffs, (r: any) => r.data_object_id),
-    roleModulesByModuleId: groupBy(raw.roleModules, (r: any) => r.domain_module_id),
-    roleModulesByRoleId: groupBy(raw.roleModules, (r: any) => r.role_id),
+    personaModulesByModuleId: groupBy(raw.personaModules, (r: any) => r.domain_module_id),
+    personaModulesByPersonaId: groupBy(raw.personaModules, (r: any) => r.persona_id),
     processRaciByProcessId: groupBy(raw.processRaci, (r: any) => r.process_id),
     handoffProcessesByProcessId: groupBy(raw.handoffProcesses, (r: any) => r.process_id),
     businessFunctionDomainsByDomainId: groupBy(raw.businessFunctionDomains, (r: any) => r.domain_id),
-    domainRolesById: new Map((raw.domainRoles ?? []).map((r: any) => [r.id as number, r])),
+    personasById: new Map((raw.personas ?? []).map((r: any) => [r.id as number, r])),
     businessFunctionsById: new Map((raw.businessFunctions ?? []).map((r: any) => [r.id as number, r])),
     processesById: new Map((raw.processes ?? []).map((r: any) => [r.id as number, r])),
     triggerEventsByDataObjectId: groupBy(triggerEvents, (r: any) => r.data_object_id),
@@ -395,7 +395,7 @@ export function buildRelationshipIndices(raw: RawRelationships): AllRelationship
 // rows shaped like the old table ({domain_module_id, domain_id}) so existing readers consume it
 // unchanged.
 export function deriveHostDomains(
-  dmdo: { domain_module_id: number; data_object_id: number; role: string }[],
+  dmdo: { domain_module_id: number; data_object_id: number; held_as: string }[],
   modules: { id: number; domain_id: number | null; module_kind?: string }[],
 ): { domain_module_id: number; domain_id: number }[] {
   const primaryDomain = new Map<number, number>();
@@ -407,7 +407,7 @@ export function deriveHostDomains(
   // data_object_id -> domains that master it (a `master` DMDO row on a module with a primary domain).
   const masterDomainsByDO = new Map<number, Set<number>>();
   for (const r of dmdo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const dom = primaryDomain.get(r.domain_module_id);
     if (dom == null) continue;
     let s = masterDomainsByDO.get(r.data_object_id);
@@ -416,7 +416,7 @@ export function deriveHostDomains(
   }
   const hostsByModule = new Map<number, Set<number>>();
   for (const r of dmdo) {
-    if (r.role !== "embedded_master") continue;
+    if (r.held_as !== "embedded_master") continue;
     if (moduleKind.get(r.domain_module_id) !== "starter") continue; // only starters host
     const owners = masterDomainsByDO.get(r.data_object_id);
     if (!owners) continue;
@@ -431,8 +431,8 @@ export function deriveHostDomains(
 }
 
 export async function loadAllRelationships(): Promise<AllRelationships> {
-  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools, triggerEvents] = await Promise.all([
-    pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional,notes&limit=20000"),
+  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, personas, personaModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools, triggerEvents] = await Promise.all([
+    pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,held_as,is_install_optional,notes&limit=20000"),
     // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
     // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
     // deleted without this read 404-ing; all.ddo is [] everywhere downstream and the
@@ -440,7 +440,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     // 2026-06-02 "<masters> audit definition reads the module junction".
     Promise.resolve([] as any[]),
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
-    pg("GET", "/data_object_relationships?select=id,data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
+    pg("GET", "/data_object_relationships?select=id,data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,persona_id,notes&limit=20000"),
     pg("GET", "/data_object_lifecycle_states?select=id,data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,is_high_risk,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
     pg("GET", "/handoffs?select=id,trigger_event_id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
     // hostDomains is DERIVED, not stored (the `domain_module_host_domains` table was dropped).
@@ -448,13 +448,13 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     // turns this plus dmdo into the same {domain_module_id, domain_id} shape every reader expects.
     pg("GET", "/domain_modules?select=id,domain_id,module_kind&limit=20000"),
     // Plan 3 persona / RACI / function loads (B0).
-    pg("GET", "/domain_roles?select=id,role_code,role_name,description,business_function_id,record_status&limit=20000"),
-    pg("GET", "/role_modules?select=id,role_id,domain_module_id,interaction_level,notes&limit=20000"),
-    pg("GET", "/process_raci?select=id,process_id,actor_role_id,actor_skill_id,raci,consultation_blocking&limit=20000"),
+    pg("GET", "/personas?select=id,persona_code,persona_name,description,business_function_id,record_status&limit=20000"),
+    pg("GET", "/persona_modules?select=id,persona_id,domain_module_id,interaction_level,notes&limit=20000"),
+    pg("GET", "/process_raci?select=id,process_id,persona_id,skill_id,raci,consultation_blocking&limit=20000"),
     pg("GET", "/business_functions?select=id,business_function_name,description,record_status,parent_business_function_id&limit=10000"),
     pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
     pg("GET", "/business_processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
-    // handoff_processes is the dominant process-attribution edge: which APQC/custom process implements
+    // handoff_processes is the dominant process-attribution relationship: which APQC/custom process implements
     // each cross-domain handoff. Embed the handoff's domain + module endpoints so consumers can attribute
     // the process to a domain/module without a second join. domain endpoints are always set; module
     // endpoints can be NULL (domain-grain handoff), so domain-grain attribution is the more complete one.
@@ -474,8 +474,8 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     lifecycle: lifecycle ?? [],
     handoffs: handoffs ?? [],
     hostDomains: deriveHostDomains(dmdo ?? [], modulesForHost ?? []),
-    domainRoles: domainRoles ?? [],
-    roleModules: roleModules ?? [],
+    personas: personas ?? [],
+    personaModules: personaModules ?? [],
     processRaci: processRaci ?? [],
     businessFunctions: businessFunctions ?? [],
     businessFunctionDomains: businessFunctionDomains ?? [],
@@ -536,8 +536,8 @@ export function writeCatalogCache(
         lifecycle: all.lifecycle.length,
         handoffs: all.handoffs.length,
         hostDomains: all.hostDomains.length,
-        domainRoles: all.domainRoles.length,
-        roleModules: all.roleModules.length,
+        personas: all.personas.length,
+        personaModules: all.personaModules.length,
         processRaci: all.processRaci.length,
         businessFunctions: all.businessFunctions.length,
         businessFunctionDomains: all.businessFunctionDomains.length,
@@ -561,8 +561,8 @@ export function writeCatalogCache(
       lifecycle: all.lifecycle,
       handoffs: all.handoffs,
       hostDomains: all.hostDomains,
-      domainRoles: all.domainRoles,
-      roleModules: all.roleModules,
+      personas: all.personas,
+      personaModules: all.personaModules,
       processRaci: all.processRaci,
       businessFunctions: all.businessFunctions,
       businessFunctionDomains: all.businessFunctionDomains,
@@ -654,9 +654,9 @@ export function loadModuleCatalog(
     .map((id) => index.domainsById.get(id))
     .filter((d): d is Domain => Boolean(d));
 
-  // Aggregate scope across modules: strongest role per data_object, plus which modules
+  // Aggregate scope across modules: strongest held_as per data_object, plus which modules
   // contributed and the per-module notes joined together.
-  const byDOId = new Map<number, { role: string; is_install_optional: boolean; modules: ModuleRow[]; notes: string[] }>();
+  const byDOId = new Map<number, { held_as: string; is_install_optional: boolean; modules: ModuleRow[]; notes: string[] }>();
   for (const mid of moduleIds) {
     const rows = all.dmdoByModuleId.get(mid) ?? [];
     for (const r of rows) {
@@ -666,14 +666,14 @@ export function loadModuleCatalog(
       const existing = byDOId.get(did);
       if (!existing) {
         byDOId.set(did, {
-          role: r.role,
+          held_as: r.held_as,
           is_install_optional: Boolean(r.is_install_optional),
           modules: [m],
           notes: r.notes ? [r.notes] : [],
         });
       } else {
-        if ((ROLE_RANK[r.role] ?? 99) < (ROLE_RANK[existing.role] ?? 99)) {
-          existing.role = r.role;
+        if ((HELD_AS_RANK[r.held_as] ?? 99) < (HELD_AS_RANK[existing.held_as] ?? 99)) {
+          existing.held_as = r.held_as;
           existing.is_install_optional = Boolean(r.is_install_optional);
         }
         if (!existing.modules.includes(m)) existing.modules.push(m);
@@ -687,7 +687,7 @@ export function loadModuleCatalog(
       if (!obj) return null;
       return {
         data_object_id: did,
-        role: info.role,
+        held_as: info.held_as,
         is_install_optional: info.is_install_optional,
         notes: info.notes.join("; ") || null,
         data_object: obj,
@@ -697,9 +697,9 @@ export function loadModuleCatalog(
     .filter((r): r is ScopeRow => r !== null);
   const scopeObjectIds = scopeRows.map((r) => r.data_object_id);
   const scopeObjectIdSet = new Set(scopeObjectIds);
-  const scopeRolesById = new Map<number, string>(scopeRows.map((r) => [r.data_object_id, r.role]));
+  const scopeHeldAsById = new Map<number, string>(scopeRows.map((r) => [r.data_object_id, r.held_as]));
   const scopeInstallOptionalById = new Map<number, boolean>(scopeRows.map((r) => [r.data_object_id, r.is_install_optional]));
-  const masterIds = new Set(scopeRows.filter((r) => r.role === "master").map((r) => r.data_object_id));
+  const masterIds = new Set(scopeRows.filter((r) => r.held_as === "master").map((r) => r.data_object_id));
 
   // Per-section derivation iterates the bulk arrays directly (not the per-scope index
   // maps) so row order matches PostgREST's natural insertion order — what the original
@@ -747,7 +747,7 @@ export function loadModuleCatalog(
     all: relAll,
   };
 
-  // ---- coMasters: other modules / domains with any role on this scope's masters ----
+  // ---- coMasters: other modules / domains with any held_as on this scope's masters ----
   // Walk bulk arrays in insertion order. Dedup on (module_id, data_object_id) for the
   // module path so a co-master that appears in both a full module row and a
   // legacy domain-level row is only listed once.
@@ -767,12 +767,12 @@ export function loadModuleCatalog(
       data_object_id: did,
       owner_module: m,
       owner_domain: m.domain_id !== null ? index.domainsById.get(m.domain_id) ?? null : null,
-      role: r.role as string,
+      held_as: r.held_as as string,
       is_install_optional: Boolean(r.is_install_optional),
       notes: (r.notes as string | null) ?? null,
     });
   }
-  // Domain-granularity fallback: domains with a role on these masters but no modules.
+  // Domain-granularity fallback: domains holding these masters but no modules.
   // Pre-compute which domains have any module so the check is O(1) per row.
   const domainsWithAnyModule = new Set<number>();
   for (const m of index.modules) {
@@ -789,17 +789,17 @@ export function loadModuleCatalog(
       data_object_id: did,
       owner_module: null,
       owner_domain: d,
-      role: r.role as string,
+      held_as: r.held_as as string,
       is_install_optional: Boolean(r.is_install_optional),
       notes: (r.notes as string | null) ?? null,
     });
   }
 
   // ---- owners: canonical module / domain that masters each non-master in scope ----
-  const nonMasterIdSet = new Set(scopeRows.filter((r) => r.role !== "master").map((r) => r.data_object_id));
+  const nonMasterIdSet = new Set(scopeRows.filter((r) => r.held_as !== "master").map((r) => r.data_object_id));
   const owners = new Map<number, OwnerInfo>();
   for (const r of all.dmdo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const did = r.data_object_id as number;
     if (!nonMasterIdSet.has(did)) continue;
     const m = index.modulesById.get(r.domain_module_id as number);
@@ -809,7 +809,7 @@ export function loadModuleCatalog(
     if (!info.modules.includes(m)) info.modules.push(m);
   }
   for (const r of all.ddo) {
-    if (r.role !== "master") continue;
+    if (r.held_as !== "master") continue;
     const did = r.data_object_id as number;
     if (!nonMasterIdSet.has(did)) continue;
     const d = index.domainsById.get(r.domain_id as number);
@@ -835,22 +835,22 @@ export function loadModuleCatalog(
   // (whose endpoints are the canonical modules, not this unit) silently vanished.
   const playedModuleIds = new Set<number>(moduleIdSet);
   for (const r of scopeRows) {
-    if (r.role !== "embedded_master") continue;
+    if (r.held_as !== "embedded_master") continue;
     for (const m of owners.get(r.data_object_id as number)?.modules ?? []) playedModuleIds.add(m.id);
   }
   const outboundHandoffs: any[] = [];
   const inboundHandoffs: any[] = [];
   for (const h of handoffRows ?? []) {
     const payloadId = h.data_object_id as number;
-    const scopeRole = scopeRolesById.get(payloadId);
+    const scopeHeldAs = scopeHeldAsById.get(payloadId);
     const srcMod = h.source_domain_module_id as number | null;
     const tgtMod = h.target_domain_module_id as number | null;
     const srcModuleInScope = srcMod !== null && moduleIdSet.has(srcMod);
     const tgtModuleInScope = tgtMod !== null && moduleIdSet.has(tgtMod);
     const srcDomainInScope = parentDomainIds.has(h.source_domain_id as number);
     const tgtDomainInScope = parentDomainIds.has(h.target_domain_id as number);
-    const payloadMasteredHere = scopeRole === "master";
-    const payloadHeldNonMaster = scopeRole !== undefined && scopeRole !== "master";
+    const payloadMasteredHere = scopeHeldAs === "master";
+    const payloadHeldNonMaster = scopeHeldAs !== undefined && scopeHeldAs !== "master";
     if (srcModuleInScope || (srcDomainInScope && srcMod === null && payloadMasteredHere)) {
       outboundHandoffs.push(h);
     } else if (
@@ -858,7 +858,7 @@ export function loadModuleCatalog(
       (tgtDomainInScope && tgtMod === null && payloadHeldNonMaster)
     ) {
       inboundHandoffs.push(h);
-    } else if (scopeRole === "embedded_master") {
+    } else if (scopeHeldAs === "embedded_master") {
       // The payload is carried here as an embedded shell but neither endpoint module is one of our
       // OWN modules. Stand in for the payload's canonical owner: outbound if we own the source side
       // and the target is outside what we play, inbound if we own the target side and the source is
@@ -926,15 +926,15 @@ export function loadModuleCatalog(
     const tgtId = h.target_domain_module_id as number | null;
     if (tgtId !== null && !moduleIdSet.has(tgtId)) relatedModuleIds.add(tgtId);
   }
-  // Persona reach (Plan 3): modules that share >=1 persona with this scope via role_modules.
+  // Persona reach (Plan 3): modules that share >=1 persona with this scope via persona_modules.
   // A persona whose workspace spans modules makes them related (same job-shaped workflow).
   {
     const personaIds = new Set<number>();
     for (const mid of moduleIds) {
-      for (const rm of all.roleModulesByModuleId.get(mid) ?? []) personaIds.add(rm.role_id as number);
+      for (const rm of all.personaModulesByModuleId.get(mid) ?? []) personaIds.add(rm.persona_id as number);
     }
     for (const pid of personaIds) {
-      for (const rm of all.roleModulesByRoleId.get(pid) ?? []) {
+      for (const rm of all.personaModulesByPersonaId.get(pid) ?? []) {
         const mid = rm.domain_module_id as number;
         if (!moduleIdSet.has(mid)) relatedModuleIds.add(mid);
       }
@@ -944,7 +944,7 @@ export function loadModuleCatalog(
   return {
     modules,
     scopeRows,
-    scopeRolesById,
+    scopeHeldAsById,
     scopeInstallOptionalById,
     aliasRows,
     relationships,

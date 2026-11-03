@@ -558,7 +558,7 @@
       "name": "candidate_referrals",
       "singular_label": "Referral",
       "plural_label": "Referrals",
-      "description": "Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus.",
+      "description": "Employee-submitted candidate suggestion related to a requisition. Tracks the referring employee, candidate, status, and any payable bonus.",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -1729,7 +1729,7 @@
       "name": "talent_pools",
       "singular_label": "Talent Pool",
       "plural_label": "Talent Pools",
-      "description": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters).",
+      "description": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medalists, alumni, target-school grads, hard-to-fill skill clusters).",
       "is_canonical_bare_word": false,
       "has_personal_content": false,
       "aliases": [
@@ -2769,7 +2769,7 @@
       ]
     }
   ],
-  "roles": [
+  "personas": [
     {
       "code": "HIRING-MANAGER",
       "business_function": null,
@@ -2947,7 +2947,7 @@
       "medium",
       "high"
     ],
-    "role_dmdo": [
+    "held_as": [
       "master",
       "embedded_master",
       "contributor",

@@ -23,7 +23,7 @@ A1 PASS, A2 FAIL (0 capabilities), A3 FAIL (only 2 solutions and both are `secon
 
 M1 FAIL (0 modules, see B1-S1 below). M2-M7 are vacuous given M1 fail.
 
-B1 PASS by leadership-tier exception. B2-B12 vacuous. B5 cross-domain integrity gap surfaced: `monitoring_events` (id 84) carries a `role='master'` row in `domain_data_objects` (domain-level, ITOM, id 2) but no `domain_module_data_objects` `role='master'` row exists anywhere in the catalog. SECOPS contributes to it; the canonical master-module pointer is missing. Routed to ITOM as a report-only follow-up.
+B1 PASS by leadership-tier exception. B2-B12 vacuous. B5 cross-domain integrity gap surfaced: `monitoring_events` (id 84) carries a `held_as='master'` row in `domain_data_objects` (domain-level, ITOM, id 2) but no `domain_module_data_objects` `held_as='master'` row exists anywhere in the catalog. SECOPS contributes to it; the canonical master-module pointer is missing. Routed to ITOM as a report-only follow-up.
 
 C1 PASS (owner Security Operations Center; no contributors or consumers loaded yet).
 
@@ -80,9 +80,9 @@ The detection verticals themselves (SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, S
 
 ### Pass 3, Neighbor discovery
 
-Edge weight derived from handoffs and DMDO cross-references:
+Relationship weight derived from handoffs and DMDO cross-references:
 
-| Neighbor | Outbound | Inbound | DMDO cross | Edge weight | Pass-4 treatment |
+| Neighbor | Outbound | Inbound | DMDO cross | Relationship weight | Pass-4 treatment |
 | --- | --- | --- | --- | --- | --- |
 | DLP | 0 | 3 (handoffs 280, 282, 284) | 0 | 3 | full 5-section diff |
 | DSPM | 0 | 2 (handoffs 287, 290) | 0 | 2 | one-line summary |
@@ -120,7 +120,7 @@ Inbound handoffs 287 and 290 from DSPM (`sensitive_data_incident.detected` mediu
 
 #### ITSM, SECOPS (weight 1, one-line summary)
 
-SECOPS contributes (role=contributor, necessity=required) to ITSM-mastered `service_incidents` (id 47). No handoffs in either direction. The contributor edge implies SECOPS should be publishing `security_incident.linked_to_service_incident` style events into ITSM once SECOPS has its own master; today the substrate is one-way (SECOPS writes contributor fields directly onto the ITSM-mastered row). Section 5 mirror candidate (SECOPS->ITSM `security_incidents links_to service_incidents`) blocked on B2-1.
+SECOPS contributes (held_as=contributor, necessity=required) to ITSM-mastered `service_incidents` (id 47). No handoffs in either direction. The contributor relationship implies SECOPS should be publishing `security_incident.linked_to_service_incident` style events into ITSM once SECOPS has its own master; today the substrate is one-way (SECOPS writes contributor fields directly onto the ITSM-mastered row). Section 5 mirror candidate (SECOPS->ITSM `security_incidents links_to service_incidents`) blocked on B2-1.
 
 #### ITOM, SECOPS (weight 1, one-line summary)
 
@@ -137,8 +137,8 @@ SECOPS embedded_masters (optional) on `org_units` (id 34, HCM-HCM-ORG-POSITIONS 
 | ID | Band | Finding | Fix |
 | --- | --- | --- | --- |
 | B1-S1 | M1 | Zero `domain_modules` rows. Even leadership-tier domains require >=1 `module_kind='full'` row per Rule #14 (a "derived-signals" or "landing" module preserving the deploy-target contract). | Author at minimum 1 landing module, code `SECOPS-LANDING`, `domain_id=11`, `module_kind='full'`, empty `domain_module_data_objects` set is acceptable for a leadership-tier landing surface under option (a) of B2-1. Under option (b) (umbrella with case-mgmt module), the landing collapses into 4 full modules per the Pass 2 modularization hypothesis. Cascades into F2 (one system skill per module). |
-| B1-S2 | A2 | Zero `capability_domains` rows. Leadership-tier domains typically carry 2-4 capability links describing what the umbrella does. | Draft 3-5 capabilities aligned to the SECOPS umbrella scope. Candidates: `security-incident-mgmt`, `threat-detection-orchestration`, `security-case-mgmt`, `response-coordination`, `breach-notification-mgmt`. Consider cross-cutting domain-neutral codes for capabilities that span SECOPS plus future sibling detection-vertical domains (per the Cross-cutting capability convention). |
-| B1-S3 | A3 | Only 2 solutions linked (both `coverage_level=secondary`, both ServiceNow Security Incident Response and ServiceNow Vulnerability Response). A3 requires >=3 solutions with >=1 `primary`. The catalog does not currently carry any pure-play SECOPS-umbrella product as `primary`. | Add solution rows for the pure-play umbrella-scoped flagship vendors (Splunk Enterprise Security, Microsoft Sentinel, CrowdStrike Falcon Complete, Palo Alto Cortex XSIAM, IBM QRadar) with appropriate `coverage_level`. Mark at least 1 as `primary`. Defer the sub-vertical solutions (Splunk SIEM proper, CrowdStrike Falcon Insight EDR proper) until the sibling SIEM and EDR domains land (Bucket 3). |
+| B1-S2 | A2 | Zero `capability_domains` rows. Leadership-tier domains typically carry 2-4 capability relationships describing what the umbrella does. | Draft 3-5 capabilities aligned to the SECOPS umbrella scope. Candidates: `security-incident-mgmt`, `threat-detection-orchestration`, `security-case-mgmt`, `response-coordination`, `breach-notification-mgmt`. Consider cross-cutting domain-neutral codes for capabilities that span SECOPS plus future sibling detection-vertical domains (per the Cross-cutting capability convention). |
+| B1-S3 | A3 | Only 2 solutions related (both `coverage_level=secondary`, both ServiceNow Security Incident Response and ServiceNow Vulnerability Response). A3 requires >=3 solutions with >=1 `primary`. The catalog does not currently carry any pure-play SECOPS-umbrella product as `primary`. | Add solution rows for the pure-play umbrella-scoped flagship vendors (Splunk Enterprise Security, Microsoft Sentinel, CrowdStrike Falcon Complete, Palo Alto Cortex XSIAM, IBM QRadar) with appropriate `coverage_level`. Mark at least 1 as `primary`. Defer the sub-vertical solutions (Splunk SIEM proper, CrowdStrike Falcon Insight EDR proper) until the sibling SIEM and EDR domains land (Bucket 3). |
 | B1-S4 | A4 | `catalog_tagline` and `catalog_description` are empty strings on the SECOPS row (Rule #20). | Draft buyer-voice tagline and description per Rule #20, surface for user review BEFORE writing. Voice rule: workflow plus value (detection, investigation, containment, regulator notification), not analyst voice. |
 | B1-S5 | F2 | Zero `skills` rows on SECOPS at any level (`domain_id=11` returns nothing, no `domain_module_id`-anchored rows). After B1-S1 lands, each new module needs exactly one `skill_type='system'` skill per Rule #17. | Author 1 system skill per new SECOPS module. Under B2-1 option (a), 1 skill on `SECOPS-LANDING` with a minimal `query_*` tool set across consumed masters (ITSM `service_incidents`, ITOM `monitoring_events`, DLP `dlp_incidents`, DSPM `sensitive_data_incidents`). Under option (b), 4 skills, one per module. Defer until B2-1 resolves. |
 
@@ -146,7 +146,7 @@ SECOPS embedded_masters (optional) on `org_units` (id 34, HCM-HCM-ORG-POSITIONS 
 
 | ID | Finding | Fix |
 | --- | --- | --- |
-| B1-S6 | SECOPS declares no DMDO consumer/embedded_master role on the 4 inbound payloads (`dlp_incidents`, `data_exfiltration_attempts`, `sensitive_data_incidents`). The 5 inbound handoffs (280, 282, 284, 287, 290) therefore have no resolvable `target_domain_module_id` even after B1-S1 lands. | After B1-S1 lands, add `domain_module_data_objects` rows on the landing module (or `SECOPS-CASE-MGMT` under option b) with `role='consumer'` (or `embedded_master` if the umbrella keeps its own local copy for cross-detection-source correlation) for `dlp_incidents`, `data_exfiltration_attempts`, `sensitive_data_incidents`. Necessity per Rule #16 considerations (likely `optional` since SECOPS can correlate without each individual DLP/DSPM source). |
+| B1-S6 | SECOPS declares no DMDO consumer/embedded_master role on the 4 inbound payloads (`dlp_incidents`, `data_exfiltration_attempts`, `sensitive_data_incidents`). The 5 inbound handoffs (280, 282, 284, 287, 290) therefore have no resolvable `target_domain_module_id` even after B1-S1 lands. | After B1-S1 lands, add `domain_module_data_objects` rows on the landing module (or `SECOPS-CASE-MGMT` under option b) with `held_as='consumer'` (or `embedded_master` if the umbrella keeps its own local copy for cross-detection-source correlation) for `dlp_incidents`, `data_exfiltration_attempts`, `sensitive_data_incidents`. Necessity per Rule #16 considerations (likely `optional` since SECOPS can correlate without each individual DLP/DSPM source). |
 
 #### APQC TAGGING (per-handoff PCF activity classification)
 
@@ -170,7 +170,7 @@ Volume expectation: with N=5 cross-domain handoffs, the 0.5N to 0.8N target is 2
 
 1. **Is SECOPS correctly classified as leadership-tier, or should it be promoted to an umbrella with sub-modules?** The SKILL.md B1 exception list includes SECOPS, and the literal catalog state matches that label (0 masters, 0 modules). But the SECOPS market has flagship vendors with their own first-class schemas (Splunk ES masters cases, alerts, notable events, response actions; Microsoft Sentinel masters incidents, analytics rules, playbooks; CrowdStrike Falcon Complete masters detections, IOAs, containment actions; Palo Alto XSIAM masters cases, datasets, agents), which is the Rule #2 point-solution-market test. The `domains.business_logic` field on the SECOPS row already acknowledges algorithmic substance ("Detection rules, correlation, ML-based anomaly detection, and high-volume log analytics"). **Options:** (a) keep leadership-tier label, author `SECOPS-LANDING` only, declare consumer DMDOs on ITSM/ITOM/DLP/DSPM masters; (b) promote SECOPS to a master-bearing umbrella, author `SECOPS-CASE-MGMT`, `SECOPS-DETECTION-ENG`, `SECOPS-RESPONSE-OPS`, `SECOPS-IR-COMPLIANCE` modules, master the 14 candidate masters in Bucket 3; (c) hybrid: author `SECOPS-LANDING` and `SECOPS-CASE-MGMT` now (the umbrella shape, masters `security_incidents` plus 2-3 related), defer detection-engineering and response-ops modules until the SIEM and EDR sibling domains (Bucket 3) load and the boundary between SECOPS umbrella and detection-vertical specialists is clearer. Has a cross-bucket dependency on Bucket 3 (the 14 speculative master candidates and the 10 sibling detection-vertical candidates jointly determine what SECOPS itself should master vs delegate).
 
-2. **SECOPS umbrella vs detection-vertical siblings, modeling choice.** The detection landscape has SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, SOC-AAS, plus already-queued EASM, CSPM, CNAPP, CIEM, ASPM, CTEM, DRP, all as distinct vendor markets with pure-play specialists. The catalog precedent (ITAM umbrella with HAM/SAM/SMP/FINOPS siblings) suggests modeling each detection vertical as its own sibling domain under a SECOPS umbrella. **Options:** (a) load all detection verticals as flat top-level domains (no parent-child link to SECOPS), let SECOPS umbrella keep its leadership-tier label and consume from each; (b) load detection verticals as top-level domains and set `domains.parent_domain_id=11` on each, exposing the umbrella relationship at query time; (c) defer until the user picks 2-3 highest-priority detection verticals (SIEM, EDR, XDR feels like the minimum coherent set) and load them in a focused wave. Cross-bucket dependency with B2-1.
+2. **SECOPS umbrella vs detection-vertical siblings, modeling choice.** The detection landscape has SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, SOC-AAS, plus already-queued EASM, CSPM, CNAPP, CIEM, ASPM, CTEM, DRP, all as distinct vendor markets with pure-play specialists. The catalog precedent (ITAM umbrella with HAM/SAM/SMP/FINOPS siblings) suggests modeling each detection vertical as its own sibling domain under a SECOPS umbrella. **Options:** (a) load all detection verticals as flat top-level domains (no parent-child relationship to SECOPS), let SECOPS umbrella keep its leadership-tier label and consume from each; (b) load detection verticals as top-level domains and set `domains.parent_domain_id=11` on each, exposing the umbrella relationship at query time; (c) defer until the user picks 2-3 highest-priority detection verticals (SIEM, EDR, XDR feels like the minimum coherent set) and load them in a focused wave. Cross-bucket dependency with B2-1.
 
 3. **SOAR vs SECOPS-RESPONSE-OPS overlap.** SOAR is already a separate domain (id 12) with `THREAT-INTEL`. The proposed `SECOPS-RESPONSE-OPS` module under option (b) of B2-1 (masters `playbook_executions`, `containment_actions`, `runbook_documents`) overlaps materially with what a SOAR domain would master. **Options:** (a) let SOAR master `playbook_executions` and `containment_actions`, SECOPS embedded_master / consumer; (b) let SECOPS master case-correlated execution and SOAR master the orchestration engine itself (rule library, connector catalog, workflow templates); (c) consolidate SOAR into SECOPS as a module (would require deprecating the SOAR domain row, which is destructive). Independent of B2-1 mechanically, but the answer reshapes the scope of `SECOPS-RESPONSE-OPS`.
 
@@ -216,7 +216,7 @@ These are candidate masters surfaced by the vendor-surface enumeration above. Th
 
 - **DLP B10b owes** `source_domain_module_id` resolution on handoffs 280, 282, 284. The DLP audit (2026-05-30) will confirm whether DLP has DMDO master rows on `dlp_incidents` and `data_exfiltration_attempts` that allow the backfill to derive the source module. If DLP M1 also fails, this is blocked on DLP's M-band audit.
 - **DSPM B10b owes** `source_domain_module_id` resolution on handoffs 287, 290. Same shape as DLP. Surface to user as a candidate next audit (DSPM).
-- **ITOM B5 owes** a `domain_module_data_objects` `role='master'` row on `monitoring_events` (id 84). Currently ITOM has a `role='master'` row in legacy `domain_data_objects` (domain-level) but no module-level master row exists, which leaves SECOPS' contributor role with no resolvable canonical-owner module. Surface as a candidate next audit (ITOM); the gap is ITOM-side.
+- **ITOM B5 owes** a `domain_module_data_objects` `held_as='master'` row on `monitoring_events` (id 84). Currently ITOM has a `held_as='master'` row in legacy `domain_data_objects` (domain-level) but no module-level master row exists, which leaves SECOPS' contributor role with no resolvable canonical-owner module. Surface as a candidate next audit (ITOM); the gap is ITOM-side.
 - **ITSM B8 owes** the inbound `data_object_relationships` mirror once SECOPS masters `security_incidents` (per B2-1 option b/c). The relationship `security_incidents links_to service_incidents` is SECOPS-side outbound, but ITSM's own B8 pass should verify the converse direction for completeness.
 - **SOAR B-band check** (if B2-3 resolves to "SOAR masters playbook_executions"), SOAR owes a master DMDO on `playbook_executions` and `containment_actions`. Surface as a candidate next audit (SOAR), which is also currently in the leadership-tier B1 exception list with the same M1 fail shape as SECOPS.
 - **THREAT-INTEL B-band check** (if `threat_indicators` / `iocs` candidate in Bucket 3 routes to THREAT-INTEL canonical master rather than SECOPS embedded_master), THREAT-INTEL owes the master DMDO. Surface as a candidate next audit (THREAT-INTEL), also currently leadership-tier with the same shape.
@@ -251,7 +251,7 @@ Scope: applied truly-technical B1 fixes only (Rule definitions per skill). Total
 
 | ID | Type | Action | Result |
 | --- | --- | --- | --- |
-| B1-A1 | INSERT `handoff_processes` APQC rows (audit pre-specified handoff_id + resolvable PCF) | Inserted 5 rows linking handoffs 280, 282, 284, 287, 290 to APQC PCF processes 1164 (L4 Analyze IT security threat impact) and 268 (L3 Control IT risk, compliance, and security), all `role='implements'`, `proposal_source='agent_curated'`, `record_status='new'` (omitted on insert per Rule #1). | 5 new rows (ids 248-252). Verified via `/handoff_processes?handoff_id=in.(280,282,284,287,290)`: 5 of 5 SECOPS inbound handoffs now have APQC tagging coverage (0/5 -> 5/5). |
+| B1-A1 | INSERT `handoff_processes` APQC rows (audit pre-specified handoff_id + resolvable PCF) | Inserted 5 rows relating handoffs 280, 282, 284, 287, 290 to APQC PCF processes 1164 (L4 Analyze IT security threat impact) and 268 (L3 Control IT risk, compliance, and security), all `role='implements'`, `proposal_source='agent_curated'`, `record_status='new'` (omitted on insert per Rule #1). | 5 new rows (ids 248-252). Verified via `/handoff_processes?handoff_id=in.(280,282,284,287,290)`: 5 of 5 SECOPS inbound handoffs now have APQC tagging coverage (0/5 -> 5/5). |
 
 Direct CLI route used (single POST with 5 rows), no loader required. No JWT-audience errors encountered.
 
@@ -349,7 +349,7 @@ All 4 prior B2 items remain open. 1 NEW item this pass.
 
 4. (Carried) Catalog UX wording for B1-S4 (Rule #20 buyer-voice draft / review flow).
 
-5. NEW. The catalog already carries 3 child domains under SECOPS via `domains.parent_domain_id=11`: SOAR (id 12), VULN-MGMT (id 13), THREAT-INTEL (id 14). The 2026-05-30 audit framed the umbrella vs sibling question (B2-2) as if no parent-child wiring existed, but the umbrella to children link is already partially in the catalog. The remaining detection verticals already queued (SIEM, EDR, XDR, UEBA, MDR, NDR, DFIR, BAS, SOC-AAS) are not yet loaded as `domains` rows, so the parent-child wiring is only 3 of an eventual ~12. Question: does the existing wiring change the answer to B2-1 or B2-2? Specifically (a) does the existing umbrella-to-children evidence push toward leadership-tier (option a of B2-1), since the catalog already says SECOPS is a parent rather than a peer; (b) does it argue for promoting more detection verticals as `parent_domain_id=11` children before answering B2-1; (c) does it inform B2-3, since SOAR is already declared a SECOPS child and a `SECOPS-RESPONSE-OPS` module would duplicate that scope.
+5. NEW. The catalog already carries 3 child domains under SECOPS via `domains.parent_domain_id=11`: SOAR (id 12), VULN-MGMT (id 13), THREAT-INTEL (id 14). The 2026-05-30 audit framed the umbrella vs sibling question (B2-2) as if no parent-child wiring existed, but the umbrella to children relationship is already partially in the catalog. The remaining detection verticals already queued (SIEM, EDR, XDR, UEBA, MDR, NDR, DFIR, BAS, SOC-AAS) are not yet loaded as `domains` rows, so the parent-child wiring is only 3 of an eventual ~12. Question: does the existing wiring change the answer to B2-1 or B2-2? Specifically (a) does the existing umbrella-to-children evidence push toward leadership-tier (option a of B2-1), since the catalog already says SECOPS is a parent rather than a peer; (b) does it argue for promoting more detection verticals as `parent_domain_id=11` children before answering B2-1; (c) does it inform B2-3, since SOAR is already declared a SECOPS child and a `SECOPS-RESPONSE-OPS` module would duplicate that scope.
 
 ### Bucket 3, Phase 0 pending (speculative)
 
@@ -372,7 +372,7 @@ All 14 prior B3 candidates remain open. The 2026-05-30 audit's vendor-evidence a
 
 - DLP B10b owes `source_domain_module_id` on handoffs 280, 282, 284. Pending DLP audit.
 - DSPM B10b owes `source_domain_module_id` on handoffs 287, 290. Pending DSPM audit.
-- ITOM B5 still owes a `domain_module_data_objects` `role=master` row on `monitoring_events` (id 84). Pending ITOM audit.
+- ITOM B5 still owes a `domain_module_data_objects` `held_as=master` row on `monitoring_events` (id 84). Pending ITOM audit.
 - ITSM B8 inbound mirror is owed once SECOPS masters `security_incidents` (Bucket 3 candidate).
 - SOAR, THREAT-INTEL, VULN-MGMT each carry leadership-tier shape with the same M1 fail pattern as SECOPS; each is a candidate next audit.
 
@@ -430,7 +430,7 @@ No loader required (single deterministic PATCH via semantius CLI). No JWT-audien
 ### Report-only owed by other domains
 
 - DSPM B10b owes source_domain_module_id on handoffs 287, 290 (still NULL). DLP already backfilled 280/282/284 (source_domain_module_id=232).
-- ITOM B5 owes a domain_module_data_objects role='master' row on monitoring_events (id 84).
+- ITOM B5 owes a domain_module_data_objects held_as='master' row on monitoring_events (id 84).
 - ITSM B8 inbound mirror owed once SECOPS masters security_incidents (b3 candidate).
 
 ### UI spot-checks
@@ -472,5 +472,5 @@ No agent-executable work remains. Every remaining item is either a user b2 decis
 ### Report-only owed by other domains
 
 - DLP / DSPM each owe the owner-side answer to B2-B9D-OWN-1164 (assign a persona to "Analyze IT security threat impact") and the RE-TAG re-point sign-off; both already recorded in their own audit files.
-- ITOM B5 owes a domain_module_data_objects role='master' row on monitoring_events (id 84).
+- ITOM B5 owes a domain_module_data_objects held_as='master' row on monitoring_events (id 84).
 - ITSM B8 inbound mirror owed once SECOPS masters security_incidents (b3 candidate, gated on B2-1).

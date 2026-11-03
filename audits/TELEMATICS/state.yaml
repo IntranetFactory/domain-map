@@ -11,13 +11,13 @@ b1a:
     action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
 
 b1b:
-  - id: B1B-S4-INTRA-DOMAIN-EDGES
+  - id: B1B-S4-INTRA-DOMAIN-RELATIONSHIPS
     summary: Author 10 intra-domain `data_object_relationships` rows per the prior audit's B1-R1..R10 specification.
     finding: |
-      Zero intra-domain edges among the 8 mastered data_objects. B6 fails. The workflow chain is unrecorded: `gps_waypoints` compose into `vehicle_trips`; trips surface `idle_events`, `geofence_events`, `driver_behavior_events`; `eld_logs` co-anchor trips; behavior + dashcam events feed `driver_safety_scorecards`. The module split is now resolved (B1B-S1 closed 2026-06-02) so the edge set is fully derivable; out of the modularization-pass scope, owed by a relationship-authoring pass.
+      Zero intra-domain relationships among the 8 mastered data_objects. B6 fails. The workflow chain is unrecorded: `gps_waypoints` compose into `vehicle_trips`; trips surface `idle_events`, `geofence_events`, `driver_behavior_events`; `eld_logs` co-anchor trips; behavior + dashcam events feed `driver_safety_scorecards`. The module split is now resolved (B1B-S1 closed 2026-06-02) so the relationship set is fully derivable; out of the modularization-pass scope, owed by a relationship-authoring pass.
     blocked_by:
       - {type: catalog_addition, scope: modules, trigger: "relationship-authoring pass (out of modularization scope; module FKs now exist)"}
-    extra_proposed_edges:
+    extra_proposed_relationships:
       - {verb: "composes/composed_of", source: gps_waypoints, target: vehicle_trips, cardinality: many_to_one, required: true}
       - {verb: "surfaces/surfaced_by", source: vehicle_trips, target: driver_behavior_events, cardinality: one_to_many, required: false}
       - {verb: "surfaces/surfaced_by", source: vehicle_trips, target: idle_events, cardinality: one_to_many, required: false}
@@ -29,13 +29,13 @@ b1b:
       - {verb: "informs/informed_by", source: eld_logs, target: driver_safety_scorecards, cardinality: many_to_one, required: false}
       - {verb: "qualifies/qualified_by", source: geofence_events, target: vehicle_trips, cardinality: many_to_one, required: false}
 
-  - id: B1B-X-CROSS-DOMAIN-EDGES
+  - id: B1B-X-CROSS-DOMAIN-RELATIONSHIPS
     summary: Load 3 cross-domain outbound `data_object_relationships` from TELEMATICS masters to FLEET-MGMT masters.
     finding: |
-      B8 cross-domain outbound coverage is zero. Three edges match handoffs already published: `vehicle_trips` reconciles_with `fuel_transactions` (FLEET-MGMT 372); `driver_behavior_events` attributed_to `fleet_drivers` (FLEET-MGMT 371); `driver_safety_scorecards` summarizes_behavior_of `fleet_drivers` (FLEET-MGMT 371). Rule #11/B8 asymmetry: TELEMATICS authors only the outbound direction.
+      B8 cross-domain outbound coverage is zero. Three relationships match handoffs already published: `vehicle_trips` reconciles_with `fuel_transactions` (FLEET-MGMT 372); `driver_behavior_events` attributed_to `fleet_drivers` (FLEET-MGMT 371); `driver_safety_scorecards` summarizes_behavior_of `fleet_drivers` (FLEET-MGMT 371). Rule #11/B8 asymmetry: TELEMATICS authors only the outbound direction.
     blocked_by:
       - {type: catalog_addition, scope: modules, trigger: "relationship-authoring pass (out of modularization scope)"}
-    extra_proposed_edges:
+    extra_proposed_relationships:
       - {verb: reconciles_with, source: vehicle_trips, target: fuel_transactions, cardinality: many_to_many}
       - {verb: attributed_to, source: driver_behavior_events, target: fleet_drivers, cardinality: many_to_one}
       - {verb: summarizes_behavior_of, source: driver_safety_scorecards, target: fleet_drivers, cardinality: many_to_one}
@@ -167,7 +167,7 @@ b2:
       - confirm-current-state
       - escalate-to-platform-team
     why: |
-      TELEMATICS skills will plausibly link both abstractions (safety-manager alert, dispatch broadcast). The coverage_tier flip drives whether the skill rolls up as platform-covered or external. Same blocker as ATS audit; resolution is catalog-wide, not per-domain.
+      TELEMATICS skills will plausibly relate both abstractions (safety-manager alert, dispatch broadcast). The coverage_tier flip drives whether the skill rolls up as platform-covered or external. Same blocker as ATS audit; resolution is catalog-wide, not per-domain.
 
   - id: B2-EVENT-CATEGORY-CONFIRMATION
     summary: Confirm the 5 event_category values the 2026-05-31 continuation wrote.

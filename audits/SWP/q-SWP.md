@@ -116,9 +116,9 @@ a8:
 
 ---
 
-q9: SWP currently links to no regulations. Should I research and add the candidates that apply (EU Pay Transparency Directive, the WARN Act for mass-layoff scenarios, and pay-equity / AI-bias rules touching cost projections and skills-gap analysis)? (yes/no)
+q9: SWP currently relates to no regulations. Should I research and add the candidates that apply (EU Pay Transparency Directive, the WARN Act for mass-layoff scenarios, and pay-equity / AI-bias rules touching cost projections and skills-gap analysis)? (yes/no)
 
-Recommended: yes, but additive and non-blocking. Each candidate needs a quick check that the regulatory tie is real before linking.
+Recommended: yes, but additive and non-blocking. Each candidate needs a quick check that the regulatory tie is real before relating.
 
 a9:
 
