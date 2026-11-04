@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Brokerage Oversight and Commission Management
 tagline: Give the broker oversight of money and compliance.
@@ -12,7 +12,8 @@ domain_code: RE-BROKERAGE
 icon_name: key
 related_modules: [re-brok-agent-ops]
 persona: []
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Brokerage Oversight and Commission Management
@@ -34,30 +35,30 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
+  real_estate_transactions["Real Estate Transactions"]
   commission_splits["Commission Splits"]
   disclosure_documents["Disclosure Documents"]
-  real_estate_transactions["Real Estate Transactions"]
   users["Users"]
   real_estate_transactions -->|"requires disclosures"| disclosure_documents
   real_estate_transactions -->|"produces commission splits"| commission_splits
-  real_estate_transactions -->|"has listing-side agent"| users
-  real_estate_transactions -->|"has buyer-side agent"| users
-  disclosure_documents -->|"has preparer"| users
-  commission_splits -->|"has recipient agent"| users
-  commission_splits -->|"has approving broker"| users
+  users -->|"represents seller on"| real_estate_transactions
+  users -->|"represents buyer on"| real_estate_transactions
+  users -->|"prepares"| disclosure_documents
+  users -->|"earns commission via"| commission_splits
+  users -->|"approves split"| commission_splits
+  class real_estate_transactions embedded_master;
   class commission_splits master;
   class disclosure_documents embedded_master;
-  class real_estate_transactions embedded_master;
   class users platform_builtin;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `commission_splits` | `commission_splits` | Commission Split | Commission Splits | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 2 | `disclosure_documents` | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | yes | operational_workflow | `:manage` | - |
-| 3 | `real_estate_transactions` | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | yes | operational_workflow | `:manage` | - |
+| 1 | `commission_splits` | `commission_splits` | Commission Split | Commission Splits | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 2 | `disclosure_documents` | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | - | yes | operational_workflow | `:manage` | - |
+| 3 | `real_estate_transactions` | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | - | yes | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -71,107 +72,97 @@ flowchart TD
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | cascade | parent | - |
-| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | cascade | parent | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | restrict | reference | - |
-| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | clear | reference | - |
-| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | restrict | reference | - |
-| `commission_splits` | has recipient agent | `users` | many_to_many | required | source | restrict | reference | - |
-| `commission_splits` | has approving broker | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | yes | cascade | parent | - |
+| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | yes | cascade | parent | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
-
-#### 5.3b Context relationships on embedded shells and consumed entities
-
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | none (required-if-present) | n/a | - |
+| `users` | represents seller on | `real_estate_transactions` | one_to_many | yes | restrict | reference | - |
+| `users` | represents buyer on | `real_estate_transactions` | one_to_many | no | clear | reference | - |
+| `users` | prepares | `disclosure_documents` | one_to_many | yes | restrict | reference | - |
+| `users` | earns commission via | `commission_splits` | one_to_many | yes | restrict | reference | - |
+| `users` | approves split | `commission_splits` | one_to_many | yes | restrict | reference | - |
+
+### 5.3 Relationships to entities outside this blueprint
+
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
+
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | yes | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+_(none: no incoming relationships from external entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | held_as | necessity | notes |
-| --- | --- | --- | --- | --- |
-| `commission_splits` | RE-BROK-AGENT-OPS (Real Estate Agent Operations) - RE-BROKERAGE | embedded_master | optional | - |
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RE-BROK-AGENT-OPS | GRC | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `disclosure_documents` | batch_sync | low | Disclosure-document completeness per closed transaction feeds brokerage-compliance audit and state-real-estate-commission requirements. |
-| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
-| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
-| RE-BROK-AGENT-OPS | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
-| RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.contingencies_cleared` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Agent-side has cleared inspection, financing, and appraisal contingencies; broker oversight takes the transaction into compliance review before authorizing closing. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `disclosure_documents` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
-| `real_estate_transactions` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
+| `disclosure_documents` | embedded_master | - | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
+| `real_estate_transactions` | embedded_master | - | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 
 ## 7. Lifecycle states
 
 ### `commission_splits` (Commission Split)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `calculated` | ✓ | - | - | - | Split row auto-derived from transaction close (listing-side vs buyer-side splits, agent shares, franchise overrides). Pending review. |
-| 2 | `reviewed` | - | - | ✓ | `re-brok-brokerage-ops:review_commission_split` | Broker reviewed split accuracy against the listing agreement and brokerage policy; flagged any anomalies. |
-| 3 | `disputed` | - | - | ✓ | `re-brok-brokerage-ops:dispute_commission_split` | One participating agent contests the calculated split. Holds disbursement pending resolution; may return to reviewed after adjustment. |
-| 4 | `approved` | - | - | ✓ | `re-brok-brokerage-ops:approve_commission_split` | Broker approved the split for payment. Ready for disbursement. |
-| 5 | `paid` | - | ✓ | ✓ | `re-brok-brokerage-ops:disburse_commission` | Commission funds disbursed to participating agents and franchise; ledger entry recorded. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `calculated` | ✓ | - | _(always)_ | - | - | - | Split row auto-derived from transaction close (listing-side vs buyer-side splits, agent shares, franchise overrides). Pending review. |
+| 2 | `reviewed` | - | - | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:review_commission_split` | Broker reviewed split accuracy against the listing agreement and brokerage policy; flagged any anomalies. |
+| 3 | `disputed` | - | - | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:dispute_commission_split` | One participating agent contests the calculated split. Holds disbursement pending resolution; may return to reviewed after adjustment. |
+| 4 | `approved` | - | - | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:approve_commission_split` | Broker approved the split for payment. Ready for disbursement. |
+| 5 | `paid` | - | ✓ | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:disburse_commission` | Commission funds disbursed to participating agents and franchise; ledger entry recorded. |
 
 ### `disclosure_documents` (Disclosure Document)
 
 _This scope holds `disclosure_documents` as **embedded_master**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | Disclosure generated from a state-specific template (agency disclosure, lead-paint, natural-hazards, transfer disclosure). Not yet delivered. |
-| 2 | `delivered` | - | - | ✓ | `re-brok-brokerage-ops:deliver_disclosure` | Disclosure sent to recipient (buyer or seller); recipient acknowledgment pending. |
-| 3 | `acknowledged` | - | ✓ | ✓ | `re-brok-brokerage-ops:acknowledge_disclosure` | Recipient signed acknowledgment recorded (typically via eSign callback). Disclosure satisfies the compliance requirement on the transaction. |
-| 4 | `rejected` | - | ✓ | - | - | Recipient refused to acknowledge or signed under dispute. Typically requires the transaction to address the rejection before progressing. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | _(always)_ | - | - | - | Disclosure generated from a state-specific template (agency disclosure, lead-paint, natural-hazards, transfer disclosure). Not yet delivered. |
+| 2 | `delivered` | - | - | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:deliver_disclosure` | Disclosure sent to recipient (buyer or seller); recipient acknowledgment pending. |
+| 3 | `acknowledged` | - | ✓ | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:acknowledge_disclosure` | Recipient signed acknowledgment recorded (typically via eSign callback). Disclosure satisfies the compliance requirement on the transaction. |
+| 4 | `rejected` | - | ✓ | _(always)_ | - | - | - | Recipient refused to acknowledge or signed under dispute. Typically requires the transaction to address the rejection before progressing. |
 
 ### `real_estate_transactions` (Real Estate Transaction)
 
 _This scope holds `real_estate_transactions` as **embedded_master**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `opened` | ✓ | - | - | - | Accepted offer created the transaction; buyer/seller, listing reference, offer price, escrow agent, target close date captured. |
-| 2 | `inspection` | - | - | ✓ | `re-brok-brokerage-ops:schedule_inspection` | Inspection period active; structural / pest / specialty inspections scheduled or in progress. |
-| 3 | `financing` | - | - | ✓ | `re-brok-brokerage-ops:submit_financing` | Buyer's loan application in underwriting; appraisal pending; financing contingency open. |
-| 4 | `contingencies_cleared` | - | - | ✓ | `re-brok-brokerage-ops:clear_contingencies` | All contingencies (inspection, financing, appraisal, title) satisfied or waived. Transaction ready for broker compliance review. |
-| 5 | `compliance_review` | - | - | ✓ | `re-brok-brokerage-ops:submit_for_compliance_review` | Broker / transaction coordinator reviewing transaction file for compliance (disclosure completeness, signature audit, trust-account accounting). Only realized when BROKERAGE-OPS module is deployed. |
-| 6 | `cleared_to_close` | - | - | ✓ | `re-brok-brokerage-ops:approve_for_closing` | Broker signed off; closing date and location confirmed. Only realized when BROKERAGE-OPS module is deployed. |
-| 7 | `closed` | - | ✓ | ✓ | `re-brok-brokerage-ops:close_transaction` | Deed recorded, funds disbursed via escrow; transaction complete. Commission splits become payable; downstream domains notified. |
-| 8 | `canceled` | - | ✓ | ✓ | `re-brok-brokerage-ops:cancel_transaction` | Transaction fell through (failed inspection beyond repair, financing denied, mutual cancellation, contingency invocation). Listing typically returns to active. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `opened` | ✓ | - | _(always)_ | - | - | - | Accepted offer created the transaction; buyer/seller, listing reference, offer price, escrow agent, target close date captured. |
+| 2 | `inspection` | - | - | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:schedule_inspection` | Inspection period active; structural / pest / specialty inspections scheduled or in progress. |
+| 3 | `financing` | - | - | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:submit_financing` | Buyer's loan application in underwriting; appraisal pending; financing contingency open. |
+| 4 | `contingencies_cleared` | - | - | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:clear_contingencies` | All contingencies (inspection, financing, appraisal, title) satisfied or waived. Transaction ready for broker compliance review. |
+| 5 | `compliance_review` | - | - | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:submit_for_compliance_review` | Broker / transaction coordinator reviewing transaction file for compliance (disclosure completeness, signature audit, trust-account accounting). Only realized when BROKERAGE-OPS module is deployed. |
+| 6 | `cleared_to_close` | - | - | `RE-BROK-BROKERAGE-OPS` | ✓ | - | `re-brok-brokerage-ops:approve_for_closing` | Broker signed off; closing date and location confirmed. Only realized when BROKERAGE-OPS module is deployed. |
+| 7 | `closed` | - | ✓ | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:close_transaction` | Deed recorded, funds disbursed via escrow; transaction complete. Commission splits become payable; downstream domains notified. |
+| 8 | `canceled` | - | ✓ | `RE-BROK-AGENT-OPS` | ✓ | - | `re-brok-agent-ops:cancel_transaction` | Transaction fell through (failed inspection beyond repair, financing denied, mutual cancellation, contingency invocation). Listing typically returns to active. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -182,30 +173,38 @@ _This scope holds `real_estate_transactions` as **embedded_master**; the canonic
 | `re-brok-brokerage-ops:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `re-brok-brokerage-ops:manage` | baseline-manage | Edit operational records | ✓ |
 | `re-brok-brokerage-ops:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `re-brok-brokerage-ops:schedule_inspection` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `inspection` | ✓ |
-| `re-brok-brokerage-ops:submit_financing` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `financing` | ✓ |
-| `re-brok-brokerage-ops:clear_contingencies` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `contingencies_cleared` | ✓ |
+| `re-brok-agent-ops:read_real_estate_transactions` | entity-read | Read Real Estate Transactions | ✓ |
+| `re-brok-agent-ops:write_real_estate_transactions` | entity-write | Write Real Estate Transactions | ✓ |
+| `re-brok-brokerage-ops:read_commission_splits` | entity-read | Read Commission Splits | ✓ |
+| `re-brok-brokerage-ops:write_commission_splits` | entity-write | Write Commission Splits | ✓ |
+| `re-brok-agent-ops:read_disclosure_documents` | entity-read | Read Disclosure Documents | ✓ |
+| `re-brok-agent-ops:write_disclosure_documents` | entity-write | Write Disclosure Documents | ✓ |
+| `re-brok-agent-ops:schedule_inspection` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `inspection` | ✓ |
+| `re-brok-agent-ops:submit_financing` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `financing` | ✓ |
+| `re-brok-agent-ops:clear_contingencies` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `contingencies_cleared` | ✓ |
 | `re-brok-brokerage-ops:submit_for_compliance_review` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `compliance_review` | ✓ |
 | `re-brok-brokerage-ops:approve_for_closing` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `cleared_to_close` | ✓ |
-| `re-brok-brokerage-ops:close_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `closed` | ✓ |
-| `re-brok-brokerage-ops:cancel_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `canceled` | ✓ |
+| `re-brok-agent-ops:close_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `closed` | ✓ |
+| `re-brok-agent-ops:cancel_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `canceled` | ✓ |
 | `re-brok-brokerage-ops:review_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `reviewed` | ✓ |
 | `re-brok-brokerage-ops:dispute_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `disputed` | ✓ |
 | `re-brok-brokerage-ops:approve_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `approved` | ✓ |
 | `re-brok-brokerage-ops:disburse_commission` | workflow-gate (lifecycle) | Transition `commission_splits` into state `paid` | ✓ |
-| `re-brok-brokerage-ops:deliver_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `delivered` | ✓ |
-| `re-brok-brokerage-ops:acknowledge_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `acknowledged` | ✓ |
-| `re-brok-brokerage-ops:view_all_disclosure_documents` | override (personal_content) | View all `disclosure_documents` rows beyond row-scope | ✓ |
-| `re-brok-brokerage-ops:manage_all_disclosure_documents` | override (personal_content) | Manage all `disclosure_documents` rows beyond row-scope | ✓ |
-| `re-brok-brokerage-ops:view_all_real_estate_transactions` | override (personal_content) | View all `real_estate_transactions` rows beyond row-scope | ✓ |
-| `re-brok-brokerage-ops:manage_all_real_estate_transactions` | override (personal_content) | Manage all `real_estate_transactions` rows beyond row-scope | ✓ |
+| `re-brok-agent-ops:deliver_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `delivered` | ✓ |
+| `re-brok-agent-ops:acknowledge_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `acknowledged` | ✓ |
+| `re-brok-agent-ops:view_all_real_estate_transactions` | override (personal_content) | View all `real_estate_transactions` rows beyond row-scope | ✓ |
+| `re-brok-agent-ops:manage_all_real_estate_transactions` | override (personal_content) | Manage all `real_estate_transactions` rows beyond row-scope | ✓ |
+| `re-brok-agent-ops:view_all_disclosure_documents` | override (personal_content) | View all `disclosure_documents` rows beyond row-scope | ✓ |
+| `re-brok-agent-ops:manage_all_disclosure_documents` | override (personal_content) | Manage all `disclosure_documents` rows beyond row-scope | ✓ |
+
+_Gates with no process: `re-brok-agent-ops:schedule_inspection`, `re-brok-agent-ops:submit_financing`, `re-brok-agent-ops:clear_contingencies`, `re-brok-brokerage-ops:submit_for_compliance_review`, `re-brok-brokerage-ops:approve_for_closing`, `re-brok-agent-ops:close_transaction`, `re-brok-agent-ops:cancel_transaction`, `re-brok-brokerage-ops:review_commission_split`, `re-brok-brokerage-ops:dispute_commission_split`, `re-brok-brokerage-ops:approve_commission_split`, `re-brok-brokerage-ops:disburse_commission`, `re-brok-agent-ops:deliver_disclosure`, `re-brok-agent-ops:acknowledge_disclosure`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
-| `disclosure_document_edit_scope` | `disclosure_documents` | has_personal_content | Row-scope by default; override via `re-brok-brokerage-ops:view_all_disclosure_documents` / `re-brok-brokerage-ops:manage_all_disclosure_documents` |
-| `real_estate_transaction_edit_scope` | `real_estate_transactions` | has_personal_content | Row-scope by default; override via `re-brok-brokerage-ops:view_all_real_estate_transactions` / `re-brok-brokerage-ops:manage_all_real_estate_transactions` |
+| `real_estate_transaction_edit_scope` | `real_estate_transactions` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_real_estate_transactions` / `re-brok-agent-ops:manage_all_real_estate_transactions` |
+| `disclosure_document_edit_scope` | `disclosure_documents` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_disclosure_documents` / `re-brok-agent-ops:manage_all_disclosure_documents` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -219,6 +218,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `re-brok-brokerage-ops_viewer` | `re-brok-brokerage-ops:read` |
 | `re-brok-brokerage-ops_manager` | `re-brok-brokerage-ops:manage` |
+| `re-brok-brokerage-ops_admin` | `re-brok-brokerage-ops:admin` |
 
 **Permission hierarchy:**
 
@@ -226,23 +226,32 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage` |
 | `re-brok-brokerage-ops:manage` | `re-brok-brokerage-ops:read` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:schedule_inspection` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_financing` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:clear_contingencies` |
+| `re-brok-brokerage-ops:read` | `re-brok-agent-ops:read_real_estate_transactions` |
+| `re-brok-brokerage-ops:read` | `re-brok-brokerage-ops:read_commission_splits` |
+| `re-brok-brokerage-ops:read` | `re-brok-agent-ops:read_disclosure_documents` |
+| `re-brok-brokerage-ops:manage` | `re-brok-agent-ops:write_real_estate_transactions` |
+| `re-brok-agent-ops:write_real_estate_transactions` | `re-brok-agent-ops:read_real_estate_transactions` |
+| `re-brok-brokerage-ops:manage` | `re-brok-brokerage-ops:write_commission_splits` |
+| `re-brok-brokerage-ops:write_commission_splits` | `re-brok-brokerage-ops:read_commission_splits` |
+| `re-brok-brokerage-ops:manage` | `re-brok-agent-ops:write_disclosure_documents` |
+| `re-brok-agent-ops:write_disclosure_documents` | `re-brok-agent-ops:read_disclosure_documents` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:schedule_inspection` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:submit_financing` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:clear_contingencies` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_for_compliance_review` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_for_closing` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:close_transaction` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:cancel_transaction` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:close_transaction` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:cancel_transaction` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:review_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:dispute_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:disburse_commission` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:deliver_disclosure` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:acknowledge_disclosure` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:view_all_disclosure_documents` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage_all_disclosure_documents` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:view_all_real_estate_transactions` |
-| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage_all_real_estate_transactions` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:deliver_disclosure` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:acknowledge_disclosure` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:view_all_real_estate_transactions` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:manage_all_real_estate_transactions` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:view_all_disclosure_documents` |
+| `re-brok-brokerage-ops:admin` | `re-brok-agent-ops:manage_all_disclosure_documents` |
 
 **RACI realization:**
 
@@ -253,5 +262,5 @@ _(none: no process_raci assignments wired to this module's gated processes yet)_
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Sales | `admin` | `:admin` |
-| contributor | Marketing | `manage` | `:manage` |
-| consumer | Accounting | `read` | `:read` |
+| contributor | Marketing | `manager` | `:manage` |
+| consumer | Accounting | `viewer` | `:read` |

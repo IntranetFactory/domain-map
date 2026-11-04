@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: SMP Automation and Self-Service Requests
 tagline: Automate the busywork of granting, moving, and removing app access.
@@ -12,7 +12,8 @@ domain_code: SMP
 icon_name: cloud-cog
 related_modules: [smp-discovery, smp-optimization, smp-renewal-vendor]
 persona: [IT-SAAS-ADMIN]
-created_at: 2026-06-27
+supports_raci: true
+created_at: 2026-11-04
 ---
 
 # SMP Automation and Self-Service Requests
@@ -34,25 +35,25 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   smp_automation_workflows["Automation Workflows"]
-  smp_app_requests["App Access Requests"]
   smp_workflow_runs["Workflow Runs"]
+  smp_app_requests["App Access Requests"]
   users["Users"]
   smp_automation_workflows -->|"runs_for"| smp_workflow_runs
-  users -->|"requested_by"| smp_app_requests
+  users -->|"requested"| smp_app_requests
   users -->|"authors"| smp_automation_workflows
   class smp_automation_workflows master;
-  class smp_app_requests master;
   class smp_workflow_runs master;
+  class smp_app_requests master;
   class users platform_builtin;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `smp_app_requests` | `smp_app_requests` | App Access Request | App Access Requests | master | - | - | required | yes | operational_workflow | `:manage` | - |
-| 2 | `smp_automation_workflows` | `smp_automation_workflows` | Automation Workflow | Automation Workflows | master | - | - | required | - | catalog | `:admin` | - |
-| 3 | `smp_workflow_runs` | `smp_workflow_runs` | Workflow Run | Workflow Runs | master | - | - | required | - | operational_record | `:manage` | - |
+| 1 | `smp_app_requests` | `smp_app_requests` | App Access Request | App Access Requests | master | - | - | - | yes | operational_workflow | `:manage` | - |
+| 2 | `smp_automation_workflows` | `smp_automation_workflows` | Automation Workflow | Automation Workflows | master | - | - | - | - | catalog | `:admin` | - |
+| 3 | `smp_workflow_runs` | `smp_workflow_runs` | Workflow Run | Workflow Runs | master | - | - | - | - | operational_record | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -60,41 +61,41 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `smp_automation_workflows` | runs_for | `smp_workflow_runs` | one_to_many | composition | required | source | cascade | parent | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | requested_by | `smp_app_requests` | one_to_many | required | target | restrict | reference | - |
-| `users` | authors | `smp_automation_workflows` | one_to_many | required | target | restrict | reference | - |
+| `smp_automation_workflows` | runs_for | `smp_workflow_runs` | one_to_many | composition | yes | cascade | parent | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | none | n/a | - |
-| `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | none (required-if-present) | n/a | - |
+| `users` | requested | `smp_app_requests` | one_to_many | yes | restrict | reference | - |
+| `users` | authors | `smp_automation_workflows` | one_to_many | yes | restrict | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `saas_applications` | has_workflows | `smp_automation_workflows` | one_to_many | no | - |
+| `smp_app_catalog_listings` | has_requests | `smp_app_requests` | one_to_many | yes | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+_(none: no incoming relationships from external entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -102,9 +103,7 @@ _(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SMP-AUTOMATION | SMP | SMP-DISCOVERY | `smp_app_catalog_listing.published` | _(lifecycle)_ | `smp_app_requests` | lifecycle_progression | low | Publishing an app to the self-service catalog opens employee app-access requests in the automation module. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -114,33 +113,33 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 
 ### `smp_app_requests` (App Access Request)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `submitted` | ✓ | - | ✓ | `smp-automation:submit_app_request` | - |
-| 20 | `manager_approved` | - | - | ✓ | `smp-automation:manager_approve_request` | - |
-| 30 | `it_approved` | - | - | ✓ | `smp-automation:it_approve_request` | - |
-| 40 | `fulfilled` | - | ✓ | ✓ | `smp-automation:fulfill_app_request` | - |
-| 50 | `denied` | - | ✓ | ✓ | `smp-automation:deny_app_request` | - |
-| 60 | `canceled` | - | ✓ | ✓ | `smp-automation:cancel_app_request` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `submitted` | ✓ | - | ✓ | - | `smp-automation:submit_app_request` | - |
+| 20 | `manager_approved` | - | - | ✓ | - | `smp-automation:manager_approve_request` | - |
+| 30 | `it_approved` | - | - | ✓ | - | `smp-automation:it_approve_request` | - |
+| 40 | `fulfilled` | - | ✓ | ✓ | - | `smp-automation:fulfill_app_request` | - |
+| 50 | `denied` | - | ✓ | ✓ | - | `smp-automation:deny_app_request` | - |
+| 60 | `canceled` | - | ✓ | ✓ | - | `smp-automation:cancel_app_request` | - |
 
 ### `smp_automation_workflows` (Automation Workflow)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `draft` | ✓ | - | - | - | - |
-| 20 | `active` | - | - | ✓ | `smp-automation:activate_workflow` | - |
-| 30 | `paused` | - | - | ✓ | `smp-automation:pause_workflow` | - |
-| 40 | `archived` | - | ✓ | ✓ | `smp-automation:archive_workflow` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `draft` | ✓ | - | - | - | - | - |
+| 20 | `active` | - | - | ✓ | - | `smp-automation:activate_workflow` | - |
+| 30 | `paused` | - | - | ✓ | - | `smp-automation:pause_workflow` | - |
+| 40 | `archived` | - | ✓ | ✓ | - | `smp-automation:archive_workflow` | - |
 
 ### `smp_workflow_runs` (Workflow Run)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `queued` | ✓ | - | - | - | - |
-| 20 | `running` | - | - | - | - | - |
-| 30 | `succeeded` | - | ✓ | - | - | - |
-| 40 | `failed` | - | ✓ | - | - | - |
-| 50 | `canceled` | - | ✓ | ✓ | `smp-automation:cancel_workflow_run` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `queued` | ✓ | - | - | - | - | - |
+| 20 | `running` | - | - | - | - | - | - |
+| 30 | `succeeded` | - | ✓ | - | - | - | - |
+| 40 | `failed` | - | ✓ | - | - | - | - |
+| 50 | `canceled` | - | ✓ | ✓ | - | `smp-automation:cancel_workflow_run` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -151,6 +150,12 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | `smp-automation:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `smp-automation:manage` | baseline-manage | Edit operational records | ✓ |
 | `smp-automation:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `smp-automation:read_smp_automation_workflows` | entity-read | Read Automation Workflows | ✓ |
+| `smp-automation:write_smp_automation_workflows` | entity-write | Write Automation Workflows | ✓ |
+| `smp-automation:read_smp_workflow_runs` | entity-read | Read Workflow Runs | ✓ |
+| `smp-automation:write_smp_workflow_runs` | entity-write | Write Workflow Runs | ✓ |
+| `smp-automation:read_smp_app_requests` | entity-read | Read App Access Requests | ✓ |
+| `smp-automation:write_smp_app_requests` | entity-write | Write App Access Requests | ✓ |
 | `smp-automation:activate_workflow` | workflow-gate (lifecycle) | Transition `smp_automation_workflows` into state `active` | ✓ |
 | `smp-automation:pause_workflow` | workflow-gate (lifecycle) | Transition `smp_automation_workflows` into state `paused` | ✓ |
 | `smp-automation:archive_workflow` | workflow-gate (lifecycle) | Transition `smp_automation_workflows` into state `archived` | ✓ |
@@ -190,6 +195,15 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `smp-automation:admin` | `smp-automation:manage` |
 | `smp-automation:manage` | `smp-automation:read` |
+| `smp-automation:read` | `smp-automation:read_smp_automation_workflows` |
+| `smp-automation:read` | `smp-automation:read_smp_workflow_runs` |
+| `smp-automation:read` | `smp-automation:read_smp_app_requests` |
+| `smp-automation:admin` | `smp-automation:write_smp_automation_workflows` |
+| `smp-automation:write_smp_automation_workflows` | `smp-automation:read_smp_automation_workflows` |
+| `smp-automation:manage` | `smp-automation:write_smp_workflow_runs` |
+| `smp-automation:write_smp_workflow_runs` | `smp-automation:read_smp_workflow_runs` |
+| `smp-automation:manage` | `smp-automation:write_smp_app_requests` |
+| `smp-automation:write_smp_app_requests` | `smp-automation:read_smp_app_requests` |
 | `smp-automation:admin` | `smp-automation:activate_workflow` |
 | `smp-automation:admin` | `smp-automation:pause_workflow` |
 | `smp-automation:admin` | `smp-automation:archive_workflow` |
@@ -214,15 +228,15 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `IT-SAAS-ADMIN` | persona | responsible | `manage_infrastructure_resource` | grant gates [smp-automation:activate_workflow, smp-automation:pause_workflow, smp-automation:archive_workflow, smp-automation:cancel_workflow_run] + the gated entities' write tier |
-| `IT-SAAS-ADMIN` | persona | accountable | `manage_infrastructure_resource` | approval gate |
-| `IT-SAAS-ADMIN` | persona | responsible | `manage_it_user_identity` | grant gates [smp-automation:submit_app_request, smp-automation:manager_approve_request, smp-automation:it_approve_request, smp-automation:fulfill_app_request, smp-automation:deny_app_request, smp-automation:cancel_app_request] + the gated entities' write tier |
-| `IT-SAAS-ADMIN` | persona | accountable | `manage_it_user_identity` | approval gate |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_infrastructure_resource` | the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_infrastructure_resource` | grant gates [smp-automation:activate_workflow, smp-automation:pause_workflow, smp-automation:archive_workflow, smp-automation:cancel_workflow_run] + the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_it_user_identity` | the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_it_user_identity` | grant gates [smp-automation:submit_app_request, smp-automation:manager_approve_request, smp-automation:it_approve_request, smp-automation:fulfill_app_request, smp-automation:deny_app_request, smp-automation:cancel_app_request] + the gated entities' write tier |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | IT Asset Management | `admin` | `:admin` |
-| contributor | Finance | `manage` | `:manage` |
-| contributor | Procurement | `manage` | `:manage` |
+| contributor | Finance | `manager` | `:manage` |
+| contributor | Procurement | `manager` | `:manage` |

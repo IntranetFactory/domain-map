@@ -998,7 +998,7 @@ Approved by the user in the moment, per decision. Script: `.tmp_deploy/2026-11-0
 
 **Blueprint.** Regenerated `--module HIRING-STARTER --no-cache` only: blob `c6327ab` to `f4890de`. It now carries every change above and the two earlier entries of today.
 
-**Review.** `hiring-starter-blueprint-review-2026-11-03.md` now points at `f4890de`, with every L number mapped from the old blob by diff. Bugs 1, 17, 32, 34, 51 and 52 moved to a "Fixed on 2026-11-03" section, the counts are 9 open (5 High, 2 Medium, 2 Low), and the section lists what these fixes leave open.
+**Review.** `hiring-starter-blueprint-review-2026-11-03.md` now points at `f4890de`, with every L number mapped from the old blob by diff. Bugs 1, 17, 32, 34, 51 and 52 moved to a "Fixed on 2026-11-03" section, the counts are 9 open (5 High, 2 Medium, 2 Low), and the section lists what these fixes leave open. The user then had the report cut to remaining issues only, because this file holds the record: the fixed list, the owner-accepted note (rels 808, 809, 812, 2740) and the vendor-evidence limit are gone from it, and what the fixes leave open is now "Other open issues". Vendor evidence for these decisions: Oracle Taleo's documentation for bugs 1 and 34 and for `reneged`; search excerpts from Lever's help center for bug-32; blogs, not vendor documentation, for reapplying and do-not-hire.
 
 **Checks after the rebuild.** `--check --no-cache` reported `unchanged` right after the rebuild. `--lint` reports no fails and 5 warnings (R9 1, R10 4), the same as before these writes. Architect `consistency-check.ts` is consistent, with the one `access_scope` warning. `domain_health.ts --domain ATS --json --refresh`, not recorded: 32 pass, 13 warn, 4 fail, 10 agent, 2 delegated, 2 skipped, the same totals the review had.
 
@@ -1010,3 +1010,7 @@ Approved by the user in the moment, per decision. Script: `.tmp_deploy/2026-11-0
 - Prevention of the terminal-state gap (authoring test, health checks, a table of allowed moves) is undecided.
 - `--check` now reports `WOULD-CHANGE`. Seconds after the rebuild, separate uncommitted work edited `generate_blueprints.ts` and `blueprint_derive.ts` to add a `supports_raci` frontmatter line, and no catalog row has changed since. That work and the file were left alone. Once the line is built in, every L number in the review goes up by one.
 - `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-04 - job_applications.hired realizer, owner-approved
+
+Plan F1c. Added ATS-PRE-EMPLOYEE-RECORD as `embedded_master` on `job_applications`. This answers B2-M5-STATE-221 with its second option: state 221 stays on module 8, so the gate keeps its name, and check M5 now passes for it. B2-M5-STATE-221 and q21 are closed. Added ATS-OFFERS as an optional consumer of `incentive_awards` (see COMP-MGMT history). Plan F6: HIRING-STARTER's `specification_requirements` now names `ats-candidate-crm:view_all_candidates`. Today's generator still mints `hiring-starter:view_all_candidates` in that blueprint until step 3 of `plans/stable-permission-names-plan.md` lands. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

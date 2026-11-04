@@ -1,6 +1,6 @@
 // scripts/lib/blueprint_invariants.ts
 //
-// Derived-result invariants R1-R10 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
+// Derived-result invariants R1-R12 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
 // checks on the BlueprintModel that deriveModuleModel / deriveBlueprintModel produce, i.e. on what a
 // blueprint's sections 6-9 SHOW, not on the catalog rows behind them (the data-layer checks live in
 // catalog_invariants.ts and the health bands). Prefix R because the checklist already has a D1.
@@ -19,6 +19,8 @@
 //   R8  every row-scope rule's entity has a single-person ownership relationship to `users`             warn
 //   R9  every persona in the RACI table has a row that grants access (not only Informed)       warn
 //   R10 entity and state text names no related entity the module can lack (heuristic)          warn
+//   R11 every 8.1 prefix is allowed, and every held entity has its permissions and bundle rows fail
+//   R12 a permission named after another module is byte-identical in that module's own 8.1     fail
 //
 // Pure: no catalog fetch, no file IO, no console output. Callers: generate_blueprints.ts (stderr on
 // every emit, and `--lint`), the health check E6 (scripts/lib/health/checks_e.ts), the architect
@@ -26,9 +28,10 @@
 //
 // Pass `opts.ctx` (the DeriveCtx the model was derived from) whenever you have it: R4's per-process
 // half needs it to resolve process ids to the `process_key` the RACI rows carry, and R6 reads the
-// trigger event's own entity (and that entity's lifecycle when it is out of scope) from it, and R10
-// reads the labels of entities outside the scope from it. Without it, R4 runs its per-gate half only,
-// R6 resolves events against the handoff's payload entity, and R10 checks in-scope entities only.
+// trigger event's own entity (and that entity's lifecycle when it is out of scope) from it, R10
+// reads the labels of entities outside the scope from it, and R11 and R12 read the entity's owner from
+// it. Without it, R4 runs its per-gate half only, R6 resolves events against the handoff's payload
+// entity, R10 checks in-scope entities only, and R11 and R12 do not run.
 
 import {
   checkEventStates,
@@ -38,10 +41,10 @@ import {
   type LifecycleStateRow,
   type TriggerEventRow,
 } from "./catalog_invariants.ts";
-import type { BlueprintModel, DeriveCtx, HandoffModel, ModuleAccessModel } from "./blueprint_derive.ts";
+import { deriveModuleModel, entityOwnerSlug, moduleSlug, type BlueprintModel, type DeriveCtx, type HandoffModel, type ModuleAccessModel } from "./blueprint_derive.ts";
 import type { Finding } from "./health/types.ts";
 
-export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9" | "R10";
+export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9" | "R10" | "R11" | "R12";
 
 export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }> = {
   R1: { severity: "fail", title: "every functional-ownership role exists among the baseline roles" },
@@ -54,6 +57,8 @@ export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }>
   R8: { severity: "warn", title: "every row-scope rule's entity has a single-person relationship to users" },
   R9: { severity: "warn", title: "every persona in the RACI table has a row that grants access" },
   R10: { severity: "warn", title: "entity and state text names no related entity the module can lack (heuristic)" },
+  R11: { severity: "fail", title: "every 8.1 prefix is allowed, and every held entity has its permissions and bundle rows" },
+  R12: { severity: "fail", title: "a permission named after another module is byte-identical in that module's own 8.1" },
 };
 
 export const RULE_IDS = Object.keys(RULES) as RuleId[];
@@ -108,6 +113,10 @@ export function checkModel(model: BlueprintModel, opts: CheckModelOptions = {}):
     checkRowScopeOwners(model, pm, (rows, d) => add("R8", code, rows, d));
     checkPersonasHaveGrant(pm, (rows, d) => add("R9", code, rows, d));
     checkSubsetText(model, pm, opts.ctx, (rows, d) => add("R10", code, rows, d));
+    if (opts.ctx) {
+      checkEntityPermissions(pm, opts.ctx, (rows, d) => add("R11", code, rows, d));
+      checkOwnerNames(pm, opts.ctx, (rows, d) => add("R12", code, rows, d));
+    }
   }
   checkHandoffStates(model, opts.ctx, (rows, d) => add("R6", scopeLabel, rows, d));
 
@@ -458,5 +467,65 @@ function checkSubsetText(model: BlueprintModel, pm: ModuleAccessModel, ctx: Deri
         `\`${entity.data_object_name}\` text says "${hits[0].word}" (${hits.map((h) => h.where).join(", ")}), but \`${other.data_object_name}\` ${why}; reword it so it stays true without that entity`,
       );
     }
+  }
+}
+
+// ---------- R11: permission prefixes, and each held entity's permissions and bundle rows ----------
+
+// The architect's consistency-check.ts applies the same contract to the rendered file (its "permission
+// prefix" and "entity permissions" checks); this catches a derivation drift before anything is written.
+function checkEntityPermissions(pm: ModuleAccessModel, ctx: DeriveCtx, report: (rows: string[], detail: string) => void): void {
+  const codes = new Set(pm.permissions.map((p) => p.code));
+  const includes = (parent: string, child: string) => pm.hierarchy.some((h) => h.including === parent && h.included === child);
+  const allowed = new Set([pm.slug]);
+  for (const row of pm.scopeRows) {
+    const entity = row.data_object;
+    const owner = entity ? entityOwnerSlug(ctx, entity) : null;
+    if (!owner) continue;
+    allowed.add(owner);
+    const read = `${owner}:read_${entity.data_object_name}`;
+    if (!codes.has(read)) report([read], `\`${entity.data_object_name}\` (${row.held_as}) has no 8.1 \`${read}\` row`);
+    else if (!includes(`${pm.slug}:read`, read)) report([read], `9.1 has no \`${pm.slug}:read\` -> \`${read}\` row`);
+    const write = `${owner}:write_${entity.data_object_name}`;
+    const wp = pm.permissions.find((p) => p.code === write);
+    if (!wp) continue;
+    if (!includes(`${pm.slug}:${wp.writeBundle}`, write)) report([write], `9.1 has no \`${pm.slug}:${wp.writeBundle}\` -> \`${write}\` row`);
+    if (!includes(write, read)) report([write], `9.1 has no \`${write}\` -> \`${read}\` row`);
+  }
+  for (const s of pm.lifecycle) {
+    const realizer = s.domain_module_id != null ? ctx.index.modulesById.get(s.domain_module_id as number) : undefined;
+    if (realizer) allowed.add(moduleSlug(realizer.domain_module_code));
+  }
+  for (const p of pm.permissions) {
+    const prefix = p.code.split(":")[0];
+    if (!allowed.has(prefix)) report([p.code], `8.1 \`${p.code}\`: prefix \`${prefix}\` is not this module's slug, the master of an entity it holds, or a module realizing one of its states`);
+  }
+}
+
+// ---------- R12: a name borrowed from another module matches that module's own 8.1 ----------
+
+// One entry per module slug: the codes its own blueprint mints. Cached per catalog, because every
+// module with an embedded entity asks for the same few owners.
+const ownCodesCache = new WeakMap<object, Map<string, Set<string> | null>>();
+function ownCodesOf(ctx: DeriveCtx, slug: string): Set<string> | null {
+  let cache = ownCodesCache.get(ctx.all);
+  if (!cache) {
+    cache = new Map();
+    ownCodesCache.set(ctx.all, cache);
+  }
+  if (!cache.has(slug)) {
+    const m = [...ctx.index.modulesById.values()].find((x) => moduleSlug(x.domain_module_code) === slug);
+    cache.set(slug, m ? new Set(deriveModuleModel(m, ctx).perModule[0].permissions.map((p) => p.code)) : null);
+  }
+  return cache.get(slug) ?? null;
+}
+
+function checkOwnerNames(pm: ModuleAccessModel, ctx: DeriveCtx, report: (rows: string[], detail: string) => void): void {
+  for (const p of pm.permissions) {
+    const prefix = p.code.split(":")[0];
+    if (prefix === pm.slug) continue;
+    const own = ownCodesOf(ctx, prefix);
+    if (!own) report([p.code], `8.1 \`${p.code}\` is named after \`${prefix}\`, which is not a module in the catalog`);
+    else if (!own.has(p.code)) report([p.code], `8.1 \`${p.code}\` is named after \`${prefix}\`, whose own 8.1 does not mint it, so the name would change when that module installs`);
   }
 }

@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Learning Automation
 tagline: Automate enrollments, reminders, and escalations so the right training reaches the right people on time.
@@ -12,7 +12,8 @@ domain_code: LMS
 icon_name: graduation-cap
 related_modules: [ats-candidate-crm, ben-enrollment, comp-planning, emp-exp-continuous-listen, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, iga-auto-provisioning, lms-compliance-training, lms-course-delivery, lms-credentials, lms-ct-gdpr, lms-ilt-delivery, lms-paths, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, training-records-starter]
 persona: [GRC-COMPLIANCE-TRAINING-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, HR-PEOPLE-OPS-SPECIALIST, LD-INSTRUCTIONAL-DESIGNER, LD-INSTRUCTOR, LD-LEARNING-ADMIN, LEGAL-COMPLIANCE-SPECIALIST, PEOPLE-MANAGER]
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Learning Automation
@@ -43,19 +44,27 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
+  employees["Employees"]
+  courses["Courses"]
+  learner_certifications["Certifications"]
+  compliance_assignments["Compliance Training Assignments"]
+  users["Users"]
   audiences["Audiences"]
   automated_enrollment_rules["Automated Enrollment Rules"]
   learner_notifications["Learner Notifications"]
   notification_templates["Notification Templates"]
   manager_nudges["Manager Nudges"]
   escalation_rules["Escalation Rules"]
-  users["Users"]
-  employees["Employees"]
-  courses["Courses"]
-  compliance_assignments["Compliance Training Assignments"]
-  learner_certifications["Certifications"]
   reminder_schedules["Reminder Schedules"]
+  users -->|"represents"| employees
+  courses -->|"fulfills"| compliance_assignments
+  courses -->|"grants"| learner_certifications
+  users -->|"authors"| courses
   users -->|"owns"| courses
+  users -->|"must complete"| compliance_assignments
+  users -->|"owns"| compliance_assignments
+  users -->|"holds"| learner_certifications
+  employees -->|"reflected on"| compliance_assignments
   audiences -->|"targeted_by"| automated_enrollment_rules
   automated_enrollment_rules -->|"creates"| compliance_assignments
   notification_templates -->|"renders"| learner_notifications
@@ -64,45 +73,37 @@ flowchart TD
   users -->|"notified_via"| learner_notifications
   users -->|"nudges"| manager_nudges
   users -->|"member_of"| audiences
-  employees -->|"is_related_to"| users
-  courses -->|"fulfills"| compliance_assignments
-  courses -->|"grants"| learner_certifications
-  users -->|"authors"| courses
-  users -->|"must complete"| compliance_assignments
-  users -->|"owns"| compliance_assignments
-  users -->|"holds"| learner_certifications
-  employees -->|"reflected on"| compliance_assignments
+  class employees embedded_master;
+  class courses embedded_master;
+  class learner_certifications embedded_master;
+  class compliance_assignments embedded_master;
+  class users consumer;
   class audiences master;
   class automated_enrollment_rules master;
   class learner_notifications master;
   class notification_templates master;
   class manager_nudges master;
   class escalation_rules master;
-  class users consumer;
-  class employees embedded_master;
-  class courses embedded_master;
-  class compliance_assignments embedded_master;
-  class learner_certifications embedded_master;
   class reminder_schedules master;
   style reminder_schedules stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `audiences` | `audiences` | Audience | Audiences | master | - | - | required | - | catalog | `:admin` | - |
-| 2 | `automated_enrollment_rules` | `automated_enrollment_rules` | Automated Enrollment Rule | Automated Enrollment Rules | master | - | - | required | - | catalog | `:admin` | - |
-| 3 | `escalation_rules` | `escalation_rules` | Escalation Rule | Escalation Rules | master | - | - | required | - | catalog | `:admin` | - |
-| 4 | `learner_notifications` | `learner_notifications` | Learner Notification | Learner Notifications | master | - | - | required | yes | operational_record | `:manage` | - |
-| 5 | `manager_nudges` | `manager_nudges` | Manager Nudge | Manager Nudges | master | - | - | required | yes | operational_workflow | `:manage` | - |
-| 6 | `notification_templates` | `notification_templates` | Notification Template | Notification Templates | master | - | - | required | - | catalog | `:admin` | - |
-| 7 | `reminder_schedules` | `reminder_schedules` | Reminder Schedule | Reminder Schedules | master | - | - | optional | - | catalog | `:admin` | - |
-| 8 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | yes | operational_workflow | `:manage` | - |
-| 9 | `compliance_assignments` | `compliance_assignments` | Compliance Training Assignment | Compliance Training Assignments | embedded_master | `lms-compliance-training` | Compliance Training | required | yes | operational_workflow | `:manage` | - |
-| 10 | `courses` | `courses` | Course | Courses | embedded_master | `lms-course-delivery` | Course Delivery | required | - | operational_workflow | `:manage` | - |
-| 11 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | required | yes | operational_workflow | `:manage` | - |
-| 12 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | operational_record | `:manage` | - |
+| 1 | `audiences` | `audiences` | Audience | Audiences | master | - | - | - | - | catalog | `:admin` | - |
+| 2 | `automated_enrollment_rules` | `automated_enrollment_rules` | Automated Enrollment Rule | Automated Enrollment Rules | master | - | - | - | - | catalog | `:admin` | - |
+| 3 | `escalation_rules` | `escalation_rules` | Escalation Rule | Escalation Rules | master | - | - | - | - | catalog | `:admin` | - |
+| 4 | `learner_notifications` | `learner_notifications` | Learner Notification | Learner Notifications | master | - | - | - | yes | operational_record | `:manage` | - |
+| 5 | `manager_nudges` | `manager_nudges` | Manager Nudge | Manager Nudges | master | - | - | - | yes | operational_workflow | `:manage` | - |
+| 6 | `notification_templates` | `notification_templates` | Notification Template | Notification Templates | master | - | - | - | - | catalog | `:admin` | - |
+| 7 | `reminder_schedules` | `reminder_schedules` | Reminder Schedule | Reminder Schedules | master | - | - | yes | - | catalog | `:admin` | - |
+| 8 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | - | yes | operational_workflow | `:manage` | - |
+| 9 | `compliance_assignments` | `compliance_assignments` | Compliance Training Assignment | Compliance Training Assignments | embedded_master | `lms-compliance-training` | Compliance Training | - | yes | operational_workflow | `:manage` | - |
+| 10 | `courses` | `courses` | Course | Courses | embedded_master | `lms-course-delivery` | Course Delivery | - | - | operational_workflow | `:manage` | - |
+| 11 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | - | yes | operational_workflow | `:manage` | - |
+| 12 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | - | - | operational_record | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -110,287 +111,243 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `audiences` | targeted_by | `automated_enrollment_rules` | one_to_many | reference | optional | target | clear | reference | - |
-| `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | reference | optional | source | clear | reference | - |
-| `notification_templates` | renders | `learner_notifications` | one_to_many | reference | optional | target | clear | reference | - |
-| `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | reference | optional | target | clear | reference | - |
-| `escalation_rules` | produces | `manager_nudges` | one_to_many | reference | optional | source | clear | reference | - |
-| `courses` | fulfills | `compliance_assignments` | one_to_many | reference | optional | source | clear | reference | - |
-| `courses` | grants | `learner_certifications` | one_to_many | reference | optional | source | clear | reference | - |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | reference | optional | source | clear | reference | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns | `courses` | one_to_many | optional | source | clear | reference | - |
-| `users` | notified_via | `learner_notifications` | one_to_many | optional | source | clear | reference | - |
-| `users` | nudges | `manager_nudges` | one_to_many | optional | source | clear | reference | - |
-| `users` | member_of | `audiences` | one_to_many | optional | source | clear | reference | - |
-| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
-| `users` | authors | `courses` | one_to_many | optional | source | clear | reference | - |
-| `users` | must complete | `compliance_assignments` | one_to_many | required | source | restrict | reference | - |
-| `users` | owns | `compliance_assignments` | one_to_many | optional | source | clear | reference | - |
-| `users` | holds | `learner_certifications` | one_to_many | required | source | restrict | reference | - |
+| `courses` | fulfills | `compliance_assignments` | one_to_many | reference | no | clear | reference | - |
+| `courses` | grants | `learner_certifications` | one_to_many | reference | no | clear | reference | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | reference | no | clear | reference | - |
+| `audiences` | targeted_by | `automated_enrollment_rules` | one_to_many | reference | no | clear | reference | - |
+| `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | reference | no | clear | reference | - |
+| `notification_templates` | renders | `learner_notifications` | one_to_many | reference | no | clear | reference | - |
+| `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | reference | no | clear | reference | - |
+| `escalation_rules` | produces | `manager_nudges` | one_to_many | reference | no | clear | reference | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | none | n/a | - |
-| `ad_audiences` | syncs from | `audiences` | one_to_one | optional | none | n/a | - |
+| `users` | represents | `employees` | one_to_one | no | clear | reference | - |
+| `users` | authors | `courses` | one_to_many | no | clear | reference | - |
+| `users` | owns | `courses` | one_to_many | no | clear | reference | - |
+| `users` | must complete | `compliance_assignments` | one_to_many | yes | restrict | reference | - |
+| `users` | owns | `compliance_assignments` | one_to_many | no | clear | reference | - |
+| `users` | holds | `learner_certifications` | one_to_many | yes | restrict | reference | - |
+| `users` | notified_via | `learner_notifications` | one_to_many | no | clear | reference | - |
+| `users` | nudges | `manager_nudges` | one_to_many | no | clear | reference | - |
+| `users` | member_of | `audiences` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
-| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | none | n/a | - |
-| `pre_employees` | promotes to | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | none | n/a | - |
-| `legal_advice_records` | references | `employees` | many_to_many | optional | none | n/a | - |
-| `employees` | is host for | `host_assignments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `courses` | has_version | `course_versions` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `courses` | classified_as | `course_categories` | many_to_many | optional | none | n/a | - |
-| `courses` | tagged_with | `course_tags` | many_to_many | optional | none | n/a | - |
-| `course_catalogs` | lists | `courses` | many_to_many | optional | none | n/a | - |
-| `courses` | reviewed_via | `course_reviews` | one_to_many | optional | none | n/a | - |
-| `courses` | rated_via | `course_ratings` | one_to_many | optional | none | n/a | - |
-| `courses` | discussed_in | `course_discussions` | one_to_many | optional | none | n/a | - |
-| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | none | n/a | - |
-| `certification_definitions` | instantiated_as | `learner_certifications` | one_to_many | required | none (required-if-present) | n/a | - |
-| `certificate_templates` | renders | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `courses` | grants | `certification_definitions` | many_to_many | optional | none | n/a | - |
-| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | none | n/a | - |
-| `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `compliance_assignments` | evidences | `compliance_audit_records` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | optional | none | n/a | - |
-| `learning_path_steps` | references | `courses` | one_to_many | optional | none | n/a | - |
-| `contingent_workers` | converts_to | `employees` | one_to_one | optional | none | n/a | - |
-| `merit_recommendations` | applies to | `employees` | one_to_one | optional | none | n/a | - |
-| `equity_grants` | granted to | `employees` | one_to_one | optional | none | n/a | - |
-| `compensation_statements` | issued to | `employees` | one_to_one | optional | none | n/a | - |
-| `employees` | requests | `absence_requests` | one_to_many | optional | none | n/a | - |
-| `org_units` | groups | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | optional | none | n/a | - |
-| `employees` | signs | `employment_contracts` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | generates | `employment_events` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
-| `employees` | holds | `skill_profiles` | one_to_one | optional | none | n/a | - |
-| `employees` | triggers | `service_requests` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `pay_runs` | one_to_many | optional | none | n/a | - |
-| `employees` | enrolls_in | `course_enrollments` | one_to_many | optional | none | n/a | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | none | n/a | - |
-| `employees` | becomes | `career_aspirations` | one_to_one | optional | none | n/a | - |
-| `employees` | becomes | `work_shifts` | one_to_many | optional | none | n/a | - |
-| `employees` | becomes | `compensation_statements` | one_to_one | optional | none | n/a | - |
-| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `corporate_cards` | one_to_many | optional | none | n/a | - |
-| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | none | n/a | - |
-| `employees` | spawns | `hr_cases` | one_to_many | optional | none | n/a | - |
-| `employees` | feeds | `headcount_plans` | one_to_many | optional | none | n/a | - |
-| `employees` | feeds | `agency_time_entries` | one_to_many | optional | none | n/a | - |
-| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | none (required-if-present) | n/a | - |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | none | n/a | - |
-| `courses` | enrolled_via | `course_enrollments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `skill_profiles` | updated by | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `compliance_obligations` | tracked by | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
-| `employees` | reflects | `learning_records` | one_to_many | optional | none | n/a | - |
-| `employees` | declares | `life_events` | one_to_many | optional | none | n/a | - |
-| `employees` | updated by | `life_events` | one_to_many | optional | none | n/a | - |
-| `employees` | submits | `survey_responses` | one_to_many | optional | none | n/a | - |
-| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
-| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
-| `employees` | raises | `hr_cases` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | updated by | `hr_cases` | one_to_many | optional | none | n/a | - |
-| `case_categories` | drives | `employees` | one_to_many | optional | none | n/a | - |
-| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | none | n/a | - |
-| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `employees` | fills | `hcm_positions` | one_to_one | optional | none | n/a | - |
-| `employees` | learns_via | `course_enrollments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `survey_campaigns` | targets | `employees` | many_to_many | optional | none | n/a | - |
-| `employees` | has | `emergency_contacts` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `work_eligibility_documents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `national_ids` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `worker_addresses` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `employee_dependents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `worker_change_requests` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
-| `employees` | is the worker behind | `traveler_profiles` | one_to_one | optional | none | n/a | - |
-| `exit_risk_assessments` | assesses | `employees` | one_to_one | optional | none | n/a | - |
-| `insider_risk_cases` | concerns | `employees` | one_to_many | optional | none | n/a | - |
-| `frontline_recognitions` | recognizes | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
-| `advocate_profiles` | represents | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `org_units` | groups | `employees` | one_to_many | yes | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | - | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | - | - |
+| `skill_profiles` | updated by | `learner_certifications` | one_to_many | no | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | no | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | no | - |
+| `compliance_obligations` | tracked by | `compliance_assignments` | one_to_many | no | - |
+| `survey_campaigns` | targets | `employees` | many_to_many | - | - |
+| `case_categories` | drives | `employees` | one_to_many | no | - |
+| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | - | - |
+| `legal_advice_records` | references | `employees` | many_to_many | - | - |
+| `candidates` | becomes | `employees` | one_to_one | no | - |
+| `pre_employees` | promotes to | `employees` | one_to_one | no | - |
+| `courses` | classified_as | `course_categories` | many_to_many | - | - |
+| `courses` | tagged_with | `course_tags` | many_to_many | - | - |
+| `course_catalogs` | lists | `courses` | many_to_many | - | - |
+| `certification_definitions` | instantiated_as | `learner_certifications` | one_to_many | yes | - |
+| `certificate_templates` | renders | `learner_certifications` | one_to_many | no | - |
+| `courses` | grants | `certification_definitions` | many_to_many | - | - |
+| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | - | - |
+| `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | yes | - |
+| `learning_path_steps` | references | `courses` | one_to_many | no | - |
+| `contingent_workers` | converts_to | `employees` | one_to_one | no | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `employees` | signs | `employment_contracts` | one_to_many | yes | - |
+| `employees` | generates | `employment_events` | one_to_many | yes | - |
+| `employees` | triggers | `asset_lifecycle_events` | one_to_many | no | - |
+| `employees` | requests | `absence_requests` | one_to_many | no | - |
+| `employees` | holds | `skill_profiles` | one_to_one | no | - |
+| `employees` | triggers | `service_requests` | one_to_many | no | - |
+| `employees` | triggers | `iga_provisioning_events` | one_to_many | no | - |
+| `employees` | triggers | `pay_runs` | one_to_many | no | - |
+| `employees` | enrolls_in | `course_enrollments` | one_to_many | no | - |
+| `employees` | becomes | `career_aspirations` | one_to_one | no | - |
+| `employees` | becomes | `work_shifts` | one_to_many | no | - |
+| `employees` | becomes | `compensation_statements` | one_to_one | no | - |
+| `employees` | triggers | `benefit_enrollments` | one_to_many | no | - |
+| `employees` | triggers | `corporate_cards` | one_to_many | no | - |
+| `employees` | spawns | `onboarding_journeys` | one_to_one | no | - |
+| `employees` | spawns | `hr_cases` | one_to_many | no | - |
+| `employees` | feeds | `headcount_plans` | one_to_many | no | - |
+| `employees` | feeds | `agency_time_entries` | one_to_many | no | - |
+| `employees` | onboarded by | `onboarding_journeys` | one_to_many | yes | - |
+| `employees` | fills | `hcm_positions` | one_to_one | no | - |
+| `employees` | finalized by | `onboarding_document_collections` | one_to_many | no | - |
+| `courses` | enrolled_via | `course_enrollments` | one_to_many | yes | - |
+| `employees` | learns_via | `course_enrollments` | one_to_many | yes | - |
+| `compliance_assignments` | triggers | `iga_provisioning_events` | one_to_many | no | - |
+| `employees` | reflects | `learning_records` | one_to_many | no | - |
+| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | yes | - |
+| `employees` | declares | `life_events` | one_to_many | no | - |
+| `employees` | updated by | `life_events` | one_to_many | no | - |
+| `employees` | submits | `survey_responses` | one_to_many | no | - |
+| `employees` | flagged on | `engagement_drivers` | one_to_many | no | - |
+| `employees` | reflected on | `engagement_drivers` | one_to_many | no | - |
+| `employees` | raises | `hr_cases` | one_to_many | yes | - |
+| `employees` | updated by | `hr_cases` | one_to_many | no | - |
+| `employees` | is host for | `host_assignments` | one_to_many | yes | - |
+| `employees` | reclassifies | `contingent_workers` | one_to_one | no | - |
+| `courses` | has_version | `course_versions` | one_to_many | yes | - |
+| `courses` | reviewed_via | `course_reviews` | one_to_many | no | - |
+| `courses` | rated_via | `course_ratings` | one_to_many | no | - |
+| `courses` | discussed_in | `course_discussions` | one_to_many | no | - |
+| `courses` | scheduled_as | `course_offerings` | one_to_many | no | - |
+| `compliance_assignments` | evidenced_by | `compliance_audit_records` | one_to_many | no | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | no | - |
+| `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | no | - |
+| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | no | - |
+| `employees` | receives | `merit_recommendations` | one_to_one | no | - |
+| `employees` | holds | `equity_grants` | one_to_one | no | - |
+| `employees` | receives | `compensation_statements` | one_to_one | no | - |
+| `employees` | has | `emergency_contacts` | one_to_many | yes | - |
+| `employees` | has | `work_eligibility_documents` | one_to_many | yes | - |
+| `employees` | has | `national_ids` | one_to_many | yes | - |
+| `employees` | has | `worker_addresses` | one_to_many | yes | - |
+| `employees` | has | `employee_dependents` | one_to_many | yes | - |
+| `employees` | has | `worker_change_requests` | one_to_many | yes | - |
+| `employees` | applies_as | `candidates` | one_to_many | no | - |
+| `employees` | is the worker behind | `traveler_profiles` | one_to_one | no | - |
+| `audiences` | syncs to | `ad_audiences` | one_to_one | no | - |
+| `employees` | is assessed by | `exit_risk_assessments` | one_to_one | no | - |
+| `employees` | is subject of | `insider_risk_cases` | one_to_many | no | - |
+| `employees` | is recognized in | `frontline_recognitions` | one_to_many | yes | - |
+| `employees` | is enrolled as | `advocate_profiles` | one_to_one | yes | - |
+| `employees` | receives | `incentive_awards` | one_to_many | yes | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.completed` | _(lifecycle)_ | `compliance_assignments` | event_stream | low | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | GRC obligation tracker updates the per-employee compliance status to 'due' so the regulator-evidence dashboard reflects the impending breach risk. Drives audit-evidence reporting (e.g., Compliance Operations dashboard). |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | event_stream | high | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | event_stream | high | Compliance training overdue is a control failure; GRC tracks obligation status, IGA may suspend high-risk access. |
-| HCM-CORE-WORKER | HRSD | HRSD-CASE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination kicks off offboarding case (exit interview, knowledge transfer, paperwork). Multiple downstream HRSD tasks created. |
-| LMS-COMPLIANCE-TRAINING | HRSD | HRSD-CASE-MGMT | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | api_call | medium | HR Service Delivery opens (or updates) an employee-facing case/task with the impending obligation, deadline, and link to the assigned course. Failure mode: when an HRSD platform isn't deployed, the nudge falls back to direct email and the in-tool reminder. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | high | New employee in HCM triggers directory account creation and birthright-role assignment in IGA. High friction because role-to-entitlement mappings drift per business unit, and IGA frequently needs additional context (cost center, manager, location) that arrives later in the journey. Same trigger event as the HCM → Onboarding and HCM → Payroll handoffs. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | high | Promotion (mover event) requires entitlement re-evaluation: add new role access, revoke prior-role access. SoD risk window during transition. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | api_call | high | Termination in HCM must immediately revoke identity access in IGA: disable account, remove group memberships, terminate app-level entitlements. Failure modes: contractor terminations not flowing (different HCM table); rehires confuse the de-provisioning idempotency; access lingers after termination is the canonical audit finding. |
-| LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | api_call | high | - |
-| LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | api_call | high | Severe overdue (PCI, HIPAA, SOX-relevant) may auto-suspend system access pending completion. Alert-without-feedback-loop common. |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.expired` | _(threshold)_ | `learner_certifications` | api_call | high | - |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.renewed` | _(lifecycle)_ | `learner_certifications` | api_call | medium | - |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.revoked` | _(lifecycle)_ | `learner_certifications` | api_call | high | - |
-| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
-| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
-| LMS-COMPLIANCE-TRAINING | HCM | HCM-LIFECYCLE-WORKFLOWS | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | Compliance assignment due-date nudges to HCM-mastered manager/employee record. HCM surfaces the impending obligation on the employee profile and routes a reminder to the line manager. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
-| LMS-AUTOMATION | LMS | LMS-COURSE-DELIVERY | `automated_enrollment_rule.activated` | _(lifecycle)_ | `automated_enrollment_rules` | lifecycle_progression | low | - |
-| LMS-AUTOMATION | LMS | LMS-COMPLIANCE-TRAINING | `automated_enrollment_rule.activated` | _(lifecycle)_ | `automated_enrollment_rules` | lifecycle_progression | low | - |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
-| HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion event triggers off-cycle compensation review (eligibility, band placement, increase recommendation) in COMP-MGMT. |
-| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
-| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination triggers benefits termination, COBRA / equivalent notices, and dependent coverage decisions. Late notifications cause coverage gaps. |
-| HCM-CORE-WORKER | EXPENSE | _(domain-level)_ | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination triggers EXPENSE corporate-card deactivation and outstanding-report close-out. |
-| HCM-CORE-WORKER | PSA | PSA-PROJECT-DELIVERY | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Terminated employee may be the assignee on open project_tasks. PROJECT-DELIVERY needs to surface affected tasks for reassignment or completion handover. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgment call), false-positive volume can swamp the staffing queue. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New consultant hired. PSA resource pool adds the employee as available capacity; skill inventory record is seeded for downstream certifications. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Consultant promoted (level / job profile change). PSA reevaluates billable rate band and skill inventory; existing project_assignments may need rate revision. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Consultant terminated. PSA must release any active project_assignments, return capacity to bench and re-allocate forecast. Medium friction: leaver-event timing varies (immediate vs notice period) and active assignments may need urgent rebalancing. |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
-| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
-| HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
-| LMS-AUTOMATION | LMS | LMS-COMPLIANCE-TRAINING | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | lifecycle_progression | low | - |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `compliance_assignments` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `courses` | embedded_master | required | LMS-COURSE-DELIVERY (LMS) | - |
-| `employees` | embedded_master | required | HCM-CORE-WORKER (HCM) | - |
-| `learner_certifications` | embedded_master | required | LMS-CREDENTIALS (LMS) | - |
-| `users` | consumer | required | _(platform built-in)_ | - |
+| `compliance_assignments` | embedded_master | - | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `courses` | embedded_master | - | LMS-COURSE-DELIVERY (LMS) | - |
+| `employees` | embedded_master | - | HCM-CORE-WORKER (HCM) | - |
+| `learner_certifications` | embedded_master | - | LMS-CREDENTIALS (LMS) | - |
+| `users` | consumer | - | _(platform built-in)_ | - |
 
 ## 7. Lifecycle states
 
 ### `automated_enrollment_rules` (Automated Enrollment Rule)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | ✓ | `lms-automation:activate` | - |
-| 3 | `paused` | - | - | ✓ | `lms-automation:pause` | - |
-| 4 | `archived` | - | ✓ | ✓ | `lms-automation:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `LMS-AUTOMATION` | - | - | - | - |
+| 2 | `active` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:activate` | - |
+| 3 | `paused` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:pause` | - |
+| 4 | `archived` | - | ✓ | `LMS-AUTOMATION` | ✓ | - | `lms-automation:archive` | - |
 
 ### `compliance_assignments` (Compliance Training Assignment)
 
 _This scope holds `compliance_assignments` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `assigned` | ✓ | - | - | - | Mandatory training assignment created for a learner with due date. |
-| 2 | `in_progress` | - | - | - | - | Learner has started the underlying course or activity. |
-| 3 | `completed` | - | ✓ | ✓ | `lms-automation:complete` | Learner finished the assignment within the due window. |
-| 4 | `overdue` | - | - | - | - | Due date passed without completion and escalation policy engaged. |
-| 5 | `waived` | - | ✓ | ✓ | `lms-automation:waive` | Assignment formally waived by compliance owner with audit reason. |
-| 6 | `expired` | - | ✓ | ✓ | `lms-automation:expire` | Assignment closed unmet at the regulatory deadline. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `assigned` | ✓ | - | _(always)_ | - | - | - | Mandatory training assignment created for a learner with due date. |
+| 2 | `in_progress` | - | - | _(always)_ | - | - | - | Learner has started the underlying course or activity. |
+| 3 | `completed` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:complete` | Learner finished the assignment within the due window. |
+| 4 | `overdue` | - | - | _(always)_ | - | - | - | Due date passed without completion and escalation policy engaged. |
+| 5 | `waived` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:waive` | Assignment formally waived by compliance owner with audit reason. |
+| 6 | `expired` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:expire` | Assignment closed unmet at the regulatory deadline. |
 
 ### `courses` (Course)
 
 _This scope holds `courses` as **embedded_master**; the canonical state machine is owned by `LMS-COURSE-DELIVERY`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Course being authored by an instructional designer or SME. |
-| 2 | `in_review` | - | - | - | - | Content under review by L&D or compliance reviewers. |
-| 3 | `published` | - | - | ✓ | `lms-automation:publish` | Course released to the catalog and available for enrollment. |
-| 4 | `retired` | - | ✓ | ✓ | `lms-automation:retire` | Course removed from the catalog and kept for historical transcripts. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Course being authored by an instructional designer or SME. |
+| 2 | `in_review` | - | - | _(always)_ | - | - | - | Content under review by L&D or compliance reviewers. |
+| 3 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | Course released to the catalog and available for enrollment. |
+| 4 | `retired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:retire` | Course removed from the catalog and kept for historical transcripts. |
 
 ### `employees` (Employee)
 
 _This scope holds `employees` as **embedded_master**; the canonical state machine is owned by `HCM-CORE-WORKER`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
-| 2 | `active` | - | - | ✓ | `lms-automation:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
-| 3 | `on_leave` | - | - | ✓ | `lms-automation:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
-| 4 | `suspended` | - | - | ✓ | `lms-automation:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
-| 5 | `terminated` | - | ✓ | ✓ | `lms-automation:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `HCM-CORE-WORKER` | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
+| 2 | `active` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
+| 3 | `on_leave` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
+| 4 | `suspended` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
+| 5 | `terminated` | - | ✓ | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
 
 ### `escalation_rules` (Escalation Rule)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | ✓ | `lms-automation:activate` | - |
-| 3 | `paused` | - | - | ✓ | `lms-automation:pause` | - |
-| 4 | `archived` | - | ✓ | ✓ | `lms-automation:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `LMS-AUTOMATION` | - | - | - | - |
+| 2 | `active` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:activate` | - |
+| 3 | `paused` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:pause` | - |
+| 4 | `archived` | - | ✓ | `LMS-AUTOMATION` | ✓ | - | `lms-automation:archive` | - |
 
 ### `learner_certifications` (Certification)
 
 _This scope holds `learner_certifications` as **embedded_master**; the canonical state machine is owned by `LMS-CREDENTIALS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `issued` | ✓ | - | ✓ | `lms-automation:issue` | Credential awarded to the learner with issue and expiry dates. |
-| 2 | `active` | - | - | - | - | Credential in force and valid for compliance or role requirements. |
-| 3 | `renewing` | - | - | - | - | Recertification campaign engaged before expiry. |
-| 4 | `renewed` | - | - | ✓ | `lms-automation:renew` | Credential renewed with a fresh validity window. |
-| 5 | `expired` | - | ✓ | - | - | Credential past its expiry date and no longer valid. |
-| 6 | `revoked` | - | ✓ | ✓ | `lms-automation:revoke` | Credential withdrawn by the issuing body or L&D for cause. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `issued` | ✓ | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:issue` | Credential awarded to the learner with issue and expiry dates. |
+| 2 | `active` | - | - | _(always)_ | - | - | - | Credential in force and valid for compliance or role requirements. |
+| 3 | `renewing` | - | - | _(always)_ | - | - | - | Recertification campaign engaged before expiry. |
+| 4 | `renewed` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:renew` | Credential renewed with a fresh validity window. |
+| 5 | `expired` | - | ✓ | _(always)_ | - | - | - | Credential past its expiry date and no longer valid. |
+| 6 | `revoked` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:revoke` | Credential withdrawn by the issuing body or L&D for cause. |
 
 ### `learner_notifications` (Learner Notification)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `queued` | ✓ | - | - | - | - |
-| 2 | `sent` | - | - | ✓ | `lms-automation:send` | - |
-| 3 | `delivered` | - | ✓ | - | - | - |
-| 4 | `failed` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `queued` | ✓ | - | `LMS-AUTOMATION` | - | - | - | - |
+| 2 | `sent` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:send` | - |
+| 3 | `delivered` | - | ✓ | `LMS-AUTOMATION` | - | - | - | - |
+| 4 | `failed` | - | ✓ | `LMS-AUTOMATION` | - | - | - | - |
 
 ### `manager_nudges` (Manager Nudge)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - |
-| 2 | `sent` | - | - | ✓ | `lms-automation:send` | - |
-| 3 | `acknowledged` | - | ✓ | - | - | - |
-| 4 | `dismissed` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | `LMS-AUTOMATION` | - | - | - | - |
+| 2 | `sent` | - | - | `LMS-AUTOMATION` | ✓ | - | `lms-automation:send` | - |
+| 3 | `acknowledged` | - | ✓ | `LMS-AUTOMATION` | - | - | - | - |
+| 4 | `dismissed` | - | ✓ | `LMS-AUTOMATION` | - | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -401,42 +358,66 @@ _This scope holds `learner_certifications` as **embedded_master**; the canonical
 | `lms-automation:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `lms-automation:manage` | baseline-manage | Edit operational records | ✓ |
 | `lms-automation:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `lms-automation:active_employee` | workflow-gate (lifecycle) | Transition `employees` into state `active` | ✓ |
-| `lms-automation:on_leave_employee` | workflow-gate (lifecycle) | Transition `employees` into state `on_leave` | ✓ |
-| `lms-automation:suspended_employee` | workflow-gate (lifecycle) | Transition `employees` into state `suspended` | ✓ |
-| `lms-automation:terminated_employee` | workflow-gate (lifecycle) | Transition `employees` into state `terminated` | ✓ |
-| `lms-automation:publish` | workflow-gate (lifecycle) | Transition `courses` into state `published` | ✓ |
-| `lms-automation:retire` | workflow-gate (lifecycle) | Transition `courses` into state `retired` | ✓ |
-| `lms-automation:issue` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `issued` | ✓ |
-| `lms-automation:renew` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `renewed` | ✓ |
-| `lms-automation:revoke` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `revoked` | ✓ |
-| `lms-automation:complete` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `completed` | ✓ |
-| `lms-automation:waive` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `waived` | ✓ |
-| `lms-automation:expire` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `expired` | ✓ |
-| `lms-automation:activate` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `active` | ✓ |
-| `lms-automation:pause` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `paused` | ✓ |
-| `lms-automation:archive` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `archived` | ✓ |
-| `lms-automation:send` | workflow-gate (lifecycle) | Transition `learner_notifications` into state `sent` | ✓ |
+| `hcm-core-worker:read_employees` | entity-read | Read Employees | ✓ |
+| `hcm-core-worker:write_employees` | entity-write | Write Employees | ✓ |
+| `lms-course-delivery:read_courses` | entity-read | Read Courses | ✓ |
+| `lms-course-delivery:write_courses` | entity-write | Write Courses | ✓ |
+| `lms-credentials:read_learner_certifications` | entity-read | Read Certifications | ✓ |
+| `lms-credentials:write_learner_certifications` | entity-write | Write Certifications | ✓ |
+| `lms-compliance-training:read_compliance_assignments` | entity-read | Read Compliance Training Assignments | ✓ |
+| `lms-compliance-training:write_compliance_assignments` | entity-write | Write Compliance Training Assignments | ✓ |
+| `lms-automation:read_audiences` | entity-read | Read Audiences | ✓ |
+| `lms-automation:write_audiences` | entity-write | Write Audiences | ✓ |
+| `lms-automation:read_automated_enrollment_rules` | entity-read | Read Automated Enrollment Rules | ✓ |
+| `lms-automation:write_automated_enrollment_rules` | entity-write | Write Automated Enrollment Rules | ✓ |
+| `lms-automation:read_learner_notifications` | entity-read | Read Learner Notifications | ✓ |
+| `lms-automation:write_learner_notifications` | entity-write | Write Learner Notifications | ✓ |
+| `lms-automation:read_notification_templates` | entity-read | Read Notification Templates | ✓ |
+| `lms-automation:write_notification_templates` | entity-write | Write Notification Templates | ✓ |
+| `lms-automation:read_manager_nudges` | entity-read | Read Manager Nudges | ✓ |
+| `lms-automation:write_manager_nudges` | entity-write | Write Manager Nudges | ✓ |
+| `lms-automation:read_escalation_rules` | entity-read | Read Escalation Rules | ✓ |
+| `lms-automation:write_escalation_rules` | entity-write | Write Escalation Rules | ✓ |
+| `lms-automation:read_reminder_schedules` | entity-read | Read Reminder Schedules | ✓ |
+| `lms-automation:write_reminder_schedules` | entity-write | Write Reminder Schedules | ✓ |
+| `hcm-core-worker:active_employee` | workflow-gate (lifecycle) | Transition `employees` into state `active` | ✓ |
+| `hcm-core-worker:on_leave_employee` | workflow-gate (lifecycle) | Transition `employees` into state `on_leave` | ✓ |
+| `hcm-core-worker:suspended_employee` | workflow-gate (lifecycle) | Transition `employees` into state `suspended` | ✓ |
+| `hcm-core-worker:terminated_employee` | workflow-gate (lifecycle) | Transition `employees` into state `terminated` | ✓ |
+| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `courses` into state `published` | ✓ |
+| `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `courses` into state `retired` | ✓ |
+| `lms-compliance-training:issue` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `issued` | ✓ |
+| `lms-compliance-training:renew` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `renewed` | ✓ |
+| `lms-compliance-training:revoke` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `revoked` | ✓ |
+| `lms-compliance-training:complete` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `completed` | ✓ |
+| `lms-compliance-training:waive` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `waived` | ✓ |
+| `lms-compliance-training:expire` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `expired` | ✓ |
+| `lms-automation:activate` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `active` or `escalation_rules` into state `active` | ✓ |
+| `lms-automation:pause` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `paused` or `escalation_rules` into state `paused` | ✓ |
+| `lms-automation:archive` | workflow-gate (lifecycle) | Transition `automated_enrollment_rules` into state `archived` or `escalation_rules` into state `archived` | ✓ |
+| `lms-automation:send` | workflow-gate (lifecycle) | Transition `learner_notifications` into state `sent` or `manager_nudges` into state `sent` | ✓ |
+| `hcm-core-worker:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
+| `hcm-core-worker:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
+| `lms-credentials:view_all_certifications` | override (personal_content) | View all `learner_certifications` rows beyond row-scope | ✓ |
+| `lms-credentials:manage_all_certifications` | override (personal_content) | Manage all `learner_certifications` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_compliance_training_assignments` | override (personal_content) | View all `compliance_assignments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_compliance_training_assignments` | override (personal_content) | Manage all `compliance_assignments` rows beyond row-scope | ✓ |
 | `lms-automation:view_all_learner_notifications` | override (personal_content) | View all `learner_notifications` rows beyond row-scope | ✓ |
 | `lms-automation:manage_all_learner_notifications` | override (personal_content) | Manage all `learner_notifications` rows beyond row-scope | ✓ |
 | `lms-automation:view_all_manager_nudges` | override (personal_content) | View all `manager_nudges` rows beyond row-scope | ✓ |
 | `lms-automation:manage_all_manager_nudges` | override (personal_content) | Manage all `manager_nudges` rows beyond row-scope | ✓ |
-| `lms-automation:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
-| `lms-automation:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
-| `lms-automation:view_all_compliance_training_assignments` | override (personal_content) | View all `compliance_assignments` rows beyond row-scope | ✓ |
-| `lms-automation:manage_all_compliance_training_assignments` | override (personal_content) | Manage all `compliance_assignments` rows beyond row-scope | ✓ |
-| `lms-automation:view_all_certifications` | override (personal_content) | View all `learner_certifications` rows beyond row-scope | ✓ |
-| `lms-automation:manage_all_certifications` | override (personal_content) | Manage all `learner_certifications` rows beyond row-scope | ✓ |
+
+_Gates with no process: `hcm-core-worker:suspended_employee`, `lms-course-delivery:retire`, `lms-compliance-training:renew`, `lms-compliance-training:revoke`, `lms-compliance-training:waive`, `lms-compliance-training:expire`, `lms-automation:activate`, `lms-automation:pause`, `lms-automation:archive`, `lms-automation:send`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
+| `employee_edit_scope` | `employees` | has_personal_content | Row-scope by default; override via `hcm-core-worker:view_all_employees` / `hcm-core-worker:manage_all_employees` |
+| `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `lms-credentials:view_all_certifications` / `lms-credentials:manage_all_certifications` |
+| `compliance_training_assignment_edit_scope` | `compliance_assignments` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_compliance_training_assignments` / `lms-compliance-training:manage_all_compliance_training_assignments` |
 | `learner_notification_edit_scope` | `learner_notifications` | has_personal_content | Row-scope by default; override via `lms-automation:view_all_learner_notifications` / `lms-automation:manage_all_learner_notifications` |
 | `manager_nudge_edit_scope` | `manager_nudges` | has_personal_content | Row-scope by default; override via `lms-automation:view_all_manager_nudges` / `lms-automation:manage_all_manager_nudges` |
-| `employee_edit_scope` | `employees` | has_personal_content | Row-scope by default; override via `lms-automation:view_all_employees` / `lms-automation:manage_all_employees` |
-| `compliance_training_assignment_edit_scope` | `compliance_assignments` | has_personal_content | Row-scope by default; override via `lms-automation:view_all_compliance_training_assignments` / `lms-automation:manage_all_compliance_training_assignments` |
-| `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `lms-automation:view_all_certifications` / `lms-automation:manage_all_certifications` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -458,32 +439,65 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `lms-automation:admin` | `lms-automation:manage` |
 | `lms-automation:manage` | `lms-automation:read` |
-| `lms-automation:admin` | `lms-automation:active_employee` |
-| `lms-automation:admin` | `lms-automation:on_leave_employee` |
-| `lms-automation:admin` | `lms-automation:suspended_employee` |
-| `lms-automation:admin` | `lms-automation:terminated_employee` |
-| `lms-automation:admin` | `lms-automation:publish` |
-| `lms-automation:admin` | `lms-automation:retire` |
-| `lms-automation:admin` | `lms-automation:issue` |
-| `lms-automation:admin` | `lms-automation:renew` |
-| `lms-automation:admin` | `lms-automation:revoke` |
-| `lms-automation:admin` | `lms-automation:complete` |
-| `lms-automation:admin` | `lms-automation:waive` |
-| `lms-automation:admin` | `lms-automation:expire` |
+| `lms-automation:read` | `hcm-core-worker:read_employees` |
+| `lms-automation:read` | `lms-course-delivery:read_courses` |
+| `lms-automation:read` | `lms-credentials:read_learner_certifications` |
+| `lms-automation:read` | `lms-compliance-training:read_compliance_assignments` |
+| `lms-automation:read` | `lms-automation:read_audiences` |
+| `lms-automation:read` | `lms-automation:read_automated_enrollment_rules` |
+| `lms-automation:read` | `lms-automation:read_learner_notifications` |
+| `lms-automation:read` | `lms-automation:read_notification_templates` |
+| `lms-automation:read` | `lms-automation:read_manager_nudges` |
+| `lms-automation:read` | `lms-automation:read_escalation_rules` |
+| `lms-automation:read` | `lms-automation:read_reminder_schedules` |
+| `lms-automation:manage` | `hcm-core-worker:write_employees` |
+| `hcm-core-worker:write_employees` | `hcm-core-worker:read_employees` |
+| `lms-automation:manage` | `lms-course-delivery:write_courses` |
+| `lms-course-delivery:write_courses` | `lms-course-delivery:read_courses` |
+| `lms-automation:manage` | `lms-credentials:write_learner_certifications` |
+| `lms-credentials:write_learner_certifications` | `lms-credentials:read_learner_certifications` |
+| `lms-automation:manage` | `lms-compliance-training:write_compliance_assignments` |
+| `lms-compliance-training:write_compliance_assignments` | `lms-compliance-training:read_compliance_assignments` |
+| `lms-automation:admin` | `lms-automation:write_audiences` |
+| `lms-automation:write_audiences` | `lms-automation:read_audiences` |
+| `lms-automation:admin` | `lms-automation:write_automated_enrollment_rules` |
+| `lms-automation:write_automated_enrollment_rules` | `lms-automation:read_automated_enrollment_rules` |
+| `lms-automation:manage` | `lms-automation:write_learner_notifications` |
+| `lms-automation:write_learner_notifications` | `lms-automation:read_learner_notifications` |
+| `lms-automation:admin` | `lms-automation:write_notification_templates` |
+| `lms-automation:write_notification_templates` | `lms-automation:read_notification_templates` |
+| `lms-automation:manage` | `lms-automation:write_manager_nudges` |
+| `lms-automation:write_manager_nudges` | `lms-automation:read_manager_nudges` |
+| `lms-automation:admin` | `lms-automation:write_escalation_rules` |
+| `lms-automation:write_escalation_rules` | `lms-automation:read_escalation_rules` |
+| `lms-automation:admin` | `lms-automation:write_reminder_schedules` |
+| `lms-automation:write_reminder_schedules` | `lms-automation:read_reminder_schedules` |
+| `lms-automation:admin` | `hcm-core-worker:active_employee` |
+| `lms-automation:admin` | `hcm-core-worker:on_leave_employee` |
+| `lms-automation:admin` | `hcm-core-worker:suspended_employee` |
+| `lms-automation:admin` | `hcm-core-worker:terminated_employee` |
+| `lms-automation:admin` | `lms-course-delivery:publish` |
+| `lms-automation:admin` | `lms-course-delivery:retire` |
+| `lms-automation:admin` | `lms-compliance-training:issue` |
+| `lms-automation:admin` | `lms-compliance-training:renew` |
+| `lms-automation:admin` | `lms-compliance-training:revoke` |
+| `lms-automation:admin` | `lms-compliance-training:complete` |
+| `lms-automation:admin` | `lms-compliance-training:waive` |
+| `lms-automation:admin` | `lms-compliance-training:expire` |
 | `lms-automation:admin` | `lms-automation:activate` |
 | `lms-automation:admin` | `lms-automation:pause` |
 | `lms-automation:admin` | `lms-automation:archive` |
 | `lms-automation:admin` | `lms-automation:send` |
+| `lms-automation:admin` | `hcm-core-worker:view_all_employees` |
+| `lms-automation:admin` | `hcm-core-worker:manage_all_employees` |
+| `lms-automation:admin` | `lms-credentials:view_all_certifications` |
+| `lms-automation:admin` | `lms-credentials:manage_all_certifications` |
+| `lms-automation:admin` | `lms-compliance-training:view_all_compliance_training_assignments` |
+| `lms-automation:admin` | `lms-compliance-training:manage_all_compliance_training_assignments` |
 | `lms-automation:admin` | `lms-automation:view_all_learner_notifications` |
 | `lms-automation:admin` | `lms-automation:manage_all_learner_notifications` |
 | `lms-automation:admin` | `lms-automation:view_all_manager_nudges` |
 | `lms-automation:admin` | `lms-automation:manage_all_manager_nudges` |
-| `lms-automation:admin` | `lms-automation:view_all_employees` |
-| `lms-automation:admin` | `lms-automation:manage_all_employees` |
-| `lms-automation:admin` | `lms-automation:view_all_compliance_training_assignments` |
-| `lms-automation:admin` | `lms-automation:manage_all_compliance_training_assignments` |
-| `lms-automation:admin` | `lms-automation:view_all_certifications` |
-| `lms-automation:admin` | `lms-automation:manage_all_certifications` |
 
 **Processes wired:**
 
@@ -500,37 +514,37 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_maintain_employee_data` | grant gates [lms-automation:active_employee] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_maintain_employee_data` | approval gate |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_maintain_employee_data` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_maintain_employee_data` | grant gates [hcm-core-worker:active_employee] + the gated entities' write tier |
 | `HR-HRIS-ADMIN` | persona | consulted | `manage_maintain_employee_data` | advisory read grant |
-| `PEOPLE-MANAGER` | persona | informed | `manage_maintain_employee_data` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_leave_absence` | grant gates [lms-automation:on_leave_employee] + the gated entities' write tier |
-| `PEOPLE-MANAGER` | persona | accountable | `manage_leave_absence` | approval gate |
+| `PEOPLE-MANAGER` | persona | informed | `manage_maintain_employee_data` | notify on trigger_events [employee.applied_internally] |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_leave_absence` | the gated entities' write tier |
+| `PEOPLE-MANAGER` | persona | accountable | `manage_leave_absence` | grant gates [hcm-core-worker:on_leave_employee] + the gated entities' write tier |
 | `HR-BUSINESS-PARTNER` | persona | consulted | `manage_leave_absence` | blocking consultation state |
-| `HR-HRIS-ADMIN` | persona | informed | `manage_leave_absence` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_separation` | grant gates [lms-automation:terminated_employee] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_separation` | approval gate |
+| `HR-HRIS-ADMIN` | persona | informed | `manage_leave_absence` | ⚠ no event wired |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_separation` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_separation` | grant gates [hcm-core-worker:terminated_employee] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `manage_separation` | advisory read grant |
-| `HR-HRIS-ADMIN` | persona | informed | `manage_separation` | notification side effect (trigger_event / webhook_receiver) |
-| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `develop_conduct_manage_employee` | grant gates [lms-automation:publish] + the gated entities' write tier |
-| `LD-LEARNING-ADMIN` | persona | accountable | `develop_conduct_manage_employee` | approval gate |
+| `HR-HRIS-ADMIN` | persona | informed | `manage_separation` | notify on trigger_events [employee.terminated] |
+| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `develop_conduct_manage_employee` | the gated entities' write tier |
+| `LD-LEARNING-ADMIN` | persona | accountable | `develop_conduct_manage_employee` | grant gates [lms-course-delivery:publish] + the gated entities' write tier |
 | `LD-INSTRUCTOR` | persona | consulted | `develop_conduct_manage_employee` | advisory read grant |
-| `PEOPLE-MANAGER` | persona | informed | `develop_conduct_manage_employee` | notification side effect (trigger_event / webhook_receiver) |
-| `LD-LEARNING-ADMIN` | persona | responsible | `manage_examinations` | grant gates [lms-automation:issue] + the gated entities' write tier |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `manage_examinations` | approval gate |
+| `PEOPLE-MANAGER` | persona | informed | `develop_conduct_manage_employee` | notify on trigger_events [course.published] |
+| `LD-LEARNING-ADMIN` | persona | responsible | `manage_examinations` | the gated entities' write tier |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `manage_examinations` | grant gates [lms-compliance-training:issue] + the gated entities' write tier |
 | `LD-INSTRUCTOR` | persona | consulted | `manage_examinations` | advisory read grant |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | responsible | `train_employees_appropriate` | grant gates [lms-automation:complete] + the gated entities' write tier |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `train_employees_appropriate` | approval gate |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | responsible | `train_employees_appropriate` | the gated entities' write tier |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `train_employees_appropriate` | grant gates [lms-compliance-training:complete] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `train_employees_appropriate` | advisory read grant |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `train_employees_appropriate` | notification side effect (trigger_event / webhook_receiver) |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `train_employees_appropriate` | notify on trigger_events [compliance_assignment.completed] |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Learning and Development | `admin` | `:admin` |
-| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Manufacturing Operations | `read` | `:read` |
-| consumer | Sales | `read` | `:read` |
-| consumer | Software Engineering | `read` | `:read` |
+| contributor | Governance, Risk and Compliance | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Manufacturing Operations | `viewer` | `:read` |
+| consumer | Sales | `viewer` | `:read` |
+| consumer | Software Engineering | `viewer` | `:read` |

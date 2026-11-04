@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: SMP License Optimization
 tagline: Stop paying for licenses nobody uses.
@@ -12,7 +12,8 @@ domain_code: SMP
 icon_name: cloud-cog
 related_modules: [smp-automation, smp-discovery, smp-renewal-vendor]
 persona: [ITAM-SAAS-PORTFOLIO-MANAGER]
-created_at: 2026-06-27
+supports_raci: true
+created_at: 2026-11-04
 ---
 
 # SMP License Optimization
@@ -42,10 +43,10 @@ flowchart TD
   smp_app_benchmarks["SaaS App Benchmarks"]
   users["Users"]
   smp_license_seat_assignments -->|"reclaims_seat"| smp_reclamation_actions
-  users -->|"reviews"| smp_optimization_recommendations
-  users -->|"executes"| smp_reclamation_actions
   users -->|"granted"| smp_license_seat_assignments
   users -->|"generates"| saas_usage_metrics
+  users -->|"reviews"| smp_optimization_recommendations
+  users -->|"executes"| smp_reclamation_actions
   class smp_license_seat_assignments master;
   class saas_usage_metrics master;
   class smp_optimization_recommendations master;
@@ -57,13 +58,13 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `smp_optimization_recommendations` | `smp_optimization_recommendations` | Optimization Recommendation | Optimization Recommendations | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 2 | `smp_reclamation_actions` | `smp_reclamation_actions` | Reclamation Action | Reclamation Actions | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 3 | `smp_app_benchmarks` | `smp_app_benchmarks` | SaaS App Benchmark | SaaS App Benchmarks | master | - | - | optional | - | computed | read-only | - |
-| 4 | `saas_usage_metrics` | `saas_usage_metrics` | SaaS Usage Metric | SaaS Usage Metrics | master | - | - | required | - | computed | read-only | - |
-| 5 | `smp_license_seat_assignments` | `smp_license_seat_assignments` | SMP License Seat Assignment | SMP License Seat Assignments | master | - | - | required | - | junction | `:manage` | - |
+| 1 | `smp_optimization_recommendations` | `smp_optimization_recommendations` | Optimization Recommendation | Optimization Recommendations | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 2 | `smp_reclamation_actions` | `smp_reclamation_actions` | Reclamation Action | Reclamation Actions | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 3 | `smp_app_benchmarks` | `smp_app_benchmarks` | SaaS App Benchmark | SaaS App Benchmarks | master | - | - | yes | - | computed | read-only | - |
+| 4 | `saas_usage_metrics` | `saas_usage_metrics` | SaaS Usage Metric | SaaS Usage Metrics | master | - | - | - | - | computed | read-only | - |
+| 5 | `smp_license_seat_assignments` | `smp_license_seat_assignments` | SMP License Seat Assignment | SMP License Seat Assignments | master | - | - | - | - | junction | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -71,48 +72,49 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `smp_license_seat_assignments` | reclaims_seat | `smp_reclamation_actions` | one_to_one | reference | required | source | restrict | reference | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | reviews | `smp_optimization_recommendations` | one_to_many | optional | target | clear | reference | - |
-| `users` | executes | `smp_reclamation_actions` | one_to_many | optional | target | clear | reference | - |
-| `users` | granted | `smp_license_seat_assignments` | one_to_many | required | target | restrict | reference | - |
-| `users` | generates | `saas_usage_metrics` | one_to_many | required | target | restrict | reference | - |
+| `smp_license_seat_assignments` | reclaims_seat | `smp_reclamation_actions` | one_to_one | reference | yes | restrict | reference | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `smp_license_seat_assignments` | correlates_with | `iga_user_entitlements` | one_to_one | optional | none | n/a | - |
-| `saas_applications` | recommends_for_app | `smp_optimization_recommendations` | one_to_many | optional | none | n/a | - |
-| `saas_subscriptions` | recommends_for_sub | `smp_optimization_recommendations` | one_to_many | optional | none | n/a | - |
-| `saas_applications` | benchmarks_for | `smp_app_benchmarks` | one_to_many | required | none (required-if-present) | n/a | - |
-| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `saas_subscriptions` | grants | `smp_license_seat_assignments` | one_to_many | optional | none | n/a | - |
+| `users` | granted | `smp_license_seat_assignments` | one_to_many | yes | restrict | reference | - |
+| `users` | generates | `saas_usage_metrics` | one_to_many | yes | restrict | reference | - |
+| `users` | reviews | `smp_optimization_recommendations` | one_to_many | no | clear | reference | - |
+| `users` | executes | `smp_reclamation_actions` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | yes | - |
+| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | yes | - |
+| `saas_subscriptions` | grants | `smp_license_seat_assignments` | one_to_many | no | - |
+| `saas_applications` | has_recommendations | `smp_optimization_recommendations` | one_to_many | no | - |
+| `saas_subscriptions` | has_recommendations | `smp_optimization_recommendations` | one_to_many | no | - |
+| `saas_applications` | has_benchmarks | `smp_app_benchmarks` | one_to_many | yes | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `smp_license_seat_assignments` | correlates_with | `iga_user_entitlements` | one_to_one | no | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -120,12 +122,7 @@ _(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SMP-OPTIMIZATION | SMP | SMP-DISCOVERY | `saas_application.deprovisioned` | _(lifecycle)_ | `smp_license_seat_assignments` | lifecycle_progression | low | Deprovisioning an application reclaims all of its license seat assignments. |
-| SMP-OPTIMIZATION | SMP | SMP-DISCOVERY | `saas_application.sanctioned` | _(lifecycle)_ | `smp_license_seat_assignments` | lifecycle_progression | low | A sanctioned SaaS application becomes eligible for license seat provisioning and usage metering in the optimization module. |
-| SMP-OPTIMIZATION | SMP | SMP-RENEWAL-VENDOR | `saas_subscription.canceled` | `active` → `canceled` _(lifecycle)_ | `smp_reclamation_actions` | lifecycle_progression | low | Canceling a subscription triggers reclamation of its license seats. |
-| SMP-OPTIMIZATION | SMP | SMP-AUTOMATION | `smp_app_request.fulfilled` | _(lifecycle)_ | `smp_license_seat_assignments` | lifecycle_progression | low | Fulfilling a self-service app request provisions a license seat assignment. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -135,34 +132,34 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 
 ### `smp_license_seat_assignments` (SMP License Seat Assignment)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `provisioned` | ✓ | - | - | - | User has been granted access to the SaaS app via SSO or direct provisioning. |
-| 20 | `active` | - | - | - | - | User is actively using the app per usage telemetry. |
-| 30 | `idle` | - | - | - | - | User has not used the app within the configured engagement window; reclaim candidate. |
-| 40 | `reclaimed` | - | ✓ | ✓ | `smp-optimization:reclaim_seat_assignment` | License returned to the pool. User notified, access revoked. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `provisioned` | ✓ | - | - | - | - | User has been granted access to the SaaS app via SSO or direct provisioning. |
+| 20 | `active` | - | - | - | - | - | User is actively using the app per usage telemetry. |
+| 30 | `idle` | - | - | - | - | - | User has not used the app within the configured engagement window; reclaim candidate. |
+| 40 | `reclaimed` | - | ✓ | ✓ | - | `smp-optimization:reclaim_seat_assignment` | License returned to the pool. User notified, access revoked. |
 
 ### `smp_optimization_recommendations` (Optimization Recommendation)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `open` | ✓ | - | - | - | - |
-| 20 | `reviewed` | - | - | - | - | - |
-| 30 | `accepted` | - | - | ✓ | `smp-optimization:accept_recommendation` | - |
-| 40 | `in_progress` | - | - | ✓ | `smp-optimization:start_recommendation` | - |
-| 50 | `realized` | - | ✓ | ✓ | `smp-optimization:realize_recommendation` | - |
-| 60 | `dismissed` | - | ✓ | ✓ | `smp-optimization:dismiss_recommendation` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `open` | ✓ | - | - | - | - | - |
+| 20 | `reviewed` | - | - | - | - | - | - |
+| 30 | `accepted` | - | - | ✓ | - | `smp-optimization:accept_recommendation` | - |
+| 40 | `in_progress` | - | - | ✓ | - | `smp-optimization:start_recommendation` | - |
+| 50 | `realized` | - | ✓ | ✓ | - | `smp-optimization:realize_recommendation` | - |
+| 60 | `dismissed` | - | ✓ | ✓ | - | `smp-optimization:dismiss_recommendation` | - |
 
 ### `smp_reclamation_actions` (Reclamation Action)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `identified` | ✓ | - | - | - | - |
-| 20 | `notified` | - | - | ✓ | `smp-optimization:notify_user_of_reclamation` | - |
-| 30 | `grace_period` | - | - | - | - | - |
-| 40 | `reclaimed` | - | ✓ | ✓ | `smp-optimization:execute_reclamation` | - |
-| 50 | `restored` | - | ✓ | ✓ | `smp-optimization:restore_reclamation` | - |
-| 60 | `canceled` | - | ✓ | ✓ | `smp-optimization:cancel_reclamation` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `identified` | ✓ | - | - | - | - | - |
+| 20 | `notified` | - | - | ✓ | - | `smp-optimization:notify_user_of_reclamation` | - |
+| 30 | `grace_period` | - | - | - | - | - | - |
+| 40 | `reclaimed` | - | ✓ | ✓ | - | `smp-optimization:execute_reclamation` | - |
+| 50 | `restored` | - | ✓ | ✓ | - | `smp-optimization:restore_reclamation` | - |
+| 60 | `canceled` | - | ✓ | ✓ | - | `smp-optimization:cancel_reclamation` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -173,6 +170,14 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | `smp-optimization:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `smp-optimization:manage` | baseline-manage | Edit operational records | ✓ |
 | `smp-optimization:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `smp-optimization:read_smp_license_seat_assignments` | entity-read | Read SMP License Seat Assignments | ✓ |
+| `smp-optimization:write_smp_license_seat_assignments` | entity-write | Write SMP License Seat Assignments | ✓ |
+| `smp-optimization:read_saas_usage_metrics` | entity-read | Read SaaS Usage Metrics | ✓ |
+| `smp-optimization:read_smp_optimization_recommendations` | entity-read | Read Optimization Recommendations | ✓ |
+| `smp-optimization:write_smp_optimization_recommendations` | entity-write | Write Optimization Recommendations | ✓ |
+| `smp-optimization:read_smp_reclamation_actions` | entity-read | Read Reclamation Actions | ✓ |
+| `smp-optimization:write_smp_reclamation_actions` | entity-write | Write Reclamation Actions | ✓ |
+| `smp-optimization:read_smp_app_benchmarks` | entity-read | Read SaaS App Benchmarks | ✓ |
 | `smp-optimization:reclaim_seat_assignment` | workflow-gate (lifecycle) | Transition `smp_license_seat_assignments` into state `reclaimed` | ✓ |
 | `smp-optimization:accept_recommendation` | workflow-gate (lifecycle) | Transition `smp_optimization_recommendations` into state `accepted` | ✓ |
 | `smp-optimization:start_recommendation` | workflow-gate (lifecycle) | Transition `smp_optimization_recommendations` into state `in_progress` | ✓ |
@@ -199,6 +204,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `smp-optimization_viewer` | `smp-optimization:read` |
 | `smp-optimization_manager` | `smp-optimization:manage` |
+| `smp-optimization_admin` | `smp-optimization:admin` |
 
 **Permission hierarchy:**
 
@@ -206,6 +212,17 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `smp-optimization:admin` | `smp-optimization:manage` |
 | `smp-optimization:manage` | `smp-optimization:read` |
+| `smp-optimization:read` | `smp-optimization:read_smp_license_seat_assignments` |
+| `smp-optimization:read` | `smp-optimization:read_saas_usage_metrics` |
+| `smp-optimization:read` | `smp-optimization:read_smp_optimization_recommendations` |
+| `smp-optimization:read` | `smp-optimization:read_smp_reclamation_actions` |
+| `smp-optimization:read` | `smp-optimization:read_smp_app_benchmarks` |
+| `smp-optimization:manage` | `smp-optimization:write_smp_license_seat_assignments` |
+| `smp-optimization:write_smp_license_seat_assignments` | `smp-optimization:read_smp_license_seat_assignments` |
+| `smp-optimization:manage` | `smp-optimization:write_smp_optimization_recommendations` |
+| `smp-optimization:write_smp_optimization_recommendations` | `smp-optimization:read_smp_optimization_recommendations` |
+| `smp-optimization:manage` | `smp-optimization:write_smp_reclamation_actions` |
+| `smp-optimization:write_smp_reclamation_actions` | `smp-optimization:read_smp_reclamation_actions` |
 | `smp-optimization:admin` | `smp-optimization:reclaim_seat_assignment` |
 | `smp-optimization:admin` | `smp-optimization:accept_recommendation` |
 | `smp-optimization:admin` | `smp-optimization:start_recommendation` |
@@ -226,13 +243,13 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | responsible | `optimize_it_resource_allocation` | grant gates [smp-optimization:reclaim_seat_assignment, smp-optimization:accept_recommendation, smp-optimization:start_recommendation, smp-optimization:realize_recommendation, smp-optimization:dismiss_recommendation, smp-optimization:notify_user_of_reclamation, smp-optimization:execute_reclamation, smp-optimization:restore_reclamation, smp-optimization:cancel_reclamation] + the gated entities' write tier |
-| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | accountable | `optimize_it_resource_allocation` | approval gate |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | responsible | `optimize_it_resource_allocation` | the gated entities' write tier |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | accountable | `optimize_it_resource_allocation` | grant gates [smp-optimization:reclaim_seat_assignment, smp-optimization:accept_recommendation, smp-optimization:start_recommendation, smp-optimization:realize_recommendation, smp-optimization:dismiss_recommendation, smp-optimization:notify_user_of_reclamation, smp-optimization:execute_reclamation, smp-optimization:restore_reclamation, smp-optimization:cancel_reclamation] + the gated entities' write tier |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | IT Asset Management | `admin` | `:admin` |
-| contributor | Finance | `manage` | `:manage` |
-| contributor | Procurement | `manage` | `:manage` |
+| contributor | Finance | `manager` | `:manage` |
+| contributor | Procurement | `manager` | `:manage` |

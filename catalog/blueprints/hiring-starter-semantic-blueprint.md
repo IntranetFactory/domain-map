@@ -12,7 +12,8 @@ domain_code: ATS
 icon_name: user-plus
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-screening-orders, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, onb-journey-mgmt, pa-workforce-metrics, swp-demand-forecast]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
-created_at: 2026-11-03
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Hiring Starter
@@ -82,7 +83,7 @@ flowchart TD
 
 ## Additional Requirements Specification
 
-Hiring manager access to candidates. A `candidates` row has no relationship leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `hiring-starter:view_all_candidates`.
+Hiring manager access to candidates. A `candidates` row has no relationship leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `ats-candidate-crm:view_all_candidates`.
 
 Do-not-hire candidates. A new application for a `do_not_hire` candidate is accepted, so the person is not told they are flagged, and the candidate stays `do_not_hire`. The application cannot move to `hired` while the candidate is `do_not_hire`.
 
@@ -235,91 +236,91 @@ _(none: no inbound handoffs whose payload is in this scope)_
 
 _This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
-| 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | - | ✓ | - | `hiring-starter:hire_candidate` | Candidate accepted an offer and converted to employee; a new application moves the person back to active. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | - | `hiring-starter:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | - | - | - | - | Candidate kept in the database but not active in any pipeline; a new application moves the candidate back to active. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | _(always)_ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | _(always)_ | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | - | `ATS-CANDIDATE-CRM` | ✓ | - | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee; a new application moves the person back to active. |
+| 4 | `do_not_hire` | - | ✓ | `ATS-CANDIDATE-CRM` | ✓ | - | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | - | _(always)_ | - | - | - | Candidate kept in the database but not active in any pipeline; a new application moves the candidate back to active. |
 
 ### `interview_scorecards` (Interview Scorecard)
 
 _This scope holds `interview_scorecards` as **embedded_master**; the canonical state machine is owned by `ATS-INTERVIEWS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Interviewer is filling in ratings and notes against the rubric. |
-| 2 | `submitted` | - | ✓ | - | - | - | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Interviewer is filling in ratings and notes against the rubric. |
+| 2 | `submitted` | - | ✓ | `ATS-INTERVIEWS` | - | - | - | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
 
 ### `interviews` (Interview)
 
 _This scope holds `interviews` as **embedded_master**; the canonical state machine is owned by `ATS-INTERVIEWS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `scheduled` | ✓ | - | - | - | - | Interview booked with candidate, panel, time, and medium. |
-| 2 | `confirmed` | - | - | - | - | - | Candidate and panel confirmed attendance. |
-| 3 | `completed` | - | ✓ | - | - | - | Interview took place; feedback is being collected. |
-| 4 | `no_show` | - | ✓ | - | - | - | Candidate or panel did not attend; interview did not occur. |
-| 5 | `canceled` | - | ✓ | - | - | - | Interview canceled before it took place. |
-| 6 | `rescheduled` | - | ✓ | - | - | - | Original slot abandoned in favor of a new scheduled interview record. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `scheduled` | ✓ | - | _(always)_ | - | - | - | Interview booked with candidate, panel, time, and medium. |
+| 2 | `confirmed` | - | - | _(always)_ | - | - | - | Candidate and panel confirmed attendance. |
+| 3 | `completed` | - | ✓ | _(always)_ | - | - | - | Interview took place; feedback is being collected. |
+| 4 | `no_show` | - | ✓ | _(always)_ | - | - | - | Candidate or panel did not attend; interview did not occur. |
+| 5 | `canceled` | - | ✓ | _(always)_ | - | - | - | Interview canceled before it took place. |
+| 6 | `rescheduled` | - | ✓ | _(always)_ | - | - | - | Original slot abandoned in favor of a new scheduled interview record. |
 
 ### `job_applications` (Application)
 
 _This scope holds `job_applications` as **embedded_master**; the canonical state machine is owned by `ATS-RECRUITMENT-PIPELINE`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `applied` | ✓ | - | - | - | - | Candidate submitted an application for the job. |
-| 2 | `screening` | - | - | - | - | - | Recruiter is reviewing resume and qualifications. |
-| 3 | `interviewing` | - | - | - | - | - | Candidate is progressing through interview loops. |
-| 4 | `offer_extended` | - | - | - | - | - | An offer has been generated and is in flight for this application. |
-| 5 | `hired` | - | ✓ | ✓ | - | `hiring-starter:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
-| 6 | `rejected` | - | ✓ | - | - | - | Application closed without progression by recruiter or hiring manager. |
-| 7 | `withdrawn` | - | ✓ | - | - | - | Candidate withdrew their application. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `applied` | ✓ | - | _(always)_ | - | - | - | Candidate submitted an application for the job. |
+| 2 | `screening` | - | - | _(always)_ | - | - | - | Recruiter is reviewing resume and qualifications. |
+| 3 | `interviewing` | - | - | `ATS-INTERVIEWS` | - | - | - | Candidate is progressing through interview loops. |
+| 4 | `offer_extended` | - | - | `ATS-OFFERS` | - | - | - | An offer has been generated and is in flight for this application. |
+| 5 | `hired` | - | ✓ | `ATS-PRE-EMPLOYEE-RECORD` | ✓ | - | `ats-pre-employee-record:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
+| 6 | `rejected` | - | ✓ | _(always)_ | - | - | - | Application closed without progression by recruiter or hiring manager. |
+| 7 | `withdrawn` | - | ✓ | _(always)_ | - | - | - | Candidate withdrew their application. |
 
 ### `job_offers` (Offer)
 
 _This scope holds `job_offers` as **embedded_master**; the canonical state machine is owned by `ATS-OFFERS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Recruiter is composing offer terms and compensation components. |
-| 2 | `pending_approval` | - | - | - | - | - | Offer routed to the designated approver for sign-off. |
-| 3 | `approved` | - | - | ✓ | - | `hiring-starter:approve_offer` | Approver signed off; offer is ready to send. |
-| 4 | `sent` | - | - | - | - | - | Offer delivered to the candidate. |
-| 5 | `accepted` | - | - | - | - | - | Candidate accepted the offer. |
-| 6 | `declined` | - | ✓ | - | - | - | Candidate declined the offer. |
-| 7 | `rescinded` | - | ✓ | ✓ | - | `hiring-starter:rescind_offer` | Offer withdrawn by the employer after being sent or accepted; gated action. |
-| 8 | `completed` | - | ✓ | - | - | - | Candidate was hired and the offer is closed; no further changes. |
-| 9 | `canceled` | - | ✓ | - | - | - | Offer abandoned before it was sent. |
-| 10 | `reneged` | - | ✓ | - | - | - | Candidate backed out after accepting the offer. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Recruiter is composing offer terms and compensation components. |
+| 2 | `pending_approval` | - | - | _(always)_ | - | - | - | Offer routed to the designated approver for sign-off. |
+| 3 | `approved` | - | - | `ATS-OFFERS` | ✓ | - | `ats-offers:approve_offer` | Approver signed off; offer is ready to send. |
+| 4 | `sent` | - | - | _(always)_ | - | - | - | Offer delivered to the candidate. |
+| 5 | `accepted` | - | - | _(always)_ | - | - | - | Candidate accepted the offer. |
+| 6 | `declined` | - | ✓ | _(always)_ | - | - | - | Candidate declined the offer. |
+| 7 | `rescinded` | - | ✓ | `ATS-OFFERS` | ✓ | - | `ats-offers:rescind_offer` | Offer withdrawn by the employer after being sent or accepted; gated action. |
+| 8 | `completed` | - | ✓ | _(always)_ | - | - | - | Candidate was hired and the offer is closed; no further changes. |
+| 9 | `canceled` | - | ✓ | _(always)_ | - | - | - | Offer abandoned before it was sent. |
+| 10 | `reneged` | - | ✓ | _(always)_ | - | - | - | Candidate backed out after accepting the offer. |
 
 ### `job_postings` (Job Posting)
 
 _This scope holds `job_postings` as **embedded_master**; the canonical state machine is owned by `ATS-RECRUITMENT-PIPELINE`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Posting being composed for a specific board or region. |
-| 2 | `published` | - | - | ✓ | - | `hiring-starter:publish_posting` | Posting is live on the target channel; gated publish step. |
-| 3 | `paused` | - | - | - | - | - | Posting temporarily hidden from the channel. |
-| 4 | `expired` | - | ✓ | - | - | - | Posting reached its scheduled end date. |
-| 5 | `closed` | - | ✓ | - | - | - | Posting taken down because the job is filled or canceled. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Posting being composed for a specific board or region. |
+| 2 | `published` | - | - | `ATS-RECRUITMENT-PIPELINE` | ✓ | - | `ats-recruitment-pipeline:publish_posting` | Posting is live on the target channel; gated publish step. |
+| 3 | `paused` | - | - | _(always)_ | - | - | - | Posting temporarily hidden from the channel. |
+| 4 | `expired` | - | ✓ | _(always)_ | - | - | - | Posting reached its scheduled end date. |
+| 5 | `closed` | - | ✓ | _(always)_ | - | - | - | Posting taken down because the job is filled or canceled. |
 
 ### `job_requisitions` (Job Requisition)
 
 _This scope holds `job_requisitions` as **embedded_master**; the canonical state machine is owned by `ATS-RECRUITMENT-PIPELINE`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Hiring manager is drafting the requisition. |
-| 2 | `pending_approval` | - | - | - | - | - | Requisition routed for headcount and budget approval. |
-| 3 | `open` | - | - | ✓ | - | `hiring-starter:approve_requisition` | Requisition approved and actively recruiting. |
-| 4 | `on_hold` | - | - | - | - | - | Recruiting temporarily paused (budget freeze, scope change). |
-| 5 | `filled` | - | ✓ | ✓ | - | `hiring-starter:close_requisition` | Requisition closed because the role was filled. |
-| 6 | `canceled` | - | ✓ | - | - | - | Requisition closed without a hire. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Hiring manager is drafting the requisition. |
+| 2 | `pending_approval` | - | - | _(always)_ | - | - | - | Requisition routed for headcount and budget approval. |
+| 3 | `open` | - | - | `ATS-RECRUITMENT-PIPELINE` | ✓ | - | `ats-recruitment-pipeline:approve_requisition` | Requisition approved and actively recruiting. |
+| 4 | `on_hold` | - | - | _(always)_ | - | - | - | Recruiting temporarily paused (budget freeze, scope change). |
+| 5 | `filled` | - | ✓ | `ATS-RECRUITMENT-PIPELINE` | ✓ | - | `ats-recruitment-pipeline:close_requisition` | Requisition closed because the role was filled. |
+| 6 | `canceled` | - | ✓ | _(always)_ | - | - | - | Requisition closed without a hire. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -330,33 +331,52 @@ _This scope holds `job_requisitions` as **embedded_master**; the canonical state
 | `hiring-starter:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `hiring-starter:manage` | baseline-manage | Edit operational records | ✓ |
 | `hiring-starter:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `hiring-starter:approve_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `open` | ✓ |
-| `hiring-starter:close_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `filled` (⚠ no process) | ✓ |
-| `hiring-starter:publish_posting` | workflow-gate (lifecycle) | Transition `job_postings` into state `published` | ✓ |
-| `hiring-starter:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` or `job_applications` into state `hired` | ✓ |
-| `hiring-starter:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
-| `hiring-starter:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
-| `hiring-starter:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` (⚠ no process) | ✓ |
-| `hiring-starter:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
-| `hiring-starter:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
-| `hiring-starter:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
-| `hiring-starter:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
-| `hiring-starter:view_all_interviews` | override (personal_content) | View all `interviews` rows beyond row-scope | ✓ |
-| `hiring-starter:manage_all_interviews` | override (personal_content) | Manage all `interviews` rows beyond row-scope | ✓ |
-| `hiring-starter:view_all_interview_scorecards` | override (personal_content) | View all `interview_scorecards` rows beyond row-scope | ✓ |
-| `hiring-starter:manage_all_interview_scorecards` | override (personal_content) | Manage all `interview_scorecards` rows beyond row-scope | ✓ |
-| `hiring-starter:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
-| `hiring-starter:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+| `ats-recruitment-pipeline:read_job_requisitions` | entity-read | Read Job Requisitions | ✓ |
+| `ats-recruitment-pipeline:write_job_requisitions` | entity-write | Write Job Requisitions | ✓ |
+| `ats-recruitment-pipeline:read_job_postings` | entity-read | Read Job Postings | ✓ |
+| `ats-recruitment-pipeline:write_job_postings` | entity-write | Write Job Postings | ✓ |
+| `ats-candidate-crm:read_candidates` | entity-read | Read Candidates | ✓ |
+| `ats-candidate-crm:write_candidates` | entity-write | Write Candidates | ✓ |
+| `ats-recruitment-pipeline:read_job_applications` | entity-read | Read Applications | ✓ |
+| `ats-recruitment-pipeline:write_job_applications` | entity-write | Write Applications | ✓ |
+| `ats-candidate-crm:read_recruitment_sources` | entity-read | Read Recruitment Sources | ✓ |
+| `ats-candidate-crm:write_recruitment_sources` | entity-write | Write Recruitment Sources | ✓ |
+| `ats-interviews:read_interviews` | entity-read | Read Interviews | ✓ |
+| `ats-interviews:write_interviews` | entity-write | Write Interviews | ✓ |
+| `ats-interviews:read_interview_scorecards` | entity-read | Read Interview Scorecards | ✓ |
+| `ats-interviews:write_interview_scorecards` | entity-write | Write Interview Scorecards | ✓ |
+| `ats-offers:read_job_offers` | entity-read | Read Offers | ✓ |
+| `ats-offers:write_job_offers` | entity-write | Write Offers | ✓ |
+| `ats-recruitment-pipeline:approve_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `open` | ✓ |
+| `ats-recruitment-pipeline:close_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `filled` | ✓ |
+| `ats-recruitment-pipeline:publish_posting` | workflow-gate (lifecycle) | Transition `job_postings` into state `published` | ✓ |
+| `ats-candidate-crm:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
+| `ats-candidate-crm:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
+| `ats-pre-employee-record:hire_candidate` | workflow-gate (lifecycle) | Transition `job_applications` into state `hired` | ✓ |
+| `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
+| `ats-offers:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` | ✓ |
+| `ats-candidate-crm:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
+| `ats-recruitment-pipeline:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
+| `ats-recruitment-pipeline:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
+| `ats-interviews:view_all_interviews` | override (personal_content) | View all `interviews` rows beyond row-scope | ✓ |
+| `ats-interviews:manage_all_interviews` | override (personal_content) | Manage all `interviews` rows beyond row-scope | ✓ |
+| `ats-interviews:view_all_interview_scorecards` | override (personal_content) | View all `interview_scorecards` rows beyond row-scope | ✓ |
+| `ats-interviews:manage_all_interview_scorecards` | override (personal_content) | Manage all `interview_scorecards` rows beyond row-scope | ✓ |
+| `ats-offers:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
+| `ats-offers:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+
+_Gates with no process: `ats-recruitment-pipeline:close_requisition`, `ats-candidate-crm:flag_do_not_hire`, `ats-offers:rescind_offer`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
-| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_candidates` / `hiring-starter:manage_all_candidates` |
-| `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_applications` / `hiring-starter:manage_all_applications` |
-| `interview_edit_scope` | `interviews` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_interviews` / `hiring-starter:manage_all_interviews` |
-| `interview_scorecard_edit_scope` | `interview_scorecards` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_interview_scorecards` / `hiring-starter:manage_all_interview_scorecards` |
-| `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_offers` / `hiring-starter:manage_all_offers` |
+| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidates` / `ats-candidate-crm:manage_all_candidates` |
+| `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_applications` / `ats-recruitment-pipeline:manage_all_applications` |
+| `interview_edit_scope` | `interviews` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_interviews` / `ats-interviews:manage_all_interviews` |
+| `interview_scorecard_edit_scope` | `interview_scorecards` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_interview_scorecards` / `ats-interviews:manage_all_interview_scorecards` |
+| `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offers` / `ats-offers:manage_all_offers` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -378,23 +398,48 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `hiring-starter:admin` | `hiring-starter:manage` |
 | `hiring-starter:manage` | `hiring-starter:read` |
-| `hiring-starter:admin` | `hiring-starter:approve_requisition` |
-| `hiring-starter:admin` | `hiring-starter:close_requisition` |
-| `hiring-starter:admin` | `hiring-starter:publish_posting` |
-| `hiring-starter:admin` | `hiring-starter:hire_candidate` |
-| `hiring-starter:admin` | `hiring-starter:flag_do_not_hire` |
-| `hiring-starter:admin` | `hiring-starter:approve_offer` |
-| `hiring-starter:admin` | `hiring-starter:rescind_offer` |
-| `hiring-starter:admin` | `hiring-starter:view_all_candidates` |
-| `hiring-starter:admin` | `hiring-starter:manage_all_candidates` |
-| `hiring-starter:admin` | `hiring-starter:view_all_applications` |
-| `hiring-starter:admin` | `hiring-starter:manage_all_applications` |
-| `hiring-starter:admin` | `hiring-starter:view_all_interviews` |
-| `hiring-starter:admin` | `hiring-starter:manage_all_interviews` |
-| `hiring-starter:admin` | `hiring-starter:view_all_interview_scorecards` |
-| `hiring-starter:admin` | `hiring-starter:manage_all_interview_scorecards` |
-| `hiring-starter:admin` | `hiring-starter:view_all_offers` |
-| `hiring-starter:admin` | `hiring-starter:manage_all_offers` |
+| `hiring-starter:read` | `ats-recruitment-pipeline:read_job_requisitions` |
+| `hiring-starter:read` | `ats-recruitment-pipeline:read_job_postings` |
+| `hiring-starter:read` | `ats-candidate-crm:read_candidates` |
+| `hiring-starter:read` | `ats-recruitment-pipeline:read_job_applications` |
+| `hiring-starter:read` | `ats-candidate-crm:read_recruitment_sources` |
+| `hiring-starter:read` | `ats-interviews:read_interviews` |
+| `hiring-starter:read` | `ats-interviews:read_interview_scorecards` |
+| `hiring-starter:read` | `ats-offers:read_job_offers` |
+| `hiring-starter:manage` | `ats-recruitment-pipeline:write_job_requisitions` |
+| `ats-recruitment-pipeline:write_job_requisitions` | `ats-recruitment-pipeline:read_job_requisitions` |
+| `hiring-starter:manage` | `ats-recruitment-pipeline:write_job_postings` |
+| `ats-recruitment-pipeline:write_job_postings` | `ats-recruitment-pipeline:read_job_postings` |
+| `hiring-starter:manage` | `ats-candidate-crm:write_candidates` |
+| `ats-candidate-crm:write_candidates` | `ats-candidate-crm:read_candidates` |
+| `hiring-starter:manage` | `ats-recruitment-pipeline:write_job_applications` |
+| `ats-recruitment-pipeline:write_job_applications` | `ats-recruitment-pipeline:read_job_applications` |
+| `hiring-starter:admin` | `ats-candidate-crm:write_recruitment_sources` |
+| `ats-candidate-crm:write_recruitment_sources` | `ats-candidate-crm:read_recruitment_sources` |
+| `hiring-starter:manage` | `ats-interviews:write_interviews` |
+| `ats-interviews:write_interviews` | `ats-interviews:read_interviews` |
+| `hiring-starter:manage` | `ats-interviews:write_interview_scorecards` |
+| `ats-interviews:write_interview_scorecards` | `ats-interviews:read_interview_scorecards` |
+| `hiring-starter:manage` | `ats-offers:write_job_offers` |
+| `ats-offers:write_job_offers` | `ats-offers:read_job_offers` |
+| `hiring-starter:admin` | `ats-recruitment-pipeline:approve_requisition` |
+| `hiring-starter:admin` | `ats-recruitment-pipeline:close_requisition` |
+| `hiring-starter:admin` | `ats-recruitment-pipeline:publish_posting` |
+| `hiring-starter:admin` | `ats-candidate-crm:hire_candidate` |
+| `hiring-starter:admin` | `ats-candidate-crm:flag_do_not_hire` |
+| `hiring-starter:admin` | `ats-pre-employee-record:hire_candidate` |
+| `hiring-starter:admin` | `ats-offers:approve_offer` |
+| `hiring-starter:admin` | `ats-offers:rescind_offer` |
+| `hiring-starter:admin` | `ats-candidate-crm:view_all_candidates` |
+| `hiring-starter:admin` | `ats-candidate-crm:manage_all_candidates` |
+| `hiring-starter:admin` | `ats-recruitment-pipeline:view_all_applications` |
+| `hiring-starter:admin` | `ats-recruitment-pipeline:manage_all_applications` |
+| `hiring-starter:admin` | `ats-interviews:view_all_interviews` |
+| `hiring-starter:admin` | `ats-interviews:manage_all_interviews` |
+| `hiring-starter:admin` | `ats-interviews:view_all_interview_scorecards` |
+| `hiring-starter:admin` | `ats-interviews:manage_all_interview_scorecards` |
+| `hiring-starter:admin` | `ats-offers:view_all_offers` |
+| `hiring-starter:admin` | `ats-offers:manage_all_offers` |
 
 **Processes wired:**
 
@@ -411,20 +456,20 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
 | `RECRUITING-RECRUITER` | persona | responsible | `manage_employee_requisitions` | the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | `manage_employee_requisitions` | grant gates [hiring-starter:approve_requisition] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `manage_employee_requisitions` | grant gates [ats-recruitment-pipeline:approve_requisition] + the gated entities' write tier |
 | `RECRUITING-SOURCER` | persona | responsible | `recruit_source_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | responsible | `recruit_source_candidates` | the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | `recruit_source_candidates` | grant gates [hiring-starter:publish_posting] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `recruit_source_candidates` | grant gates [ats-recruitment-pipeline:publish_posting] + the gated entities' write tier |
 | `HIRING-MANAGER` | persona | informed | `recruit_source_candidates` | notify on trigger_events [job_posting.published] |
 | `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [hiring-starter:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-candidate-crm:hire_candidate, ats-pre-employee-record:hire_candidate] + the gated entities' write tier |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 | `HIRING-MANAGER` | persona | responsible | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
 | `RECRUITING-COORDINATOR` | persona | responsible | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | grant gates [hiring-starter:approve_offer] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | grant gates [ats-offers:approve_offer] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |
 
 ### 9.2 Functional ownership and default grants

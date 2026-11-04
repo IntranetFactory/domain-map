@@ -831,7 +831,7 @@ export function loadModuleCatalog(
   // Handoff attribution. A unit surfaces a handoff when the handoff CROSSES its boundary. Plan 4:
   // the unit "plays" its own modules PLUS the canonical owner modules of every entity it carries as
   // `embedded_master` (it stands in for them when deployed standalone, the same self-containment
-  // principle as the re-prefixed gates). Without this an embedded entity's module-level handoffs
+  // principle as the gates it holds for those owners). Without this an embedded entity's module-level handoffs
   // (whose endpoints are the canonical modules, not this unit) silently vanished.
   const playedModuleIds = new Set<number>(moduleIdSet);
   for (const r of scopeRows) {

@@ -436,3 +436,7 @@ The owner asked for a sweep of the other starters after the Hiring Starter revie
 - `customers` state `canceled` "ended all subscriptions": true here, because memberships are farm-share subscriptions. The question sits in `q-HVAC-SVC-MGMT.md`, where it is not true.
 
 `q-FARMER-DIRECT-SALES.md` was renumbered: the optional questions moved from q2-q4 to q3-q5. `checks:` was not re-recorded.
+
+## 2026-11-04 - delivery realizers, owner-approved
+
+Plan F5a and F5b. dmdo 619 and 620 (FDS-DELIVERY-OPS on `csa_share_packs` and `wholesale_orders`) went from `consumer` to `embedded_master`, because the module realizes `csa_share_packs.delivered` and `wholesale_orders.fulfilled` and could not write those states. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

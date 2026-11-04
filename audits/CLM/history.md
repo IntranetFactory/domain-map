@@ -780,3 +780,7 @@ because the user answered it with a question. No `record_status` flip anywhere (
 `a-CLM.md` and the stale `q-CLM.md` deleted. A fresh `q-CLM.md` regenerated with the single open question
 (CLM-COMPLIANCE, re-framed per a4). Domain stays `status: feedback_needed` / `next_action_by: user`. No
 `record_status` touched anywhere this pass.
+
+## 2026-11-04 - legal_contracts realizers, owner-approved
+
+Plan F1a and F1b. Added CLM-NEGOTIATION and CLM-RENEWAL as `embedded_master` on `legal_contracts`. Each realizes a gated state on that entity (`approved`, `renewed`) and did not hold it, so check M5 failed; it now passes. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

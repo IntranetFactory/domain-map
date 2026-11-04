@@ -103,14 +103,6 @@ a9:
 
 ---
 
-q21: Hiring on an application is set to happen in the Pre-Employee Record module, which doesn't contain applications. Move it to the Recruitment Pipeline, which owns applications (yes/no)
-
-Recommended: yes. Today it produces a permission under the wrong module, and it is the one problem the design checker reports on the Recruitment Pipeline blueprint.
-
-a21:
-
----
-
 q22: Treat candidate assessments, candidate referrals and referral payouts as personal data, so each row is visible only to its owner unless someone holds view-all access?
 
 - a) All three.
@@ -240,4 +232,4 @@ a32: c, applied 2026-11-02
 - Candidate experience surveys, job templates, interview transcripts, candidate education and employment history, recruiting audit events: modeled by several of the vendors above.
 - Referral bonuses reach payroll two ways; one path would be cleaner.
 
-<!-- agent map, ignore: q1=B1B-B9D-MISTAG-402 q2=B2-M9-COMPOSED-CHILDREN q3=B2-B7B-USER-RELATIONSHIPS q4=B2-B6B-OWNER-SIDE q5=B2-E4D-SUBMIT-SCORECARD q6=B2-R7-HIRING-STARTER-DESCRIPTION q7=B2-HS-SOURCE-RELATIONSHIP q8=B2-B9C-EVENT-REPOINTS q9=B2-HIGH-RISK-GATES q21=B2-M5-STATE-221 q22=B2-B4-PERSONAL-CONTENT q23=B2-R18-VENDOR-NAMES q24=B2-MO1-BACKGROUND-CHECKS-MODULE q25=B2-X4-BGV-PUBLISHER q26=B2-S1-RECRUITER-INTERACTIONS q27=B2-S2-NURTURE-VS-SEQUENCES q28=B2-M1-MESSAGE-TEMPLATES q29=B2-M3-AI-MATCHING q30=B2-M10-PAY-RANGES q31=B2-X2-BENADMIN-H395 q32=B2-INTERVIEW-CANDIDATES-NO-GATE | domain_id=56 -->
+<!-- agent map, ignore: q1=B1B-B9D-MISTAG-402 q2=B2-M9-COMPOSED-CHILDREN q3=B2-B7B-USER-RELATIONSHIPS q4=B2-B6B-OWNER-SIDE q5=B2-E4D-SUBMIT-SCORECARD q6=B2-R7-HIRING-STARTER-DESCRIPTION q7=B2-HS-SOURCE-RELATIONSHIP q8=B2-B9C-EVENT-REPOINTS q9=B2-HIGH-RISK-GATES q22=B2-B4-PERSONAL-CONTENT q23=B2-R18-VENDOR-NAMES q24=B2-MO1-BACKGROUND-CHECKS-MODULE q25=B2-X4-BGV-PUBLISHER q26=B2-S1-RECRUITER-INTERACTIONS q27=B2-S2-NURTURE-VS-SEQUENCES q28=B2-M1-MESSAGE-TEMPLATES q29=B2-M3-AI-MATCHING q30=B2-M10-PAY-RANGES q31=B2-X2-BENADMIN-H395 q32=B2-INTERVIEW-CANDIDATES-NO-GATE | domain_id=56 -->

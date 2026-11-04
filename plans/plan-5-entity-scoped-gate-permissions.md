@@ -1,5 +1,7 @@
 # Plan 5: entity-scoped workflow-gate permission identity (reduce naming friction)
 
+**Status: SUPERSEDED 2026-11-04, never run.** [stable-permission-names-plan.md](stable-permission-names-plan.md) solves the same problem with owner-prefixed names, so no gate renames on a full module.
+
 Scope: re-key WORKFLOW-GATE and PATTERN-FLAG-OVERRIDE permissions from the module-prefixed form
 `<module>:<verb>_<entity>` to a deployment-stable, entity-scoped form `<entity>:<verb>`. Baseline
 tiers (`<module>:read` / `:manage` / `:admin`) stay module-scoped. This gives every gate one stable

@@ -1,0 +1,58 @@
+{
+ "taken_at": "2026-11-04T09:34:27.389Z",
+ "loader": ".tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts",
+ "before": [
+  {
+   "table": "domain_module_data_objects",
+   "id": 416,
+   "held_as": "contributor"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 1396,
+   "held_as": "contributor"
+  },
+  {
+   "table": "data_object_relationships",
+   "id": 1332,
+   "related_data_object_id": 158,
+   "data_object_relationship_label": "offer_versions proposes equity_grants"
+  },
+  {
+   "table": "domain_module_capabilities",
+   "id": 153,
+   "notes": "Grant, vesting, and exercise lifecycle."
+  },
+  {
+   "table": "domain_modules",
+   "id": 79,
+   "catalog_tagline": "Grant equity and incentive awards, then track them from proposal through vesting.",
+   "catalog_description": "Propose equity and incentive awards as part of total rewards, approve them, and follow each grant through vesting, exercise, forfeiture, and expiration. Keep award terms, schedules, and statuses in one place so finance, payroll, and your people all see the same numbers. Give your team a clean record of every long-term incentive you have promised."
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 248,
+   "held_as": "embedded_master"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 619,
+   "held_as": "consumer"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 620,
+   "held_as": "consumer"
+  },
+  {
+   "table": "domain_module_data_objects",
+   "id": 712,
+   "held_as": "consumer"
+  },
+  {
+   "table": "domain_modules",
+   "id": 154,
+   "specification_requirements": "Hiring manager access to candidates. A `candidates` row has no relationship leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `hiring-starter:view_all_candidates`.\n\nDo-not-hire candidates. A new application for a `do_not_hire` candidate is accepted, so the person is not told they are flagged, and the candidate stays `do_not_hire`. The application cannot move to `hired` while the candidate is `do_not_hire`."
+  }
+ ]
+}

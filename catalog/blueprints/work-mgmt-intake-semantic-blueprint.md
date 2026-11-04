@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Work Request Intake
 tagline: Capture work requests through structured forms and route them straight into the right project.
@@ -15,7 +15,8 @@ domain_code: WORK-MGMT
 icon_name: kanban
 related_modules: [work-mgmt-goals-okr, work-mgmt-task-exec]
 persona: []
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Work Request Intake
@@ -38,7 +39,7 @@ flowchart TD
   work_forms["Forms"]
   work_form_submissions["Form Submissions"]
   users["Users"]
-  work_form_submissions -->|"submitted_against"| work_forms
+  work_forms -->|"has_submissions"| work_form_submissions
   users -->|"created_forms"| work_forms
   users -->|"submitted_forms"| work_form_submissions
   class work_forms master;
@@ -48,10 +49,10 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `work_form_submissions` | `work_form_submissions` | Form Submission | Form Submissions | master | - | - | required | yes | operational_workflow | `:manage` | - |
-| 2 | `work_forms` | `work_forms` | Form | Forms | master | - | - | required | - | catalog | `:admin` | - |
+| 1 | `work_form_submissions` | `work_form_submissions` | Form Submission | Form Submissions | master | - | - | - | yes | operational_workflow | `:manage` | - |
+| 2 | `work_forms` | `work_forms` | Form | Forms | master | - | - | - | - | catalog | `:admin` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -59,41 +60,41 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `work_form_submissions` | submitted_against | `work_forms` | one_to_many | composition | required | target | cascade | parent | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | created_forms | `work_forms` | one_to_many | optional | source | clear | reference | - |
-| `users` | submitted_forms | `work_form_submissions` | one_to_many | optional | source | clear | reference | - |
+| `work_forms` | has_submissions | `work_form_submissions` | one_to_many | composition | yes | cascade | parent | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_forms` | routes_to | `work_projects` | one_to_many | optional | none | n/a | - |
+| `users` | created_forms | `work_forms` | one_to_many | no | clear | reference | - |
+| `users` | submitted_forms | `work_form_submissions` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+_(none: no outgoing relationships to external entities)_
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | no | - |
+| `work_forms` | routes_to | `work_projects` | one_to_many | no | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -111,20 +112,20 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 
 ### `work_form_submissions` (Form Submission)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `submitted` | ✓ | - | - | - | - |
-| 2 | `triaged` | - | - | - | - | - |
-| 3 | `converted` | - | ✓ | ✓ | `work-mgmt-intake:convert_form_submission` | - |
-| 4 | `rejected` | - | ✓ | ✓ | `work-mgmt-intake:reject_form_submission` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `submitted` | ✓ | - | - | - | - | - |
+| 2 | `triaged` | - | - | - | - | - | - |
+| 3 | `converted` | - | ✓ | ✓ | - | `work-mgmt-intake:convert_form_submission` | - |
+| 4 | `rejected` | - | ✓ | ✓ | - | `work-mgmt-intake:reject_form_submission` | - |
 
 ### `work_forms` (Form)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `work-mgmt-intake:publish_work_form` | - |
-| 3 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | - | - | - | - |
+| 2 | `published` | - | - | ✓ | - | `work-mgmt-intake:publish_work_form` | - |
+| 3 | `archived` | - | ✓ | - | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -135,11 +136,17 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | `work-mgmt-intake:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `work-mgmt-intake:manage` | baseline-manage | Edit operational records | ✓ |
 | `work-mgmt-intake:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `work-mgmt-intake:read_work_forms` | entity-read | Read Forms | ✓ |
+| `work-mgmt-intake:write_work_forms` | entity-write | Write Forms | ✓ |
+| `work-mgmt-intake:read_work_form_submissions` | entity-read | Read Form Submissions | ✓ |
+| `work-mgmt-intake:write_work_form_submissions` | entity-write | Write Form Submissions | ✓ |
 | `work-mgmt-intake:publish_work_form` | workflow-gate (lifecycle) | Transition `work_forms` into state `published` | ✓ |
 | `work-mgmt-intake:convert_form_submission` | workflow-gate (lifecycle) | Transition `work_form_submissions` into state `converted` | ✓ |
 | `work-mgmt-intake:reject_form_submission` | workflow-gate (lifecycle) | Transition `work_form_submissions` into state `rejected` | ✓ |
 | `work-mgmt-intake:view_all_form_submissions` | override (personal_content) | View all `work_form_submissions` rows beyond row-scope | ✓ |
 | `work-mgmt-intake:manage_all_form_submissions` | override (personal_content) | Manage all `work_form_submissions` rows beyond row-scope | ✓ |
+
+_Gates with no process: `work-mgmt-intake:publish_work_form`, `work-mgmt-intake:convert_form_submission`, `work-mgmt-intake:reject_form_submission`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
@@ -167,6 +174,12 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `work-mgmt-intake:admin` | `work-mgmt-intake:manage` |
 | `work-mgmt-intake:manage` | `work-mgmt-intake:read` |
+| `work-mgmt-intake:read` | `work-mgmt-intake:read_work_forms` |
+| `work-mgmt-intake:read` | `work-mgmt-intake:read_work_form_submissions` |
+| `work-mgmt-intake:admin` | `work-mgmt-intake:write_work_forms` |
+| `work-mgmt-intake:write_work_forms` | `work-mgmt-intake:read_work_forms` |
+| `work-mgmt-intake:manage` | `work-mgmt-intake:write_work_form_submissions` |
+| `work-mgmt-intake:write_work_form_submissions` | `work-mgmt-intake:read_work_form_submissions` |
 | `work-mgmt-intake:admin` | `work-mgmt-intake:publish_work_form` |
 | `work-mgmt-intake:admin` | `work-mgmt-intake:convert_form_submission` |
 | `work-mgmt-intake:admin` | `work-mgmt-intake:reject_form_submission` |
@@ -182,7 +195,7 @@ _(none: no process_raci assignments wired to this module's gated processes yet)_
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Business Operations | `admin` | `:admin` |
-| contributor | Customer Success | `manage` | `:manage` |
-| contributor | Marketing | `manage` | `:manage` |
-| contributor | Product Management | `manage` | `:manage` |
-| consumer | Sales | `read` | `:read` |
+| contributor | Customer Success | `manager` | `:manage` |
+| contributor | Marketing | `manager` | `:manage` |
+| contributor | Product Management | `manager` | `:manage` |
+| consumer | Sales | `viewer` | `:read` |

@@ -616,3 +616,7 @@ re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-
 ## 2026-11-03 - supplier_certifications master moved, owner-approved
 
 The master of `supplier_certifications` is now SRM-RISK-COMPLIANCE (see FOOD-TRACE history). No FSQM row changed. Check M9 now flags dmdo 1396, FSQM-AUDIT-SUPPLIER as contributor, which is q17.
+
+## 2026-11-04 - supplier_certifications hold, owner-approved
+
+The owner answered q17 with an embedded copy. dmdo 1396 (FSQM-AUDIT-SUPPLIER on `supplier_certifications`) went from `contributor` to `embedded_master`, so FSQM still installs without SRM. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

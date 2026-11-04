@@ -411,3 +411,7 @@ None.
 ### Fixes applied
 
 entity_type (10 PATCH), Catalog UX (4 PATCH), 1 trigger_event + 5 intra-domain handoffs inserted. All `record_status='new'`.
+
+## 2026-11-04 - inventory_locations master, owner-approved
+
+Plan F3. dmdo 248 (INV-CORE-STOCK on `inventory_locations`) went from `embedded_master` to `master`, because the intended owner, OMS, has no modules. If OMS is modularized later, moving the master changes this entity's permission names. B1B-S1-B5 is closed: its other row, `commerce_products`, already has its master in B2C-COMM-CATALOG-MERCH. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

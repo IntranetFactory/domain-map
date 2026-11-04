@@ -83,7 +83,7 @@ export const M_CHECKS: Check[] = [
     title: "gated states carry their realizing module",
     run: async (ctx) => {
       const states = masterLifecycle(ctx).filter((s: any) => s.requires_permission === true);
-      // The realizer may sit in any module (a re-prefixed gate on another domain's shell), so the
+      // The realizer may sit in any module (a gate on another domain's shell), so the
       // held_as lookup is catalog-wide.
       const heldAs = new Map<string, string[]>();
       for (const r of ctx.all.dmdo) {

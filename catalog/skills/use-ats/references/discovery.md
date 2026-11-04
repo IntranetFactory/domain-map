@@ -126,7 +126,7 @@ label column is entity-specific and must be read, not assumed), governance flags
 contract**:
 
 - **`validation_rules`**, live jsonlogic write guards, each with a human `message` + `description`
-  (e.g. moving an application to `hired` requires `hiring-starter:hire_candidate`; an edit-scope rule
+  (e.g. moving an application to `hired` requires `ats-pre-employee-record:hire_candidate`; an edit-scope rule
   limiting writes to the owner). Honor these before any write; surface the `message` on a block.
 - **`select_rule`**, row-level read visibility (RLS). A query may over- or under-return relative to
   what the UI shows; the rule tells you the actual scope (e.g. own rows unless `view_all_*`).
@@ -232,15 +232,15 @@ provenance reads:
       "catalog_entity_aliases": [],
       "module_id": 1033, "singular_label": "Application", "plural_label": "Applications",
       "description": "...", "id_column": "id", "label_column": "application_ref", "label_parent": "candidate_id",
-      "view_permission": "hiring-starter:read", "edit_permission": "hiring-starter:manage",
+      "view_permission": "ats-recruitment-pipeline:read_job_applications", "edit_permission": "ats-recruitment-pipeline:write_job_applications",
       "edit_mode": "auto", "is_child": false, "audit_log": true, "cube_mode": "auto", "managed": true, "searchable": true, "updated_at": "...",
       "validation_rules": [
         { "code": "hire_via_application_requires_permission",
           "message": "Only users with the hire-candidate permission can move an application to hired.",
           "description": "Gates the transition into the hired terminal state.",
-          "jsonlogic": { "if": ["...status==hired...", { "require_permission": "hiring-starter:hire_candidate" }, true] } }
+          "jsonlogic": { "if": ["...status==hired...", { "require_permission": "ats-pre-employee-record:hire_candidate" }, true] } }
       ],
-      "select_rule": { "or": [{ "==": [{ "var": "owner_user_id" }, { "var": "$user_id" }] }, { "has_permission": "hiring-starter:view_all_applications" }] },
+      "select_rule": { "or": [{ "==": [{ "var": "owner_user_id" }, { "var": "$user_id" }] }, { "has_permission": "ats-recruitment-pipeline:view_all_applications" }] },
       "computed_fields": [],
       "fields": [
         { "name": "candidate_id", "title": "Candidate", "catalog_field_code": "candidate_id",

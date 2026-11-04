@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Training Records (Compliance Documentation Starter)
 tagline: A lightweight way to assign training and keep completion records, ready to deploy on day one.
@@ -12,7 +12,8 @@ domain_code: LMS
 icon_name: graduation-cap
 related_modules: [clm-negotiation, clm-repository, hcm-lifecycle-workflows, hrsd-case-mgmt, iga-auto-provisioning, lms-automation, lms-compliance-training, lms-course-delivery, lms-credentials, lms-ct-gdpr, lms-ilt-delivery, lms-paths]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, GRC-COMPLIANCE-TRAINING-MANAGER, LD-INSTRUCTOR, LD-LEARNING-ADMIN, LEGAL-COMPLIANCE-SPECIALIST, LEGAL-COUNSEL, PEOPLE-MANAGER]
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Training Records (Compliance Documentation Starter)
@@ -40,32 +41,32 @@ Deployable starter kit for small and mid-market organizations that outsource tra
 flowchart TD
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
-  compliance_assignments["Compliance Training Assignments"]
-  training_evidence_records["Training Evidence Records"]
   signature_records["Signature Records"]
   learner_certifications["Certifications"]
+  compliance_assignments["Compliance Training Assignments"]
+  users["Users"]
+  training_evidence_records["Training Evidence Records"]
   harassment_training_acknowledgments["Harassment Training Acknowledgments"]
   fda_part11_audit_trails["FDA Part 11 Audit Trails"]
-  users["Users"]
   compliance_regulations["Compliance Regulations"]
   dpo_training_acknowledgments["DPO Training Acknowledgments"]
   pci_dss_awareness_records["PCI DSS Awareness Records"]
+  users -->|"must complete"| compliance_assignments
+  users -->|"owns"| compliance_assignments
+  users -->|"holds"| learner_certifications
+  users -->|"signed"| signature_records
   compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgments
   compliance_assignments -->|"produces"| fda_part11_audit_trails
   users -->|"acknowledges"| harassment_training_acknowledgments
   users -->|"audit_trailed_in"| fda_part11_audit_trails
-  users -->|"signed"| signature_records
-  users -->|"must complete"| compliance_assignments
-  users -->|"owns"| compliance_assignments
-  users -->|"holds"| learner_certifications
   compliance_regulations -->|"is_evidenced_by"| training_evidence_records
-  class compliance_assignments embedded_master;
-  class training_evidence_records embedded_master;
   class signature_records embedded_master;
   class learner_certifications embedded_master;
+  class compliance_assignments embedded_master;
+  class users consumer;
+  class training_evidence_records embedded_master;
   class harassment_training_acknowledgments embedded_master;
   class fda_part11_audit_trails embedded_master;
-  class users consumer;
   class compliance_regulations embedded_master;
   class dpo_training_acknowledgments embedded_master;
   class pci_dss_awareness_records embedded_master;
@@ -78,18 +79,18 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | yes | operational_workflow | `:manage` | - |
-| 2 | `compliance_regulations` | `compliance_regulations` | Compliance Regulation | Compliance Regulations | embedded_master | `lms-compliance-training` | Compliance Training | optional | - | catalog | `:admin` | - |
-| 3 | `compliance_assignments` | `compliance_assignments` | Compliance Training Assignment | Compliance Training Assignments | embedded_master | `lms-compliance-training` | Compliance Training | required | yes | operational_workflow | `:manage` | - |
-| 4 | `dpo_training_acknowledgments` | `dpo_training_acknowledgments` | DPO Training Acknowledgment | DPO Training Acknowledgments | embedded_master | - | - | optional | yes | operational_record | `:manage` | - |
-| 5 | `fda_part11_audit_trails` | `fda_part11_audit_trails` | FDA Part 11 Audit Trail | FDA Part 11 Audit Trails | embedded_master | `lms-compliance-training` | Compliance Training | optional | yes | operational_workflow | `:manage` | - |
-| 6 | `harassment_training_acknowledgments` | `harassment_training_acknowledgments` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | embedded_master | `lms-compliance-training` | Compliance Training | optional | yes | operational_workflow | `:manage` | - |
-| 7 | `pci_dss_awareness_records` | `pci_dss_awareness_records` | PCI DSS Awareness Record | PCI DSS Awareness Records | embedded_master | - | - | optional | yes | operational_record | `:manage` | - |
-| 8 | `signature_records` | `signature_records` | Signature Record | Signature Records | embedded_master | `clm-repository` | Contract Repository | required | yes | operational_workflow | `:manage` | - |
-| 9 | `training_evidence_records` | `training_evidence_records` | Training Evidence Record | Training Evidence Records | embedded_master | `lms-compliance-training` | Compliance Training | required | yes | operational_workflow | `:manage` | - |
-| 10 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | operational_record | `:manage` | - |
+| 1 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | - | yes | operational_workflow | `:manage` | - |
+| 2 | `compliance_regulations` | `compliance_regulations` | Compliance Regulation | Compliance Regulations | embedded_master | `lms-compliance-training` | Compliance Training | yes | - | catalog | `:admin` | - |
+| 3 | `compliance_assignments` | `compliance_assignments` | Compliance Training Assignment | Compliance Training Assignments | embedded_master | `lms-compliance-training` | Compliance Training | - | yes | operational_workflow | `:manage` | - |
+| 4 | `dpo_training_acknowledgments` | `dpo_training_acknowledgments` | DPO Training Acknowledgment | DPO Training Acknowledgments | embedded_master | `lms-compliance-training` | Compliance Training | yes | yes | operational_record | `:manage` | - |
+| 5 | `fda_part11_audit_trails` | `fda_part11_audit_trails` | FDA Part 11 Audit Trail | FDA Part 11 Audit Trails | embedded_master | `lms-compliance-training` | Compliance Training | yes | yes | operational_workflow | `:manage` | - |
+| 6 | `harassment_training_acknowledgments` | `harassment_training_acknowledgments` | Harassment Training Acknowledgment | Harassment Training Acknowledgments | embedded_master | `lms-compliance-training` | Compliance Training | yes | yes | operational_workflow | `:manage` | - |
+| 7 | `pci_dss_awareness_records` | `pci_dss_awareness_records` | PCI DSS Awareness Record | PCI DSS Awareness Records | embedded_master | `lms-compliance-training` | Compliance Training | yes | yes | operational_record | `:manage` | - |
+| 8 | `signature_records` | `signature_records` | Signature Record | Signature Records | embedded_master | `clm-repository` | Contract Repository | - | yes | operational_workflow | `:manage` | - |
+| 9 | `training_evidence_records` | `training_evidence_records` | Training Evidence Record | Training Evidence Records | embedded_master | `lms-compliance-training` | Compliance Training | - | yes | operational_workflow | `:manage` | - |
+| 10 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | - | - | operational_record | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -97,102 +98,87 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | reference | optional | target | clear | reference | - |
-| `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | reference | optional | target | clear | reference | - |
-| `compliance_regulations` | is_evidenced_by | `training_evidence_records` | one_to_many | reference | optional | target | clear | reference | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | acknowledges | `harassment_training_acknowledgments` | one_to_many | required | source | restrict | reference | - |
-| `users` | audit_trailed_in | `fda_part11_audit_trails` | one_to_many | optional | source | clear | reference | - |
-| `users` | signed | `signature_records` | one_to_many | optional | source | clear | reference | - |
-| `users` | must complete | `compliance_assignments` | one_to_many | required | source | restrict | reference | - |
-| `users` | owns | `compliance_assignments` | one_to_many | optional | source | clear | reference | - |
-| `users` | holds | `learner_certifications` | one_to_many | required | source | restrict | reference | - |
+| `compliance_assignments` | acknowledged_via | `harassment_training_acknowledgments` | one_to_many | reference | no | clear | reference | - |
+| `compliance_assignments` | produces | `fda_part11_audit_trails` | one_to_many | reference | no | clear | reference | - |
+| `compliance_regulations` | is_evidenced_by | `training_evidence_records` | one_to_many | reference | no | clear | reference | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
-
-#### 5.3b Context relationships on embedded shells and consumed entities
-
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `certification_definitions` | instantiated_as | `learner_certifications` | one_to_many | required | none (required-if-present) | n/a | - |
-| `certificate_templates` | renders | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `compliance_assignments` | evidences | `compliance_audit_records` | one_to_many | optional | none | n/a | - |
-| `compliance_audit_records` | rolled_into | `training_evidence_records` | one_to_many | optional | none | n/a | - |
-| `training_evidence_records` | supplies | `regulator_filing_exports` | many_to_many | optional | none | n/a | - |
-| `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | optional | none | n/a | - |
-| `legal_contracts` | witnessed_by | `signature_records` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `courses` | grants | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `skill_profiles` | updated by | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `compliance_obligations` | tracked by | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `compliance_assignments` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `envelopes` | yields | `signature_records` | one_to_many | optional | none | n/a | - |
+| `users` | must complete | `compliance_assignments` | one_to_many | yes | restrict | reference | - |
+| `users` | owns | `compliance_assignments` | one_to_many | no | clear | reference | - |
+| `users` | holds | `learner_certifications` | one_to_many | yes | restrict | reference | - |
+| `users` | signed | `signature_records` | one_to_many | no | clear | reference | - |
+| `users` | acknowledges | `harassment_training_acknowledgments` | one_to_many | yes | restrict | reference | - |
+| `users` | audit_trailed_in | `fda_part11_audit_trails` | one_to_many | no | clear | reference | - |
+
+### 5.3 Relationships to entities outside this blueprint
+
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
+
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `courses` | fulfills | `compliance_assignments` | one_to_many | no | - |
+| `courses` | grants | `learner_certifications` | one_to_many | no | - |
+| `skill_profiles` | updated by | `learner_certifications` | one_to_many | no | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | no | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | no | - |
+| `compliance_obligations` | tracked by | `compliance_assignments` | one_to_many | no | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | no | - |
+| `legal_contracts` | witnessed_by | `signature_records` | one_to_many | yes | - |
+| `envelopes` | yields | `signature_records` | one_to_many | no | - |
+| `certification_definitions` | instantiated_as | `learner_certifications` | one_to_many | yes | - |
+| `certificate_templates` | renders | `learner_certifications` | one_to_many | no | - |
+| `compliance_training_campaigns` | generates | `compliance_assignments` | one_to_many | yes | - |
+| `training_evidence_records` | supplies | `regulator_filing_exports` | many_to_many | - | - |
+| `automated_enrollment_rules` | creates | `compliance_assignments` | one_to_many | no | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `compliance_assignments` | triggers | `iga_provisioning_events` | one_to_many | no | - |
+| `compliance_assignments` | evidenced_by | `compliance_audit_records` | one_to_many | no | - |
+| `training_evidence_records` | consolidates | `compliance_audit_records` | one_to_many | no | - |
+| `compliance_assignments` | escalates_via | `manager_nudges` | one_to_many | no | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: this scope masters no entities)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.completed` | _(lifecycle)_ | `compliance_assignments` | event_stream | low | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | GRC obligation tracker updates the per-employee compliance status to 'due' so the regulator-evidence dashboard reflects the impending breach risk. Drives audit-evidence reporting (e.g., Compliance Operations dashboard). |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | event_stream | high | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | event_stream | high | Compliance training overdue is a control failure; GRC tracks obligation status, IGA may suspend high-risk access. |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `training_evidence_record.submitted` | _(lifecycle)_ | `training_evidence_records` | event_stream | low | - |
-| LMS-COMPLIANCE-TRAINING | HRSD | HRSD-CASE-MGMT | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | api_call | medium | HR Service Delivery opens (or updates) an employee-facing case/task with the impending obligation, deadline, and link to the assigned course. Failure mode: when an HRSD platform isn't deployed, the nudge falls back to direct email and the in-tool reminder. |
-| LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | api_call | high | - |
-| LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | api_call | high | Severe overdue (PCI, HIPAA, SOX-relevant) may auto-suspend system access pending completion. Alert-without-feedback-loop common. |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.expired` | _(threshold)_ | `learner_certifications` | api_call | high | - |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.renewed` | _(lifecycle)_ | `learner_certifications` | api_call | medium | - |
-| LMS-CREDENTIALS | IGA | IGA-AUTO-PROVISIONING | `learner_certification.revoked` | _(lifecycle)_ | `learner_certifications` | api_call | high | - |
-| LMS-COMPLIANCE-TRAINING | HCM | HCM-LIFECYCLE-WORKFLOWS | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | Compliance assignment due-date nudges to HCM-mastered manager/employee record. HCM surfaces the impending obligation on the employee profile and routes a reminder to the line manager. |
-| LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | lifecycle_progression | low | - |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLM-REPOSITORY | CLM | CLM-NEGOTIATION | `signature_record.completed` | _(state_change)_ | `signature_records` | lifecycle_progression | low | Signature envelope completion in negotiation hands the executed envelope to the repository for persistence. Intra-domain lifecycle progression; the signed document gets indexed and the related legal_contract transitions out_for_signature -> signed. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `compliance_assignments` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `compliance_regulations` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `dpo_training_acknowledgments` | embedded_master | optional | _(no canonical owner recorded)_ | - |
-| `fda_part11_audit_trails` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `harassment_training_acknowledgments` | embedded_master | optional | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `learner_certifications` | embedded_master | required | LMS-CREDENTIALS (LMS) | - |
-| `pci_dss_awareness_records` | embedded_master | optional | _(no canonical owner recorded)_ | - |
-| `signature_records` | embedded_master | required | CLM-REPOSITORY (CLM) | - |
-| `training_evidence_records` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
-| `users` | consumer | required | _(platform built-in)_ | - |
+| `compliance_assignments` | embedded_master | - | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `compliance_regulations` | embedded_master | yes | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `dpo_training_acknowledgments` | embedded_master | yes | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `fda_part11_audit_trails` | embedded_master | yes | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `harassment_training_acknowledgments` | embedded_master | yes | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `learner_certifications` | embedded_master | - | LMS-CREDENTIALS (LMS) | - |
+| `pci_dss_awareness_records` | embedded_master | yes | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `signature_records` | embedded_master | - | CLM-REPOSITORY (CLM) | - |
+| `training_evidence_records` | embedded_master | - | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `users` | consumer | - | _(platform built-in)_ | - |
 
 ## 7. Lifecycle states
 
@@ -200,71 +186,71 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 _This scope holds `compliance_assignments` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `assigned` | ✓ | - | - | - | Mandatory training assignment created for a learner with due date. |
-| 2 | `in_progress` | - | - | - | - | Learner has started the underlying course or activity. |
-| 3 | `completed` | - | ✓ | ✓ | `training-records-starter:complete` | Learner finished the assignment within the due window. |
-| 4 | `overdue` | - | - | - | - | Due date passed without completion and escalation policy engaged. |
-| 5 | `waived` | - | ✓ | ✓ | `training-records-starter:waive` | Assignment formally waived by compliance owner with audit reason. |
-| 6 | `expired` | - | ✓ | ✓ | `training-records-starter:expire` | Assignment closed unmet at the regulatory deadline. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `assigned` | ✓ | - | _(always)_ | - | - | - | Mandatory training assignment created for a learner with due date. |
+| 2 | `in_progress` | - | - | _(always)_ | - | - | - | Learner has started the underlying course or activity. |
+| 3 | `completed` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:complete` | Learner finished the assignment within the due window. |
+| 4 | `overdue` | - | - | _(always)_ | - | - | - | Due date passed without completion and escalation policy engaged. |
+| 5 | `waived` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:waive` | Assignment formally waived by compliance owner with audit reason. |
+| 6 | `expired` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:expire` | Assignment closed unmet at the regulatory deadline. |
 
 ### `fda_part11_audit_trails` (FDA Part 11 Audit Trail)
 
 _This scope holds `fda_part11_audit_trails` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `recorded` | ✓ | - | - | - | - |
-| 2 | `validated` | - | - | ✓ | `training-records-starter:validate` | - |
-| 3 | `archived` | - | ✓ | ✓ | `training-records-starter:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `recorded` | ✓ | - | `LMS-COMPLIANCE-TRAINING` | - | - | - | - |
+| 2 | `validated` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:validate` | - |
+| 3 | `archived` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:archive` | - |
 
 ### `harassment_training_acknowledgments` (Harassment Training Acknowledgment)
 
 _This scope holds `harassment_training_acknowledgments` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - |
-| 2 | `acknowledged` | - | - | ✓ | `training-records-starter:acknowledge` | - |
-| 3 | `archived` | - | ✓ | ✓ | `training-records-starter:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | `LMS-COMPLIANCE-TRAINING` | - | - | - | - |
+| 2 | `acknowledged` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:acknowledge` | - |
+| 3 | `archived` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:archive` | - |
 
 ### `learner_certifications` (Certification)
 
 _This scope holds `learner_certifications` as **embedded_master**; the canonical state machine is owned by `LMS-CREDENTIALS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `issued` | ✓ | - | ✓ | `training-records-starter:issue` | Credential awarded to the learner with issue and expiry dates. |
-| 2 | `active` | - | - | - | - | Credential in force and valid for compliance or role requirements. |
-| 3 | `renewing` | - | - | - | - | Recertification campaign engaged before expiry. |
-| 4 | `renewed` | - | - | ✓ | `training-records-starter:renew` | Credential renewed with a fresh validity window. |
-| 5 | `expired` | - | ✓ | - | - | Credential past its expiry date and no longer valid. |
-| 6 | `revoked` | - | ✓ | ✓ | `training-records-starter:revoke` | Credential withdrawn by the issuing body or L&D for cause. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `issued` | ✓ | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:issue` | Credential awarded to the learner with issue and expiry dates. |
+| 2 | `active` | - | - | _(always)_ | - | - | - | Credential in force and valid for compliance or role requirements. |
+| 3 | `renewing` | - | - | _(always)_ | - | - | - | Recertification campaign engaged before expiry. |
+| 4 | `renewed` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:renew` | Credential renewed with a fresh validity window. |
+| 5 | `expired` | - | ✓ | _(always)_ | - | - | - | Credential past its expiry date and no longer valid. |
+| 6 | `revoked` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:revoke` | Credential withdrawn by the issuing body or L&D for cause. |
 
 ### `signature_records` (Signature Record)
 
 _This scope holds `signature_records` as **embedded_master**; the canonical state machine is owned by `CLM-REPOSITORY`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `pending` | ✓ | - | - | - | Signature envelope created but not yet dispatched. |
-| 20 | `sent` | - | - | - | - | Envelope dispatched to first signer(s); awaiting first signature. |
-| 30 | `in_progress` | - | - | - | - | One or more signers have signed; others remain. |
-| 40 | `completed` | - | ✓ | - | - | All required signers have signed. The signed contract document is persisted. Terminal positive outcome. |
-| 50 | `declined` | - | ✓ | - | - | A signer declined to sign. Envelope is terminal; a new envelope can be created if negotiation re-opens. |
-| 60 | `voided` | - | ✓ | ✓ | `training-records-starter:void_signature_record` | Sender voided the envelope before all signers completed. Terminal. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `pending` | ✓ | - | _(always)_ | - | - | - | Signature envelope created but not yet dispatched. |
+| 20 | `sent` | - | - | `CLM-REPOSITORY` | - | - | - | Envelope dispatched to first signer(s); awaiting first signature. |
+| 30 | `in_progress` | - | - | `CLM-REPOSITORY` | - | - | - | One or more signers have signed; others remain. |
+| 40 | `completed` | - | ✓ | _(always)_ | - | - | - | All required signers have signed. The signed contract document is persisted. Terminal positive outcome. |
+| 50 | `declined` | - | ✓ | _(always)_ | - | - | - | A signer declined to sign. Envelope is terminal; a new envelope can be created if negotiation re-opens. |
+| 60 | `voided` | - | ✓ | `CLM-REPOSITORY` | ✓ | - | `clm-repository:void_signature_record` | Sender voided the envelope before all signers completed. Terminal. |
 
 ### `training_evidence_records` (Training Evidence Record)
 
 _This scope holds `training_evidence_records` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `finalized` | - | - | ✓ | `training-records-starter:finalize` | - |
-| 3 | `submitted` | - | - | ✓ | `training-records-starter:submit` | - |
-| 4 | `archived` | - | ✓ | ✓ | `training-records-starter:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | `LMS-COMPLIANCE-TRAINING` | - | - | - | - |
+| 2 | `finalized` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:finalize` | - |
+| 3 | `submitted` | - | - | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:submit` | - |
+| 4 | `archived` | - | ✓ | `LMS-COMPLIANCE-TRAINING` | ✓ | - | `lms-compliance-training:archive` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -275,47 +261,67 @@ _This scope holds `training_evidence_records` as **embedded_master**; the canoni
 | `training-records-starter:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `training-records-starter:manage` | baseline-manage | Edit operational records | ✓ |
 | `training-records-starter:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `training-records-starter:void_signature_record` | workflow-gate (lifecycle) | Transition `signature_records` into state `voided` | ✓ |
-| `training-records-starter:issue` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `issued` | ✓ |
-| `training-records-starter:renew` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `renewed` | ✓ |
-| `training-records-starter:revoke` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `revoked` | ✓ |
-| `training-records-starter:complete` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `completed` | ✓ |
-| `training-records-starter:waive` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `waived` | ✓ |
-| `training-records-starter:expire` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `expired` | ✓ |
-| `training-records-starter:finalize` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `finalized` | ✓ |
-| `training-records-starter:submit` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `submitted` | ✓ |
-| `training-records-starter:archive` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `archived` | ✓ |
-| `training-records-starter:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgments` into state `acknowledged` | ✓ |
-| `training-records-starter:validate` | workflow-gate (lifecycle) | Transition `fda_part11_audit_trails` into state `validated` | ✓ |
-| `training-records-starter:view_all_compliance_training_assignments` | override (personal_content) | View all `compliance_assignments` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_compliance_training_assignments` | override (personal_content) | Manage all `compliance_assignments` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_training_evidence_records` | override (personal_content) | View all `training_evidence_records` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_training_evidence_records` | override (personal_content) | Manage all `training_evidence_records` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_signature_records` | override (personal_content) | View all `signature_records` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_signature_records` | override (personal_content) | Manage all `signature_records` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_certifications` | override (personal_content) | View all `learner_certifications` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_certifications` | override (personal_content) | Manage all `learner_certifications` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_fda_part_11_audit_trails` | override (personal_content) | Manage all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_dpo_training_acknowledgments` | override (personal_content) | View all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_dpo_training_acknowledgments` | override (personal_content) | Manage all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
-| `training-records-starter:view_all_pci_dss_awareness_records` | override (personal_content) | View all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
-| `training-records-starter:manage_all_pci_dss_awareness_records` | override (personal_content) | Manage all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
+| `clm-repository:read_signature_records` | entity-read | Read Signature Records | ✓ |
+| `clm-repository:write_signature_records` | entity-write | Write Signature Records | ✓ |
+| `lms-credentials:read_learner_certifications` | entity-read | Read Certifications | ✓ |
+| `lms-credentials:write_learner_certifications` | entity-write | Write Certifications | ✓ |
+| `lms-compliance-training:read_compliance_assignments` | entity-read | Read Compliance Training Assignments | ✓ |
+| `lms-compliance-training:write_compliance_assignments` | entity-write | Write Compliance Training Assignments | ✓ |
+| `lms-compliance-training:read_training_evidence_records` | entity-read | Read Training Evidence Records | ✓ |
+| `lms-compliance-training:write_training_evidence_records` | entity-write | Write Training Evidence Records | ✓ |
+| `lms-compliance-training:read_harassment_training_acknowledgments` | entity-read | Read Harassment Training Acknowledgments | ✓ |
+| `lms-compliance-training:write_harassment_training_acknowledgments` | entity-write | Write Harassment Training Acknowledgments | ✓ |
+| `lms-compliance-training:read_fda_part11_audit_trails` | entity-read | Read FDA Part 11 Audit Trails | ✓ |
+| `lms-compliance-training:write_fda_part11_audit_trails` | entity-write | Write FDA Part 11 Audit Trails | ✓ |
+| `lms-compliance-training:read_compliance_regulations` | entity-read | Read Compliance Regulations | ✓ |
+| `lms-compliance-training:write_compliance_regulations` | entity-write | Write Compliance Regulations | ✓ |
+| `lms-compliance-training:read_dpo_training_acknowledgments` | entity-read | Read DPO Training Acknowledgments | ✓ |
+| `lms-compliance-training:write_dpo_training_acknowledgments` | entity-write | Write DPO Training Acknowledgments | ✓ |
+| `lms-compliance-training:read_pci_dss_awareness_records` | entity-read | Read PCI DSS Awareness Records | ✓ |
+| `lms-compliance-training:write_pci_dss_awareness_records` | entity-write | Write PCI DSS Awareness Records | ✓ |
+| `clm-repository:void_signature_record` | workflow-gate (lifecycle) | Transition `signature_records` into state `voided` | ✓ |
+| `lms-compliance-training:issue` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `issued` | ✓ |
+| `lms-compliance-training:renew` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `renewed` | ✓ |
+| `lms-compliance-training:revoke` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `revoked` | ✓ |
+| `lms-compliance-training:complete` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `completed` | ✓ |
+| `lms-compliance-training:waive` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `waived` | ✓ |
+| `lms-compliance-training:expire` | workflow-gate (lifecycle) | Transition `compliance_assignments` into state `expired` | ✓ |
+| `lms-compliance-training:finalize` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `finalized` | ✓ |
+| `lms-compliance-training:submit` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `submitted` | ✓ |
+| `lms-compliance-training:archive` | workflow-gate (lifecycle) | Transition `training_evidence_records` into state `archived`, `harassment_training_acknowledgments` into state `archived` or `fda_part11_audit_trails` into state `archived` | ✓ |
+| `lms-compliance-training:acknowledge` | workflow-gate (lifecycle) | Transition `harassment_training_acknowledgments` into state `acknowledged` | ✓ |
+| `lms-compliance-training:validate` | workflow-gate (lifecycle) | Transition `fda_part11_audit_trails` into state `validated` | ✓ |
+| `clm-repository:view_all_signature_records` | override (personal_content) | View all `signature_records` rows beyond row-scope | ✓ |
+| `clm-repository:manage_all_signature_records` | override (personal_content) | Manage all `signature_records` rows beyond row-scope | ✓ |
+| `lms-credentials:view_all_certifications` | override (personal_content) | View all `learner_certifications` rows beyond row-scope | ✓ |
+| `lms-credentials:manage_all_certifications` | override (personal_content) | Manage all `learner_certifications` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_compliance_training_assignments` | override (personal_content) | View all `compliance_assignments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_compliance_training_assignments` | override (personal_content) | Manage all `compliance_assignments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_training_evidence_records` | override (personal_content) | View all `training_evidence_records` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_training_evidence_records` | override (personal_content) | Manage all `training_evidence_records` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_harassment_training_acknowledgments` | override (personal_content) | View all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_harassment_training_acknowledgments` | override (personal_content) | Manage all `harassment_training_acknowledgments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_fda_part_11_audit_trails` | override (personal_content) | Manage all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_dpo_training_acknowledgments` | override (personal_content) | View all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_dpo_training_acknowledgments` | override (personal_content) | Manage all `dpo_training_acknowledgments` rows beyond row-scope | ✓ |
+| `lms-compliance-training:view_all_pci_dss_awareness_records` | override (personal_content) | View all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_pci_dss_awareness_records` | override (personal_content) | Manage all `pci_dss_awareness_records` rows beyond row-scope | ✓ |
+
+_Gates with no process: `lms-compliance-training:renew`, `lms-compliance-training:revoke`, `lms-compliance-training:waive`, `lms-compliance-training:expire`, `lms-compliance-training:finalize`, `lms-compliance-training:archive`, `lms-compliance-training:acknowledge`, `lms-compliance-training:validate`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
-| `compliance_training_assignment_edit_scope` | `compliance_assignments` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_compliance_training_assignments` / `training-records-starter:manage_all_compliance_training_assignments` |
-| `training_evidence_record_edit_scope` | `training_evidence_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_training_evidence_records` / `training-records-starter:manage_all_training_evidence_records` |
-| `signature_record_edit_scope` | `signature_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_signature_records` / `training-records-starter:manage_all_signature_records` |
-| `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_certifications` / `training-records-starter:manage_all_certifications` |
-| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgments` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_harassment_training_acknowledgments` / `training-records-starter:manage_all_harassment_training_acknowledgments` |
-| `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_fda_part_11_audit_trails` / `training-records-starter:manage_all_fda_part_11_audit_trails` |
-| `dpo_training_acknowledgment_edit_scope` | `dpo_training_acknowledgments` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_dpo_training_acknowledgments` / `training-records-starter:manage_all_dpo_training_acknowledgments` |
-| `pci_dss_awareness_record_edit_scope` | `pci_dss_awareness_records` | has_personal_content | Row-scope by default; override via `training-records-starter:view_all_pci_dss_awareness_records` / `training-records-starter:manage_all_pci_dss_awareness_records` |
+| `signature_record_edit_scope` | `signature_records` | has_personal_content | Row-scope by default; override via `clm-repository:view_all_signature_records` / `clm-repository:manage_all_signature_records` |
+| `certification_edit_scope` | `learner_certifications` | has_personal_content | Row-scope by default; override via `lms-credentials:view_all_certifications` / `lms-credentials:manage_all_certifications` |
+| `compliance_training_assignment_edit_scope` | `compliance_assignments` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_compliance_training_assignments` / `lms-compliance-training:manage_all_compliance_training_assignments` |
+| `training_evidence_record_edit_scope` | `training_evidence_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_training_evidence_records` / `lms-compliance-training:manage_all_training_evidence_records` |
+| `harassment_training_acknowledgment_edit_scope` | `harassment_training_acknowledgments` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_harassment_training_acknowledgments` / `lms-compliance-training:manage_all_harassment_training_acknowledgments` |
+| `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_fda_part_11_audit_trails` / `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
+| `dpo_training_acknowledgment_edit_scope` | `dpo_training_acknowledgments` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_dpo_training_acknowledgments` / `lms-compliance-training:manage_all_dpo_training_acknowledgments` |
+| `pci_dss_awareness_record_edit_scope` | `pci_dss_awareness_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_pci_dss_awareness_records` / `lms-compliance-training:manage_all_pci_dss_awareness_records` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -329,6 +335,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `training-records-starter_viewer` | `training-records-starter:read` |
 | `training-records-starter_manager` | `training-records-starter:manage` |
+| `training-records-starter_admin` | `training-records-starter:admin` |
 
 **Permission hierarchy:**
 
@@ -336,34 +343,61 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `training-records-starter:admin` | `training-records-starter:manage` |
 | `training-records-starter:manage` | `training-records-starter:read` |
-| `training-records-starter:admin` | `training-records-starter:void_signature_record` |
-| `training-records-starter:admin` | `training-records-starter:issue` |
-| `training-records-starter:admin` | `training-records-starter:renew` |
-| `training-records-starter:admin` | `training-records-starter:revoke` |
-| `training-records-starter:admin` | `training-records-starter:complete` |
-| `training-records-starter:admin` | `training-records-starter:waive` |
-| `training-records-starter:admin` | `training-records-starter:expire` |
-| `training-records-starter:admin` | `training-records-starter:finalize` |
-| `training-records-starter:admin` | `training-records-starter:submit` |
-| `training-records-starter:admin` | `training-records-starter:archive` |
-| `training-records-starter:admin` | `training-records-starter:acknowledge` |
-| `training-records-starter:admin` | `training-records-starter:validate` |
-| `training-records-starter:admin` | `training-records-starter:view_all_compliance_training_assignments` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_compliance_training_assignments` |
-| `training-records-starter:admin` | `training-records-starter:view_all_training_evidence_records` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_training_evidence_records` |
-| `training-records-starter:admin` | `training-records-starter:view_all_signature_records` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_signature_records` |
-| `training-records-starter:admin` | `training-records-starter:view_all_certifications` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_certifications` |
-| `training-records-starter:admin` | `training-records-starter:view_all_harassment_training_acknowledgments` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_harassment_training_acknowledgments` |
-| `training-records-starter:admin` | `training-records-starter:view_all_fda_part_11_audit_trails` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_fda_part_11_audit_trails` |
-| `training-records-starter:admin` | `training-records-starter:view_all_dpo_training_acknowledgments` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_dpo_training_acknowledgments` |
-| `training-records-starter:admin` | `training-records-starter:view_all_pci_dss_awareness_records` |
-| `training-records-starter:admin` | `training-records-starter:manage_all_pci_dss_awareness_records` |
+| `training-records-starter:read` | `clm-repository:read_signature_records` |
+| `training-records-starter:read` | `lms-credentials:read_learner_certifications` |
+| `training-records-starter:read` | `lms-compliance-training:read_compliance_assignments` |
+| `training-records-starter:read` | `lms-compliance-training:read_training_evidence_records` |
+| `training-records-starter:read` | `lms-compliance-training:read_harassment_training_acknowledgments` |
+| `training-records-starter:read` | `lms-compliance-training:read_fda_part11_audit_trails` |
+| `training-records-starter:read` | `lms-compliance-training:read_compliance_regulations` |
+| `training-records-starter:read` | `lms-compliance-training:read_dpo_training_acknowledgments` |
+| `training-records-starter:read` | `lms-compliance-training:read_pci_dss_awareness_records` |
+| `training-records-starter:manage` | `clm-repository:write_signature_records` |
+| `clm-repository:write_signature_records` | `clm-repository:read_signature_records` |
+| `training-records-starter:manage` | `lms-credentials:write_learner_certifications` |
+| `lms-credentials:write_learner_certifications` | `lms-credentials:read_learner_certifications` |
+| `training-records-starter:manage` | `lms-compliance-training:write_compliance_assignments` |
+| `lms-compliance-training:write_compliance_assignments` | `lms-compliance-training:read_compliance_assignments` |
+| `training-records-starter:manage` | `lms-compliance-training:write_training_evidence_records` |
+| `lms-compliance-training:write_training_evidence_records` | `lms-compliance-training:read_training_evidence_records` |
+| `training-records-starter:manage` | `lms-compliance-training:write_harassment_training_acknowledgments` |
+| `lms-compliance-training:write_harassment_training_acknowledgments` | `lms-compliance-training:read_harassment_training_acknowledgments` |
+| `training-records-starter:manage` | `lms-compliance-training:write_fda_part11_audit_trails` |
+| `lms-compliance-training:write_fda_part11_audit_trails` | `lms-compliance-training:read_fda_part11_audit_trails` |
+| `training-records-starter:admin` | `lms-compliance-training:write_compliance_regulations` |
+| `lms-compliance-training:write_compliance_regulations` | `lms-compliance-training:read_compliance_regulations` |
+| `training-records-starter:manage` | `lms-compliance-training:write_dpo_training_acknowledgments` |
+| `lms-compliance-training:write_dpo_training_acknowledgments` | `lms-compliance-training:read_dpo_training_acknowledgments` |
+| `training-records-starter:manage` | `lms-compliance-training:write_pci_dss_awareness_records` |
+| `lms-compliance-training:write_pci_dss_awareness_records` | `lms-compliance-training:read_pci_dss_awareness_records` |
+| `training-records-starter:admin` | `clm-repository:void_signature_record` |
+| `training-records-starter:admin` | `lms-compliance-training:issue` |
+| `training-records-starter:admin` | `lms-compliance-training:renew` |
+| `training-records-starter:admin` | `lms-compliance-training:revoke` |
+| `training-records-starter:admin` | `lms-compliance-training:complete` |
+| `training-records-starter:admin` | `lms-compliance-training:waive` |
+| `training-records-starter:admin` | `lms-compliance-training:expire` |
+| `training-records-starter:admin` | `lms-compliance-training:finalize` |
+| `training-records-starter:admin` | `lms-compliance-training:submit` |
+| `training-records-starter:admin` | `lms-compliance-training:archive` |
+| `training-records-starter:admin` | `lms-compliance-training:acknowledge` |
+| `training-records-starter:admin` | `lms-compliance-training:validate` |
+| `training-records-starter:admin` | `clm-repository:view_all_signature_records` |
+| `training-records-starter:admin` | `clm-repository:manage_all_signature_records` |
+| `training-records-starter:admin` | `lms-credentials:view_all_certifications` |
+| `training-records-starter:admin` | `lms-credentials:manage_all_certifications` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_compliance_training_assignments` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_compliance_training_assignments` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_training_evidence_records` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_training_evidence_records` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_harassment_training_acknowledgments` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_harassment_training_acknowledgments` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_fda_part_11_audit_trails` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_dpo_training_acknowledgments` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_dpo_training_acknowledgments` |
+| `training-records-starter:admin` | `lms-compliance-training:view_all_pci_dss_awareness_records` |
+| `training-records-starter:admin` | `lms-compliance-training:manage_all_pci_dss_awareness_records` |
 
 **Processes wired:**
 
@@ -377,24 +411,24 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `CONTRACT-OPS-SPECIALIST` | persona | responsible | `manage_contracts` | grant gates [training-records-starter:void_signature_record] + the gated entities' write tier |
-| `CONTRACT-OPS-MANAGER` | persona | accountable | `manage_contracts` | approval gate |
+| `CONTRACT-OPS-SPECIALIST` | persona | responsible | `manage_contracts` | the gated entities' write tier |
+| `CONTRACT-OPS-MANAGER` | persona | accountable | `manage_contracts` | grant gates [clm-repository:void_signature_record] + the gated entities' write tier |
 | `LEGAL-COUNSEL` | persona | consulted | `manage_contracts` | advisory read grant |
-| `LD-LEARNING-ADMIN` | persona | responsible | `manage_examinations` | grant gates [training-records-starter:issue] + the gated entities' write tier |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `manage_examinations` | approval gate |
+| `LD-LEARNING-ADMIN` | persona | responsible | `manage_examinations` | the gated entities' write tier |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `manage_examinations` | grant gates [lms-compliance-training:issue] + the gated entities' write tier |
 | `LD-INSTRUCTOR` | persona | consulted | `manage_examinations` | advisory read grant |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | responsible | `train_employees_appropriate` | grant gates [training-records-starter:complete, training-records-starter:submit] + the gated entities' write tier |
-| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `train_employees_appropriate` | approval gate |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | responsible | `train_employees_appropriate` | the gated entities' write tier |
+| `GRC-COMPLIANCE-TRAINING-MANAGER` | persona | accountable | `train_employees_appropriate` | grant gates [lms-compliance-training:complete, lms-compliance-training:submit] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `train_employees_appropriate` | advisory read grant |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `train_employees_appropriate` | notification side effect (trigger_event / webhook_receiver) |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `train_employees_appropriate` | notify on trigger_events [compliance_assignment.completed, training_evidence_record.submitted] |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Learning and Development | `admin` | `:admin` |
-| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Manufacturing Operations | `read` | `:read` |
-| consumer | Sales | `read` | `:read` |
-| consumer | Software Engineering | `read` | `:read` |
+| contributor | Governance, Risk and Compliance | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Manufacturing Operations | `viewer` | `:read` |
+| consumer | Sales | `viewer` | `:read` |
+| consumer | Software Engineering | `viewer` | `:read` |

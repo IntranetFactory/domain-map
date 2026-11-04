@@ -4,6 +4,12 @@ Repo-wide log of meaningful changes: emitted artifacts whose shape consumers dep
 
 ---
 
+## Blueprint permissions: named by the catalog
+
+2026-11-04. `catalog/blueprints/` §8.1 and §9.1 changed shape, in place, at format version `3.1`. Every entity has `<master>:read_<entity>` and `<master>:write_<entity>` (new tiers `entity-read` and `entity-write`). Gates are named after the realizing module, else the master, and overrides after the master, whatever the module emitting the file. `<unit>:read`, `:manage` and `:admin` are bundles that include them through §9.1. §7 prints `realizing module` whenever a gate is named after another module, and §3 `mastered in` names the master on `derived` rows. Plan: [plans/stable-permission-names-plan.md](plans/stable-permission-names-plan.md).
+
+---
+
 ## `domain-map.json` / `personas.json` / `processes.json` — current shape
 
 Emitted by [scripts/emit_domain_map.ts](scripts/emit_domain_map.ts) from the live Semantius catalog. Reads go through [scripts/lib/catalog.ts](scripts/lib/catalog.ts) and the local cache. One run writes three files under `catalog/`:

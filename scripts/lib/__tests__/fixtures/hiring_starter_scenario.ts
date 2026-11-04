@@ -69,6 +69,7 @@ export function hiringStarterScenario(): Fixture {
       dmdoRow(I.PIPE, I.POSTINGS, "master"),
       dmdoRow(I.PIPE, I.APPLICATIONS, "master"),
       dmdoRow(I.OFFERS, I.JOB_OFFERS, "master"),
+      dmdoRow(I.PRE, I.APPLICATIONS, "embedded_master"),
       dmdoRow(I.STARTER, I.CANDIDATES, "embedded_master"),
       dmdoRow(I.STARTER, I.POSTINGS, "embedded_master"),
       dmdoRow(I.STARTER, I.APPLICATIONS, "embedded_master"),
@@ -84,8 +85,8 @@ export function hiringStarterScenario(): Fixture {
       lifecycleState({ id: 4, data_object_id: I.POSTINGS, state_name: "draft", state_order: 1, is_initial: true, description: "Being composed." }),
       lifecycleState({ id: 5, data_object_id: I.POSTINGS, state_name: "published", state_order: 2, requires_permission: true, permission_verb_override: "publish_posting", domain_module_id: I.PIPE, process_id: I.RECRUIT, description: "Live on the channel." }),
       lifecycleState({ id: 6, data_object_id: I.POSTINGS, state_name: "closed", state_order: 3, is_terminal: true, description: "Taken down." }),
-      // job_applications: `hired` shares the `hire_candidate` code; its realizer (pre-employee
-      // record) is not installed either, so the starter mints it.
+      // job_applications: `hired` is realized by the pre-employee record, which is not installed
+      // either, so the starter mints that module's gate and holds it.
       lifecycleState({ id: 7, data_object_id: I.APPLICATIONS, state_name: "applied", state_order: 1, is_initial: true, description: "Submitted." }),
       lifecycleState({ id: 8, data_object_id: I.APPLICATIONS, state_name: "hired", state_order: 2, is_terminal: true, requires_permission: true, permission_verb_override: "hire_candidate", domain_module_id: I.PRE, process_id: I.HIRE, description: "Hired against the requisition." }),
       // job_offers: `approved` is the high-risk gate.

@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Task and Project Execution
 tagline: Plan projects, assign tasks, and track them from kickoff to done.
@@ -15,7 +15,8 @@ domain_code: WORK-MGMT
 icon_name: kanban
 related_modules: [crm-pipeline-mgt, emp-exp-action-planning, intgov-governance, mrm-planning, pm-discovery, pm-roadmap-delivery, psa-project-delivery, psa-resource-mgmt, sem-execution-tracking, spm-demand-mgmt, spm-portfolio-planning, spm-resource-capacity, work-mgmt-goals-okr, work-mgmt-intake, wsc-channels-conversations]
 persona: [OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Task and Project Execution
@@ -69,19 +70,19 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
+  crm_opportunities["Opportunities"]
+  action_plans["Engagement Action Plans"]
+  project_tasks["Project Tasks"]
+  project_assignments["Project Assignments"]
   work_items["Work Items"]
   work_projects["Work Projects"]
   work_automations["Work Automations"]
-  crm_opportunities["Opportunities"]
-  strategic_initiatives["Strategic Initiatives"]
   strategic_portfolios["Portfolios"]
-  action_plans["Engagement Action Plans"]
+  strategic_initiatives["Strategic Initiatives"]
   business_value_assessments["Business Value Assessments"]
-  project_tasks["Project Tasks"]
+  product_releases["Product Releases"]
   product_roadmaps["Product Roadmaps"]
   feature_requests["Feature Requests"]
-  product_releases["Product Releases"]
-  project_assignments["Project Assignments"]
   work_dependencies["Work Dependencies"]
   work_milestones["Milestones"]
   work_approval_steps["Approval Steps"]
@@ -105,26 +106,9 @@ flowchart TD
   work_statuses["Work Statuses"]
   work_status_updates["Work Status Updates"]
   users["Users"]
-  work_dependencies -->|"blocks"| work_items
-  work_milestones -->|"belongs_to"| work_projects
-  work_approval_steps -->|"belongs_to"| work_approval_chains
-  work_approval_chains -->|"gates"| work_items
-  work_approval_chains -->|"gates_project"| work_projects
-  work_user_workloads -->|"rolls_up"| work_items
-  work_custom_fields -->|"applies_to"| work_projects
-  work_custom_field_values -->|"valued_for"| work_custom_fields
-  work_custom_field_values -->|"set_on"| work_items
-  work_sections -->|"belongs_to"| work_projects
-  work_items -->|"placed_in"| work_sections
-  work_project_templates -->|"seeds"| work_projects
-  work_task_templates -->|"seeds_item"| work_items
-  work_item_tags -->|"references_tag"| work_tags
-  work_item_tags -->|"tagged_on"| work_items
-  work_item_comments -->|"belongs_to"| work_items
-  work_item_attachments -->|"belongs_to"| work_items
   action_plans -->|"spawns"| work_items
-  work_items -->|"depends_on"| work_items
   work_projects -->|"contains"| work_items
+  work_items -->|"depends_on"| work_items
   work_automations -->|"drives"| work_items
   work_automations -->|"applies_to"| work_projects
   strategic_initiatives -->|"portfolio rollup from"| work_items
@@ -132,28 +116,33 @@ flowchart TD
   work_automations -->|"feeds"| project_tasks
   work_automations -->|"mirrors_to"| product_roadmaps
   project_tasks -->|"performed_by"| project_assignments
+  work_dependencies -->|"blocks"| work_items
+  work_projects -->|"has_milestones"| work_milestones
+  work_approval_chains -->|"has_steps"| work_approval_steps
+  work_approval_chains -->|"gates"| work_items
+  work_approval_chains -->|"gates_project"| work_projects
+  work_user_workloads -->|"rolls_up"| work_items
+  work_projects -->|"has_custom_fields"| work_custom_fields
+  work_custom_fields -->|"has_values"| work_custom_field_values
+  work_items -->|"has_field_values"| work_custom_field_values
+  work_projects -->|"has_sections"| work_sections
+  work_sections -->|"holds_items"| work_items
+  work_project_templates -->|"seeds"| work_projects
+  work_task_templates -->|"seeds_item"| work_items
+  work_tags -->|"applied_via"| work_item_tags
+  work_items -->|"has_tag_assignments"| work_item_tags
+  work_items -->|"has_comments"| work_item_comments
+  work_items -->|"has_attachments"| work_item_attachments
   strategic_portfolios -->|"groups"| strategic_initiatives
   strategic_initiatives -->|"evaluated_by"| business_value_assessments
-  proofing_sessions -->|"belongs_to"| work_items
-  proofing_annotations -->|"belongs_to"| proofing_sessions
+  work_items -->|"has_proofing_sessions"| proofing_sessions
+  proofing_sessions -->|"has_annotations"| proofing_annotations
   work_dashboards -->|"summarizes"| work_projects
-  work_views -->|"scopes"| work_projects
-  work_time_entries -->|"logged_against"| work_items
+  work_projects -->|"is_scoped_by"| work_views
+  work_items -->|"has_time_entries"| work_time_entries
   work_portfolios -->|"groups"| work_projects
   work_statuses -->|"is_status_of"| work_items
-  work_status_updates -->|"records_change_on"| work_items
-  product_releases -->|"owned by"| users
-  product_roadmaps -->|"owned by"| users
-  feature_requests -->|"submitted by"| users
-  users -->|"owns_milestones"| work_milestones
-  users -->|"approves_steps"| work_approval_steps
-  users -->|"initiated_chains"| work_approval_chains
-  users -->|"created_custom_fields"| work_custom_fields
-  users -->|"created_sections"| work_sections
-  users -->|"authored_project_templates"| work_project_templates
-  users -->|"authored_task_templates"| work_task_templates
-  users -->|"authored_comments"| work_item_comments
-  users -->|"uploaded_attachments"| work_item_attachments
+  work_items -->|"has_status_updates"| work_status_updates
   users -->|"owns"| action_plans
   action_plans -->|"is_assigned_to"| users
   users -->|"assigned items"| work_items
@@ -163,9 +152,21 @@ flowchart TD
   users -->|"owns"| crm_opportunities
   users -->|"assigned_to"| project_tasks
   users -->|"staffed_on"| project_assignments
+  users -->|"owns_milestones"| work_milestones
+  users -->|"approves_steps"| work_approval_steps
+  users -->|"initiated_chains"| work_approval_chains
+  users -->|"created_custom_fields"| work_custom_fields
+  users -->|"created_sections"| work_sections
+  users -->|"authored_project_templates"| work_project_templates
+  users -->|"authored_task_templates"| work_task_templates
+  users -->|"authored_comments"| work_item_comments
+  users -->|"uploaded_attachments"| work_item_attachments
   users -->|"owns"| strategic_portfolios
   users -->|"assesses"| business_value_assessments
   users -->|"approves"| business_value_assessments
+  users -->|"owns"| product_releases
+  users -->|"owns"| product_roadmaps
+  users -->|"submits"| feature_requests
   users -->|"owns_proofing_sessions"| proofing_sessions
   users -->|"authored_annotations"| proofing_annotations
   users -->|"owns_dashboards"| work_dashboards
@@ -173,19 +174,19 @@ flowchart TD
   users -->|"logged_time"| work_time_entries
   users -->|"owns_portfolios"| work_portfolios
   users -->|"made_status_updates"| work_status_updates
+  class crm_opportunities consumer;
+  class action_plans consumer;
+  class project_tasks consumer;
+  class project_assignments consumer;
   class work_items master;
   class work_projects master;
   class work_automations master;
-  class crm_opportunities consumer;
-  class strategic_initiatives consumer;
   class strategic_portfolios consumer;
-  class action_plans consumer;
+  class strategic_initiatives consumer;
   class business_value_assessments consumer;
-  class project_tasks consumer;
+  class product_releases consumer;
   class product_roadmaps consumer;
   class feature_requests consumer;
-  class product_releases consumer;
-  class project_assignments consumer;
   class work_dependencies master;
   class work_milestones master;
   class work_approval_steps master;
@@ -210,15 +211,15 @@ flowchart TD
   class work_status_updates master;
   class users platform_builtin;
   style crm_opportunities stroke-dasharray:5 5;
-  style strategic_initiatives stroke-dasharray:5 5;
-  style strategic_portfolios stroke-dasharray:5 5;
   style action_plans stroke-dasharray:5 5;
-  style business_value_assessments stroke-dasharray:5 5;
   style project_tasks stroke-dasharray:5 5;
+  style project_assignments stroke-dasharray:5 5;
+  style strategic_portfolios stroke-dasharray:5 5;
+  style strategic_initiatives stroke-dasharray:5 5;
+  style business_value_assessments stroke-dasharray:5 5;
+  style product_releases stroke-dasharray:5 5;
   style product_roadmaps stroke-dasharray:5 5;
   style feature_requests stroke-dasharray:5 5;
-  style product_releases stroke-dasharray:5 5;
-  style project_assignments stroke-dasharray:5 5;
   style proofing_sessions stroke-dasharray:5 5;
   style proofing_annotations stroke-dasharray:5 5;
   style work_dashboards stroke-dasharray:5 5;
@@ -231,43 +232,43 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `work_approval_chains` | `work_approval_chains` | Approval Chain | Approval Chains | master | - | - | required | - | catalog | `:admin` | - |
-| 2 | `work_approval_steps` | `work_approval_steps` | Approval Step | Approval Steps | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 3 | `work_custom_field_values` | `work_custom_field_values` | Custom Field Value | Custom Field Values | master | - | - | required | - | junction | `:admin` | - |
-| 4 | `work_custom_fields` | `work_custom_fields` | Custom Field | Custom Fields | master | - | - | required | - | catalog | `:admin` | - |
-| 5 | `work_item_attachments` | `work_item_attachments` | Item Attachment | Item Attachments | master | - | - | required | - | operational_record | `:manage` | - |
-| 6 | `work_item_comments` | `work_item_comments` | Item Comment | Item Comments | master | - | - | required | yes | operational_record | `:manage` | - |
-| 7 | `work_item_tags` | `work_item_tags` | Item Tag Assignment | Item Tag Assignments | master | - | - | required | - | junction | `:admin` | - |
-| 8 | `work_milestones` | `work_milestones` | Milestone | Milestones | master | - | - | required | - | operational_record | `:manage` | - |
-| 9 | `work_project_templates` | `work_project_templates` | Project Template | Project Templates | master | - | - | required | - | catalog | `:admin` | - |
-| 10 | `proofing_annotations` | `proofing_annotations` | Proofing Annotation | Proofing Annotations | master | - | - | optional | - | operational_record | `:manage` | - |
-| 11 | `proofing_sessions` | `proofing_sessions` | Proofing Session | Proofing Sessions | master | - | - | optional | - | operational_workflow | `:manage` | - |
-| 12 | `work_sections` | `work_sections` | Section | Sections | master | - | - | required | - | catalog | `:admin` | - |
-| 13 | `work_tags` | `work_tags` | Tag | Tags | master | - | - | required | - | catalog | `:admin` | - |
-| 14 | `work_task_templates` | `work_task_templates` | Task Template | Task Templates | master | - | - | required | - | catalog | `:admin` | - |
-| 15 | `work_automations` | `work_automations` | Work Automation | Work Automations | master | - | - | required | - | catalog | `:admin` | - |
-| 16 | `work_dashboards` | `work_dashboards` | Work Dashboard | Work Dashboards | master | - | - | optional | - | catalog | `:admin` | - |
-| 17 | `work_dependencies` | `work_dependencies` | Work Dependency | Work Dependencies | master | - | - | required | - | junction | `:manage` | - |
-| 18 | `work_items` | `work_items` | Work Item | Work Items | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 19 | `work_portfolios` | `work_portfolios` | Work Portfolio | Work Portfolios | master | - | - | optional | - | catalog | `:admin` | - |
-| 20 | `work_projects` | `work_projects` | Work Project | Work Projects | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 21 | `work_status_updates` | `work_status_updates` | Work Status Update | Work Status Updates | master | - | - | optional | - | operational_record | `:manage` | - |
-| 22 | `work_statuses` | `work_statuses` | Work Status | Work Statuses | master | - | - | optional | - | catalog | `:admin` | - |
-| 23 | `work_time_entries` | `work_time_entries` | Work Time Entry | Work Time Entries | master | - | - | optional | yes | operational_record | `:manage` | - |
-| 24 | `work_views` | `work_views` | Work View | Work Views | master | - | - | optional | - | catalog | `:admin` | - |
-| 25 | `work_user_workloads` | `work_user_workloads` | Workload | Workloads | master | - | - | required | - | computed | read-only | - |
-| 26 | `business_value_assessments` | `business_value_assessments` | Business Value Assessment | Business Value Assessments | consumer | `spm-demand-mgmt` | Demand and Value Management | optional | - | operational_workflow | `:manage` | - |
-| 27 | `action_plans` | `action_plans` | Engagement Action Plan | Engagement Action Plans | consumer | `emp-exp-action-planning` | Action Planning | optional | - | operational_workflow | `:manage` | - |
-| 28 | `feature_requests` | `feature_requests` | Feature Request | Feature Requests | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | yes | operational_workflow | `:manage` | - |
-| 29 | `crm_opportunities` | `crm_opportunities` | Opportunity | Opportunities | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | optional | yes | operational_workflow | `:manage` | - |
-| 30 | `strategic_portfolios` | `strategic_portfolios` | Portfolio | Portfolios | consumer | `spm-portfolio-planning` | Portfolio Planning | optional | - | operational_workflow | `:manage` | - |
-| 31 | `product_releases` | `product_releases` | Product Release | Product Releases | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | operational_workflow | `:manage` | - |
-| 32 | `product_roadmaps` | `product_roadmaps` | Product Roadmap | Product Roadmaps | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | operational_workflow | `:manage` | - |
-| 33 | `project_assignments` | `project_assignments` | Project Assignment | Project Assignments | consumer | `psa-resource-mgmt` | Resource Management | optional | - | operational_workflow | `:manage` | - |
-| 34 | `project_tasks` | `project_tasks` | Project Task | Project Tasks | consumer | `psa-project-delivery` | Project Delivery | optional | - | operational_workflow | `:manage` | - |
-| 35 | `strategic_initiatives` | `strategic_initiatives` | Strategic Initiative | Strategic Initiatives | consumer | `sem-execution-tracking` | Execution Tracking | optional | - | operational_workflow | `:manage` | - |
+| 1 | `work_approval_chains` | `work_approval_chains` | Approval Chain | Approval Chains | master | - | - | - | - | catalog | `:admin` | - |
+| 2 | `work_approval_steps` | `work_approval_steps` | Approval Step | Approval Steps | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 3 | `work_custom_field_values` | `work_custom_field_values` | Custom Field Value | Custom Field Values | master | - | - | - | - | junction | `:admin` | - |
+| 4 | `work_custom_fields` | `work_custom_fields` | Custom Field | Custom Fields | master | - | - | - | - | catalog | `:admin` | - |
+| 5 | `work_item_attachments` | `work_item_attachments` | Item Attachment | Item Attachments | master | - | - | - | - | operational_record | `:manage` | - |
+| 6 | `work_item_comments` | `work_item_comments` | Item Comment | Item Comments | master | - | - | - | yes | operational_record | `:manage` | - |
+| 7 | `work_item_tags` | `work_item_tags` | Item Tag Assignment | Item Tag Assignments | master | - | - | - | - | junction | `:admin` | - |
+| 8 | `work_milestones` | `work_milestones` | Milestone | Milestones | master | - | - | - | - | operational_record | `:manage` | - |
+| 9 | `work_project_templates` | `work_project_templates` | Project Template | Project Templates | master | - | - | - | - | catalog | `:admin` | - |
+| 10 | `proofing_annotations` | `proofing_annotations` | Proofing Annotation | Proofing Annotations | master | - | - | yes | - | operational_record | `:manage` | - |
+| 11 | `proofing_sessions` | `proofing_sessions` | Proofing Session | Proofing Sessions | master | - | - | yes | - | operational_workflow | `:manage` | - |
+| 12 | `work_sections` | `work_sections` | Section | Sections | master | - | - | - | - | catalog | `:admin` | - |
+| 13 | `work_tags` | `work_tags` | Tag | Tags | master | - | - | - | - | catalog | `:admin` | - |
+| 14 | `work_task_templates` | `work_task_templates` | Task Template | Task Templates | master | - | - | - | - | catalog | `:admin` | - |
+| 15 | `work_automations` | `work_automations` | Work Automation | Work Automations | master | - | - | - | - | catalog | `:admin` | - |
+| 16 | `work_dashboards` | `work_dashboards` | Work Dashboard | Work Dashboards | master | - | - | yes | - | catalog | `:admin` | - |
+| 17 | `work_dependencies` | `work_dependencies` | Work Dependency | Work Dependencies | master | - | - | - | - | junction | `:manage` | - |
+| 18 | `work_items` | `work_items` | Work Item | Work Items | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 19 | `work_portfolios` | `work_portfolios` | Work Portfolio | Work Portfolios | master | - | - | yes | - | catalog | `:admin` | - |
+| 20 | `work_projects` | `work_projects` | Work Project | Work Projects | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 21 | `work_status_updates` | `work_status_updates` | Work Status Update | Work Status Updates | master | - | - | yes | - | operational_record | `:manage` | - |
+| 22 | `work_statuses` | `work_statuses` | Work Status | Work Statuses | master | - | - | yes | - | catalog | `:admin` | - |
+| 23 | `work_time_entries` | `work_time_entries` | Work Time Entry | Work Time Entries | master | - | - | yes | yes | operational_record | `:manage` | - |
+| 24 | `work_views` | `work_views` | Work View | Work Views | master | - | - | yes | - | catalog | `:admin` | - |
+| 25 | `work_user_workloads` | `work_user_workloads` | Workload | Workloads | master | - | - | - | - | computed | read-only | - |
+| 26 | `business_value_assessments` | `business_value_assessments` | Business Value Assessment | Business Value Assessments | consumer | `spm-demand-mgmt` | Demand and Value Management | yes | - | operational_workflow | `:manage` | - |
+| 27 | `action_plans` | `action_plans` | Engagement Action Plan | Engagement Action Plans | consumer | `emp-exp-action-planning` | Action Planning | yes | - | operational_workflow | `:manage` | - |
+| 28 | `feature_requests` | `feature_requests` | Feature Request | Feature Requests | consumer | `pm-discovery` | Product Discovery and Prioritization | yes | yes | operational_workflow | `:manage` | - |
+| 29 | `crm_opportunities` | `crm_opportunities` | Opportunity | Opportunities | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | yes | yes | operational_workflow | `:manage` | - |
+| 30 | `strategic_portfolios` | `strategic_portfolios` | Portfolio | Portfolios | consumer | `spm-portfolio-planning` | Portfolio Planning | yes | - | operational_workflow | `:manage` | - |
+| 31 | `product_releases` | `product_releases` | Product Release | Product Releases | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | yes | - | operational_workflow | `:manage` | - |
+| 32 | `product_roadmaps` | `product_roadmaps` | Product Roadmap | Product Roadmaps | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | yes | - | operational_workflow | `:manage` | - |
+| 33 | `project_assignments` | `project_assignments` | Project Assignment | Project Assignments | consumer | `psa-resource-mgmt` | Resource Management | yes | - | operational_workflow | `:manage` | - |
+| 34 | `project_tasks` | `project_tasks` | Project Task | Project Tasks | consumer | `psa-project-delivery` | Project Delivery | yes | - | operational_workflow | `:manage` | - |
+| 35 | `strategic_initiatives` | `strategic_initiatives` | Strategic Initiative | Strategic Initiatives | consumer | `sem-execution-tracking` | Execution Tracking | yes | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -275,411 +276,253 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `work_dependencies` | blocks | `work_items` | many_to_many | association | required | source | restrict | reference | - |
-| `work_milestones` | belongs_to | `work_projects` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_approval_steps` | belongs_to | `work_approval_chains` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_approval_chains` | gates | `work_items` | many_to_many | reference | optional | source | clear | reference | - |
-| `work_approval_chains` | gates_project | `work_projects` | many_to_many | reference | optional | source | clear | reference | - |
-| `work_user_workloads` | rolls_up | `work_items` | many_to_many | reference | required | source | restrict | reference | - |
-| `work_custom_fields` | applies_to | `work_projects` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_custom_field_values` | valued_for | `work_custom_fields` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_custom_field_values` | set_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_sections` | belongs_to | `work_projects` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_items` | placed_in | `work_sections` | one_to_many | reference | optional | target | clear | reference | - |
-| `work_project_templates` | seeds | `work_projects` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_task_templates` | seeds_item | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_item_tags` | references_tag | `work_tags` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_item_tags` | tagged_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_item_comments` | belongs_to | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_item_attachments` | belongs_to | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `action_plans` | spawns | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
-| `work_projects` | contains | `work_items` | one_to_many | composition | required | source | cascade | parent | - |
-| `work_automations` | drives | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_automations` | applies_to | `work_projects` | many_to_many | association | optional | target | clear | reference | - |
-| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | reference | optional | target | clear | reference | - |
-| `work_automations` | rolls_up_into | `strategic_portfolios` | many_to_many | reference | optional | source | clear | reference | - |
-| `work_automations` | feeds | `project_tasks` | many_to_many | reference | optional | source | clear | reference | - |
-| `work_automations` | mirrors_to | `product_roadmaps` | many_to_many | reference | optional | source | clear | reference | - |
-| `project_tasks` | performed_by | `project_assignments` | many_to_many | association | optional | target | clear | reference | - |
-| `strategic_portfolios` | groups | `strategic_initiatives` | one_to_many | association | optional | source | clear | reference | - |
-| `strategic_initiatives` | evaluated_by | `business_value_assessments` | one_to_many | reference | optional | source | clear | reference | - |
-| `proofing_sessions` | belongs_to | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `proofing_annotations` | belongs_to | `proofing_sessions` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_dashboards` | summarizes | `work_projects` | many_to_many | reference | optional | source | clear | reference | - |
-| `work_views` | scopes | `work_projects` | one_to_many | reference | optional | target | clear | reference | - |
-| `work_time_entries` | logged_against | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
-| `work_portfolios` | groups | `work_projects` | one_to_many | association | optional | source | clear | reference | - |
-| `work_statuses` | is_status_of | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
-| `work_status_updates` | records_change_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `product_releases` | owned by | `users` | many_to_many | optional | source | clear | reference | - |
-| `product_roadmaps` | owned by | `users` | many_to_many | optional | source | clear | reference | - |
-| `feature_requests` | submitted by | `users` | many_to_many | optional | source | clear | reference | - |
-| `users` | owns_milestones | `work_milestones` | one_to_many | optional | source | clear | reference | - |
-| `users` | approves_steps | `work_approval_steps` | one_to_many | optional | source | clear | reference | - |
-| `users` | initiated_chains | `work_approval_chains` | one_to_many | optional | source | clear | reference | - |
-| `users` | created_custom_fields | `work_custom_fields` | one_to_many | optional | source | clear | reference | - |
-| `users` | created_sections | `work_sections` | one_to_many | optional | source | clear | reference | - |
-| `users` | authored_project_templates | `work_project_templates` | one_to_many | optional | source | clear | reference | - |
-| `users` | authored_task_templates | `work_task_templates` | one_to_many | optional | source | clear | reference | - |
-| `users` | authored_comments | `work_item_comments` | one_to_many | optional | source | clear | reference | - |
-| `users` | uploaded_attachments | `work_item_attachments` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns | `action_plans` | one_to_many | required | source | restrict | reference | - |
-| `action_plans` | is_assigned_to | `users` | many_to_many | optional | target | clear | reference | - |
-| `users` | assigned items | `work_items` | one_to_many | optional | source | clear | reference | - |
-| `users` | created items | `work_items` | one_to_many | required | source | restrict | reference | - |
-| `users` | owns projects | `work_projects` | one_to_many | required | source | restrict | reference | - |
-| `users` | authored automations | `work_automations` | one_to_many | required | source | restrict | reference | - |
-| `users` | owns | `crm_opportunities` | one_to_many | required | source | restrict | reference | - |
-| `users` | assigned_to | `project_tasks` | many_to_many | optional | target | clear | reference | - |
-| `users` | staffed_on | `project_assignments` | one_to_many | required | target | restrict | reference | - |
-| `users` | owns | `strategic_portfolios` | one_to_many | required | source | restrict | reference | - |
-| `users` | assesses | `business_value_assessments` | one_to_many | required | source | restrict | reference | - |
-| `users` | approves | `business_value_assessments` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns_proofing_sessions | `proofing_sessions` | one_to_many | optional | source | clear | reference | - |
-| `users` | authored_annotations | `proofing_annotations` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns_dashboards | `work_dashboards` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns_views | `work_views` | one_to_many | optional | source | clear | reference | - |
-| `users` | logged_time | `work_time_entries` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns_portfolios | `work_portfolios` | one_to_many | optional | source | clear | reference | - |
-| `users` | made_status_updates | `work_status_updates` | one_to_many | optional | source | clear | reference | - |
+| `action_plans` | spawns | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_projects` | contains | `work_items` | one_to_many | composition | yes | cascade | parent | - |
+| `work_items` | depends_on | `work_items` | many_to_many | association | - | cascade | parent | - |
+| `work_automations` | drives | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_automations` | applies_to | `work_projects` | many_to_many | association | - | cascade | parent | - |
+| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_automations` | rolls_up_into | `strategic_portfolios` | many_to_many | reference | - | cascade | parent | - |
+| `work_automations` | feeds | `project_tasks` | many_to_many | reference | - | cascade | parent | - |
+| `work_automations` | mirrors_to | `product_roadmaps` | many_to_many | reference | - | cascade | parent | - |
+| `project_tasks` | performed_by | `project_assignments` | many_to_many | association | - | cascade | parent | - |
+| `work_dependencies` | blocks | `work_items` | many_to_many | association | - | cascade | parent | - |
+| `work_projects` | has_milestones | `work_milestones` | one_to_many | composition | yes | cascade | parent | - |
+| `work_approval_chains` | has_steps | `work_approval_steps` | one_to_many | composition | yes | cascade | parent | - |
+| `work_approval_chains` | gates | `work_items` | many_to_many | reference | - | cascade | parent | - |
+| `work_approval_chains` | gates_project | `work_projects` | many_to_many | reference | - | cascade | parent | - |
+| `work_user_workloads` | rolls_up | `work_items` | many_to_many | reference | - | cascade | parent | - |
+| `work_projects` | has_custom_fields | `work_custom_fields` | one_to_many | reference | no | clear | reference | - |
+| `work_custom_fields` | has_values | `work_custom_field_values` | one_to_many | composition | yes | cascade | parent | - |
+| `work_items` | has_field_values | `work_custom_field_values` | one_to_many | composition | yes | cascade | parent | - |
+| `work_projects` | has_sections | `work_sections` | one_to_many | composition | yes | cascade | parent | - |
+| `work_sections` | holds_items | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_project_templates` | seeds | `work_projects` | one_to_many | reference | no | clear | reference | - |
+| `work_task_templates` | seeds_item | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_tags` | applied_via | `work_item_tags` | one_to_many | composition | yes | cascade | parent | - |
+| `work_items` | has_tag_assignments | `work_item_tags` | one_to_many | composition | yes | cascade | parent | - |
+| `work_items` | has_comments | `work_item_comments` | one_to_many | composition | yes | cascade | parent | - |
+| `work_items` | has_attachments | `work_item_attachments` | one_to_many | composition | yes | cascade | parent | - |
+| `strategic_portfolios` | groups | `strategic_initiatives` | one_to_many | association | no | clear | reference | - |
+| `strategic_initiatives` | evaluated_by | `business_value_assessments` | one_to_many | reference | no | clear | reference | - |
+| `work_items` | has_proofing_sessions | `proofing_sessions` | one_to_many | composition | yes | cascade | parent | - |
+| `proofing_sessions` | has_annotations | `proofing_annotations` | one_to_many | composition | yes | cascade | parent | - |
+| `work_dashboards` | summarizes | `work_projects` | many_to_many | reference | - | cascade | parent | - |
+| `work_projects` | is_scoped_by | `work_views` | one_to_many | reference | no | clear | reference | - |
+| `work_items` | has_time_entries | `work_time_entries` | one_to_many | composition | yes | cascade | parent | - |
+| `work_portfolios` | groups | `work_projects` | one_to_many | association | no | clear | reference | - |
+| `work_statuses` | is_status_of | `work_items` | one_to_many | reference | no | clear | reference | - |
+| `work_items` | has_status_updates | `work_status_updates` | one_to_many | composition | yes | cascade | parent | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_forms` | routes_to | `work_projects` | one_to_many | optional | none | n/a | - |
-| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | none | n/a | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
-| `work_automations` | propagates_to | `service_requests` | many_to_many | optional | none | n/a | - |
-| `work_projects` | closes_into | `service_projects` | one_to_one | optional | none | n/a | - |
-| `work_automations` | posts_to | `chat_channels` | many_to_many | optional | none | n/a | - |
-| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
-| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
-| `marketing_plan_lines` | is delivered by | `work_projects` | one_to_many | optional | none | n/a | - |
-| `work_goal_relationships` | relates | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
+| `users` | owns | `action_plans` | one_to_many | yes | restrict | reference | - |
+| `action_plans` | is_assigned_to | `users` | many_to_many | - | cascade | parent | - |
+| `users` | assigned items | `work_items` | one_to_many | no | clear | reference | - |
+| `users` | created items | `work_items` | one_to_many | yes | restrict | reference | - |
+| `users` | owns projects | `work_projects` | one_to_many | yes | restrict | reference | - |
+| `users` | authored automations | `work_automations` | one_to_many | yes | restrict | reference | - |
+| `users` | owns | `crm_opportunities` | one_to_many | yes | restrict | reference | - |
+| `users` | assigned_to | `project_tasks` | many_to_many | - | cascade | parent | - |
+| `users` | staffed_on | `project_assignments` | one_to_many | yes | restrict | reference | - |
+| `users` | owns_milestones | `work_milestones` | one_to_many | no | clear | reference | - |
+| `users` | approves_steps | `work_approval_steps` | one_to_many | no | clear | reference | - |
+| `users` | initiated_chains | `work_approval_chains` | one_to_many | no | clear | reference | - |
+| `users` | created_custom_fields | `work_custom_fields` | one_to_many | no | clear | reference | - |
+| `users` | created_sections | `work_sections` | one_to_many | no | clear | reference | - |
+| `users` | authored_project_templates | `work_project_templates` | one_to_many | no | clear | reference | - |
+| `users` | authored_task_templates | `work_task_templates` | one_to_many | no | clear | reference | - |
+| `users` | authored_comments | `work_item_comments` | one_to_many | no | clear | reference | - |
+| `users` | uploaded_attachments | `work_item_attachments` | one_to_many | no | clear | reference | - |
+| `users` | owns | `strategic_portfolios` | one_to_many | yes | restrict | reference | - |
+| `users` | assesses | `business_value_assessments` | one_to_many | yes | restrict | reference | - |
+| `users` | approves | `business_value_assessments` | one_to_many | no | clear | reference | - |
+| `users` | owns | `product_releases` | one_to_many | no | clear | reference | - |
+| `users` | owns | `product_roadmaps` | one_to_many | no | clear | reference | - |
+| `users` | submits | `feature_requests` | one_to_many | no | clear | reference | - |
+| `users` | owns_proofing_sessions | `proofing_sessions` | one_to_many | no | clear | reference | - |
+| `users` | authored_annotations | `proofing_annotations` | one_to_many | no | clear | reference | - |
+| `users` | owns_dashboards | `work_dashboards` | one_to_many | no | clear | reference | - |
+| `users` | owns_views | `work_views` | one_to_many | no | clear | reference | - |
+| `users` | logged_time | `work_time_entries` | one_to_many | no | clear | reference | - |
+| `users` | owns_portfolios | `work_portfolios` | one_to_many | no | clear | reference | - |
+| `users` | made_status_updates | `work_status_updates` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | none | n/a | - |
-| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | optional | none | n/a | - |
-| `deal_risk_scores` | scores | `crm_opportunities` | one_to_many | optional | none | n/a | - |
-| `revenue_forecasts` | forecasts | `crm_opportunities` | one_to_many | optional | none | n/a | - |
-| `captured_activities` | attributed_to | `crm_opportunities` | one_to_many | optional | none | n/a | - |
-| `crm_opportunities` | opens | `customer_cases` | one_to_many | optional | none | n/a | - |
-| `customers` | impacted_by | `product_releases` | many_to_many | optional | none | n/a | - |
-| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | none | n/a | - |
-| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
-| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | optional | none | n/a | - |
-| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
-| `engagement_drivers` | triggers | `action_plans` | one_to_many | optional | none | n/a | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | none | n/a | - |
-| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | none | n/a | - |
-| `customers` | has_opportunities | `crm_opportunities` | one_to_many | required | none (required-if-present) | n/a | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | none | n/a | - |
-| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | required | none (required-if-present) | n/a | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | none | n/a | - |
-| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
-| `service_projects` | contains | `project_tasks` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `service_projects` | staffs | `project_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | none | n/a | - |
-| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | none | n/a | - |
-| `demand_intake_requests` | becomes | `strategic_initiatives` | one_to_one | optional | none | n/a | - |
-| `strategic_initiatives` | delivered_through | `roadmap_items` | one_to_many | optional | none | n/a | - |
-| `strategic_initiatives` | staffed_by | `resource_allocations` | one_to_many | optional | none | n/a | - |
-| `dependency_chains` | relates | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
-| `strategic_initiatives` | tracked_by | `benefits_tracking_records` | one_to_many | optional | none | n/a | - |
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `engagement_drivers` | triggers | `action_plans` | one_to_many | no | - |
+| `org_units` | owns | `action_plans` | one_to_many | no | - |
+| `test_defects` | spawns | `work_items` | one_to_many | no | - |
+| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | no | - |
+| `customers` | impacted_by | `product_releases` | many_to_many | - | - |
+| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | no | - |
+| `okr_objectives` | tracked_by | `work_items` | one_to_many | no | - |
+| `work_projects` | aligned_to | `okr_objectives` | many_to_many | - | - |
+| `work_automations` | propagates_to | `service_requests` | many_to_many | - | - |
+| `work_automations` | posts_to | `chat_channels` | many_to_many | - | - |
+| `customers` | has_opportunities | `crm_opportunities` | one_to_many | yes | - |
+| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | yes | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | - | - |
+| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | - | - |
+| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | - | - |
+| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | - | - |
+| `service_projects` | contains | `project_tasks` | one_to_many | yes | - |
+| `service_projects` | staffs | `project_assignments` | one_to_many | yes | - |
+| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | - | - |
+| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | no | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | no | - |
+| `work_forms` | routes_to | `work_projects` | one_to_many | no | - |
+| `revenue_forecasts` | forecasts | `crm_opportunities` | many_to_many | - | - |
+| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | no | - |
+| `demand_intake_requests` | becomes | `strategic_initiatives` | one_to_one | no | - |
+| `dependency_chains` | relates | `strategic_initiatives` | many_to_many | - | - |
+| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | no | - |
+| `marketing_plan_lines` | is delivered by | `work_projects` | one_to_many | no | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | no | - |
+| `crm_opportunities` | opens | `customer_cases` | one_to_many | no | - |
+| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | no | - |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | no | - |
+| `work_projects` | closes_into | `service_projects` | one_to_one | no | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | no | - |
+| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | no | - |
+| `crm_opportunities` | scored_by | `deal_risk_scores` | one_to_many | no | - |
+| `crm_opportunities` | has_captured_activity | `captured_activities` | one_to_many | no | - |
+| `strategic_initiatives` | delivered_through | `roadmap_items` | one_to_many | no | - |
+| `strategic_initiatives` | staffed_by | `resource_allocations` | one_to_many | no | - |
+| `strategic_initiatives` | tracked_by | `benefits_tracking_records` | one_to_many | no | - |
+| `work_items` | is_related_by | `work_goal_relationships` | one_to_many | yes | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | held_as | necessity | notes |
-| --- | --- | --- | --- | --- |
-| `work_automations` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
-| `work_automations` | WSC-CHANNELS-CONVERSATIONS (Channels and Conversations) - WSC | consumer | optional | - |
-| `work_items` | INTGOV-GOVERNANCE (Intranet Content Governance and Lifecycle) - INTRANET-GOV | embedded_master | optional | - |
-| `work_items` | MRM-PLANNING (Marketing Planning and Calendar) - MRM | consumer | optional | - |
-| `work_items` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
-| `work_items` | SPM-RESOURCE-CAPACITY (Resource and Capacity Planning) - SPM | consumer | optional | - |
-| `work_items` | WORK-MGMT-GOALS-OKR (Team-Execution Goals and OKRs) - WORK-MGMT | embedded_master | required | - |
-| `work_projects` | MRM-PLANNING (Marketing Planning and Calendar) - MRM | consumer | optional | - |
-| `work_projects` | PSA-PROJECT-DELIVERY (Project Delivery) - PSA | consumer | optional | - |
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_automation.triggered` | _(signal)_ | `work_automations` | batch_sync | medium | Aggregated work-automation outcomes feed SPM portfolio rollup. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results relating down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_project.completed` | `active` → `completed` _(lifecycle)_ | `work_projects` | api_call | medium | WM work_project completion feeds SPM portfolio rollup (project closure as a milestone in the strategic portfolio). target_domain_module_id NULL because SPM is not yet modularized. |
-| WORK-MGMT-TASK-EXEC | PSA | _(domain-level)_ | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | low | Automation-driven task transitions feed PSA for utilization and billable-hour tracking. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | low | When WM is the work tracker for a PSA-managed delivery, work_item completion closes the loop on PSA-side time / utilization accounting. Pairs with the existing PSA -> WM project_task.completed inbound for the bidirectional sync pattern. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_project.completed` | `active` → `completed` _(lifecycle)_ | `work_projects` | batch_sync | medium | Services orgs running delivery in WORK-MGMT close a project and need utilization, billable hours, and milestone-based revenue recognition to roll up into PSA. Nightly sync of project status + hours is the common pattern; richer real-time integration exists but is uncommon. |
-| WORK-MGMT-TASK-EXEC | WSC | WSC-CHANNELS-CONVERSATIONS | `work_automation.triggered` | _(signal)_ | `work_automations` | api_call | low | Automations post status updates and task notifications into workstream collaboration channels. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_automation.disabled` | `enabled` → `disabled` _(lifecycle)_ | `work_automations` | event_stream | low | A WORK-MGMT automation rule has been disabled. PROD-MGMT subscribers stop reacting to its downstream effects (e.g. auto-creation of feature_request relationships from incoming work_items). |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | medium | Engineering team automations mirror into product-management roadmap tracking. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are related to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke: friction is the mapping between work_item id and roadmap_item id. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_automation.triggered` | _(signal)_ | `work_automations` | event_stream | low | Automation rules can drive OKR check-in updates or auto-progress KRs based on work_item events. Eventful (out-of-process at runtime) because automation execution decouples from the caller. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal: it drives KR closure recalculation and triggers KR-fully-met evaluations on related objectives. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has related the item to a key result. In-process FK + state read; no message moves. |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | SPM | SPM-DEMAND-MGMT | `business_value_assessment.completed` | `approved` _(lifecycle)_ | `business_value_assessments` | event_stream | medium | Approved initiatives cascade into team-level work items in WORK-MGMT. |
-| WORK-MGMT-TASK-EXEC | SPM | SPM-DEMAND-MGMT | `demand_intake.approved` | `screened` → `approved` _(state_change)_ | `strategic_initiatives` | api_call | high | SPM creates work_projects + kickoff work_items for charter and resourcing. |
-| WORK-MGMT-TASK-EXEC | SPM | SPM-PORTFOLIO-PLANNING | `strategic_portfolio.rebalanced` | `active` → `active` _(state_change)_ | `strategic_portfolios` | batch_sync | high | Re-prioritization cascades to project priority updates; high-touch validation. |
-| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.completed` | _(state_change)_ | `action_plans` | api_call | medium | An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the related work_items being closed in WORK-MGMT, leaving stale tasks. |
-| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.created` | _(state_change)_ | `action_plans` | api_call | medium | Engagement action plans often tracked as work items in WORK-MGMT for execution visibility. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `project_task.completed` | _(lifecycle)_ | `project_tasks` | event_stream | low | PSA task completion mirrors into the WORK-MGMT board to keep team-level views current. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.confirmed` | _(state_change)_ | `project_assignments` | event_stream | low | PSA seeds the WORK-MGMT project board with the newly-assigned resource so day-to-day task tracking can begin. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.released` | _(state_change)_ | `project_assignments` | event_stream | low | A project assignment is released in PSA (consultant rolls off or capacity is freed). WORK-MGMT subscribers may close or reassign the work_items that were owned by the released assignee. Failure mode: orphaned work_items if the release event is missed and no reassignment happens. |
-| WORK-MGMT-TASK-EXEC | CRM | CRM-PIPELINE-MGT | `crm_opportunity.closed_won` | _(state_change)_ | `crm_opportunities` | api_call | high | Sales closes a deal in CRM; delivery / Customer Success spin up a kickoff project in their work-management tool. Custom iPaaS automations or hand-built webhooks bridge the two; payload mapping (opportunity products to project tasks, account stakeholders to project members) is bespoke per org. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-DISCOVERY | `feature_request.upvoted_threshold` | _(threshold)_ | `feature_requests` | event_stream | medium | Once demand-signal crosses the prioritization threshold, an engineering work item / epic is created in WORK-MGMT. Many teams still do this by hand. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.planned` | _(lifecycle)_ | `product_releases` | event_stream | low | WORK-MGMT creates the delivery workstream / release train for the planned release, with the scope and target date hydrated from PROD-MGMT. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.rolled_back` | _(state_change)_ | `product_releases` | event_stream | medium | A product release is rolled back in PROD-MGMT (post-ship regression or incident). WORK-MGMT subscribers reopen the work_items that tracked the release and spawn remediation tasks. Failure mode: remediation tasks may not be scoped correctly if the rollback reason isn't propagated. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.shipped` | _(lifecycle)_ | `product_releases` | event_stream | low | A product release ships in PROD-MGMT. WORK-MGMT subscribers close the work_items that tracked release-prep tasks and surface release notes against the project board. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.item_promoted` | _(state_change)_ | `product_roadmaps` | event_stream | medium | Promoting a roadmap item to now/next must create the corresponding delivery work in WORK-MGMT; manual handoff here is one of the most-cited PROD↔ENG pain points. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.published` | _(lifecycle)_ | `product_roadmaps` | event_stream | low | A new or updated product roadmap is published in PROD-MGMT. WORK-MGMT subscribers create work_projects or sub-projects representing the new roadmap initiatives so cross-functional teams can begin execution tracking. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-INTAKE | `work_form_submission.converted` | `triaged` → `converted` _(lifecycle)_ | `work_items` | lifecycle_progression | low | A converted intake form submission spawns a work item in the task-execution module under the routed project. |
-| WORK-MGMT-TASK-EXEC | INTRANET-GOV | INTGOV-GOVERNANCE | `intranet_content_attestation.flagged_stale` | `pending` → `flagged_stale` _(state_change)_ | `work_items` | api_call | medium | When content is flagged stale during recertification, an improvement work item is created in Work Management for remediation. |
-| WORK-MGMT-TASK-EXEC | MRM | MRM-PLANNING | `marketing_plan_line.scheduled` | `scheduled` _(state_change)_ | `work_items` | api_call | medium | When a plan line is scheduled on the marketing calendar, the delivery work is handed to work-management as tasks and projects. Payload: the work item that delivers the plan line. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `action_plans` | consumer | optional | EMP-EXP-ACTION-PLANNING (EMP-EXP) | - |
-| `business_value_assessments` | consumer | optional | SPM-DEMAND-MGMT (SPM) | - |
-| `crm_opportunities` | consumer | optional | CRM-PIPELINE-MGT (CRM) | - |
-| `feature_requests` | consumer | optional | PM-DISCOVERY (PROD-MGMT) | - |
-| `product_releases` | consumer | optional | PM-ROADMAP-DELIVERY (PROD-MGMT) | - |
-| `product_roadmaps` | consumer | optional | PM-ROADMAP-DELIVERY (PROD-MGMT) | - |
-| `project_assignments` | consumer | optional | PSA-RESOURCE-MGMT (PSA) | - |
-| `project_tasks` | consumer | optional | PSA-PROJECT-DELIVERY (PSA) | - |
-| `strategic_initiatives` | consumer | optional | SEM-EXECUTION-TRACKING (SEM) | - |
-| `strategic_portfolios` | consumer | optional | SPM-PORTFOLIO-PLANNING (SPM) | - |
+| `action_plans` | consumer | yes | EMP-EXP-ACTION-PLANNING (EMP-EXP) | - |
+| `business_value_assessments` | consumer | yes | SPM-DEMAND-MGMT (SPM) | - |
+| `crm_opportunities` | consumer | yes | CRM-PIPELINE-MGT (CRM) | - |
+| `feature_requests` | consumer | yes | PM-DISCOVERY (PROD-MGMT) | - |
+| `product_releases` | consumer | yes | PM-ROADMAP-DELIVERY (PROD-MGMT) | - |
+| `product_roadmaps` | consumer | yes | PM-ROADMAP-DELIVERY (PROD-MGMT) | - |
+| `project_assignments` | consumer | yes | PSA-RESOURCE-MGMT (PSA) | - |
+| `project_tasks` | consumer | yes | PSA-PROJECT-DELIVERY (PSA) | - |
+| `strategic_initiatives` | consumer | yes | SEM-EXECUTION-TRACKING (SEM) | - |
+| `strategic_portfolios` | consumer | yes | SPM-PORTFOLIO-PLANNING (SPM) | - |
 
 ## 7. Lifecycle states
 
-### `action_plans` (Engagement Action Plan)
-
-_This scope holds `action_plans` as **consumer**; the canonical state machine is owned by `EMP-EXP-ACTION-PLANNING`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `open` | ✓ | - | - | - | - |
-| 20 | `in_progress` | - | - | - | - | - |
-| 30 | `completed` | - | ✓ | ✓ | `emp-exp-action-planning:complete_action_plan` | - |
-| 40 | `archived` | - | ✓ | - | - | - |
-
-### `business_value_assessments` (Business Value Assessment)
-
-_This scope holds `business_value_assessments` as **consumer**; the canonical state machine is owned by `SPM-DEMAND-MGMT`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `submitted` | - | - | - | - | - |
-| 3 | `approved` | - | ✓ | ✓ | `spm-demand-mgmt:approve_business_value_assessment` | - |
-
-### `crm_opportunities` (Opportunity)
-
-_This scope holds `crm_opportunities` as **consumer**; the canonical state machine is owned by `CRM-PIPELINE-MGT`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | Opportunity created and being scoped. |
-| 2 | `qualified` | - | - | - | - | Opportunity has passed qualification and entered active pursuit. |
-| 3 | `proposal` | - | - | - | - | Proposal or quote has been delivered to the prospect. |
-| 4 | `negotiation` | - | - | - | - | Commercial terms are being negotiated with the prospect. |
-| 5 | `won` | - | ✓ | ✓ | `crm-pipeline-mgt:close_won` | Deal closed-won; triggers downstream subscription activation. |
-| 6 | `lost` | - | ✓ | - | - | Deal closed-lost; opportunity terminated without revenue. |
-
-### `feature_requests` (Feature Request)
-
-_This scope holds `feature_requests` as **consumer**; the canonical state machine is owned by `PM-DISCOVERY`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `new` | ✓ | - | - | - | Feature request just captured; awaiting triage. |
-| 2 | `triaged` | - | - | - | - | Request has been reviewed and deemed in-scope for the product. |
-| 3 | `prioritized` | - | - | - | - | Request has been ranked relative to other backlog items. |
-| 4 | `accepted` | - | ✓ | ✓ | `pm-discovery:accepted_feature_request` | Request has been accepted; converted to a product_feature row. |
-| 5 | `rejected` | - | ✓ | ✓ | `pm-discovery:rejected_feature_request` | Request will not be built; rationale captured. |
-| 6 | `archived` | - | ✓ | - | - | Old or duplicate request; out of consideration for filtering. |
-
-### `product_releases` (Product Release)
-
-_This scope holds `product_releases` as **consumer**; the canonical state machine is owned by `PM-ROADMAP-DELIVERY`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `planned` | ✓ | - | - | - | Release plan exists with target date and feature set. |
-| 2 | `in_progress` | - | - | - | - | Release work in flight; features merging in. |
-| 3 | `shipped` | - | ✓ | ✓ | `pm-roadmap-delivery:shipped_product_release` | Release has gone live to the target audience. |
-| 4 | `rolled_back` | - | ✓ | ✓ | `pm-roadmap-delivery:rolled_back_product_release` | Release was pulled after shipping due to defects or business reasons. |
-| 5 | `canceled` | - | ✓ | ✓ | `pm-roadmap-delivery:canceled_product_release` | Release was canceled before shipping. |
-
-### `product_roadmaps` (Product Roadmap)
-
-_This scope holds `product_roadmaps` as **consumer**; the canonical state machine is owned by `PM-ROADMAP-DELIVERY`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Roadmap is being authored; not visible to wider audiences. |
-| 2 | `published` | - | - | ✓ | `pm-roadmap-delivery:published_product_roadmap` | Roadmap version is published; visible to the configured audience. |
-| 3 | `archived` | - | ✓ | - | - | Roadmap version is superseded; kept for historical reference. |
-
-### `project_assignments` (Project Assignment)
-
-_This scope holds `project_assignments` as **consumer**; the canonical state machine is owned by `PSA-RESOURCE-MGMT`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `proposed` | ✓ | - | - | - | Resource manager has nominated a consultant for a role on the project; awaiting confirmation. |
-| 2 | `confirmed` | - | - | ✓ | `psa-resource-mgmt:confirm_project_assignment` | Resource committed to the project at a stated allocation; HCM capacity decremented; WORK-MGMT seat created. |
-| 3 | `active` | - | - | - | - | Resource is actively delivering on the assignment; hours flowing through time entries. |
-| 4 | `released` | - | ✓ | ✓ | `psa-resource-mgmt:release_project_assignment` | Resource has rolled off (planned end, early release, scope change). Capacity returned to HCM bench. |
-
-### `project_tasks` (Project Task)
-
-_This scope holds `project_tasks` as **consumer**; the canonical state machine is owned by `PSA-PROJECT-DELIVERY`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `not_started` | ✓ | - | - | - | Task created on the project plan; not yet picked up. |
-| 2 | `in_progress` | - | - | ✓ | `psa-project-delivery:start_project_task` | Assignee has begun work on the task. |
-| 3 | `blocked` | - | - | ✓ | `psa-project-delivery:block_project_task` | Task cannot proceed: upstream dependency, approval, or external input outstanding. |
-| 4 | `completed` | - | ✓ | ✓ | `psa-project-delivery:complete_project_task` | Task delivered; rolls into milestone progress. |
-| 5 | `canceled` | - | ✓ | ✓ | `psa-project-delivery:cancel_project_task` | Task abandoned (scope change, descope, redundancy). |
-
 ### `proofing_sessions` (Proofing Session)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | - |
-| 2 | `in_review` | - | - | - | - | - |
-| 3 | `changes_requested` | - | - | - | - | - |
-| 4 | `approved` | - | ✓ | ✓ | `work-mgmt-task-exec:approve_proofing_session` | - |
-| 5 | `rejected` | - | ✓ | ✓ | `work-mgmt-task-exec:reject_proofing_session` | - |
-
-### `strategic_initiatives` (Strategic Initiative)
-
-_This scope holds `strategic_initiatives` as **consumer**; the canonical state machine is owned by `SEM-EXECUTION-TRACKING`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `proposed` | ✓ | - | - | - | Initiative is drafted by a strategy-office contributor; not yet funded or scheduled. |
-| 2 | `approved` | - | - | ✓ | `sem-execution-tracking:approve_strategic_initiative` | Initiative cleared by the operating-rhythm review; budget and owner confirmed. Publishes strategic_initiative.approved. |
-| 3 | `in_progress` | - | - | - | - | Execution underway; status, milestones, and benefits realization updated against the initiative. |
-| 4 | `completed` | - | ✓ | ✓ | `sem-execution-tracking:complete_strategic_initiative` | Benefits realized or scope fully delivered. Publishes strategic_initiative.completed. |
-| 5 | `canceled` | - | ✓ | ✓ | `sem-execution-tracking:cancel_strategic_initiative` | Initiative withdrawn before completion (deprioritized, blocked, or rolled into another initiative). Publishes strategic_initiative.canceled. |
-
-### `strategic_portfolios` (Portfolio)
-
-_This scope holds `strategic_portfolios` as **consumer**; the canonical state machine is owned by `SPM-PORTFOLIO-PLANNING`._
-
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `proposed` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | ✓ | `spm-portfolio-planning:activate_strategic_portfolio` | - |
-| 3 | `under_review` | - | - | - | - | - |
-| 4 | `sunset` | - | ✓ | ✓ | `spm-portfolio-planning:retire_strategic_portfolio` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | - | - | - | - |
+| 2 | `in_review` | - | - | - | - | - | - |
+| 3 | `changes_requested` | - | - | - | - | - | - |
+| 4 | `approved` | - | ✓ | ✓ | - | `work-mgmt-task-exec:approve_proofing_session` | - |
+| 5 | `rejected` | - | ✓ | ✓ | - | `work-mgmt-task-exec:reject_proofing_session` | - |
 
 ### `work_approval_chains` (Approval Chain)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `initiated` | ✓ | - | - | - | - |
-| 2 | `in_progress` | - | - | - | - | - |
-| 3 | `approved` | - | ✓ | ✓ | `work-mgmt-task-exec:approve_chain` | - |
-| 4 | `rejected` | - | ✓ | ✓ | `work-mgmt-task-exec:reject_chain` | - |
-| 5 | `canceled` | - | ✓ | ✓ | `work-mgmt-task-exec:cancel_approval_chain` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `initiated` | ✓ | - | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - | - |
+| 3 | `approved` | - | ✓ | ✓ | - | `work-mgmt-task-exec:approve_chain` | - |
+| 4 | `rejected` | - | ✓ | ✓ | - | `work-mgmt-task-exec:reject_chain` | - |
+| 5 | `canceled` | - | ✓ | ✓ | - | `work-mgmt-task-exec:cancel_approval_chain` | - |
 
 ### `work_approval_steps` (Approval Step)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - |
-| 2 | `approved` | - | ✓ | ✓ | `work-mgmt-task-exec:approve_step` | - |
-| 3 | `rejected` | - | ✓ | ✓ | `work-mgmt-task-exec:reject_step` | - |
-| 4 | `expired` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | - | - |
+| 2 | `approved` | - | ✓ | ✓ | - | `work-mgmt-task-exec:approve_step` | - |
+| 3 | `rejected` | - | ✓ | ✓ | - | `work-mgmt-task-exec:reject_step` | - |
+| 4 | `expired` | - | ✓ | - | - | - | - |
 
 ### `work_automations` (Work Automation)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `enabled` | - | - | ✓ | `work-mgmt-task-exec:enable_work_automation` | - |
-| 3 | `disabled` | - | - | ✓ | `work-mgmt-task-exec:disable_work_automation` | - |
-| 4 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | - | - | - | - |
+| 2 | `enabled` | - | - | ✓ | - | `work-mgmt-task-exec:enable_work_automation` | - |
+| 3 | `disabled` | - | - | ✓ | - | `work-mgmt-task-exec:disable_work_automation` | - |
+| 4 | `archived` | - | ✓ | - | - | - | - |
 
 ### `work_items` (Work Item)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | - |
-| 2 | `in_progress` | - | - | - | - | - |
-| 3 | `blocked` | - | - | - | - | - |
-| 4 | `done` | - | ✓ | - | - | - |
-| 5 | `canceled` | - | ✓ | ✓ | `work-mgmt-task-exec:cancel_work_item` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - | - |
+| 3 | `blocked` | - | - | - | - | - | - |
+| 4 | `done` | - | ✓ | - | - | - | - |
+| 5 | `canceled` | - | ✓ | ✓ | - | `work-mgmt-task-exec:cancel_work_item` | - |
 
 ### `work_milestones` (Milestone)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | - |
-| 2 | `reached` | - | ✓ | ✓ | `work-mgmt-task-exec:reach_work_milestone` | - |
-| 3 | `missed` | - | ✓ | ✓ | `work-mgmt-task-exec:miss_work_milestone` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | - | - | - | - |
+| 2 | `reached` | - | ✓ | ✓ | - | `work-mgmt-task-exec:reach_work_milestone` | - |
+| 3 | `missed` | - | ✓ | ✓ | - | `work-mgmt-task-exec:miss_work_milestone` | - |
 
 ### `work_project_templates` (Project Template)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `work-mgmt-task-exec:publish_project_template` | - |
-| 3 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | - | - | - | - |
+| 2 | `published` | - | - | ✓ | - | `work-mgmt-task-exec:publish_project_template` | - |
+| 3 | `archived` | - | ✓ | - | - | - | - |
 
 ### `work_projects` (Work Project)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `planning` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | - | - | - |
-| 3 | `on_hold` | - | - | - | - | - |
-| 4 | `completed` | - | ✓ | ✓ | `work-mgmt-task-exec:complete_work_project` | - |
-| 5 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `planning` | ✓ | - | - | - | - | - |
+| 2 | `active` | - | - | - | - | - | - |
+| 3 | `on_hold` | - | - | - | - | - | - |
+| 4 | `completed` | - | ✓ | ✓ | - | `work-mgmt-task-exec:complete_work_project` | - |
+| 5 | `archived` | - | ✓ | - | - | - | - |
 
 ### `work_task_templates` (Task Template)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `work-mgmt-task-exec:publish_task_template` | - |
-| 3 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | - | - | - | - |
+| 2 | `published` | - | - | ✓ | - | `work-mgmt-task-exec:publish_task_template` | - |
+| 3 | `archived` | - | ✓ | - | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -690,6 +533,65 @@ _This scope holds `strategic_portfolios` as **consumer**; the canonical state ma
 | `work-mgmt-task-exec:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `work-mgmt-task-exec:manage` | baseline-manage | Edit operational records | ✓ |
 | `work-mgmt-task-exec:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `crm-pipeline-mgt:read_crm_opportunities` | entity-read | Read Opportunities | ✓ |
+| `emp-exp-action-planning:read_action_plans` | entity-read | Read Engagement Action Plans | ✓ |
+| `psa-project-delivery:read_project_tasks` | entity-read | Read Project Tasks | ✓ |
+| `psa-resource-mgmt:read_project_assignments` | entity-read | Read Project Assignments | ✓ |
+| `work-mgmt-task-exec:read_work_items` | entity-read | Read Work Items | ✓ |
+| `work-mgmt-task-exec:write_work_items` | entity-write | Write Work Items | ✓ |
+| `work-mgmt-task-exec:read_work_projects` | entity-read | Read Work Projects | ✓ |
+| `work-mgmt-task-exec:write_work_projects` | entity-write | Write Work Projects | ✓ |
+| `work-mgmt-task-exec:read_work_automations` | entity-read | Read Work Automations | ✓ |
+| `work-mgmt-task-exec:write_work_automations` | entity-write | Write Work Automations | ✓ |
+| `spm-portfolio-planning:read_strategic_portfolios` | entity-read | Read Portfolios | ✓ |
+| `sem-execution-tracking:read_strategic_initiatives` | entity-read | Read Strategic Initiatives | ✓ |
+| `spm-demand-mgmt:read_business_value_assessments` | entity-read | Read Business Value Assessments | ✓ |
+| `pm-roadmap-delivery:read_product_releases` | entity-read | Read Product Releases | ✓ |
+| `pm-roadmap-delivery:read_product_roadmaps` | entity-read | Read Product Roadmaps | ✓ |
+| `pm-discovery:read_feature_requests` | entity-read | Read Feature Requests | ✓ |
+| `work-mgmt-task-exec:read_work_dependencies` | entity-read | Read Work Dependencies | ✓ |
+| `work-mgmt-task-exec:write_work_dependencies` | entity-write | Write Work Dependencies | ✓ |
+| `work-mgmt-task-exec:read_work_milestones` | entity-read | Read Milestones | ✓ |
+| `work-mgmt-task-exec:write_work_milestones` | entity-write | Write Milestones | ✓ |
+| `work-mgmt-task-exec:read_work_approval_steps` | entity-read | Read Approval Steps | ✓ |
+| `work-mgmt-task-exec:write_work_approval_steps` | entity-write | Write Approval Steps | ✓ |
+| `work-mgmt-task-exec:read_work_approval_chains` | entity-read | Read Approval Chains | ✓ |
+| `work-mgmt-task-exec:write_work_approval_chains` | entity-write | Write Approval Chains | ✓ |
+| `work-mgmt-task-exec:read_work_user_workloads` | entity-read | Read Workloads | ✓ |
+| `work-mgmt-task-exec:read_work_custom_fields` | entity-read | Read Custom Fields | ✓ |
+| `work-mgmt-task-exec:write_work_custom_fields` | entity-write | Write Custom Fields | ✓ |
+| `work-mgmt-task-exec:read_work_custom_field_values` | entity-read | Read Custom Field Values | ✓ |
+| `work-mgmt-task-exec:write_work_custom_field_values` | entity-write | Write Custom Field Values | ✓ |
+| `work-mgmt-task-exec:read_work_sections` | entity-read | Read Sections | ✓ |
+| `work-mgmt-task-exec:write_work_sections` | entity-write | Write Sections | ✓ |
+| `work-mgmt-task-exec:read_work_project_templates` | entity-read | Read Project Templates | ✓ |
+| `work-mgmt-task-exec:write_work_project_templates` | entity-write | Write Project Templates | ✓ |
+| `work-mgmt-task-exec:read_work_task_templates` | entity-read | Read Task Templates | ✓ |
+| `work-mgmt-task-exec:write_work_task_templates` | entity-write | Write Task Templates | ✓ |
+| `work-mgmt-task-exec:read_work_tags` | entity-read | Read Tags | ✓ |
+| `work-mgmt-task-exec:write_work_tags` | entity-write | Write Tags | ✓ |
+| `work-mgmt-task-exec:read_work_item_tags` | entity-read | Read Item Tag Assignments | ✓ |
+| `work-mgmt-task-exec:write_work_item_tags` | entity-write | Write Item Tag Assignments | ✓ |
+| `work-mgmt-task-exec:read_work_item_comments` | entity-read | Read Item Comments | ✓ |
+| `work-mgmt-task-exec:write_work_item_comments` | entity-write | Write Item Comments | ✓ |
+| `work-mgmt-task-exec:read_work_item_attachments` | entity-read | Read Item Attachments | ✓ |
+| `work-mgmt-task-exec:write_work_item_attachments` | entity-write | Write Item Attachments | ✓ |
+| `work-mgmt-task-exec:read_proofing_sessions` | entity-read | Read Proofing Sessions | ✓ |
+| `work-mgmt-task-exec:write_proofing_sessions` | entity-write | Write Proofing Sessions | ✓ |
+| `work-mgmt-task-exec:read_proofing_annotations` | entity-read | Read Proofing Annotations | ✓ |
+| `work-mgmt-task-exec:write_proofing_annotations` | entity-write | Write Proofing Annotations | ✓ |
+| `work-mgmt-task-exec:read_work_dashboards` | entity-read | Read Work Dashboards | ✓ |
+| `work-mgmt-task-exec:write_work_dashboards` | entity-write | Write Work Dashboards | ✓ |
+| `work-mgmt-task-exec:read_work_views` | entity-read | Read Work Views | ✓ |
+| `work-mgmt-task-exec:write_work_views` | entity-write | Write Work Views | ✓ |
+| `work-mgmt-task-exec:read_work_time_entries` | entity-read | Read Work Time Entries | ✓ |
+| `work-mgmt-task-exec:write_work_time_entries` | entity-write | Write Work Time Entries | ✓ |
+| `work-mgmt-task-exec:read_work_portfolios` | entity-read | Read Work Portfolios | ✓ |
+| `work-mgmt-task-exec:write_work_portfolios` | entity-write | Write Work Portfolios | ✓ |
+| `work-mgmt-task-exec:read_work_statuses` | entity-read | Read Work Statuses | ✓ |
+| `work-mgmt-task-exec:write_work_statuses` | entity-write | Write Work Statuses | ✓ |
+| `work-mgmt-task-exec:read_work_status_updates` | entity-read | Read Work Status Updates | ✓ |
+| `work-mgmt-task-exec:write_work_status_updates` | entity-write | Write Work Status Updates | ✓ |
 | `work-mgmt-task-exec:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `canceled` | ✓ |
 | `work-mgmt-task-exec:complete_work_project` | workflow-gate (lifecycle) | Transition `work_projects` into state `completed` | ✓ |
 | `work-mgmt-task-exec:enable_work_automation` | workflow-gate (lifecycle) | Transition `work_automations` into state `enabled` | ✓ |
@@ -709,6 +611,8 @@ _This scope holds `strategic_portfolios` as **consumer**; the canonical state ma
 | `work-mgmt-task-exec:manage_all_item_comments` | override (personal_content) | Manage all `work_item_comments` rows beyond row-scope | ✓ |
 | `work-mgmt-task-exec:view_all_work_time_entries` | override (personal_content) | View all `work_time_entries` rows beyond row-scope | ✓ |
 | `work-mgmt-task-exec:manage_all_work_time_entries` | override (personal_content) | Manage all `work_time_entries` rows beyond row-scope | ✓ |
+
+_Gates with no process: `work-mgmt-task-exec:enable_work_automation`, `work-mgmt-task-exec:disable_work_automation`, `work-mgmt-task-exec:reach_work_milestone`, `work-mgmt-task-exec:miss_work_milestone`, `work-mgmt-task-exec:approve_step`, `work-mgmt-task-exec:reject_step`, `work-mgmt-task-exec:approve_chain`, `work-mgmt-task-exec:reject_chain`, `work-mgmt-task-exec:cancel_approval_chain`, `work-mgmt-task-exec:publish_project_template`, `work-mgmt-task-exec:publish_task_template`, `work-mgmt-task-exec:approve_proofing_session`, `work-mgmt-task-exec:reject_proofing_session`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
@@ -737,6 +641,89 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:manage` |
 | `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:read` |
+| `work-mgmt-task-exec:read` | `crm-pipeline-mgt:read_crm_opportunities` |
+| `work-mgmt-task-exec:read` | `emp-exp-action-planning:read_action_plans` |
+| `work-mgmt-task-exec:read` | `psa-project-delivery:read_project_tasks` |
+| `work-mgmt-task-exec:read` | `psa-resource-mgmt:read_project_assignments` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_items` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_projects` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_automations` |
+| `work-mgmt-task-exec:read` | `spm-portfolio-planning:read_strategic_portfolios` |
+| `work-mgmt-task-exec:read` | `sem-execution-tracking:read_strategic_initiatives` |
+| `work-mgmt-task-exec:read` | `spm-demand-mgmt:read_business_value_assessments` |
+| `work-mgmt-task-exec:read` | `pm-roadmap-delivery:read_product_releases` |
+| `work-mgmt-task-exec:read` | `pm-roadmap-delivery:read_product_roadmaps` |
+| `work-mgmt-task-exec:read` | `pm-discovery:read_feature_requests` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_dependencies` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_milestones` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_approval_steps` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_approval_chains` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_user_workloads` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_custom_fields` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_custom_field_values` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_sections` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_project_templates` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_task_templates` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_tags` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_item_tags` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_item_comments` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_item_attachments` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_proofing_sessions` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_proofing_annotations` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_dashboards` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_views` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_time_entries` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_portfolios` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_statuses` |
+| `work-mgmt-task-exec:read` | `work-mgmt-task-exec:read_work_status_updates` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_items` |
+| `work-mgmt-task-exec:write_work_items` | `work-mgmt-task-exec:read_work_items` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_projects` |
+| `work-mgmt-task-exec:write_work_projects` | `work-mgmt-task-exec:read_work_projects` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_automations` |
+| `work-mgmt-task-exec:write_work_automations` | `work-mgmt-task-exec:read_work_automations` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_dependencies` |
+| `work-mgmt-task-exec:write_work_dependencies` | `work-mgmt-task-exec:read_work_dependencies` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_milestones` |
+| `work-mgmt-task-exec:write_work_milestones` | `work-mgmt-task-exec:read_work_milestones` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_approval_steps` |
+| `work-mgmt-task-exec:write_work_approval_steps` | `work-mgmt-task-exec:read_work_approval_steps` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_approval_chains` |
+| `work-mgmt-task-exec:write_work_approval_chains` | `work-mgmt-task-exec:read_work_approval_chains` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_custom_fields` |
+| `work-mgmt-task-exec:write_work_custom_fields` | `work-mgmt-task-exec:read_work_custom_fields` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_custom_field_values` |
+| `work-mgmt-task-exec:write_work_custom_field_values` | `work-mgmt-task-exec:read_work_custom_field_values` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_sections` |
+| `work-mgmt-task-exec:write_work_sections` | `work-mgmt-task-exec:read_work_sections` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_project_templates` |
+| `work-mgmt-task-exec:write_work_project_templates` | `work-mgmt-task-exec:read_work_project_templates` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_task_templates` |
+| `work-mgmt-task-exec:write_work_task_templates` | `work-mgmt-task-exec:read_work_task_templates` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_tags` |
+| `work-mgmt-task-exec:write_work_tags` | `work-mgmt-task-exec:read_work_tags` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_item_tags` |
+| `work-mgmt-task-exec:write_work_item_tags` | `work-mgmt-task-exec:read_work_item_tags` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_item_comments` |
+| `work-mgmt-task-exec:write_work_item_comments` | `work-mgmt-task-exec:read_work_item_comments` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_item_attachments` |
+| `work-mgmt-task-exec:write_work_item_attachments` | `work-mgmt-task-exec:read_work_item_attachments` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_proofing_sessions` |
+| `work-mgmt-task-exec:write_proofing_sessions` | `work-mgmt-task-exec:read_proofing_sessions` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_proofing_annotations` |
+| `work-mgmt-task-exec:write_proofing_annotations` | `work-mgmt-task-exec:read_proofing_annotations` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_dashboards` |
+| `work-mgmt-task-exec:write_work_dashboards` | `work-mgmt-task-exec:read_work_dashboards` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_views` |
+| `work-mgmt-task-exec:write_work_views` | `work-mgmt-task-exec:read_work_views` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_time_entries` |
+| `work-mgmt-task-exec:write_work_time_entries` | `work-mgmt-task-exec:read_work_time_entries` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_portfolios` |
+| `work-mgmt-task-exec:write_work_portfolios` | `work-mgmt-task-exec:read_work_portfolios` |
+| `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:write_work_statuses` |
+| `work-mgmt-task-exec:write_work_statuses` | `work-mgmt-task-exec:read_work_statuses` |
+| `work-mgmt-task-exec:manage` | `work-mgmt-task-exec:write_work_status_updates` |
+| `work-mgmt-task-exec:write_work_status_updates` | `work-mgmt-task-exec:read_work_status_updates` |
 | `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:cancel_work_item` |
 | `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:complete_work_project` |
 | `work-mgmt-task-exec:admin` | `work-mgmt-task-exec:enable_work_automation` |
@@ -767,15 +754,15 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `OPERATIONS-WORK-CONTRIBUTOR` | persona | responsible | `manage_projects` | grant gates [work-mgmt-task-exec:cancel_work_item, work-mgmt-task-exec:complete_work_project] + the gated entities' write tier |
-| `OPERATIONS-WORK-PROGRAM-LEAD` | persona | accountable | `manage_projects` | approval gate |
+| `OPERATIONS-WORK-CONTRIBUTOR` | persona | responsible | `manage_projects` | the gated entities' write tier |
+| `OPERATIONS-WORK-PROGRAM-LEAD` | persona | accountable | `manage_projects` | grant gates [work-mgmt-task-exec:cancel_work_item, work-mgmt-task-exec:complete_work_project] + the gated entities' write tier |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Business Operations | `admin` | `:admin` |
-| contributor | Customer Success | `manage` | `:manage` |
-| contributor | Marketing | `manage` | `:manage` |
-| contributor | Product Management | `manage` | `:manage` |
-| consumer | Sales | `read` | `:read` |
+| contributor | Customer Success | `manager` | `:manage` |
+| contributor | Marketing | `manager` | `:manage` |
+| contributor | Product Management | `manager` | `:manage` |
+| consumer | Sales | `viewer` | `:read` |

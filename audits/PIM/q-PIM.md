@@ -5,10 +5,10 @@ Manage one trusted record for every product (attributes, variants, categories, t
 
 ---
 
-q1: (answer this first) Four sibling product objects (products, translations, digital assets) are both mastered in one PIM module and re-consumed in its sibling modules, which is not allowed. How should this be resolved?
+q1: (answer this first) Three sibling holdings of product objects (products, translations, digital assets) are mastered in one PIM module and re-consumed in a sibling module, which is not allowed. How should this be resolved?
 
-- a) Delete the 4 duplicate consumer relationships, so the other modules read the canonical product, translation, and asset records by reference.
-- b) Promote each of the 4 to its own embedded copy, so each module can be installed and run standalone without its sibling.
+- a) Delete the 3 duplicate consumer relationships, so the other modules read the canonical product, translation, and asset records by reference.
+- b) Promote each of the 3 to its own embedded copy, so each module can be installed and run standalone without its sibling.
 - c) Mixed: delete some and promote others (specify which).
 
 Recommended: a. Delete is the default. A standalone Syndication module with no Product Content module has no products to syndicate, and a standalone Digital Assets module has no products to depict, so the standalone-deployable path is weak here. This is a destructive change (deleting rows or overwriting roles) and it gates the module-shape fix below it, so it needs your sign-off and unlocks the rest of the build.

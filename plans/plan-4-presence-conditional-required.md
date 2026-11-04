@@ -1,5 +1,7 @@
 # Plan 4: presence-conditional `is_required` and relationship-layer self-containment (M9 part 2)
 
+**Status note 2026-11-04.** The naming half of step D, re-prefixing gates and overrides to the installing unit, is superseded by [stable-permission-names-plan.md](stable-permission-names-plan.md). A unit still mints the gates of what it embeds, under the catalog's names. The rest of this plan stands.
+
 Scope: redefine `data_object_relationships.is_required` as PRESENCE-CONDITIONAL (a required
 relationship is a mandatory FK only when the target entity is installed; it never forces the target
 to install), and extend Plan 3's M9 self-containment audit from the entity layer to the

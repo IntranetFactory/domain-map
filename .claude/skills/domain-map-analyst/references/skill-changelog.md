@@ -1,3 +1,13 @@
+### 2026-11-04: permissions are named by the catalog, never by what is installed
+
+**Context.** A module embedding an entity minted its gates and overrides under its own slug, so one catalog produced different names in different tenants, and an owner installing later left old rows behind that gate rules kept testing. Module-wide `read` and `manage` also forced a bad choice at adoption.
+
+**Decision.** By the owner, in [plans/stable-permission-names-plan.md](../../../../plans/stable-permission-names-plan.md). Every entity has its own `<master>:read_<entity>` and `<master>:write_<entity>`. A gate takes the realizing module's name, else the master's. An override takes the master's. Only bundles keep the unit's slug. A module that provisions an entity, as `master` or `embedded_master`, mints a gate whose naming module is outside the unit. A `derived` row's `mastered in` names the catalog master when one exists. This retires plan-5 and the naming half of plan-4 step D.
+
+**Enforced by.** R11 and R12 in `scripts/lib/blueprint_invariants.ts`, the architect's `consistency-check.ts`, and a `permission gone` line from `generate_blueprints.ts` for each name that disappears.
+
+**Catalog fixes it needed.** `equity_grants` was split: `CAP-TABLE-GRANTS` masters the security, and `COMP-INCENTIVES` masters the new `incentive_awards`, the pay decision. `SRM-RISK-COMPLIANCE` is the only master of `supplier_certifications`. Modules that realize a gate now hold its entity (F1, F5). See each domain's `history.md`, 2026-11-03 and 2026-11-04.
+
 ### 2026-11-03: blueprints carry `supports_raci`
 
 **Context.** A catalog blueprint could be offered `raci` while most of its gates had no process, and the architect then invented the missing processes and approvers. Rendered with the new code on 2026-11-03, 21 of the 334 modules that render came out true. The other 97 of the 431 modules do not render, because of a missing `entity_type` (B13).
@@ -5,6 +15,8 @@
 **Decision.** By the owner. The generator derives `supports_raci` into the blueprint frontmatter (`deriveSupportsRaci` in `scripts/lib/blueprint_derive.ts`), and `raci` is offered only when it is true. Create-Greenfield keeps drafting its own matrix. The file format version stays 3.1. The architect's rules, script and checks are in `semantius-plugin`.
 
 **Why derived.** A stored flag goes stale as soon as someone wires a gate. Salesforce also checks at activation that an approval process has a step, rather than storing a flag.
+
+**Also (bug-47).** `gateDescription` no longer appends `(⚠ no process)`, because the §8.1 description deploys verbatim. `gatesWithoutProcessNote` names those gates in a note under the §8.1 table. Blueprints show this once regenerated.
 
 ### 2026-11-03: entity and state text stays true in a subset; R10 warns on it
 

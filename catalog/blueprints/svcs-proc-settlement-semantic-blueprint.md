@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Services Milestone Delivery and Settlement
 tagline: Track milestones and deliverables to acceptance, then pay on what was actually delivered.
@@ -10,7 +10,8 @@ domain_modules:
   - svcs-proc-settlement
 domain_code: SVCS-PROC
 persona: []
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Services Milestone Delivery and Settlement
@@ -45,12 +46,12 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `milestone_invoices` | `milestone_invoices` | Milestone Invoice | Milestone Invoices | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 2 | `service_acceptances` | `service_acceptances` | Service Acceptance | Service Acceptances | master | - | - | optional | - | operational_record | `:manage` | - |
-| 3 | `service_deliverables` | `service_deliverables` | Service Deliverable | Service Deliverables | master | - | - | optional | - | operational_workflow | `:manage` | - |
-| 4 | `sow_milestones` | `sow_milestones` | SOW Milestone | SOW Milestones | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 1 | `milestone_invoices` | `milestone_invoices` | Milestone Invoice | Milestone Invoices | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 2 | `service_acceptances` | `service_acceptances` | Service Acceptance | Service Acceptances | master | - | - | yes | - | operational_record | `:manage` | - |
+| 3 | `service_deliverables` | `service_deliverables` | Service Deliverable | Service Deliverables | master | - | - | yes | - | operational_workflow | `:manage` | - |
+| 4 | `sow_milestones` | `sow_milestones` | SOW Milestone | SOW Milestones | master | - | - | - | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -58,33 +59,33 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-_(none: no relationships with both endpoints inside the scope)_
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
+_(none: no relationships with both entities in this blueprint)_
 
-_(none: no relationships against platform built-ins)_
+### 5.2 Relationships to platform built-ins (`users`)
 
-### 5.3 Cross-scope relationships
+_(none: no relationships to platform built-ins)_
 
-#### 5.3a Outbound from this scope's masters and contributors
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+_(none: no outgoing relationships to external entities)_
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+_(none: no incoming relationships from external entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -110,6 +111,14 @@ _(none: no lifecycle states for the entities in this scope)_
 | `svcs-proc-settlement:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `svcs-proc-settlement:manage` | baseline-manage | Edit operational records | ✓ |
 | `svcs-proc-settlement:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `svcs-proc-settlement:read_sow_milestones` | entity-read | Read SOW Milestones | ✓ |
+| `svcs-proc-settlement:write_sow_milestones` | entity-write | Write SOW Milestones | ✓ |
+| `svcs-proc-settlement:read_service_deliverables` | entity-read | Read Service Deliverables | ✓ |
+| `svcs-proc-settlement:write_service_deliverables` | entity-write | Write Service Deliverables | ✓ |
+| `svcs-proc-settlement:read_milestone_invoices` | entity-read | Read Milestone Invoices | ✓ |
+| `svcs-proc-settlement:write_milestone_invoices` | entity-write | Write Milestone Invoices | ✓ |
+| `svcs-proc-settlement:read_service_acceptances` | entity-read | Read Service Acceptances | ✓ |
+| `svcs-proc-settlement:write_service_acceptances` | entity-write | Write Service Acceptances | ✓ |
 
 ### 8.2 Business rules
 
@@ -127,6 +136,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `svcs-proc-settlement_viewer` | `svcs-proc-settlement:read` |
 | `svcs-proc-settlement_manager` | `svcs-proc-settlement:manage` |
+| `svcs-proc-settlement_admin` | `svcs-proc-settlement:admin` |
 
 **Permission hierarchy:**
 
@@ -134,6 +144,18 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `svcs-proc-settlement:admin` | `svcs-proc-settlement:manage` |
 | `svcs-proc-settlement:manage` | `svcs-proc-settlement:read` |
+| `svcs-proc-settlement:read` | `svcs-proc-settlement:read_sow_milestones` |
+| `svcs-proc-settlement:read` | `svcs-proc-settlement:read_service_deliverables` |
+| `svcs-proc-settlement:read` | `svcs-proc-settlement:read_milestone_invoices` |
+| `svcs-proc-settlement:read` | `svcs-proc-settlement:read_service_acceptances` |
+| `svcs-proc-settlement:manage` | `svcs-proc-settlement:write_sow_milestones` |
+| `svcs-proc-settlement:write_sow_milestones` | `svcs-proc-settlement:read_sow_milestones` |
+| `svcs-proc-settlement:manage` | `svcs-proc-settlement:write_service_deliverables` |
+| `svcs-proc-settlement:write_service_deliverables` | `svcs-proc-settlement:read_service_deliverables` |
+| `svcs-proc-settlement:manage` | `svcs-proc-settlement:write_milestone_invoices` |
+| `svcs-proc-settlement:write_milestone_invoices` | `svcs-proc-settlement:read_milestone_invoices` |
+| `svcs-proc-settlement:manage` | `svcs-proc-settlement:write_service_acceptances` |
+| `svcs-proc-settlement:write_service_acceptances` | `svcs-proc-settlement:read_service_acceptances` |
 
 **RACI realization:**
 

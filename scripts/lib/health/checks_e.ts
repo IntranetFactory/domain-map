@@ -19,7 +19,7 @@
 // E6 also runs the derived-result invariants R1-R10 (scripts/lib/blueprint_invariants.ts, health plan
 // Phase 3) over each primary module's derived blueprint (deriveModuleModel on ctx.index / ctx.all),
 // one finding per (R id, result). E6 rows: data_objects.id for the B13 predicate, and
-// "<R id>:<identifier>" strings (gate code, role slug, process key, handoff id, entity name) for R1-R10.
+// "<R id>:<identifier>" strings (gate code, role slug, process key, handoff id, entity name) for R1-R12.
 // The R7 skill clause reads one catalog-wide /skills select.
 
 import {
@@ -75,7 +75,7 @@ function stateModuleId(ctx: HealthCtx, s: any): number | null {
 const SKILLS_PATH = "/skills?select=id,skill_name,skill_type,domain_id&order=id.asc&limit=100000";
 const MAX_R_ITEMS = 12;
 
-// E6 derived result: R1-R10 over every primary module's derived blueprint, grouped per (R id, result).
+// E6 derived result: R1-R12 over every primary module's derived blueprint, grouped per (R id, result).
 async function derivedResultFindings(ctx: HealthCtx): Promise<Finding[]> {
   const dctx = makeDeriveCtx(ctx.index, ctx.all);
   const skills = await ctx.query(SKILLS_PATH);
@@ -85,7 +85,7 @@ async function derivedResultFindings(ctx: HealthCtx): Promise<Finding[]> {
     found.push(...checkModel(deriveModuleModel(m, dctx), { ctx: dctx, skills: { system: ofDomain("system"), domain: ofDomain("domain") } }));
   }
   if (found.length === 0) {
-    return [{ id: "E6", result: "pass", detail: `derived result R1-R10: the derived blueprints of all ${ctx.modules.length} modules pass` }];
+    return [{ id: "E6", result: "pass", detail: `derived result R1-R12: the derived blueprints of all ${ctx.modules.length} modules pass` }];
   }
   const out: Finding[] = [];
   for (const id of RULE_IDS as RuleId[]) {
@@ -210,7 +210,7 @@ export const E_CHECKS: Check[] = [
     id: "E6",
     band: "E",
     kind: "mechanical+agent",
-    title: "reach reconciles against derived permissions; entity_type classified; derived result R1-R10",
+    title: "reach reconciles against derived permissions; entity_type classified; derived result R1-R12",
     run: async (ctx) => {
       const v = checkMastersClassified(ctx.masters, (id) => ctx.index.dataObjectsById.get(id)?.entity_type, ctx.doName);
       return [

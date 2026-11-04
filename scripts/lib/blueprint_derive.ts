@@ -67,13 +67,23 @@ export function entityPluralToken(o: DataObject): string {
 
 // `includedInAdmin` is the §8.1 `included in :admin?` cell, and the §9 hierarchy carries a
 // `<slug>:admin` -> code row exactly for the gate / override rows where it is true. `highRisk` is set
-// on `workflow-gate (lifecycle)` rows only (see GateModel).
-export type Permission = { code: string; tier: string; description: string; includedInAdmin: boolean; highRisk?: boolean };
+// on `workflow-gate (lifecycle)` rows only (see GateModel). `writeBundle` and `readCode` are set on
+// `entity-write` rows only: the unit's bundle (`manage` or `admin`, from the entity's write tier) that
+// includes the row, and the entity's read permission the row includes.
+export type Permission = {
+  code: string;
+  tier: string;
+  description: string;
+  includedInAdmin: boolean;
+  highRisk?: boolean;
+  writeBundle?: string;
+  readCode?: string;
+};
 export type BusinessRule = { name: string; dataObject: string; sourceFlag: string; intent: string };
 
 // B2 (plan-2-entity-type-tiers.md): the per-entity write tier, derived from `entity_type`.
-// Read is uniformly `:read`; the write tier selects which existing module baseline governs
-// mutations. No new permission is minted: `:manage` / `:admin` already exist per module.
+// Read is uniformly `:read`; the write tier selects which of the module's bundles includes the
+// entity's write permission: `:manage` or `:admin`.
 // `endpointEntityTypes` matters only for junctions (admin when a related endpoint is a catalog).
 // `unclassified` (and null / unknown) map to `:manage`, flagged pending (m2). This is now
 // defense-in-depth only: the emitter HARD-aborts any module carrying an unclassified entity_type
@@ -91,15 +101,15 @@ export type WriteTier = { read: string; write: string | null; pending: boolean }
 // DB at deploy.
 export type DeleteMode = { mode: string; fkFormat: string };
 
-// One lifecycle state's gate, as resolved by deriveGate. `gateModule` is the canonical realizing
-// module (or the in-scope master's module on the NULL-realizer fallback); `code` carries the
-// prefix actually minted, which differs from gateModule's slug only when `reprefixed`.
-export type DerivedGate = { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject; reprefixed: boolean };
+// One lifecycle state's gate, as resolved by deriveGate. `gateModule` names it: the module the
+// catalog says realizes the state, else the entity's master. `heldForOwner` is true when that module
+// is outside the emitted scope and the scope provisions the entity (`master` or `embedded_master`), so
+// the unit mints the gate under that module's name and holds it through its bundles.
+export type DerivedGate = { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject; heldForOwner: boolean };
 
 // One minted `workflow-gate (lifecycle)` permission and every lifecycle state mapped to it. Several
-// states can share one code (a permission_verb_override collision, made more common by re-prefixing,
-// e.g. candidates.hired + job_applications.hired -> `<unit>:hire_candidate`); the permission is
-// minted once and its description names every mapped state. `highRisk` is true when any mapped
+// states can share one code (a permission_verb_override collision under one realizing module); the
+// permission is minted once and its description names every mapped state. `highRisk` is true when any mapped
 // state is `is_high_risk` (the architect checker reads a gate as high-risk from any §7 row deriving
 // it). `processIds` are the distinct `process_id`s of the mapped states; empty means the gate is
 // wired to no process (`⚠ no process`), so no RACI Accountable row can hold it.
@@ -151,7 +161,7 @@ export type HandoffModel = {
 
 // §7: one state with the gate deriveGate resolves against the whole emitted scope. `gate` is
 // computed for every state (requires_permission or not) because the realizing-module column
-// reads `reprefixed` either way.
+// reads `heldForOwner` either way.
 export type LifecycleStateModel = { state: any; gate: DerivedGate | null };
 
 // §7: one entity's state machine. `scopeRow` is undefined only when a lifecycle row's entity is
@@ -195,58 +205,48 @@ export type BlueprintModel = {
 
 // ---------- derivation rules ----------
 
+// The module whose slug names an entity's permissions: its catalog master, whatever is installed.
+// Null for a platform built-in, which keeps platform permissions, and for an entity with no master in
+// the catalog, which has no owner to name them after.
+export function entityOwnerSlug(ctx: DeriveCtx, o: DataObject): string | null {
+  if (o.kind === "platform_builtin") return null;
+  const master = (ctx.all.dmdoByDataObjectId.get(o.id) ?? []).find((r: any) => r.held_as === "master");
+  const m = master ? ctx.index.modulesById.get(master.domain_module_id as number) : undefined;
+  return m ? moduleSlug(m.domain_module_code) : null;
+}
+
 // M1 (plan-1-consistency.md): the single canonical gate-code derivation, shared by the §7
 // lifecycle renderer and §8 deriveWorkflowGatesAndRules so the two can never disagree on a
-// gate's module prefix. Canonical fallback: a state with NULL domain_module_id is gated by
-// the module that masters its data_object (in scope; or, for an entity this scope carries as
-// `embedded_master`, the absent catalog master, which the re-prefix below then replaces with the
-// installing unit). Returns null when no module resolves (the §7 caller renders a
-// blank/annotation; §8 simply does not mint the gate).
+// gate's module prefix. A gate is named by the catalog, never by what is installed: the module the
+// catalog says realizes the state, else the entity's master. On a NULL realizer that is the master in
+// scope or, for an entity this scope carries as `embedded_master`, the catalog master, which a scope
+// holding the entity as `embedded_master` does not install. An embedded entity with no master anywhere
+// falls back to the installing unit, the only module left to name it. Returns null when no module
+// resolves (the §7 caller renders a blank/annotation; §8 simply does not mint the gate).
 export function deriveGate(
   ctx: DeriveCtx,
   state: any,
   scopeRows: ScopeRow[],
-  reprefixModuleIdSet?: Set<number>,
+  scopeModuleIds?: Set<number>,
 ): DerivedGate | null {
   const obj = ctx.index.dataObjectsById.get(state.data_object_id as number);
   if (!obj) return null;
   const realizingId = state.domain_module_id as number | null;
+  const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
   let gateModule = realizingId !== null
     ? ctx.index.modulesById.get(realizingId)
     : scopeRows.find((r) => r.data_object_id === state.data_object_id && r.held_as === "master")?.modules[0];
-  // NULL realizer on an entity carried as `embedded_master` (Writing Convention 10): the canonical
-  // gate module is the entity's catalog master, which is out of the emitted scope (a scope that
-  // installs the master holds the entity as `master`, strongest held_as wins). Resolve it so the
-  // re-prefix below mints the gate under the installing unit, exactly as for a non-NULL realizer
-  // that is out of scope. Without this the gate showed as `-` in §7 and was never minted.
-  if (!gateModule && realizingId === null && reprefixModuleIdSet) {
-    const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
-    if (here && here.held_as === "embedded_master" && here.modules.length > 0) {
-      const owner = (ctx.all.dmdoByDataObjectId.get(obj.id) ?? [])
-        .find((r: any) => r.held_as === "master" && !reprefixModuleIdSet.has(r.domain_module_id as number));
-      gateModule = (owner ? ctx.index.modulesById.get(owner.domain_module_id as number) : undefined) ?? here.modules[0];
-    }
+  if (!gateModule && realizingId === null && scopeModuleIds && here?.held_as === "embedded_master" && here.modules.length > 0) {
+    const owner = (ctx.all.dmdoByDataObjectId.get(obj.id) ?? [])
+      .find((r: any) => r.held_as === "master" && !scopeModuleIds.has(r.domain_module_id as number));
+    gateModule = (owner ? ctx.index.modulesById.get(owner.domain_module_id as number) : undefined) ?? here.modules[0];
   }
   if (!gateModule) return null;
   const verbSegment = state.permission_verb_override
     ? (state.permission_verb_override as string)
     : `${state.state_name}_${entitySingularToken(obj)}`;
-  // Plan 4 step D: re-prefix the gate to the installing unit when the canonical realizing module
-  // is NOT in the emitted scope but this scope carries the entity as `embedded_master`. The entity
-  // is present standalone, so its gate must be realized (and minted in §8) under the installing
-  // module's slug instead of dangling at the absent realizer's prefix. `gateModule` is left
-  // pointing at the canonical realizer so the §7 "realizing module" column can annotate the
-  // re-prefix. When `reprefixModuleIdSet` is omitted this is a no-op (byte-identical to before).
-  let prefixModule = gateModule;
-  let reprefixed = false;
-  if (reprefixModuleIdSet && !reprefixModuleIdSet.has(gateModule.id)) {
-    const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
-    if (here && here.held_as === "embedded_master" && here.modules.length > 0) {
-      prefixModule = here.modules[0];
-      reprefixed = true;
-    }
-  }
-  return { code: `${moduleSlug(prefixModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj, reprefixed };
+  const heldForOwner = Boolean(scopeModuleIds && !scopeModuleIds.has(gateModule.id) && (here?.held_as === "embedded_master" || here?.held_as === "master"));
+  return { code: `${moduleSlug(gateModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj, heldForOwner };
 }
 
 export function deriveWriteTier(entityType: string | null | undefined, endpointEntityTypes: string[] = []): WriteTier {
@@ -306,6 +306,9 @@ export function neighborEntityTypes(ctx: DeriveCtx, doId: number, rels: { all: a
   return [...types];
 }
 
+// How a module holds an entity when it gets the entity's write permission.
+const WRITING_HELD_AS = new Set(["master", "embedded_master", "contributor"]);
+
 // The §3 write tier of one in-scope entity: junctions consult their neighbors' entity_types.
 function entityWriteTier(ctx: DeriveCtx, r: ScopeRow, rels: { all: any[] }): WriteTier {
   const o = r.data_object;
@@ -316,7 +319,7 @@ function entityWriteTier(ctx: DeriveCtx, r: ScopeRow, rels: { all: any[] }): Wri
 // Plan 4 step D: the lifecycle states a module realizes when emitted as a standalone unit.
 // `master`-here or this-module-realized states (the pre-plan-4 set), PLUS states for entities
 // carried as `embedded_master` whose canonical realizing module is out of the emitted scope (the
-// installing unit realizes and mints those gates locally, re-prefixed by deriveGate). A NULL
+// installing unit mints those gates under the owner's name and holds them). A NULL
 // realizer on an embedded entity counts as out of scope: its canonical realizer is the entity's
 // catalog master, which a scope holding the entity as `embedded_master` does not install. For a
 // module whose embedded entities all have in-scope realizers this returns the same set as before.
@@ -342,6 +345,7 @@ export function deriveWorkflowGatesAndRules(
   lifecycleRows: any[],
   thisModuleId: number,
   emittedModuleIdSet: Set<number>,
+  rels: { all: any[] },
 ): { permissions: Permission[]; businessRules: BusinessRule[]; gates: GateModel[] } {
   const permissions: Permission[] = [];
   const businessRules: BusinessRule[] = [];
@@ -359,19 +363,14 @@ export function deriveWorkflowGatesAndRules(
     if (!ls.requires_permission) continue;
     const realizingId = ls.domain_module_id as number | null;
     const ownsAsRealizer = realizingId === thisModuleId;
-    const ownsAsMaster = realizingId === null && moduleMasterIds.has(ls.data_object_id as number);
-    // Plan 4 step D: the installing unit realizes (and mints, re-prefixed) the gate for an entity
-    // it carries as `embedded_master` whose canonical realizing module is out of the emitted
-    // scope. Without this a starter (or any standalone-emitted module embedding such an entity)
-    // shows the gate in §7 but mints nothing in §8.1, leaving the transition ungoverned. A NULL
-    // realizer counts as out of scope here (its canonical realizer is the absent catalog master).
+    // Plan 4 step D: a module that provisions the entity (`master` or `embedded_master`) mints the
+    // gate under the catalog's name when the module the catalog names is out of the emitted scope.
+    // Without this it shows the gate in §7 but mints nothing in §8.1, leaving the transition
+    // ungoverned. A NULL realizer counts as out of scope here (the gate is the entity's master's).
     const realizerOutOfScope = realizingId === null || !emittedModuleIdSet.has(realizingId);
-    const ownsByEmbedding = realizerOutOfScope && moduleEmbeddedIds.has(ls.data_object_id as number);
-    if (!ownsAsRealizer && !ownsAsMaster && !ownsByEmbedding) continue;
-    // M1: same shared deriveGate as §7, passed the emitted scope so the re-prefix is identical.
-    // On the realizer/master paths the realizer is in scope, so the re-prefix is a no-op and the
-    // code stays `${slug}:...`; on the embedded path it re-prefixes to this installing module's
-    // slug, which is also `${slug}`.
+    const provisioned = moduleMasterIds.has(ls.data_object_id as number) || moduleEmbeddedIds.has(ls.data_object_id as number);
+    if (!ownsAsRealizer && !(realizerOutOfScope && provisioned)) continue;
+    // M1: same shared deriveGate as §7, so the two show one code.
     const g = deriveGate(ctx, ls, moduleObjects, emittedModuleIdSet);
     if (!g || baselineCodes.has(g.code)) continue;
     // Override collision (modules.md §4): two transitions can collapse to one gate code. Mint the
@@ -402,6 +401,25 @@ export function deriveWorkflowGatesAndRules(
       : "Edit reference data and inherit every workflow gate below",
     includedInAdmin: false,
   });
+  // One read and one write permission per entity, named by its master. A module that only reads the
+  // entity, and a computed entity, get the read row alone. An entity with no owner gets neither.
+  for (const r of moduleObjects) {
+    const o = r.data_object as DataObject;
+    const owner = o ? entityOwnerSlug(ctx, o) : null;
+    if (!owner) continue;
+    const readCode = `${owner}:read_${o.data_object_name}`;
+    permissions.push({ code: readCode, tier: "entity-read", description: `Read ${o.plural_label}`, includedInAdmin: true });
+    const writeTier = entityWriteTier(ctx, r, rels).write;
+    if (!WRITING_HELD_AS.has(r.held_as) || !writeTier) continue;
+    permissions.push({
+      code: `${owner}:write_${o.data_object_name}`,
+      tier: "entity-write",
+      description: `Write ${o.plural_label}`,
+      includedInAdmin: true,
+      writeBundle: writeTier.slice(1),
+      readCode,
+    });
+  }
   for (const gate of gates) {
     permissions.push({
       code: gate.code,
@@ -415,9 +433,9 @@ export function deriveWorkflowGatesAndRules(
   for (const r of moduleObjects) {
     // Plan 4: personal_content overrides + business rules follow the ENTITY, not its held_as value. A unit
     // carrying an entity as `embedded_master` is its local master when deployed standalone, so it
-    // mints the same row-scope governance, re-prefixed to this unit (`slug`),
-    // exactly as the gate mint above does. (Single-module blueprints are the only kind emitted, so
-    // an `embedded_master` row here always means the canonical master is out of scope.)
+    // mints the same row-scope governance under the owner's name, exactly as the gate mint above does.
+    // (Single-module blueprints are the only kind emitted, so an `embedded_master` row here always
+    // means the canonical master is out of scope.)
     if (r.held_as !== "master" && r.held_as !== "embedded_master") continue;
     const o = r.data_object as DataObject;
     if (!o) continue;
@@ -429,14 +447,15 @@ export function deriveWorkflowGatesAndRules(
     const entitySingular = entitySingularToken(o);
     const entityPlural = entityPluralToken(o);
     if (o.has_personal_content) {
+      const owner = entityOwnerSlug(ctx, o) ?? slug;
       permissions.push({
-        code: `${slug}:view_all_${entityPlural}`,
+        code: `${owner}:view_all_${entityPlural}`,
         tier: "override (personal_content)",
         description: `View all \`${o.data_object_name}\` rows beyond row-scope`,
         includedInAdmin: true,
       });
       permissions.push({
-        code: `${slug}:manage_all_${entityPlural}`,
+        code: `${owner}:manage_all_${entityPlural}`,
         tier: "override (personal_content)",
         description: `Manage all \`${o.data_object_name}\` rows beyond row-scope`,
         includedInAdmin: true,
@@ -445,7 +464,7 @@ export function deriveWorkflowGatesAndRules(
         name: `${entitySingular}_edit_scope`,
         dataObject: o.data_object_name,
         sourceFlag: "has_personal_content",
-        intent: `Row-scope by default; override via \`${slug}:view_all_${entityPlural}\` / \`${slug}:manage_all_${entityPlural}\``,
+        intent: `Row-scope by default; override via \`${owner}:view_all_${entityPlural}\` / \`${owner}:manage_all_${entityPlural}\``,
       });
     }
   }
@@ -453,12 +472,20 @@ export function deriveWorkflowGatesAndRules(
   return { permissions, businessRules, gates };
 }
 
-// §8.1 description of a gate: every mapped state (a shared code names them all), and `⚠ no
-// process` when no mapped state is wired to a process (no RACI Accountable row can hold it).
+// §8.1 description of a gate: every mapped state (a shared code names them all). It deploys verbatim
+// as the live permission's description, so it carries no review note.
 export function gateDescription(gate: GateModel): string {
   const parts = gate.states.map((s) => `\`${s.dataObject.data_object_name}\` into state \`${s.state.state_name}\``);
   const body = parts.length <= 1 ? (parts[0] ?? "") : `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}`;
-  return `Transition ${body}${gate.processIds.length === 0 ? " (⚠ no process)" : ""}`;
+  return `Transition ${body}`;
+}
+
+// The note under the §8.1 table: the gates with no mapped state wired to a process, which no RACI
+// Accountable row can hold. Null when there are none.
+export function gatesWithoutProcessNote(gates: GateModel[]): string | null {
+  const codes = gates.filter((g) => g.processIds.length === 0).map((g) => `\`${g.code}\``);
+  if (codes.length === 0) return null;
+  return `_Gates with no process: ${codes.join(", ")}. No Accountable can hold them, so this blueprint does not support \`raci\`._`;
 }
 
 // ============================================================
@@ -481,12 +508,22 @@ export function deriveBaselineRoles(slug: string, permissions: Permission[]): Ba
 
 // B2: hierarchy from the §8 permission set. admin includes manage includes read, and admin
 // includes every workflow gate / personal_content override whose §8.1 `included in :admin?` is ✓
-// (every one except a high-risk gate, which only the RACI Accountable persona holds).
+// (every one except a high-risk gate, which only the RACI Accountable persona holds). The bundles hold
+// the per-entity permissions: read includes every read row, the write tier's bundle includes each
+// write row, and a write row includes its entity's read row.
 export function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyRelationship[] {
   const relationships: HierarchyRelationship[] = [
     { including: `${slug}:admin`, included: `${slug}:manage` },
     { including: `${slug}:manage`, included: `${slug}:read` },
   ];
+  for (const p of permissions) {
+    if (p.tier === "entity-read") relationships.push({ including: `${slug}:read`, included: p.code });
+  }
+  for (const p of permissions) {
+    if (p.tier !== "entity-write") continue;
+    relationships.push({ including: `${slug}:${p.writeBundle}`, included: p.code });
+    relationships.push({ including: p.code, included: p.readCode as string });
+  }
   for (const p of permissions) {
     if ((p.tier.startsWith("workflow-gate") || p.tier.startsWith("override")) && p.includedInAdmin) {
       relationships.push({ including: `${slug}:admin`, included: p.code });
@@ -630,7 +667,7 @@ function deriveModuleAccess(ctx: DeriveCtx, m: ModuleRow, cat: ModuleCatalog, mo
   const slug = moduleSlug(m.domain_module_code);
   const moduleScopeRows = cat.scopeRows.filter((r) => r.modules.includes(m));
   const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, cat.lifecycleRows, moduleIdSet);
-  const { permissions, businessRules, gates } = deriveWorkflowGatesAndRules(ctx, slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
+  const { permissions, businessRules, gates } = deriveWorkflowGatesAndRules(ctx, slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet, cat.relationships);
   return {
     module: m,
     slug,

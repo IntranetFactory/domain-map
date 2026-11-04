@@ -742,3 +742,8 @@ The owner asked for a sweep of the other starters after the Hiring Starter revie
 - `signature_records` "envelopes": R10 reads this as the `envelopes` entity, but it is what the row is.
 
 `q-LMS.md` was renumbered: the optional research question moved from q3 to q5. `checks:` was not re-recorded.
+
+
+## 2026-11-04 - compliance training masters, owner-approved
+
+Plan F2. LMS-COMPLIANCE-TRAINING now masters `dpo_training_acknowledgments` and `pci_dss_awareness_records`, both optional. Neither had a master anywhere, so their embedded rows failed check B5 and they had no owner to name permissions after. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

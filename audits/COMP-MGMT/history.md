@@ -438,3 +438,12 @@ The owner decided that `equity_grants` was two things under one name: the securi
 - **Left alone:** the retired `domain_data_objects` rows, and B3-INCENTIVE-PLANS, because a plan is not an award.
 - **Evidence:** catalog text and a light vendor check only, no Phase 0. SAP SuccessFactors separates Variable Pay (short-term bonuses) from long-term stock and options; HRSoft lists cash-based and stock-based awards. The name `incentive_awards` is the owner's.
 - **Now open:** q19 to q22 (buyer copy, relationship 1332, capability EQUITY-MGMT, dmdo 416).
+
+## 2026-11-04 - incentive_awards follow-ups, owner-approved
+
+The owner answered q19 to q22. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.
+
+- q19: module 79 `catalog_tagline` and `catalog_description` replaced with the proposed copy.
+- q20: relationship 1332 is now `offer_versions proposes incentive_awards`, and ATS-OFFERS holds `incentive_awards` as an optional consumer.
+- q21: EQUITY-MGMT stays on COMP-INCENTIVES; row 153's note now reads "Equity award decisions and cap-table integration."
+- q22: dmdo 416 (COMP-STATEMENTS on `equity_grants`) went from `contributor` to `consumer`.

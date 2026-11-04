@@ -51,7 +51,7 @@ describe("how a module holds an entity is `held_as`; `role` is a permission role
 describe("§7 lifecycle", () => {
   test("the `high risk?` column sits right after `requires_permission?` and is ✓ only on the high-risk gated row", () => {
     const t = tableAfter("### `job_offers` (Offer)");
-    expect(t.header).toEqual(["order", "state_name", "initial?", "terminal?", "requires_permission?", "high risk?", "derived gate", "description"]);
+    expect(t.header).toEqual(["order", "state_name", "initial?", "terminal?", "realizing module", "requires_permission?", "high risk?", "derived gate", "description"]);
     const risk = t.header.indexOf("high risk?");
     expect(t.rows.map((r) => [r[1], r[risk]])).toEqual([
       ["`draft`", "-"],
@@ -72,10 +72,11 @@ describe("§8.1 and §9.1", () => {
     const t = tableAfter("### 8.1 Permissions");
     const gates = t.rows.filter((r) => r[1] === "workflow-gate (lifecycle)").map((r) => [r[0], r[3]]);
     expect(gates).toEqual([
-      ["`hiring-starter:hire_candidate`", "✓"],
-      ["`hiring-starter:flag_do_not_hire`", "✓"],
-      ["`hiring-starter:publish_posting`", "✓"],
-      ["`hiring-starter:approve_offer`", "-"],
+      ["`ats-candidate-crm:hire_candidate`", "✓"],
+      ["`ats-candidate-crm:flag_do_not_hire`", "✓"],
+      ["`ats-recruitment-pipeline:publish_posting`", "✓"],
+      ["`ats-pre-employee-record:hire_candidate`", "✓"],
+      ["`ats-offers:approve_offer`", "-"],
     ]);
   });
 

@@ -179,16 +179,4 @@ a9:
 
 ---
 
-q17: Supplier certifications are now mastered in the supplier risk module of SRM, and the module health check flags how the audit and supplier-risk module (FSQM-AUDIT-SUPPLIER) holds them. How should it hold them?
-
-- a) As an embedded copy, so FSQM still installs without SRM.
-- b) Stay a contributor, but marked optional, so the module installs without it.
-- c) Leave it and accept the flag.
-
-Recommended: a. The module tracks the certifications each supplier owes, so it needs the record whether or not SRM is installed. This overwrites an existing value, so it needs your confirmation.
-
-a17:
-
----
-
-<!-- agent map, ignore: q1=B2-GFSI-AUDITS-MASTERSHIP q2=B2-VACCP-TACCP+B3-VACCP-TACCP q3=B2-AUDIT-PREP-OVERRIDE q4=B2-PATTERN-FLAGS q5=B2-ALIAS-ARBITRATION q6=B2-APQC-APPROVAL q7=B3-CORRECTIVE-ACTION-RECORDS+B3-VERIFICATION-RECORDS+B3-MOCK-RECALLS+B3-EMP-PROGRAMS q8=B3-FOOD-SAFETY-PLANS q9=B3-COA-RECORDS q10=B2-B9D-OWN-37 q11=B2-B9D-OWN-208 q12=B2-B9D-OWN-170 q13=B2-B9D-OWN-393 q14=B2-B9D-OWN-579 q15=B2-B9D-OWN-817 q16=B2-B9D-OWN-1551 q17=B2-CERT-CONTRIBUTOR-HOLD | domain_id=157 -->
+<!-- agent map, ignore: q1=B2-GFSI-AUDITS-MASTERSHIP q2=B2-VACCP-TACCP+B3-VACCP-TACCP q3=B2-AUDIT-PREP-OVERRIDE q4=B2-PATTERN-FLAGS q5=B2-ALIAS-ARBITRATION q6=B2-APQC-APPROVAL q7=B3-CORRECTIVE-ACTION-RECORDS+B3-VERIFICATION-RECORDS+B3-MOCK-RECALLS+B3-EMP-PROGRAMS q8=B3-FOOD-SAFETY-PLANS q9=B3-COA-RECORDS q10=B2-B9D-OWN-37 q11=B2-B9D-OWN-208 q12=B2-B9D-OWN-170 q13=B2-B9D-OWN-393 q14=B2-B9D-OWN-579 q15=B2-B9D-OWN-817 q16=B2-B9D-OWN-1551 | domain_id=157 -->

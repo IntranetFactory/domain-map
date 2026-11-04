@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Intranet Content Inventory and Sources
 tagline: See every piece of content across all your intranets in one map.
@@ -11,7 +11,8 @@ domain_modules:
 domain_code: INTRANET-GOV
 related_modules: [intgov-governance]
 persona: []
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Intranet Content Inventory and Sources
@@ -47,12 +48,12 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `connected_intranets` | `connected_intranets` | Connected Intranet | Connected Intranets | master | - | - | required | - | catalog | `:admin` | - |
-| 2 | `intranet_content_health_scores` | `intranet_content_health_scores` | Content Health Score | Content Health Scores | master | - | - | required | - | computed | read-only | - |
-| 3 | `intranet_content_inventory_records` | `intranet_content_inventory_records` | Content Inventory Record | Content Inventory Records | master | - | - | required | - | operational_record | `:manage` | - |
-| 4 | `intranet_content_types` | `intranet_content_types` | Intranet Content Type | Intranet Content Types | master | - | - | required | - | catalog | `:admin` | - |
+| 1 | `connected_intranets` | `connected_intranets` | Connected Intranet | Connected Intranets | master | - | - | - | - | catalog | `:admin` | - |
+| 2 | `intranet_content_health_scores` | `intranet_content_health_scores` | Content Health Score | Content Health Scores | master | - | - | - | - | computed | read-only | - |
+| 3 | `intranet_content_inventory_records` | `intranet_content_inventory_records` | Content Inventory Record | Content Inventory Records | master | - | - | - | - | operational_record | `:manage` | - |
+| 4 | `intranet_content_types` | `intranet_content_types` | Intranet Content Type | Intranet Content Types | master | - | - | - | - | catalog | `:admin` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -60,41 +61,41 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `connected_intranets` | contains | `intranet_content_inventory_records` | one_to_many | composition | required | source | cascade | parent | - |
-| `intranet_content_types` | classifies | `intranet_content_inventory_records` | one_to_many | reference | required | source | restrict | reference | - |
-| `intranet_content_inventory_records` | is scored by | `intranet_content_health_scores` | one_to_one | composition | optional | source | cascade | parent | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `connected_intranets` | contains | `intranet_content_inventory_records` | one_to_many | composition | yes | cascade | parent | - |
+| `intranet_content_types` | classifies | `intranet_content_inventory_records` | one_to_many | reference | yes | restrict | reference | - |
+| `intranet_content_inventory_records` | is scored by | `intranet_content_health_scores` | one_to_one | composition | yes | cascade | parent | - |
 
-_(none: no relationships against platform built-ins)_
+### 5.2 Relationships to platform built-ins (`users`)
 
-### 5.3 Cross-scope relationships
+_(none: no relationships to platform built-ins)_
 
-#### 5.3a Outbound from this scope's masters and contributors
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `intranet_content_inventory_records` | is governed by | `intranet_content_ownership_assignments` | one_to_many | optional | none | n/a | - |
-| `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | optional | none | n/a | - |
-| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+_(none: no outgoing relationships to external entities)_
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `intranet_content_inventory_records` | is governed by | `intranet_content_ownership_assignments` | one_to_many | yes | - |
+| `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | yes | - |
+| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | no | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -120,6 +121,13 @@ _(none: no lifecycle states for the entities in this scope)_
 | `intgov-inventory:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `intgov-inventory:manage` | baseline-manage | Edit operational records | ✓ |
 | `intgov-inventory:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `intgov-inventory:read_connected_intranets` | entity-read | Read Connected Intranets | ✓ |
+| `intgov-inventory:write_connected_intranets` | entity-write | Write Connected Intranets | ✓ |
+| `intgov-inventory:read_intranet_content_inventory_records` | entity-read | Read Content Inventory Records | ✓ |
+| `intgov-inventory:write_intranet_content_inventory_records` | entity-write | Write Content Inventory Records | ✓ |
+| `intgov-inventory:read_intranet_content_types` | entity-read | Read Intranet Content Types | ✓ |
+| `intgov-inventory:write_intranet_content_types` | entity-write | Write Intranet Content Types | ✓ |
+| `intgov-inventory:read_intranet_content_health_scores` | entity-read | Read Content Health Scores | ✓ |
 
 ### 8.2 Business rules
 
@@ -145,6 +153,16 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `intgov-inventory:admin` | `intgov-inventory:manage` |
 | `intgov-inventory:manage` | `intgov-inventory:read` |
+| `intgov-inventory:read` | `intgov-inventory:read_connected_intranets` |
+| `intgov-inventory:read` | `intgov-inventory:read_intranet_content_inventory_records` |
+| `intgov-inventory:read` | `intgov-inventory:read_intranet_content_types` |
+| `intgov-inventory:read` | `intgov-inventory:read_intranet_content_health_scores` |
+| `intgov-inventory:admin` | `intgov-inventory:write_connected_intranets` |
+| `intgov-inventory:write_connected_intranets` | `intgov-inventory:read_connected_intranets` |
+| `intgov-inventory:manage` | `intgov-inventory:write_intranet_content_inventory_records` |
+| `intgov-inventory:write_intranet_content_inventory_records` | `intgov-inventory:read_intranet_content_inventory_records` |
+| `intgov-inventory:admin` | `intgov-inventory:write_intranet_content_types` |
+| `intgov-inventory:write_intranet_content_types` | `intgov-inventory:read_intranet_content_types` |
 
 **RACI realization:**
 
@@ -156,5 +174,5 @@ _(none: no process_raci assignments wired to this module's gated processes yet)_
 | --- | --- | --- | --- |
 | owner | Human Resources | `admin` | `:admin` |
 | owner | IT Operations | `admin` | `:admin` |
-| contributor | Marketing Communications | `manage` | `:manage` |
-| consumer | Executive | `read` | `:read` |
+| contributor | Marketing Communications | `manager` | `:manage` |
+| consumer | Executive | `viewer` | `:read` |

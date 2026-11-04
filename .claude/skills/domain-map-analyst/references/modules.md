@@ -73,15 +73,15 @@ Permissions are **derived** from `data_object_lifecycle_states` (workflow gates)
   - `<module>:manage`
   - `<module>:admin`
 - **Workflow gates (one per lifecycle state with `requires_permission=true`):**
-  - Format: `<module>:<verb>_<entity_singular>`
+  - Format: `<realizing module>:<verb>_<entity_singular>`, or `<master>:...` when the state has no realizing module (`deriveGate`). The name is the same in every blueprint
   - `<verb>` = `data_object_lifecycle_states.permission_verb_override` if set, else `state_name`
   - `<entity_singular>` = derived from `data_objects.singular_label`
 - **`has_personal_content` overrides (when the hint is true):**
-  - `has_personal_content` → `<module>:view_all_<entity>` + `<module>:manage_all_<entity>`
+  - `has_personal_content` → `<master>:view_all_<entity>` + `<master>:manage_all_<entity>`
 
 ### Write tier by `entity_type` (B2)
 
-Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is derived from `data_objects.entity_type` (not stored, not authored): `deriveWriteTier` in `scripts/generate_blueprints.ts` resolves it and renders the section-3 "write tier" column.
+Every entity has its own `<master>:read_<entity>` and `<master>:write_<entity>`, and `<module>:read` includes the read permission of every entity the module holds. Which bundle includes an entity's WRITE permission is derived from `data_objects.entity_type` (not stored, not authored): `deriveWriteTier` in `scripts/lib/blueprint_derive.ts` resolves it and renders the section-3 "write tier" column.
 
 | `entity_type` | write tier |
 |---|---|
@@ -91,14 +91,14 @@ Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is 
 | `computed` | none (read-only) |
 | `unclassified` | `<module>:manage`, flagged pending — defense-in-depth only: the emitter HARD-fails the module (B13 gate) before shipping this tier, so a real 3.0 file never carries it |
 
-No new permission is minted: `:manage` and `:admin` already exist per module, so `entity_type` only selects which existing baseline tier applies. The M6 generator guard suppresses pattern-flag overrides on `catalog` / `junction` / `computed` masters.
+`entity_type` selects the bundle only: the entity's permissions are named after its master either way. A module that holds the entity as `consumer` or `derived`, and any `computed` entity, gets the read permission alone. A platform built-in and an entity with no master get neither. The M6 generator guard suppresses pattern-flag overrides on `catalog` / `junction` / `computed` masters.
 
 ### `permissions` (DERIVED + emitted, materialized by the deployer in the tenant)
 
 As of Plan 3 the catalog does NOT store derived permissions. The emitter (§8) derives the per-module codes + tiers from lifecycle states + the entity-type write tier; the blueprint carries them; the deployer materializes them as tenant `permissions` rows. Each derived permission carries:
 
-- a code: `<domain_module_code>:<verb>_<entity_singular>` for gates (verb = `permission_verb_override` if set, else `state_name`), or the baseline `<module>:read` / `:manage` / `:admin`.
-- a `tier`: `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`.
+- a code: `<realizing module>:<verb>_<entity_singular>` for gates (verb = `permission_verb_override` if set, else `state_name`), `<master>:read_<entity>` / `<master>:write_<entity>` per entity, `<master>:view_all_<entity>` / `<master>:manage_all_<entity>` for overrides, or the bundles `<module>:read` / `:manage` / `:admin`.
+- a `tier`: `baseline-read` / `baseline-manage` / `baseline-admin` / `entity-read` / `entity-write` / `workflow-gate` / `override`.
 
 The catalog's own `_core` `permissions` table holds only the 6 platform rows (the catalog app's RBAC); no catalog loader writes derived permissions into it.
 
@@ -107,18 +107,21 @@ The catalog's own `_core` `permissions` table holds only the 6 platform rows (th
 The emitter (§9, B2) derives per-module hierarchy relationships:
 - `<module>:admin` ⊃ `<module>:manage` ⊃ `<module>:read`
 - `<module>:admin` ⊃ every workflow gate and pattern-flag override in that module
+- `<module>:read` ⊃ the `entity-read` row of every entity it holds
+- `<module>:manage` or `<module>:admin` (by the entity's write tier) ⊃ its `entity-write` rows
+- each `entity-write` row ⊃ its entity's `entity-read` row
 
 The derived persona bundle uses tier-level grants (`<module>:admin`) and the derived hierarchy auto-expands them at request time. None of this is stored in the catalog; the deployer provisions it in the tenant from the blueprint.
 
 ### Override collisions
 
-When two lifecycle states across different data_objects use the same `permission_verb_override` (e.g. `candidates.hired` and `job_applications.hired` both override to `hire_candidate`), the derived permission rows legitimately collapse to one permission fired by two transitions. The deployer treats them as one.
+When two lifecycle states across different data_objects, realized by the same module, use the same `permission_verb_override`, the derived permission rows legitimately collapse to one permission fired by two transitions. The deployer treats them as one. Realized by different modules, they stay two permissions: `candidates.hired` is `ats-candidate-crm:hire_candidate` and `job_applications.hired` is `ats-pre-employee-record:hire_candidate`.
 
-### State realization at deploy: re-prefix, do not prune (plan-4)
+### State realization at deploy: the catalog names the gate, do not prune
 
 `data_object_lifecycle_states.domain_module_id` is nullable. NULL = state always reachable when the master is installed. Non-NULL = state realized by that specific module.
 
-When a gated state's realizing module is NOT installed but the entity IS present in the deploying unit (carried as `embedded_master`), the gate **re-prefixes to the installing unit** rather than being pruned. A hiring starter that embeds `job_offers` without `ATS-OFFERS` still needs the approval gate, so it emits and mints `hiring-starter:approve_offer` instead of dangling at the absent `ats-offers:approve_offer`. The emitter does this for the blueprint (the shared `deriveGate` re-prefixes the §7 label; `deriveWorkflowGatesAndRules` mints the re-prefixed gate in §8.1); the deployer does the same for arbitrary partial deployments at install time. This supersedes the earlier "prune states whose `domain_module_id` references an un-installed module" rule, which silently dropped governance for embedded entities.
+When a gated state's realizing module is NOT in the deploying unit but the unit provisions the entity (`master` or `embedded_master`), the unit still mints the gate, under the realizing module's name, and holds it through its bundles. A hiring starter that embeds `job_offers` without `ATS-OFFERS` emits `ats-offers:approve_offer`, and the name is the same when `ATS-OFFERS` installs: the row moves there, and no grant, rule or hierarchy row changes. The emitter does this for the blueprint (the shared `deriveGate` names the §7 label; `deriveWorkflowGatesAndRules` mints the gate in §8.1); the deployer settles who holds the row at install time (modeler Stage 2a). This supersedes the earlier "prune states whose `domain_module_id` references an un-installed module" rule, which silently dropped governance for embedded entities.
 
 A state is genuinely dropped only when its entity is ALSO absent from the deploying unit (nothing to gate). Transitive embedded_master pull-in carries the entity; there is no `requires_modules` column on lifecycle states.
 
@@ -156,7 +159,7 @@ Starter kits are `domain_modules` rows with `module_kind='starter'`. Authoring c
 
 - Starters take exactly two `domain_module_data_objects` shapes: `embedded_master` on a `kind='domain_owned'` data_object (canonical master must exist in some full module), or `consumer` on a `kind='platform_builtin'` data_object (today only `users`). Never `master`, never `derived`, never `contributor`, never `consumer + domain_owned`. The platform-side `starter_no_master` validation_rule on `domain_module_data_objects` rejects `held_as ∈ {master, derived}`; the broader restriction (no `contributor`, no `consumer + domain_owned`) lives in the loader pre-flight `validateStarterDataObjectJunction()` (in [loader-idiom.md](loader-idiom.md)). Why: a starter must be deployable standalone. A `consumer + domain_owned` row points at a master that may not be installed at the deployment where the starter is the entry point; a `contributor` row writes to a target that may not exist. For any domain-owned data_object the starter needs, `embedded_master` ships a local shell that defers to the canonical master via the demotion path when the full module installs alongside.
 - `domain_modules.domain_id` is nullable for starters with no obvious primary host (persona-shaped bundles like `REAL-ESTATE-AGENT` spanning CRM + CLM + light project tracking); such a starter is promoted to its own `domain_kind='bundle'` domain and homes there. The markets it touches are DERIVED from its `embedded_master` rows (the domains mastering what it embeds) — there is no host-junction table to author.
-- Starters carry the **three baseline permissions** (`<starter_code>:read` / `:manage` / `:admin`) **plus the full re-prefixed governance of every entity they embed whose canonical realizing module is out of the deploying unit** (plan-4, §4 "State realization at deploy"): workflow gates, pattern-flag overrides (`view_all_` / `manage_all_` / `submit_`), and the matching §8.2 business rules. A hiring starter embedding `job_offers` without `ATS-OFFERS` emits and mints `hiring-starter:approve_offer` and `hiring-starter:view_all_offers`, not a dangling `ats-offers:approve_offer`. Governance follows the entity, not its `held_as` value (an embedded entity standalone is the local master and is governed in full). All of it is DERIVED by the emitter and materialized by the deployer; no loader authors permission rows. (This supersedes the earlier "exactly three baseline permissions, no workflow gates" rule, which left embedded entities ungoverned.)
+- Starters carry the **three baseline permissions** (`<starter_code>:read` / `:manage` / `:admin`), which are bundles, **plus the full governance of every entity they embed, under the catalog's names** (§4 "State realization at deploy"): read and write permissions, workflow gates, pattern-flag overrides (`view_all_` / `manage_all_` / `submit_`), and the matching §8.2 business rules. A hiring starter embedding `job_offers` without `ATS-OFFERS` emits `ats-offers:read_job_offers`, `ats-offers:write_job_offers` and `ats-offers:approve_offer`, and its bundles include them. Governance follows the entity, not its `held_as` value (an embedded entity standalone is governed in full). All of it is DERIVED by the emitter and materialized by the deployer; no loader authors permission rows.
 - A starter's blueprint also surfaces its embedded entities' **boundary-crossing handoffs** in §6.2 / §6.3 (events those entities publish to, or react to from, modules the starter does NOT play). A unit "plays" its own modules plus the canonical owner modules of what it embeds; handoffs internal to that played set are hidden, only the ones that cross the boundary surface. Same entity-follows-the-unit principle as the gates.
 - Starters carry **no skill of their own** (Rule #17: skills are domain-grain only). A single-domain starter is served by the host domain's skill; a cross-domain starter is promoted to a `domain_kind='bundle'` domain and served by one ordinary domain skill there. The starter's `domain_module_tools` are still authored (floor: one `query_<entity>` per embedded master plus light mutates where the workflow supports them) and roll up into whichever domain skill serves it.
 - Upgrade behavior: when the tenant later installs the full module whose data_object the starter embedded, the embedded shell deterministically demotes via the existing `embedded_master`-with-canonical-master rule. No tenant-side data migration. Starter permissions stick around after upgrade (provisional, revisit after first real starter ships); tenant manages skill cleanup.

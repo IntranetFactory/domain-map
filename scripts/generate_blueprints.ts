@@ -19,9 +19,9 @@
 //   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
 //   bun run scripts/generate_blueprints.ts --released           # a file for every module hosted on a RELEASED domain
 //   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
-//   bun run scripts/generate_blueprints.ts --lint               # R1-R10 over the existing blueprints' modules; writes nothing
+//   bun run scripts/generate_blueprints.ts --lint               # R1-R12 over the existing blueprints' modules; writes nothing
 //
-// Every emit also runs the derived-result invariants R1-R10 (./lib/blueprint_invariants.ts) and
+// Every emit also runs the derived-result invariants R1-R12 (./lib/blueprint_invariants.ts) and
 // prints their findings to stderr (Policy 1: warn, never throw). `--lint` writes no file, prints the
 // findings with a per-rule summary, and exits non-zero on any `fail` finding; it lints the existing
 // blueprint files' modules by default, or the --module / --released / --all selection.
@@ -54,6 +54,7 @@ import {
 } from "./lib/catalog";
 import {
   deriveBlueprintModel,
+  gatesWithoutProcessNote,
   makeDeriveCtx,
   moduleSlug,
   type BlueprintModel,
@@ -419,7 +420,7 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
 // silently rendered). Returns both the code-shaped slug ("mastered in" column) and the
 // human-readable name ("label" column).
 function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string; label: string } {
-  if (r.held_as === "master" || r.held_as === "derived") return { code: "-", label: "-" };
+  if (r.held_as === "master") return { code: "-", label: "-" };
   const info = owners.get(r.data_object_id);
   if (!info) {
     const fallback = r.data_object.kind === "platform_builtin" ? "_(platform built-in)_" : "-";
@@ -849,7 +850,9 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   // States belong to the data_object, not the module. Every entity touched by
   // this scope (any DMDO held_as) shows its full state machine; per-state
   // `realizing module` column indicates whose permission prefix the gate uses,
-  // or "(always)" when the gate is universal (domain_module_id is NULL).
+  // or "(always)" when the gate is universal (domain_module_id is NULL). It prints on a multi-module
+  // scope and whenever a gate is named after a module outside this scope, so the file itself says why.
+  const showRealizerCol = showModulesCol || model.lifecycle.some((l) => l.states.some((s) => s.state.requires_permission && s.gate && !moduleIdSet.has(s.gate.gateModule.id)));
   out.push("## 7. Lifecycle states");
   out.push("");
   if (lifecycleRows.length === 0) {
@@ -873,7 +876,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
       }
       out.push("");
       const headers = ["order", "state_name", "initial?", "terminal?"];
-      if (showModulesCol) headers.push("realizing module");
+      if (showRealizerCol) headers.push("realizing module");
       // `high risk?` sits right after `requires_permission?` (architect template §7): ✓ only on a
       // gated row whose catalog state is_high_risk; it changes who holds the gate only under `raci`.
       headers.push("requires_permission?", "high risk?", "derived gate", "description");
@@ -883,10 +886,9 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
         // M1: gate code comes from the single shared deriveGate (canonical fallback: NULL
         // domain_module_id is gated by the in-scope master's owning module), resolved in the model.
         let gate = s.requires_permission && g ? `\`${g.code}\`` : "";
-        // Plan 4 step D: a re-prefixed gate is realized locally by the installing unit, so it
-        // counts as in-scope for the M1 §7-vs-§8 cross-check even though its canonical realizer
-        // is out of scope.
-        if (s.requires_permission && g && (moduleIdSet.has(g.gateModule.id) || g.reprefixed)) section7InScopeGates.add(g.code);
+        // Plan 4 step D: a gate held for its owner is minted here, so it counts as in-scope for the M1
+        // §7-vs-§8 cross-check even though the module that names it is out of scope.
+        if (s.requires_permission && g && (moduleIdSet.has(g.gateModule.id) || g.heldForOwner)) section7InScopeGates.add(g.code);
         // M2 (Policy 1): a requires_permission state on an entity mastered IN this scope that
         // still resolves to no module is a genuine gap (e.g. a dangling realizing module),
         // not the benign "gate owned by an out-of-scope master" case (which stays blank).
@@ -895,21 +897,19 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
           gate = "⚠ _(unresolved gate: no realizing module)_";
           console.warn(`  ⚠ M2: requires_permission state \`${obj.data_object_name}.${s.state_name}\` resolves to no gate (${modules.map((m) => m.domain_module_code).join("+")})`);
         }
+        const realizerCode = `\`${modulesById.get(realizingId as number)?.domain_module_code ?? `#${realizingId}`}\``;
         const realizingLabel = realizingId === null
           ? "_(always)_"
-          : moduleIdSet.has(realizingId)
-            ? `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\``
-            : g?.reprefixed
-              // Plan 4 step D: realizer absent, entity carried as embedded_master, gate re-prefixed.
-              ? `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\` (gate re-prefixed to installing unit)`
-              : `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\` (needs install)`;
+          : moduleIdSet.has(realizingId) || g?.heldForOwner
+            ? realizerCode
+            : `${realizerCode} (needs install)`;
         const cells: (string | number)[] = [
           s.state_order,
           `\`${s.state_name}\``,
           s.is_initial ? "✓" : "",
           s.is_terminal ? "✓" : "",
         ];
-        if (showModulesCol) cells.push(realizingLabel);
+        if (showRealizerCol) cells.push(realizingLabel);
         cells.push(s.requires_permission ? "✓" : "", s.requires_permission && s.is_high_risk ? "✓" : "", gate, s.description || "");
         out.push(tableRow(cells));
       }
@@ -941,13 +941,15 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   // §8 and §9 read the per-module derivations from model.perModule (one entry per module, in
   // `modules` order); the §8 permission set there is the same one the §9 hierarchy is built from.
   if (modules.length === 1) {
-    const { permissions, businessRules } = model.perModule[0];
+    const { permissions, businessRules, gates } = model.perModule[0];
     for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
     out.push("### 8.1 Permissions");
     out.push("");
     out.push(tableHeader(["permission", "tier", "description", "included in `:admin`?"]));
     for (const p of permissions) out.push(tableRow([`\`${p.code}\``, p.tier, p.description, p.includedInAdmin ? "✓" : ""]));
     out.push("");
+    const note = gatesWithoutProcessNote(gates);
+    if (note) out.push(note, "");
     out.push("### 8.2 Business rules");
     out.push("");
     if (businessRules.length === 0) {
@@ -958,12 +960,14 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
     }
     out.push("");
   } else {
-    model.perModule.forEach(({ module: m, permissions, businessRules }, idx) => {
+    model.perModule.forEach(({ module: m, permissions, businessRules, gates }, idx) => {
       for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
       out.push(`### 8.${idx + 1} \`${m.domain_module_code}\``);
       out.push("");
       out.push(tableHeader(["permission", "tier", "description", "included in `:admin`?"]));
       for (const p of permissions) out.push(tableRow([`\`${p.code}\``, p.tier, p.description, p.includedInAdmin ? "✓" : ""]));
+      const note = gatesWithoutProcessNote(gates);
+      if (note) out.push("", note);
       if (businessRules.length > 0) {
         out.push("");
         out.push("Business rules:");
@@ -1132,27 +1136,41 @@ function blueprintBodyIgnoringDate(s: string): string {
   return s.replace(/\r\n/g, "\n").replace(/^created_at: .*$/m, "created_at:");
 }
 
-// The derived-result invariants R1-R10 for one emitted unit. The model is derived again from the
+// The derived-result invariants R1-R12 for one emitted unit. The model is derived again from the
 // same catalog the render used (derivation is pure and in-memory), so emitBlueprint stays unchanged.
 function modelFindings(modules: ModuleRow[]): ModelFinding[] {
   return checkModel(deriveShownModel(modules), { ctx: deriveCtx });
 }
 
-async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
+// The §8.1 permission codes a blueprint file shows.
+function permissionCodesInFile(md: string): string[] {
+  const start = md.search(/^###\s+8\.1\b/m);
+  if (start < 0) return [];
+  const rest = md.slice(start).replace(/\r\n?/g, "\n");
+  const body = rest.slice(rest.indexOf("\n"));
+  const end = body.search(/^#{2,3}\s/m);
+  const section = end < 0 ? body : body.slice(0, end);
+  return [...section.matchAll(/^\|\s*`([^`]+:[^`]+)`\s*\|/gm)].map((m) => m[1]);
+}
+
+async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean; removedPermissions: string[] }> {
   const md = emitBlueprint([m]);
   // Phase 3 invariants on every emit (Policy 1: warn on stderr, never throw; --lint fails on them).
   for (const f of modelFindings([m])) console.warn(`  ⚠ ${f.id} (${f.result}): ${f.detail} (${f.module})`);
   const outPath = resolve(BLUEPRINTS_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
+  let removedPermissions: string[] = [];
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, "utf8");
     if (blueprintBodyIgnoringDate(existing) === blueprintBodyIgnoringDate(md)) changed = false;
+    const kept = new Set(permissionCodesInFile(md));
+    removedPermissions = permissionCodesInFile(existing).filter((code) => !kept.has(code));
   }
   if (!CHECK && changed) {
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, md, "utf8");
   }
-  return { path: outPath, changed };
+  return { path: outPath, changed, removedPermissions };
 }
 
 // regen = refresh what already exists. Enumerate committed blueprint files and return their
@@ -1171,12 +1189,16 @@ function blueprintSlugsOnDisk(): string[] {
 // the rest of the corpus; failures are banner-reported and force a non-zero exit so CI sees them.
 async function emitModuleList(modules: ModuleRow[], label: string): Promise<void> {
   let modulesChanged = 0;
+  let permissionsGone = 0;
   const failures: { code: string; message: string }[] = [];
   for (const m of modules) {
     try {
       const r = await emitOneModuleBlueprint(m);
       if (r.changed) modulesChanged++;
       console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  module ${m.domain_module_code}  →  ${r.path}`);
+      // A released name that disappears breaks every tenant that deployed it, so it is always reported.
+      for (const code of r.removedPermissions) console.log(`  permission gone  ${m.domain_module_code}  ${code}`);
+      permissionsGone += r.removedPermissions.length;
     } catch (e) {
       const message = (e as Error).message;
       failures.push({ code: m.domain_module_code, message });
@@ -1184,7 +1206,7 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
     }
   }
   console.log("");
-  console.log(`summary (${label}): modules ${modulesChanged}/${modules.length} ${CHECK ? "would change" : "changed"}, ${failures.length} failed`);
+  console.log(`summary (${label}): modules ${modulesChanged}/${modules.length} ${CHECK ? "would change" : "changed"}, ${failures.length} failed, ${permissionsGone} permission name(s) gone`);
   let bad = false;
   if (failures.length > 0) {
     console.error("");
@@ -1200,7 +1222,7 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
   if (bad) exit(1);
 }
 
-// --lint: the derived-result invariants R1-R10 over a module list. Writes no file. Each module is
+// --lint: the derived-result invariants R1-R12 over a module list. Writes no file. Each module is
 // also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
 // Exits non-zero on any `fail` finding, emit failure, R7 finding or catalog data defect; other `warn`
 // findings never fail the run. The data defects are checked over every relationship, not per module,
@@ -1283,7 +1305,7 @@ async function main(): Promise<void> {
     console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
     console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
     console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
-    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R10 only; writes no file");
+    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R12 only; writes no file");
     console.error("  generate_blueprints.ts --clear-cache");
     exit(2);
   }
@@ -1310,6 +1332,7 @@ async function main(): Promise<void> {
     try {
       const r = await emitOneModuleBlueprint(m);
       console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
+      for (const code of r.removedPermissions) console.log(`  permission gone  ${MODULE_CODE}  ${code}`);
       if (CHECK && r.changed) exit(1);
     } catch (e) {
       console.error(`FAILED module ${MODULE_CODE}: ${(e as Error).message}`);

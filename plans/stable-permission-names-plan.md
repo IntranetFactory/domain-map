@@ -1,6 +1,6 @@
 # Stable permissions for embedded entities
 
-**Status:** PROPOSED 2026-11-03. Every decision is answered (section 8). The two entities with two masters are fixed in the catalog (F4, F7). The other catalog fixes still need approval. The skills, generator and docs are not started.
+**Status:** DONE 2026-11-04, all four steps, uncommitted. Every decision is answered (section 8), and section 10 records each check's result. No full deploy has run through the modeler skill: the platform behavior is proven, and the deployer's written steps have only been checked by reading.
 
 **When built, this replaces:**
 - [plan-5](plan-5-entity-scoped-gate-permissions.md), which solved the naming problem with `<entity>:<verb>` names (design only, never run);
@@ -88,6 +88,72 @@ hiring-starter:admin               includes ats-candidate-crm:hire_candidate
 | `hiring-starter:view_all_candidates` | `ats-candidate-crm:view_all_candidates` |
 | Not present | `read_` and `write_` for each of its 8 entities, 16 rows |
 | `hiring-starter:read`, `:manage`, `:admin` | Same names, now bundles |
+
+### File format
+
+This is the contract every skill, the generator (step 3) and the deployer share. The format stays `version: "3.1"`, changed in place (D5).
+
+**Which rows an entity gets in §8.1:**
+
+| The module holds the entity as | `entity-read` row | `entity-write` row |
+|---|---|---|
+| `master`, `embedded_master` | Yes | Yes |
+| `contributor` | Yes | Yes |
+| `consumer`, `derived`, or `entity_type` `computed` | Yes | No |
+| A platform built-in such as `users` | No: keeps platform permissions | No |
+| Anything, when the entity has no master in the catalog | No | No |
+
+Under `access_scope: custom` no per-entity rows exist, because the module keeps its hand-made permissions. Under `basic` they exist, and every write sits under `manage`.
+
+**Blueprint and spec §8.1 rows:**
+
+| permission | tier | description | included in `:admin`? |
+|---|---|---|---|
+| `<owner>:read_<entity>` | `entity-read` | `Read <Plural Label>` | ✓ |
+| `<owner>:write_<entity>` | `entity-write` | `Write <Plural Label>` | ✓ |
+| `<realizer or owner>:<verb>` | `workflow-gate (lifecycle)` | As today | As today |
+| `<owner>:view_all_<plural>`, `<owner>:manage_all_<plural>` | `override` | As today | ✓ |
+| `<owner>:bypass_submit_lock` | `workflow-gate (rule)` | As today | ✓ |
+
+**Who mints a gate.** The module that realizes the state, and any module holding the entity as `master` or `embedded_master` when the module naming the gate is outside the unit (D16). Both mint the same name, and the deployer's holder rule settles which module holds the row.
+
+`<owner>` is the slug of the module in §3 `mastered in`. `<realizer>` is the slug of the module §7 names for that state. Only the bundle tiers (`baseline-read`, `baseline-manage`, `baseline-admin`, `narrow`) keep the unit's own slug. Any other permission is about one entity, so it takes that entity's owner, including `finalize_`, `reassign_` and `view_confidential_`. A `derived` row's §3 `mastered in` names the catalog master when one exists (D14). **The allowed §8.1 prefixes are the unit's slug, any §3 `mastered in` module's slug, and any §7 realizing module's slug.**
+
+The spec's §8.1 table loses its `reconciliation` column: `re-prefixed-from` is gone and every other value was `(none)`.
+
+**Blueprint and spec §9.1 hierarchy rows,** in addition to today's rows:
+
+| permission | includes | When |
+|---|---|---|
+| `<unit>:read` | `<owner>:read_<entity>` | Every `entity-read` row |
+| `<unit>:manage` | `<owner>:write_<entity>` | `write tier` is `:manage`, and always under `basic` |
+| `<unit>:admin` | `<owner>:write_<entity>` | `write tier` is `:admin` |
+| `<unit>:<narrow>` | `<owner>:write_<entity>` | `write tier` names that narrow tier |
+| `<owner>:write_<entity>` | `<owner>:read_<entity>` | Every `entity-write` row |
+
+Today's rows stay: `:admin` includes `:manage`, `:manage` includes `:read`, `:manage` includes each narrow tier, and `:admin` includes gates and overrides. A gate's §9.1 row names the gate's literal code.
+
+**§3 and §7.** The blueprint's §3 `write tier` column keeps `:manage`, `:admin` or a narrow suffix. It now says which bundle includes the entity's write permission. §7 `derived gate` carries the literal code.
+
+**Spec §3 entity lines.** Each entity the spec owns carries both as full codes:
+
+```
+**View permission:** ats-candidate-crm:read_candidates
+**Edit permission:** ats-candidate-crm:write_candidates
+```
+
+A bare `manage`, `admin` or narrow suffix on `**Edit permission:**` is the old shape, and the modeler's Stage 1 rejects it. Under `custom` these lines name the module's hand-made codes. Under "live names win" (section 7) they carry the entity's live codes, and §8.1 lists those codes with their usual tiers, whatever their prefix. A `computed` entity has no write row, so its section omits `**Edit permission:**`, and the column takes its platform default, `admin`.
+
+**Spec RACI realization.** The `grant_module` column is gone, because every code is literal.
+
+| raci | `realization` |
+|---|---|
+| responsible | The unit's bundles for the gated entities' write tier. On an `:admin`-tier gated entity, its `write_<entity>` instead of `<unit>:admin` (D8) |
+| accountable | `grant gates [<literal codes>]` plus the same as responsible |
+| consulted | `advisory read grant` |
+| informed | `notification side effect: <event_category> to <target module>`, the two values the old column held |
+
+The modeler's Stage 1 rejects a spec that still carries `re-prefixed-from` or a `grant_module` column.
 
 ## 3. How a module holds these permissions
 
@@ -199,16 +265,17 @@ Measured with read-only probes on the 2026-11-03 13:17 catalog cache, with both 
 | Case | Data | Handling |
 |---|---|---|
 | State realized by a module that is not the master | 13 of 1,108 gated states | Gates use the realizer, because that is the name its own blueprint mints (D2). Read and write always use the master |
-| Realizer does not hold the entity | 3 states: `legal_contracts.approved`, `legal_contracts.renewed`, `job_applications.hired`. Check M5 fails on these | F1 |
-| Realizer holds the entity only as a consumer | 3 states: `csa_share_packs.delivered`, `wholesale_orders.fulfilled`, `pim_products.published`. Check M5 warns | F5. A consumer's bundle has no write permission, so the holder of the gate could not write the state |
+| Realizer does not hold the entity | None since 2026-11-04. It was `legal_contracts.approved`, `legal_contracts.renewed` and `job_applications.hired`. Check M5 fails on this | F1 |
+| Realizer holds the entity only as a consumer | None since 2026-11-04. It was `csa_share_packs.delivered`, `wholesale_orders.fulfilled` and `pim_products.published`. Check M5 warns on this | F5. A consumer's bundle has no write permission, so the holder of the gate could not write the state |
 | Entity with two masters | None since 2026-11-03: `equity_grants` and `supplier_certifications` were the only two. The generator throws on this when it emits an embedder, and check M7 fails on it | F4, F7. A new one needs the same decision: one record or two |
-| Embedded with no master anywhere | 3 rows: `inventory_locations`, `dpo_training_acknowledgments`, `pci_dss_awareness_records` | F2 and F3 |
+| Embedded with no master anywhere | None since 2026-11-04. It was `inventory_locations`, `dpo_training_acknowledgments` and `pci_dss_awareness_records`. Check B5 fails on this | F2 and F3. A new one has no owner to name its permissions after, so it needs a master first |
 | Consumer of an entity with no master anywhere | 72 rows on 55 entities, such as `purchase_orders`. No owner name exists, and nothing can create the table | No permission row and no bundle row. Regeneration adds them when the catalog gains a master. Check B5 already reports these, and fixing them means modularizing other domains, so this plan does not |
 | Consumer or contributor of an entity whose owner is known but not installed | Optional by rule | Still mint the row and the bundle row, so the owner's arrival needs no extra wiring |
 | Silo: `rename-incoming-from`, a deliberately separate table | Analyst option 3b.1 | **Keep the local prefix.** A shared name would make a grant on one table open the other |
 | Embedded entity renamed locally through `.aliases` | `customizations-protocol.md:15` | Prefix and entity token come from the catalog code, so the local name does not change them |
 | Entity already live with other permission names (reused or hand-built) | Any `reuse-from` | **Live names win.** The analyst builds the unit's bundle rows from the entity's live `view_permission` and `edit_permission` |
-| Two modules master the same table in one tenant, and the user picks a shared module | Analyst option 3b.2, rare | Live names win, so nothing is renamed. The incoming spec is rewritten to use them. "A new dedicated manager group" removes the old module's hierarchy row to the write permission (D9). This is the only deletion in the design |
+| Two modules master the same table in one tenant, and the user picks a shared module | Analyst option 3b.2, rare | Live names win, so nothing is renamed. The incoming spec is rewritten to use them. "A new dedicated manager group" removes the old module's hierarchy row to the write permission (D9). Deploying the old module's spec again adds it back, and the plan line says so. Fast flow picks this answer but keeps the row and logs that (D15) |
+| A confirmed tier flip that narrows who can edit | Stage 3 surfaces it, and the user confirms it | The deployer removes this module's old bundle row to the write permission (D13). Fast flow keeps the row and logs that |
 | A module is deleted | `ON DELETE CASCADE` on its rows, grants and hierarchy rows | Rows held for an entity go with that entity, because they follow it (section 4). If a consumer holding a row for an absent entity is deleted, another consumer loses its hierarchy row until it redeploys |
 | A held row moves at adoption | `bump_module_version_from_related` (`0420_module_version.sql:177`) bumps both modules | Expected: an entity move already does this. The old holder's next deploy reports that the live model changed (`flows.md` row 45) |
 | Administrator role | Auto-granted every new permission (`0080_rbac_functions.sql:1490`) | Unchanged, but it makes Administrator the largest permission list |
@@ -239,14 +306,16 @@ Measured with read-only probes on the 2026-11-03 13:17 catalog cache, with both 
 | D10 | How does a user see a module whose entity they can read? | **No action today.** See "Known limitations" in section 9 |
 | D11 | Which module masters `equity_grants`? | **`CAP-TABLE-GRANTS`, and the other side is a different thing.** `equity_grants` held both the security issued on the cap table and the pay decision, so `COMP-INCENTIVES` got its own entity, `incentive_awards`. Done, F4 |
 | D12 | Which module masters `supplier_certifications`? | **`SRM-RISK-COMPLIANCE`.** This is one record with one lifecycle, its required parent `suppliers` is mastered in SRM, and `FOOD-TRACE-SUPPLIER-PROVENANCE` is scoped to one industry, so it embeds the entity. Done, F7 |
-
-The remaining overwrites in step 2 still need your approval item by item, per the project rule on destructive catalog writes.
+| D13 | When someone confirms a tier flip that narrows who can edit, what happens to the old bundle's row? | **The deployer removes it.** This is a second stated exception to no-deletion, for the same reason as D9: the user chooses it in the same run. Fast flow keeps the row |
+| D14 | What does a `derived` row's §3 `mastered in` say? | **The catalog master's slug when one exists,** so the prefix can be checked (12 of 15 rows). The other 3 keep `-` and get no permission rows. The version stays `3.1` |
+| D16 | Does a master module mint the gate of a state another module realizes? | **Yes.** Decided during step 3, because otherwise §7 names a gate that §8.1 does not mint, and those blueprints failed the architect's pre-save check (8 issues in 4 of 55). The name is the realizer's, so nothing changes when the realizer installs |
+| D15 | What about the "Who can edit" answers? | **"A new dedicated manager group" stays Recommended and stays the fast-flow pick,** though a fast run keeps the old row. "New group plus current managers of this module only" is deleted, because it did the same as "both modules". After a removal, deploying the old module's spec again adds the row back, and the plan line and the question say so |
 
 ## 9. Work plan
 
-**Precondition.** The `role` to `held_as` and domain roles to `personas` schema rename is live, but another session's matching changes in `scripts/` were still uncommitted when this was written. They touch the same functions, so that work should land first. Re-run the section 6 measurements after it does.
+**Built on.** The `role` to `held_as` and domain roles to `personas` rename is in place. A small uncommitted change in `scripts/`, moving the "no process" note out of the §8.1 gate descriptions, is unrelated, and this work sits on top of it.
 
-**Order:** four steps. The one ordering rule that matters is that the skills and catalog fixes come before the blueprints regenerate, because today's modeler would mishandle the new names (section 4).
+**Order:** four steps. The one ordering rule was that the skills and catalog fixes come before the blueprints regenerate, because the old modeler would mishandle the new names (section 4).
 
 ### Platform facts this relies on
 
@@ -269,6 +338,8 @@ These come from reading the source. They need no platform change:
 | Module export | Export reads permissions by `module_id` (`C:\dev\semantius-cli\src\local-tools\transfer\export.ts:99-119`), so a later embedder's file names rows it does not carry, and importing that file alone onto an empty host fails on the missing permissions | The CLI transfer tools |
 
 ### Step 1: skills in `semantius-plugin/skills`
+
+**Done 2026-11-04, uncommitted.** No deploy has exercised these changes, and the modeler has no evals. The tables below record what was changed.
 
 **semantius-architect**
 
@@ -347,7 +418,8 @@ The generator builds permission names from these rows, so a wrong row gives a wr
 | F4 | `incentive_awards` (new, 1482) | Mastered in `COMP-INCENTIVES`, embedded and optional in `COMP-STATEMENTS`, consumer and optional in `PAYROLL-EARNINGS-DEDUCTIONS`. 3 aliases, 4 states, 6 relationships, 2 events, 1 tool, handoffs 1606 to 1610 | D11. The pay decision: one person's bonus, commission or long-term award |
 | F7 | `supplier_certifications` | `SRM-RISK-COMPLIANCE` is the only master. Row (258, 498) went from `master` to `embedded_master`. States 1771 to 1777 and events 1518 to 1520 moved to module 407. Handoff 362 is now inside SRM | D12. Its gates are now named `srm-risk-compliance:*` |
 
-**Still needs approval.** These run as one loader script in `.tmp_deploy/`, with a backup in `backups/` first, using the live ids below. `domain_module_data_objects` has no `record_status` column, so no status is set. Nothing is stamped `approved` (Rule #1).
+**Done 2026-11-04, owner-approved item by item,** with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`. Before-values are in `backups/stable-permission-fixes-2026-11-04.json`. `domain_module_data_objects` has no `record_status` column, so no status was set. Nothing is stamped `approved` (Rule #1).
+
 
 | # | Table and row | Write | Why | Type |
 |---|---|---|---|---|
@@ -362,26 +434,28 @@ The generator builds permission names from these rows, so a wrong row gives a wr
 | F5c | `domain_module_data_objects` (143, 811) | Same | `PIM-SYNDICATION` realizes `pim_products.published` | Overwrite |
 | F6 | `domain_modules` 154, `specification_requirements` | Replace `hiring-starter:view_all_candidates` with `ats-candidate-crm:view_all_candidates` | The text names the old permission | Overwrite |
 
-After the writes:
-1. Run `domain_health.ts --domain <CODE> --record` for each touched domain.
-2. Add a dated section to each `audits/<CODE>/history.md`.
-3. Close `B2-M5-STATE-221` in ATS and the `inventory_locations` half of `B1B-S1-B5` in INV-MGMT, and clear their `q-` questions.
+Each touched domain has its checks recorded, a dated history section, and its closed items removed from `state.yaml` and the `q-` file.
 
 ### Step 3: generator and blueprints in this repo
+
+**Done 2026-11-04, uncommitted.**
 
 | File | Change |
 |---|---|
 | `scripts/lib/blueprint_derive.ts`, `deriveGate` | Build the code from `gateModule` and remove the installing-unit branch. Keep the owner lookup for a NULL realizer and the local fallback for no master |
-| `scripts/lib/blueprint_derive.ts`, `deriveWorkflowGatesAndRules` | Overrides and §8.2 text use the entity's master for embedded rows. Keep the `ownsByEmbedding` guard, which decides which gates a unit mints. Add the `entity-read` and `entity-write` rows, including consumer and contributor rows, and skip entities with no master |
+| `scripts/lib/blueprint_derive.ts`, `deriveWorkflowGatesAndRules` | Overrides and §8.2 text use the entity's master for embedded rows. The guard that decides which gates a unit mints now covers a master too (D16). Add the `entity-read` and `entity-write` rows, including consumer and contributor rows, and skip entities with no master |
 | `derivePermissionHierarchy` | Add the bundle rows from section 2, using each row's write tier |
-| `deriveRaciRealization` | Follow D8 |
-| `scripts/generate_blueprints.ts:887-905` | Drop the "gate re-prefixed" §7 annotation; render the new tiers |
-| `scripts/analytics/blueprint_contract_check.ts:150-190,343` | An owner-prefixed gate on an embedded row is minted, not a consumer; handle the new tiers |
-| `scripts/lib/blueprint_invariants.ts`, `health/checks_m.ts:86` | Add the checks in section 10 |
-| `scripts/lib/__tests__/` | Update `blueprint_derive.rules.test.ts:353`, `blueprint_derive.starter.test.ts`, `blueprint_contract.test.ts`, `blueprint_render.rules.test.ts`, and the hiring-starter golden file |
-| `catalog/blueprints/` | Regenerate with `--regenerate`, then run `--check`. Expect every file with a provisioned entity to change, not just the 36 from the renames. On 2026-11-03, `--regenerate --check` already reported all 55 files as changed, so most of that drift predates F4 and F7 |
+| `deriveRaciRealization` | No change: the blueprint keeps the text "the gated entities' write tier", and the analyst and modeler apply D8 when they resolve it |
+| `scripts/generate_blueprints.ts:887-905` | Drop the "gate re-prefixed" §7 annotation; render the new tiers. Print §3 `mastered in` on `derived` rows (D14). Print the §7 `realizing module` column whenever a gate's prefix is not the unit's, including in single-module files such as `hiring-starter` |
+| `semantius-architect/references/consistency-check.ts` | A gate prefix with no §7 `realizing module` to explain it now fails instead of warning. A lifecycle gate named `submit_...` is no longer mistaken for an override |
+| `scripts/analytics/blueprint_contract_check.ts` | No change needed: it asks §8.1 what is minted, so an owner-prefixed gate already reads as minted |
+| `scripts/lib/blueprint_invariants.ts` | New R11 and R12, which also run in health check E6 and `--lint` |
+| `scripts/lib/__tests__/` | Updated the rules, starter, contract, invariants and render tests, the fixture and the golden file. New `blueprint_derive.permissions.test.ts` |
+| `catalog/blueprints/` | Regenerated. All 55 changed, and exactly 389 names disappeared, the number section 6 predicted. `--regenerate --check` now reports 0 changes |
 
 ### Step 4: docs in this repo
+
+**Done 2026-11-04, uncommitted.** The discovery reference's permission examples, in the skill template and its 15 emitted copies, also moved to the new names.
 
 | File | Change |
 |---|---|
@@ -392,26 +466,31 @@ After the writes:
 
 ## 10. Verification
 
-| # | Check | Where |
-|---|---|---|
-| V1 | For every embedded gate and override, the name in the unit's §8.1 is byte-identical to the name in the owner's §8.1. Same for `read_` and `write_` | New invariant. Today 889 of 895; all of them after step 2 |
-| V2 | The install orders in section 4 end with identical permission names, entity columns, hierarchy rows, grants and rule JSON | Test stack |
-| V3 | No §8.1 prefix falls outside the allowed set, and every provisioned entity has its permissions and bundle rows | `consistency-check.ts` and the generator invariant |
-| V4 | Regeneration reports any permission name that disappears from a released blueprint. The first regeneration is the baseline | New `--check` output |
-| V5 | A gate rule passes for the owner's admin after adoption | Test stack; this is cost 2 in section 1 |
-| V6 | After adoption, a holder of `hiring-starter:manage` can write `candidates` but not an entity only the CRM module has | Test stack; this is cost 5 in section 1 |
-| V7 | Adopting changes no role's effective permissions, except that the owner's roles gain theirs | Test stack, comparing `get_userinfo` before and after |
-| V8 | Deleting a module that holds shared rows behaves as section 7 says | Test stack |
-| V9 | Checks M5, M7 and B5 pass on the step 2 rows. B5 still reports the 72 consumer rows in section 7 | `domain_health.ts` |
-| V10 | No `re-prefix` wording remains outside changelogs | Search of both repos |
-| V11 | `bun test` passes here; `bun test scripts/terminology.test.ts` and the optimizer round-trip eval pass in the plugin repo | Both repos |
+Results from 2026-11-04.
+
+| # | Check | Result | Where |
+|---|---|---|---|
+| V1 | For every embedded gate and override, the name in the unit's §8.1 is byte-identical to the name in the owner's §8.1. Same for `read_` and `write_` | **Pass.** 0 R12 findings across all 431 modules | R12 |
+| V2 | The install orders in section 4 end with identical permission names, entity columns, hierarchy rows, grants and rule names | **Pass.** Starter first and owner first end in the same 36 rows | `scripts/analytics/stable_permissions_install_orders.sql`, local stack |
+| V3 | No §8.1 prefix falls outside the allowed set, and every provisioned entity has its permissions and bundle rows | **Pass.** 0 R11 findings across all 431 modules; the architect's checker passes 55 of 55 blueprints | R11, `consistency-check.ts`, `blueprint_contract_check.ts` |
+| V4 | Regeneration reports any permission name that disappears from a released blueprint | **Pass.** The first regeneration reported 389, and it is the baseline. Now 0 | `permission gone` lines from `generate_blueprints.ts` |
+| V5 | A gate rule passes for the owner's admin after adoption | **Pass.** The owner's admin and the starter's admin pass it, and the starter's manager does not | `scripts/analytics/stable_permissions_install_orders.sql`, local stack |
+| V6 | After adoption, a holder of `hiring-starter:manage` can write `candidates` but not an entity only the CRM module has | **Pass.** Row-level security refuses the other entity, and the holder does not hold the CRM's `manage` | `scripts/analytics/stable_permissions_install_orders.sql`, local stack |
+| V7 | Adopting changes no role's effective permissions, except that the owner's roles gain theirs | **Pass.** The starter's manager and viewer hold identical lists before and after | `scripts/analytics/stable_permissions_install_orders.sql`, local stack |
+| V8 | Deleting a module that holds shared rows behaves as section 7 says | **Pass.** A module holding a permission that an entity elsewhere names cannot be deleted. After adoption the starter can go, and the owner's rows and gate keep working | `scripts/analytics/stable_permissions_install_orders.sql`, local stack |
+| V9 | Checks M5, M7 and B5 pass on the step 2 rows. B5 still reports the consumer rows in section 7 | **Pass on those rows.** No entity has two masters, no embedded row lacks a master, and no realizer lacks its entity. Each domain still has other failing checks that predate this work | `domain_health.ts` |
+| V10 | No `re-prefix` wording remains outside changelogs | **Pass.** It remains only in Stage 1's rejection rule for old specs, the checker and evals that test that rejection, and changelogs | Search of both repos |
+| V11 | `bun test scripts/lib/__tests__/` passes here; `bun test scripts/` and the consistency eval pass in the plugin repo; the optimizer round-trip eval passes except for one known failure, `fixture-full.json`, whose extracted `raci` spec has no RACI table. That failure predates this plan and is tracked separately | **Pass,** with that one known failure | Both repos |
+
+**Not checked:** a full deploy through the modeler skill (section 11). `R4` still reports one older data finding among the 55 blueprints: `lms-course-delivery:publish` is held by two Accountable rows.
 
 ## 11. Risks
 
 - **Permission lists get longer and nobody has measured the effect.** Each check is a string search of the caller's whole list, and Administrator's list grows the most. The source suggests this copes, but no load test is part of this plan (D7).
+- **No deploy has run through the modeler skill itself.** `scripts/analytics/stable_permissions_install_orders.sql` proves the platform honors the design, writing the rows the way Stage 2a says to. It does not prove the modeler's written steps produce those rows. The first real deploy of a starter is where that gets proven.
 - **The two known limitations in section 9 stay until someone fixes them.** A user can lose sight of an adopted entity in navigation, and a later embedder's export won't import alone.
 - **This is much larger than the naming change alone.** It changes every blueprint with a provisioned entity and the file format.
 - **Blueprints and permission lists get longer and harder to read.** `lms-course-delivery` goes from 52 to 110 permissions, and a starter's list shows prefixes of modules the customer has never installed. Stage 3 and Stage 5 show per-entity rows as a count, and Stage 5's "kept here until their home module is installed" line already explains the prefixes in plain words.
 - **RACI stays broader than it should be.** Under D8, personas keep module-wide write access for now. Per-entity permissions make narrowing possible but don't do it.
 - **`inventory_locations` may move later.** F3 makes it stable today, but modularizing OMS would change its names. Check V4 will flag that.
-- **The stale-rule finding is from reading the skills.** V5 confirms the fix.
+- **`scripts/lib/__tests__/` is the test command.** A bare `bun test` stops early, because `scripts/emit_skill_spec.ts` matches Bun's `_spec` test pattern and exits with its usage text. That predates this plan.

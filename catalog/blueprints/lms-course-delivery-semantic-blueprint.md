@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Course Delivery
 tagline: Build, publish, and deliver online courses, then track every enrollment through to completion.
@@ -12,7 +12,8 @@ domain_code: LMS
 icon_name: graduation-cap
 related_modules: [ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, comp-planning, emp-exp-continuous-listen, fin-gl-close, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, talent-succession-career, training-records-starter]
 persona: [HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, HR-ORG-DESIGN-ANALYST, HR-PEOPLE-OPS-SPECIALIST, LD-INSTRUCTIONAL-DESIGNER, LD-INSTRUCTOR, LD-LEARNING-ADMIN, PEOPLE-MANAGER]
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Course Delivery
@@ -60,12 +61,12 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
+  employees["Employees"]
+  hcm_positions["Positions"]
   org_units["Org Units"]
   courses["Courses"]
   course_enrollments["Course Enrollments"]
   learning_records["Learning Records"]
-  employees["Employees"]
-  hcm_positions["Positions"]
   cost_centers["Cost Centers"]
   course_versions["Course Versions"]
   course_modules["Course Modules"]
@@ -90,12 +91,24 @@ flowchart TD
   observation_checklists["Observation Checklists"]
   observation_checklist_results["Observation Checklist Results"]
   users["Users"]
+  org_units -->|"groups"| employees
+  org_units -->|"contains"| hcm_positions
+  cost_centers -->|"funds"| org_units
+  employees -->|"enrolls_in"| course_enrollments
+  org_units -->|"maps_to"| cost_centers
+  employees -->|"fills"| hcm_positions
+  courses -->|"enrolled_via"| course_enrollments
+  course_enrollments -->|"produces"| learning_records
+  employees -->|"learns_via"| course_enrollments
+  cost_centers -->|"funds"| course_enrollments
+  employees -->|"reflects"| learning_records
+  org_units -->|"parent of"| org_units
   courses -->|"has_version"| course_versions
   course_versions -->|"contains"| course_modules
   course_modules -->|"contains"| lessons
   lessons -->|"uses"| learning_content_assets
   course_versions -->|"imports"| scorm_packages
-  course_completions -->|"records_completion_of"| course_versions
+  course_versions -->|"completed_via"| course_completions
   course_enrollments -->|"yields"| course_completions
   course_assessments -->|"contains"| assessment_questions
   course_assessments -->|"attempted_by"| assessment_attempts
@@ -106,41 +119,28 @@ flowchart TD
   courses -->|"reviewed_via"| course_reviews
   courses -->|"rated_via"| course_ratings
   courses -->|"discussed_in"| course_discussions
-  org_units -->|"groups"| employees
-  org_units -->|"contains"| hcm_positions
-  hcm_positions -->|"is_filled_by"| employees
-  cost_centers -->|"funds"| org_units
-  employees -->|"enrolls_in"| course_enrollments
-  org_units -->|"maps_to"| cost_centers
-  courses -->|"enrolled_via"| course_enrollments
-  course_enrollments -->|"produces"| learning_records
-  cost_centers -->|"funds"| course_enrollments
-  employees -->|"reflects"| learning_records
-  employees -->|"fills"| hcm_positions
-  employees -->|"learns_via"| course_enrollments
-  org_units -->|"rolls_up_to"| org_units
+  users -->|"represents"| employees
+  users -->|"manages"| hcm_positions
+  users -->|"leads"| org_units
+  users -->|"owns"| cost_centers
+  users -->|"authors"| courses
   users -->|"owns"| courses
+  users -->|"enrolls in"| course_enrollments
+  users -->|"assigns"| course_enrollments
+  users -->|"earns"| learning_records
+  org_units -->|"has members"| users
   users -->|"attempts"| assessment_attempts
   users -->|"answers"| quiz_responses
   users -->|"completes"| course_completions
   users -->|"posts_in"| course_discussions
   users -->|"authors"| course_reviews
   users -->|"rates_via"| course_ratings
-  employees -->|"is_related_to"| users
-  users -->|"manages"| hcm_positions
-  users -->|"leads"| org_units
-  users -->|"owns"| cost_centers
-  users -->|"authors"| courses
-  users -->|"enrolls in"| course_enrollments
-  users -->|"assigns"| course_enrollments
-  users -->|"earns"| learning_records
-  org_units -->|"has members"| users
+  class employees embedded_master;
+  class hcm_positions embedded_master;
   class org_units embedded_master;
   class courses master;
   class course_enrollments master;
   class learning_records master;
-  class employees embedded_master;
-  class hcm_positions embedded_master;
   class cost_centers embedded_master;
   class course_versions master;
   class course_modules master;
@@ -165,8 +165,8 @@ flowchart TD
   class observation_checklists master;
   class observation_checklist_results master;
   class users platform_builtin;
-  style org_units stroke-dasharray:5 5;
   style hcm_positions stroke-dasharray:5 5;
+  style org_units stroke-dasharray:5 5;
   style cost_centers stroke-dasharray:5 5;
   style question_banks stroke-dasharray:5 5;
   style cmi5_assignable_units stroke-dasharray:5 5;
@@ -177,37 +177,37 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `assessment_attempts` | `assessment_attempts` | Assessment Attempt | Assessment Attempts | master | - | - | required | yes | operational_workflow | `:manage` | - |
-| 2 | `assessment_questions` | `assessment_questions` | Assessment Question | Assessment Questions | master | - | - | required | - | catalog | `:admin` | - |
-| 3 | `cmi5_assignable_units` | `cmi5_assignable_units` | cmi5 Assignable Unit | cmi5 Assignable Units | master | - | - | optional | - | catalog | `:admin` | - |
-| 4 | `course_assessments` | `course_assessments` | Course Assessment | Course Assessments | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 5 | `course_catalogs` | `course_catalogs` | Course Catalog | Course Catalogs | master | - | - | required | - | catalog | `:admin` | - |
-| 6 | `course_categories` | `course_categories` | Course Category | Course Categories | master | - | - | required | - | catalog | `:admin` | - |
-| 7 | `course_completions` | `course_completions` | Course Completion | Course Completions | master | - | - | required | yes | operational_record | `:manage` | - |
-| 8 | `course_discussions` | `course_discussions` | Course Discussion | Course Discussions | master | - | - | required | yes | operational_record | `:manage` | - |
-| 9 | `course_enrollments` | `course_enrollments` | Course Enrollment | Course Enrollments | master | - | - | required | yes | operational_workflow | `:manage` | - |
-| 10 | `course_modules` | `course_modules` | Course Module | Course Modules | master | - | - | required | - | catalog | `:admin` | - |
-| 11 | `course_ratings` | `course_ratings` | Course Rating | Course Ratings | master | - | - | required | yes | operational_record | `:manage` | - |
-| 12 | `course_reviews` | `course_reviews` | Course Review | Course Reviews | master | - | - | required | yes | operational_record | `:manage` | - |
-| 13 | `course_tags` | `course_tags` | Course Tag | Course Tags | master | - | - | required | - | catalog | `:admin` | - |
-| 14 | `course_versions` | `course_versions` | Course Version | Course Versions | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 15 | `courses` | `courses` | Course | Courses | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 16 | `learning_content_assets` | `learning_content_assets` | Learning Content Asset | Learning Content Assets | master | - | - | required | - | catalog | `:admin` | - |
-| 17 | `learning_records` | `learning_records` | Learning Record | Learning Records | master | - | - | required | yes | operational_record | `:manage` | - |
-| 18 | `lessons` | `lessons` | Lesson | Lessons | master | - | - | required | - | catalog | `:admin` | - |
-| 19 | `lrs_statement_endpoints` | `lrs_statement_endpoints` | LRS Statement Endpoint | LRS Statement Endpoints | master | - | - | optional | - | catalog | `:admin` | - |
-| 20 | `observation_checklist_results` | `observation_checklist_results` | Observation Checklist Result | Observation Checklist Results | master | - | - | optional | yes | operational_workflow | `:manage` | - |
-| 21 | `observation_checklists` | `observation_checklists` | Observation Checklist | Observation Checklists | master | - | - | optional | - | catalog | `:admin` | - |
-| 22 | `question_banks` | `question_banks` | Question Bank | Question Banks | master | - | - | optional | - | catalog | `:admin` | - |
-| 23 | `quiz_responses` | `quiz_responses` | Quiz Response | Quiz Responses | master | - | - | required | yes | operational_record | `:manage` | - |
-| 24 | `scorm_packages` | `scorm_packages` | SCORM Package | SCORM Packages | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 25 | `xapi_statements` | `xapi_statements` | xAPI Statement | xAPI Statements | master | - | - | required | yes | operational_record | `:manage` | - |
-| 26 | `cost_centers` | `cost_centers` | Cost Center | Cost Centers | embedded_master | `fin-gl-close` | General Ledger and Close | optional | - | catalog | `:admin` | - |
-| 27 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | required | yes | operational_workflow | `:manage` | - |
-| 28 | `org_units` | `org_units` | Org Unit | Org Units | embedded_master | `hcm-org-positions` | Organization and Position Management | optional | - | operational_workflow | `:manage` | - |
-| 29 | `hcm_positions` | `hcm_positions` | Position | Positions | embedded_master | `hcm-org-positions` | Organization and Position Management | optional | - | operational_workflow | `:manage` | - |
+| 1 | `assessment_attempts` | `assessment_attempts` | Assessment Attempt | Assessment Attempts | master | - | - | - | yes | operational_workflow | `:manage` | - |
+| 2 | `assessment_questions` | `assessment_questions` | Assessment Question | Assessment Questions | master | - | - | - | - | catalog | `:admin` | - |
+| 3 | `cmi5_assignable_units` | `cmi5_assignable_units` | cmi5 Assignable Unit | cmi5 Assignable Units | master | - | - | yes | - | catalog | `:admin` | - |
+| 4 | `course_assessments` | `course_assessments` | Course Assessment | Course Assessments | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 5 | `course_catalogs` | `course_catalogs` | Course Catalog | Course Catalogs | master | - | - | - | - | catalog | `:admin` | - |
+| 6 | `course_categories` | `course_categories` | Course Category | Course Categories | master | - | - | - | - | catalog | `:admin` | - |
+| 7 | `course_completions` | `course_completions` | Course Completion | Course Completions | master | - | - | - | yes | operational_record | `:manage` | - |
+| 8 | `course_discussions` | `course_discussions` | Course Discussion | Course Discussions | master | - | - | - | yes | operational_record | `:manage` | - |
+| 9 | `course_enrollments` | `course_enrollments` | Course Enrollment | Course Enrollments | master | - | - | - | yes | operational_workflow | `:manage` | - |
+| 10 | `course_modules` | `course_modules` | Course Module | Course Modules | master | - | - | - | - | catalog | `:admin` | - |
+| 11 | `course_ratings` | `course_ratings` | Course Rating | Course Ratings | master | - | - | - | yes | operational_record | `:manage` | - |
+| 12 | `course_reviews` | `course_reviews` | Course Review | Course Reviews | master | - | - | - | yes | operational_record | `:manage` | - |
+| 13 | `course_tags` | `course_tags` | Course Tag | Course Tags | master | - | - | - | - | catalog | `:admin` | - |
+| 14 | `course_versions` | `course_versions` | Course Version | Course Versions | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 15 | `courses` | `courses` | Course | Courses | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 16 | `learning_content_assets` | `learning_content_assets` | Learning Content Asset | Learning Content Assets | master | - | - | - | - | catalog | `:admin` | - |
+| 17 | `learning_records` | `learning_records` | Learning Record | Learning Records | master | - | - | - | yes | operational_record | `:manage` | - |
+| 18 | `lessons` | `lessons` | Lesson | Lessons | master | - | - | - | - | catalog | `:admin` | - |
+| 19 | `lrs_statement_endpoints` | `lrs_statement_endpoints` | LRS Statement Endpoint | LRS Statement Endpoints | master | - | - | yes | - | catalog | `:admin` | - |
+| 20 | `observation_checklist_results` | `observation_checklist_results` | Observation Checklist Result | Observation Checklist Results | master | - | - | yes | yes | operational_workflow | `:manage` | - |
+| 21 | `observation_checklists` | `observation_checklists` | Observation Checklist | Observation Checklists | master | - | - | yes | - | catalog | `:admin` | - |
+| 22 | `question_banks` | `question_banks` | Question Bank | Question Banks | master | - | - | yes | - | catalog | `:admin` | - |
+| 23 | `quiz_responses` | `quiz_responses` | Quiz Response | Quiz Responses | master | - | - | - | yes | operational_record | `:manage` | - |
+| 24 | `scorm_packages` | `scorm_packages` | SCORM Package | SCORM Packages | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 25 | `xapi_statements` | `xapi_statements` | xAPI Statement | xAPI Statements | master | - | - | - | yes | operational_record | `:manage` | - |
+| 26 | `cost_centers` | `cost_centers` | Cost Center | Cost Centers | embedded_master | `fin-gl-close` | General Ledger and Close | yes | - | catalog | `:admin` | - |
+| 27 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | - | yes | operational_workflow | `:manage` | - |
+| 28 | `org_units` | `org_units` | Org Unit | Org Units | embedded_master | `hcm-org-positions` | Organization and Position Management | yes | - | operational_workflow | `:manage` | - |
+| 29 | `hcm_positions` | `hcm_positions` | Position | Positions | embedded_master | `hcm-org-positions` | Organization and Position Management | yes | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -215,404 +215,330 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `courses` | has_version | `course_versions` | one_to_many | composition | required | source | cascade | parent | - |
-| `course_versions` | contains | `course_modules` | one_to_many | composition | optional | source | cascade | parent | - |
-| `course_modules` | contains | `lessons` | one_to_many | composition | optional | source | cascade | parent | - |
-| `lessons` | uses | `learning_content_assets` | many_to_many | association | optional | source | clear | reference | - |
-| `course_versions` | imports | `scorm_packages` | one_to_many | reference | optional | source | clear | reference | - |
-| `course_completions` | records_completion_of | `course_versions` | one_to_many | reference | required | target | restrict | reference | - |
-| `course_enrollments` | yields | `course_completions` | one_to_many | composition | optional | source | cascade | parent | - |
-| `course_assessments` | contains | `assessment_questions` | one_to_many | composition | optional | source | cascade | parent | - |
-| `course_assessments` | attempted_by | `assessment_attempts` | one_to_many | reference | optional | source | clear | reference | - |
-| `assessment_attempts` | produces | `quiz_responses` | one_to_many | composition | optional | source | cascade | parent | - |
-| `courses` | classified_as | `course_categories` | many_to_many | association | optional | source | clear | reference | - |
-| `courses` | tagged_with | `course_tags` | many_to_many | association | optional | source | clear | reference | - |
-| `course_catalogs` | lists | `courses` | many_to_many | association | optional | source | clear | reference | - |
-| `courses` | reviewed_via | `course_reviews` | one_to_many | reference | optional | target | clear | reference | - |
-| `courses` | rated_via | `course_ratings` | one_to_many | reference | optional | target | clear | reference | - |
-| `courses` | discussed_in | `course_discussions` | one_to_many | reference | optional | target | clear | reference | - |
-| `org_units` | groups | `employees` | one_to_many | reference | required | source | restrict | reference | - |
-| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | restrict | reference | - |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | clear | reference | - |
-| `cost_centers` | funds | `org_units` | one_to_many | reference | required | source | restrict | reference | - |
-| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | optional | source | clear | reference | - |
-| `org_units` | maps_to | `cost_centers` | one_to_one | reference | optional | source | clear | reference | - |
-| `courses` | enrolled_via | `course_enrollments` | one_to_many | reference | required | source | restrict | reference | - |
-| `course_enrollments` | produces | `learning_records` | one_to_many | composition | required | source | cascade | parent | - |
-| `cost_centers` | funds | `course_enrollments` | one_to_many | reference | optional | source | clear | reference | - |
-| `employees` | reflects | `learning_records` | one_to_many | reference | optional | source | clear | reference | - |
-| `employees` | fills | `hcm_positions` | one_to_one | reference | optional | source | clear | reference | - |
-| `employees` | learns_via | `course_enrollments` | one_to_many | reference | required | source | restrict | reference | - |
-| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns | `courses` | one_to_many | optional | source | clear | reference | - |
-| `users` | attempts | `assessment_attempts` | one_to_many | required | source | restrict | reference | - |
-| `users` | answers | `quiz_responses` | one_to_many | optional | source | clear | reference | - |
-| `users` | completes | `course_completions` | one_to_many | required | source | restrict | reference | - |
-| `users` | posts_in | `course_discussions` | one_to_many | optional | source | clear | reference | - |
-| `users` | authors | `course_reviews` | one_to_many | optional | source | clear | reference | - |
-| `users` | rates_via | `course_ratings` | one_to_many | optional | source | clear | reference | - |
-| `employees` | is_related_to | `users` | one_to_one | optional | target | clear | reference | - |
-| `users` | manages | `hcm_positions` | one_to_many | optional | source | clear | reference | - |
-| `users` | leads | `org_units` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns | `cost_centers` | one_to_many | optional | source | clear | reference | - |
-| `users` | authors | `courses` | one_to_many | optional | source | clear | reference | - |
-| `users` | enrolls in | `course_enrollments` | one_to_many | required | source | restrict | reference | - |
-| `users` | assigns | `course_enrollments` | one_to_many | optional | source | clear | reference | - |
-| `users` | earns | `learning_records` | one_to_many | required | source | restrict | reference | - |
-| `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
+| `org_units` | groups | `employees` | one_to_many | reference | yes | restrict | reference | - |
+| `org_units` | contains | `hcm_positions` | one_to_many | reference | yes | restrict | reference | - |
+| `cost_centers` | funds | `org_units` | one_to_many | reference | yes | restrict | reference | - |
+| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | no | clear | reference | - |
+| `org_units` | maps_to | `cost_centers` | one_to_one | reference | no | clear | reference | - |
+| `employees` | fills | `hcm_positions` | one_to_one | reference | no | clear | reference | - |
+| `courses` | enrolled_via | `course_enrollments` | one_to_many | reference | yes | restrict | reference | - |
+| `course_enrollments` | produces | `learning_records` | one_to_many | composition | yes | cascade | parent | - |
+| `employees` | learns_via | `course_enrollments` | one_to_many | reference | yes | restrict | reference | - |
+| `cost_centers` | funds | `course_enrollments` | one_to_many | reference | no | clear | reference | - |
+| `employees` | reflects | `learning_records` | one_to_many | reference | no | clear | reference | - |
+| `org_units` | parent of | `org_units` | one_to_many | reference | no | clear | reference | - |
+| `courses` | has_version | `course_versions` | one_to_many | composition | yes | cascade | parent | - |
+| `course_versions` | contains | `course_modules` | one_to_many | composition | yes | cascade | parent | - |
+| `course_modules` | contains | `lessons` | one_to_many | composition | yes | cascade | parent | - |
+| `lessons` | uses | `learning_content_assets` | many_to_many | association | - | cascade | parent | - |
+| `course_versions` | imports | `scorm_packages` | one_to_many | reference | no | clear | reference | - |
+| `course_versions` | completed_via | `course_completions` | one_to_many | reference | yes | restrict | reference | - |
+| `course_enrollments` | yields | `course_completions` | one_to_many | composition | yes | cascade | parent | - |
+| `course_assessments` | contains | `assessment_questions` | one_to_many | composition | yes | cascade | parent | - |
+| `course_assessments` | attempted_by | `assessment_attempts` | one_to_many | reference | no | clear | reference | - |
+| `assessment_attempts` | produces | `quiz_responses` | one_to_many | composition | yes | cascade | parent | - |
+| `courses` | classified_as | `course_categories` | many_to_many | association | - | cascade | parent | - |
+| `courses` | tagged_with | `course_tags` | many_to_many | association | - | cascade | parent | - |
+| `course_catalogs` | lists | `courses` | many_to_many | association | - | cascade | parent | - |
+| `courses` | reviewed_via | `course_reviews` | one_to_many | reference | no | clear | reference | - |
+| `courses` | rated_via | `course_ratings` | one_to_many | reference | no | clear | reference | - |
+| `courses` | discussed_in | `course_discussions` | one_to_many | reference | no | clear | reference | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | none | n/a | - |
-| `courses` | grants | `certification_definitions` | many_to_many | optional | none | n/a | - |
-| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | none | n/a | - |
-| `learning_path_steps` | references | `courses` | one_to_many | optional | none | n/a | - |
-| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | none | n/a | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | none | n/a | - |
-| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | none | n/a | - |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | none | n/a | - |
-| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `courses` | grants | `learner_certifications` | one_to_many | optional | none | n/a | - |
-| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | none | n/a | - |
-| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | none | n/a | - |
-| `learning_records` | feeds | `people_kpis` | one_to_many | optional | none | n/a | - |
+| `users` | represents | `employees` | one_to_one | no | clear | reference | - |
+| `users` | manages | `hcm_positions` | one_to_many | no | clear | reference | - |
+| `users` | leads | `org_units` | one_to_many | no | clear | reference | - |
+| `users` | owns | `cost_centers` | one_to_many | no | clear | reference | - |
+| `users` | authors | `courses` | one_to_many | no | clear | reference | - |
+| `users` | owns | `courses` | one_to_many | no | clear | reference | - |
+| `users` | enrolls in | `course_enrollments` | one_to_many | yes | restrict | reference | - |
+| `users` | assigns | `course_enrollments` | one_to_many | no | clear | reference | - |
+| `users` | earns | `learning_records` | one_to_many | yes | restrict | reference | - |
+| `org_units` | has members | `users` | one_to_many | no | clear | reference | - |
+| `users` | attempts | `assessment_attempts` | one_to_many | yes | restrict | reference | - |
+| `users` | answers | `quiz_responses` | one_to_many | no | clear | reference | - |
+| `users` | completes | `course_completions` | one_to_many | yes | restrict | reference | - |
+| `users` | posts_in | `course_discussions` | one_to_many | no | clear | reference | - |
+| `users` | authors | `course_reviews` | one_to_many | no | clear | reference | - |
+| `users` | rates_via | `course_ratings` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
-| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | none | n/a | - |
-| `pre_employees` | promotes to | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | none | n/a | - |
-| `legal_advice_records` | references | `employees` | many_to_many | optional | none | n/a | - |
-| `employees` | is host for | `host_assignments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `contingent_workers` | converts_to | `employees` | one_to_one | optional | none | n/a | - |
-| `merit_recommendations` | applies to | `employees` | one_to_one | optional | none | n/a | - |
-| `equity_grants` | granted to | `employees` | one_to_one | optional | none | n/a | - |
-| `compensation_statements` | issued to | `employees` | one_to_one | optional | none | n/a | - |
-| `employees` | requests | `absence_requests` | one_to_many | optional | none | n/a | - |
-| `job_profiles` | defines | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | signs | `employment_contracts` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | generates | `employment_events` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
-| `employees` | holds | `skill_profiles` | one_to_one | optional | none | n/a | - |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | none | n/a | - |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | none | n/a | - |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `service_requests` | one_to_many | optional | none | n/a | - |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `pay_runs` | one_to_many | optional | none | n/a | - |
-| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | none | n/a | - |
-| `employees` | becomes | `career_aspirations` | one_to_one | optional | none | n/a | - |
-| `employees` | becomes | `work_shifts` | one_to_many | optional | none | n/a | - |
-| `employees` | becomes | `compensation_statements` | one_to_one | optional | none | n/a | - |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | none | n/a | - |
-| `employees` | triggers | `corporate_cards` | one_to_many | optional | none | n/a | - |
-| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | none | n/a | - |
-| `employees` | spawns | `hr_cases` | one_to_many | optional | none | n/a | - |
-| `employees` | feeds | `headcount_plans` | one_to_many | optional | none | n/a | - |
-| `employees` | feeds | `agency_time_entries` | one_to_many | optional | none | n/a | - |
-| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | none (required-if-present) | n/a | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | none | n/a | - |
-| `employees` | declares | `life_events` | one_to_many | optional | none | n/a | - |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | none | n/a | - |
-| `employees` | updated by | `life_events` | one_to_many | optional | none | n/a | - |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | none | n/a | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | none | n/a | - |
-| `employees` | submits | `survey_responses` | one_to_many | optional | none | n/a | - |
-| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
-| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
-| `employees` | raises | `hr_cases` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | updated by | `hr_cases` | one_to_many | optional | none | n/a | - |
-| `case_categories` | drives | `employees` | one_to_many | optional | none | n/a | - |
-| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | none | n/a | - |
-| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | none (required-if-present) | n/a | - |
-| `survey_campaigns` | targets | `employees` | many_to_many | optional | none | n/a | - |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | has | `emergency_contacts` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `work_eligibility_documents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `national_ids` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `worker_addresses` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `employee_dependents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `employees` | has | `worker_change_requests` | one_to_many | required | none (required-if-present) | n/a | - |
-| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
-| `employees` | is the worker behind | `traveler_profiles` | one_to_one | optional | none | n/a | - |
-| `exit_risk_assessments` | assesses | `employees` | one_to_one | optional | none | n/a | - |
-| `insider_risk_cases` | concerns | `employees` | one_to_many | optional | none | n/a | - |
-| `frontline_recognitions` | recognizes | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
-| `advocate_profiles` | represents | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `job_profiles` | defines | `hcm_positions` | one_to_many | yes | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | - | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | no | - |
+| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | no | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | - | - |
+| `skill_profiles` | updated by | `course_enrollments` | one_to_many | no | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | - | - |
+| `survey_campaigns` | targets | `employees` | many_to_many | - | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | - | - |
+| `case_categories` | drives | `employees` | one_to_many | no | - |
+| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | - | - |
+| `legal_advice_records` | references | `employees` | many_to_many | - | - |
+| `candidates` | becomes | `employees` | one_to_one | no | - |
+| `pre_employees` | promotes to | `employees` | one_to_one | no | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | no | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | no | - |
+| `courses` | grants | `certification_definitions` | many_to_many | - | - |
+| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | - | - |
+| `learning_path_steps` | references | `courses` | one_to_many | no | - |
+| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | no | - |
+| `contingent_workers` | converts_to | `employees` | one_to_one | no | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `employees` | signs | `employment_contracts` | one_to_many | yes | - |
+| `employees` | generates | `employment_events` | one_to_many | yes | - |
+| `employees` | triggers | `asset_lifecycle_events` | one_to_many | no | - |
+| `employees` | requests | `absence_requests` | one_to_many | no | - |
+| `employees` | holds | `skill_profiles` | one_to_one | no | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | no | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | no | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | no | - |
+| `employees` | triggers | `service_requests` | one_to_many | no | - |
+| `employees` | triggers | `iga_provisioning_events` | one_to_many | no | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | no | - |
+| `employees` | triggers | `pay_runs` | one_to_many | no | - |
+| `hcm_positions` | spawns | `job_requisitions` | one_to_many | no | - |
+| `employees` | becomes | `career_aspirations` | one_to_one | no | - |
+| `employees` | becomes | `work_shifts` | one_to_many | no | - |
+| `employees` | becomes | `compensation_statements` | one_to_one | no | - |
+| `employees` | triggers | `benefit_enrollments` | one_to_many | no | - |
+| `employees` | triggers | `corporate_cards` | one_to_many | no | - |
+| `employees` | spawns | `onboarding_journeys` | one_to_one | no | - |
+| `employees` | spawns | `hr_cases` | one_to_many | no | - |
+| `employees` | feeds | `headcount_plans` | one_to_many | no | - |
+| `employees` | feeds | `agency_time_entries` | one_to_many | no | - |
+| `employees` | onboarded by | `onboarding_journeys` | one_to_many | yes | - |
+| `employees` | finalized by | `onboarding_document_collections` | one_to_many | no | - |
+| `courses` | fulfills | `compliance_assignments` | one_to_many | no | - |
+| `courses` | grants | `learner_certifications` | one_to_many | no | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | no | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | no | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | no | - |
+| `course_enrollments` | updates | `career_aspirations` | one_to_many | no | - |
+| `learning_records` | feeds | `people_kpis` | one_to_many | no | - |
+| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | yes | - |
+| `employees` | declares | `life_events` | one_to_many | no | - |
+| `employees` | updated by | `life_events` | one_to_many | no | - |
+| `org_units` | owns | `action_plans` | one_to_many | no | - |
+| `employees` | submits | `survey_responses` | one_to_many | no | - |
+| `employees` | flagged on | `engagement_drivers` | one_to_many | no | - |
+| `employees` | reflected on | `engagement_drivers` | one_to_many | no | - |
+| `employees` | raises | `hr_cases` | one_to_many | yes | - |
+| `employees` | updated by | `hr_cases` | one_to_many | no | - |
+| `employees` | is host for | `host_assignments` | one_to_many | yes | - |
+| `employees` | reclassifies | `contingent_workers` | one_to_one | no | - |
+| `courses` | scheduled_as | `course_offerings` | one_to_many | no | - |
+| `employees` | receives | `merit_recommendations` | one_to_one | no | - |
+| `employees` | holds | `equity_grants` | one_to_one | no | - |
+| `employees` | receives | `compensation_statements` | one_to_one | no | - |
+| `employees` | has | `emergency_contacts` | one_to_many | yes | - |
+| `employees` | has | `work_eligibility_documents` | one_to_many | yes | - |
+| `employees` | has | `national_ids` | one_to_many | yes | - |
+| `employees` | has | `worker_addresses` | one_to_many | yes | - |
+| `employees` | has | `employee_dependents` | one_to_many | yes | - |
+| `employees` | has | `worker_change_requests` | one_to_many | yes | - |
+| `employees` | applies_as | `candidates` | one_to_many | no | - |
+| `employees` | is the worker behind | `traveler_profiles` | one_to_one | no | - |
+| `employees` | is assessed by | `exit_risk_assessments` | one_to_one | no | - |
+| `employees` | is subject of | `insider_risk_cases` | one_to_many | no | - |
+| `employees` | is recognized in | `frontline_recognitions` | one_to_many | yes | - |
+| `employees` | is enrolled as | `advocate_profiles` | one_to_one | yes | - |
+| `employees` | receives | `incentive_awards` | one_to_many | yes | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | held_as | necessity | notes |
-| --- | --- | --- | --- | --- |
-| `course_completions` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
-| `course_enrollments` | LMS-CREDENTIALS (Credentials, Badges and Continuing Education) - LMS | embedded_master | required | - |
-| `course_enrollments` | LMS-ILT-DELIVERY (Instructor-Led and Virtual-Instructor-Led Training) - LMS | embedded_master | required | - |
-| `course_enrollments` | LMS-PATHS (Learning Paths) - LMS | embedded_master | required | - |
-| `course_enrollments` | PA-PREDICTIVE-MODELS (Predictive Models) - PA | consumer | optional | - |
-| `course_enrollments` | SKILLS-MGMT-PROFILE (Worker Skill Profiles and Assessments) - SKILLS-MGMT | contributor | optional | - |
-| `course_enrollments` | TALENT-SUCCESSION-CAREER (Succession and Career Planning) - TALENT-MGMT | consumer | optional | - |
-| `courses` | LMS-AUTOMATION (Learning Automation) - LMS | embedded_master | required | - |
-| `courses` | LMS-COMPLIANCE-TRAINING (Compliance Training) - LMS | embedded_master | required | - |
-| `courses` | LMS-CREDENTIALS (Credentials, Badges and Continuing Education) - LMS | embedded_master | required | - |
-| `courses` | LMS-ILT-DELIVERY (Instructor-Led and Virtual-Instructor-Led Training) - LMS | embedded_master | required | - |
-| `learning_records` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
-| `learning_records` | PA-PREDICTIVE-MODELS (Predictive Models) - PA | derived | required | - |
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| HCM-CORE-WORKER | HRSD | HRSD-CASE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination kicks off offboarding case (exit interview, knowledge transfer, paperwork). Multiple downstream HRSD tasks created. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | high | New employee in HCM triggers directory account creation and birthright-role assignment in IGA. High friction because role-to-entitlement mappings drift per business unit, and IGA frequently needs additional context (cost center, manager, location) that arrives later in the journey. Same trigger event as the HCM → Onboarding and HCM → Payroll handoffs. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | high | Promotion (mover event) requires entitlement re-evaluation: add new role access, revoke prior-role access. SoD risk window during transition. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | api_call | high | Termination in HCM must immediately revoke identity access in IGA: disable account, remove group memberships, terminate app-level entitlements. Failure modes: contractor terminations not flowing (different HCM table); rehires confuse the de-provisioning idempotency; access lingers after termination is the canonical audit finding. |
-| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.created` | _(state_change)_ | `org_units` | event_stream | medium | New org unit drives IGA group/role provisioning. Group-name conventions and ownership must be encoded; otherwise orphan groups proliferate. |
-| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.disbanded` | _(state_change)_ | `org_units` | event_stream | high | Org-unit disbandment requires IGA group cleanup; orphan-group risk if employees re-assigned slowly. |
-| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.merged` | _(state_change)_ | `org_units` | event_stream | high | Org-unit merge consolidates IGA groups: members migrate, entitlements deduplicated, SoD revalidated. Often runs as a batch project rather than event. |
-| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
-| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
-| LMS-COURSE-DELIVERY | HCM | HCM-LIFECYCLE-WORKFLOWS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | event_stream | low | - |
-| LMS-COURSE-DELIVERY | HCM | HCM-LIFECYCLE-WORKFLOWS | `learning_record.posted` | _(lifecycle)_ | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialized, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | medium | Approved position flows to ATS as the basis for a requisition. Approval state must be in sync to avoid requisitions opened against unapproved positions. |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.eliminated` | _(state_change)_ | `hcm_positions` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.filled` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.frozen` | _(state_change)_ | `hcm_positions` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.opened` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.activated` | _(state_change)_ | `org_units` | api_call | low | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.closed` | _(state_change)_ | `org_units` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.disbanded` | _(state_change)_ | `org_units` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.merged` | _(state_change)_ | `org_units` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | _(lifecycle)_ | `assessment_attempts` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialization in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
-| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
-| LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
-| HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion event triggers off-cycle compensation review (eligibility, band placement, increase recommendation) in COMP-MGMT. |
-| HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
-| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
-| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination triggers benefits termination, COBRA / equivalent notices, and dependent coverage decisions. Late notifications cause coverage gaps. |
-| HCM-ORG-POSITIONS | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
-| FIN-GL-CLOSE | EPM | _(domain-level)_ | `cost_center.created` | _(lifecycle)_ | `cost_centers` | event_stream | low | New cost centers get a plan slot in EPM. |
-| HCM-CORE-WORKER | EXPENSE | _(domain-level)_ | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination triggers EXPENSE corporate-card deactivation and outstanding-report close-out. |
-| HCM-CORE-WORKER | PSA | PSA-PROJECT-DELIVERY | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Terminated employee may be the assignee on open project_tasks. PROJECT-DELIVERY needs to surface affected tasks for reassignment or completion handover. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgment call), false-positive volume can swamp the staffing queue. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New consultant hired. PSA resource pool adds the employee as available capacity; skill inventory record is seeded for downstream certifications. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Consultant promoted (level / job profile change). PSA reevaluates billable rate band and skill inventory; existing project_assignments may need rate revision. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Consultant terminated. PSA must release any active project_assignments, return capacity to bench and re-allocate forecast. Medium friction: leaver-event timing varies (immediate vs notice period) and active assignments may need urgent rebalancing. |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
-| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
-| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
-| HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM relates the operational HR record to the identity. |
-| LMS-COURSE-DELIVERY | HCM | HCM-CORE-WORKER | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `cost_centers` | embedded_master | optional | FIN-GL-CLOSE (FIN) | - |
-| `employees` | embedded_master | required | HCM-CORE-WORKER (HCM) | - |
-| `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
-| `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
+| `cost_centers` | embedded_master | yes | FIN-GL-CLOSE (FIN) | - |
+| `employees` | embedded_master | - | HCM-CORE-WORKER (HCM) | - |
+| `hcm_positions` | embedded_master | yes | HCM-ORG-POSITIONS (HCM) | - |
+| `org_units` | embedded_master | yes | HCM-ORG-POSITIONS (HCM) | - |
 
 ## 7. Lifecycle states
 
 ### `assessment_attempts` (Assessment Attempt)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `in_progress` | ✓ | - | - | - | - |
-| 2 | `submitted` | - | - | ✓ | `lms-course-delivery:submit` | - |
-| 3 | `graded` | - | - | ✓ | `lms-course-delivery:grade` | - |
-| 4 | `passed` | - | ✓ | - | - | - |
-| 5 | `failed` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `in_progress` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `submitted` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:submit` | - |
+| 3 | `graded` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:grade` | - |
+| 4 | `passed` | - | ✓ | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 5 | `failed` | - | ✓ | `LMS-COURSE-DELIVERY` | - | - | - | - |
 
 ### `course_assessments` (Course Assessment)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `lms-course-delivery:publish` | - |
-| 3 | `retired` | - | ✓ | ✓ | `lms-course-delivery:retire` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | - |
+| 3 | `retired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:retire` | - |
 
 ### `course_completions` (Course Completion)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `recorded` | ✓ | - | - | - | - |
-| 2 | `validated` | - | - | ✓ | `lms-course-delivery:validate` | - |
-| 3 | `voided` | - | ✓ | ✓ | `lms-course-delivery:void` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `recorded` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `validated` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:validate` | - |
+| 3 | `voided` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:void` | - |
 
 ### `course_discussions` (Course Discussion)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | - |
-| 2 | `closed` | - | - | ✓ | `lms-course-delivery:close` | - |
-| 3 | `archived` | - | ✓ | ✓ | `lms-course-delivery:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `closed` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:close` | - |
+| 3 | `archived` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:archive` | - |
 
 ### `course_enrollments` (Course Enrollment)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `enrolled` | ✓ | - | - | - | Learner enrolled in the course but has not started. |
-| 2 | `in_progress` | - | - | - | - | Learner has begun the course content or activities. |
-| 3 | `completed` | - | ✓ | ✓ | `lms-course-delivery:complete` | Learner met all completion criteria with a passing score. |
-| 4 | `failed` | - | ✓ | ✓ | `lms-course-delivery:fail` | Learner did not meet the passing criteria within allowed attempts. |
-| 5 | `expired` | - | ✓ | ✓ | `lms-course-delivery:expire` | Enrollment closed unmet at the due date or content expiry. |
-| 6 | `withdrawn` | - | ✓ | ✓ | `lms-course-delivery:withdraw` | Learner withdrew or was unenrolled before completion. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `enrolled` | ✓ | - | _(always)_ | - | - | - | Learner enrolled in the course but has not started. |
+| 2 | `in_progress` | - | - | _(always)_ | - | - | - | Learner has begun the course content or activities. |
+| 3 | `completed` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:complete` | Learner met all completion criteria with a passing score. |
+| 4 | `failed` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:fail` | Learner did not meet the passing criteria within allowed attempts. |
+| 5 | `expired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:expire` | Enrollment closed unmet at the due date or content expiry. |
+| 6 | `withdrawn` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:withdraw` | Learner withdrew or was unenrolled before completion. |
 
 ### `course_reviews` (Course Review)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `submitted` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `lms-course-delivery:publish` | - |
-| 3 | `flagged` | - | - | - | - | - |
-| 4 | `removed` | - | ✓ | ✓ | `lms-course-delivery:remove` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `submitted` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | - |
+| 3 | `flagged` | - | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 4 | `removed` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:remove` | - |
 
 ### `course_versions` (Course Version)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `in_review` | - | - | - | - | - |
-| 3 | `published` | - | - | ✓ | `lms-course-delivery:publish` | - |
-| 4 | `retired` | - | ✓ | ✓ | `lms-course-delivery:retire` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `in_review` | - | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 3 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | - |
+| 4 | `retired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:retire` | - |
 
 ### `courses` (Course)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Course being authored by an instructional designer or SME. |
-| 2 | `in_review` | - | - | - | - | Content under review by L&D or compliance reviewers. |
-| 3 | `published` | - | - | ✓ | `lms-course-delivery:publish` | Course released to the catalog and available for enrollment. |
-| 4 | `retired` | - | ✓ | ✓ | `lms-course-delivery:retire` | Course removed from the catalog and kept for historical transcripts. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Course being authored by an instructional designer or SME. |
+| 2 | `in_review` | - | - | _(always)_ | - | - | - | Content under review by L&D or compliance reviewers. |
+| 3 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | Course released to the catalog and available for enrollment. |
+| 4 | `retired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:retire` | Course removed from the catalog and kept for historical transcripts. |
 
 ### `employees` (Employee)
 
 _This scope holds `employees` as **embedded_master**; the canonical state machine is owned by `HCM-CORE-WORKER`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
-| 2 | `active` | - | - | ✓ | `lms-course-delivery:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
-| 3 | `on_leave` | - | - | ✓ | `lms-course-delivery:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
-| 4 | `suspended` | - | - | ✓ | `lms-course-delivery:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
-| 5 | `terminated` | - | ✓ | ✓ | `lms-course-delivery:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `HCM-CORE-WORKER` | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
+| 2 | `active` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
+| 3 | `on_leave` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
+| 4 | `suspended` | - | - | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
+| 5 | `terminated` | - | ✓ | `HCM-CORE-WORKER` | ✓ | - | `hcm-core-worker:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
 
 ### `hcm_positions` (Position)
 
 _This scope holds `hcm_positions` as **embedded_master**; the canonical state machine is owned by `HCM-ORG-POSITIONS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `proposed` | ✓ | - | - | - | Position has been designed but not yet approved against the headcount plan. |
-| 2 | `approved` | - | - | ✓ | `lms-course-delivery:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
-| 3 | `open` | - | - | ✓ | `lms-course-delivery:open_position` | Approved and actively being recruited against; not yet filled. |
-| 4 | `filled` | - | - | ✓ | `lms-course-delivery:filled_position` | An employee occupies the position. |
-| 5 | `frozen` | - | - | ✓ | `lms-course-delivery:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
-| 6 | `eliminated` | - | ✓ | ✓ | `lms-course-delivery:eliminated_position` | Removed from the org structure permanently. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `proposed` | ✓ | - | `HCM-ORG-POSITIONS` | - | - | - | Position has been designed but not yet approved against the headcount plan. |
+| 2 | `approved` | - | - | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
+| 3 | `open` | - | - | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:open_position` | Approved and actively being recruited against; not yet filled. |
+| 4 | `filled` | - | - | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:filled_position` | An employee occupies the position. |
+| 5 | `frozen` | - | - | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
+| 6 | `eliminated` | - | ✓ | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:eliminated_position` | Removed from the org structure permanently. |
 
 ### `learning_content_assets` (Learning Content Asset)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `uploaded` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | - | - | - |
-| 3 | `deprecated` | - | - | - | - | - |
-| 4 | `archived` | - | ✓ | ✓ | `lms-course-delivery:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `uploaded` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `active` | - | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 3 | `deprecated` | - | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 4 | `archived` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:archive` | - |
 
 ### `learning_records` (Learning Record)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `recorded` | ✓ | - | - | - | Statement captured from the content runtime or external source. |
-| 2 | `validated` | - | ✓ | ✓ | `lms-course-delivery:validate` | Record validated against schema and posted to the learner transcript. |
-| 3 | `voided` | - | ✓ | ✓ | `lms-course-delivery:void` | Record voided due to data error, duplicate, or content reset. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `recorded` | ✓ | - | _(always)_ | - | - | - | Statement captured from the content runtime or external source. |
+| 2 | `validated` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:validate` | Record validated against schema and posted to the learner transcript. |
+| 3 | `voided` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:void` | Record voided due to data error, duplicate, or content reset. |
 
 ### `observation_checklist_results` (Observation Checklist Result)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `in_progress` | ✓ | - | - | - | - |
-| 2 | `submitted` | - | - | ✓ | `lms-course-delivery:submit` | - |
-| 3 | `signed_off` | - | ✓ | ✓ | `lms-course-delivery:sign_off` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `in_progress` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `submitted` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:submit` | - |
+| 3 | `signed_off` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:sign_off` | - |
 
 ### `observation_checklists` (Observation Checklist)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `published` | - | - | ✓ | `lms-course-delivery:publish` | - |
-| 3 | `retired` | - | ✓ | ✓ | `lms-course-delivery:retire` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `published` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:publish` | - |
+| 3 | `retired` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:retire` | - |
 
 ### `org_units` (Org Unit)
 
 _This scope holds `org_units` as **embedded_master**; the canonical state machine is owned by `HCM-ORG-POSITIONS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `lms-course-delivery:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
-| 3 | `reorganized` | - | ✓ | ✓ | `lms-course-delivery:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
-| 4 | `closed` | - | ✓ | ✓ | `lms-course-delivery:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | `HCM-ORG-POSITIONS` | - | - | - | Org unit defined as part of a future structure; not yet operational. |
+| 2 | `active` | - | - | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center relationship, and reporting lines. |
+| 3 | `reorganized` | - | ✓ | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
+| 4 | `closed` | - | ✓ | `HCM-ORG-POSITIONS` | ✓ | - | `hcm-org-positions:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
 ### `scorm_packages` (SCORM Package)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `uploaded` | ✓ | - | - | - | - |
-| 2 | `validated` | - | - | ✓ | `lms-course-delivery:validate` | - |
-| 3 | `active` | - | - | - | - | - |
-| 4 | `deprecated` | - | ✓ | ✓ | `lms-course-delivery:deprecate` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `uploaded` | ✓ | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 2 | `validated` | - | - | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:validate` | - |
+| 3 | `active` | - | - | `LMS-COURSE-DELIVERY` | - | - | - | - |
+| 4 | `deprecated` | - | ✓ | `LMS-COURSE-DELIVERY` | ✓ | - | `lms-course-delivery:deprecate` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -623,39 +549,97 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `lms-course-delivery:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `lms-course-delivery:manage` | baseline-manage | Edit operational records | ✓ |
 | `lms-course-delivery:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `lms-course-delivery:active_employee` | workflow-gate (lifecycle) | Transition `employees` into state `active` | ✓ |
-| `lms-course-delivery:on_leave_employee` | workflow-gate (lifecycle) | Transition `employees` into state `on_leave` | ✓ |
-| `lms-course-delivery:suspended_employee` | workflow-gate (lifecycle) | Transition `employees` into state `suspended` | ✓ |
-| `lms-course-delivery:terminated_employee` | workflow-gate (lifecycle) | Transition `employees` into state `terminated` | ✓ |
-| `lms-course-delivery:approved_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `approved` | ✓ |
-| `lms-course-delivery:open_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `open` | ✓ |
-| `lms-course-delivery:filled_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `filled` | ✓ |
-| `lms-course-delivery:frozen_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `frozen` | ✓ |
-| `lms-course-delivery:eliminated_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `eliminated` | ✓ |
-| `lms-course-delivery:active_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `active` | ✓ |
-| `lms-course-delivery:reorganized_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `reorganized` | ✓ |
-| `lms-course-delivery:closed_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `closed` | ✓ |
-| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `courses` into state `published` | ✓ |
-| `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `courses` into state `retired` | ✓ |
+| `hcm-core-worker:read_employees` | entity-read | Read Employees | ✓ |
+| `hcm-core-worker:write_employees` | entity-write | Write Employees | ✓ |
+| `hcm-org-positions:read_hcm_positions` | entity-read | Read Positions | ✓ |
+| `hcm-org-positions:write_hcm_positions` | entity-write | Write Positions | ✓ |
+| `hcm-org-positions:read_org_units` | entity-read | Read Org Units | ✓ |
+| `hcm-org-positions:write_org_units` | entity-write | Write Org Units | ✓ |
+| `lms-course-delivery:read_courses` | entity-read | Read Courses | ✓ |
+| `lms-course-delivery:write_courses` | entity-write | Write Courses | ✓ |
+| `lms-course-delivery:read_course_enrollments` | entity-read | Read Course Enrollments | ✓ |
+| `lms-course-delivery:write_course_enrollments` | entity-write | Write Course Enrollments | ✓ |
+| `lms-course-delivery:read_learning_records` | entity-read | Read Learning Records | ✓ |
+| `lms-course-delivery:write_learning_records` | entity-write | Write Learning Records | ✓ |
+| `fin-gl-close:read_cost_centers` | entity-read | Read Cost Centers | ✓ |
+| `fin-gl-close:write_cost_centers` | entity-write | Write Cost Centers | ✓ |
+| `lms-course-delivery:read_course_versions` | entity-read | Read Course Versions | ✓ |
+| `lms-course-delivery:write_course_versions` | entity-write | Write Course Versions | ✓ |
+| `lms-course-delivery:read_course_modules` | entity-read | Read Course Modules | ✓ |
+| `lms-course-delivery:write_course_modules` | entity-write | Write Course Modules | ✓ |
+| `lms-course-delivery:read_lessons` | entity-read | Read Lessons | ✓ |
+| `lms-course-delivery:write_lessons` | entity-write | Write Lessons | ✓ |
+| `lms-course-delivery:read_learning_content_assets` | entity-read | Read Learning Content Assets | ✓ |
+| `lms-course-delivery:write_learning_content_assets` | entity-write | Write Learning Content Assets | ✓ |
+| `lms-course-delivery:read_scorm_packages` | entity-read | Read SCORM Packages | ✓ |
+| `lms-course-delivery:write_scorm_packages` | entity-write | Write SCORM Packages | ✓ |
+| `lms-course-delivery:read_xapi_statements` | entity-read | Read xAPI Statements | ✓ |
+| `lms-course-delivery:write_xapi_statements` | entity-write | Write xAPI Statements | ✓ |
+| `lms-course-delivery:read_course_completions` | entity-read | Read Course Completions | ✓ |
+| `lms-course-delivery:write_course_completions` | entity-write | Write Course Completions | ✓ |
+| `lms-course-delivery:read_course_assessments` | entity-read | Read Course Assessments | ✓ |
+| `lms-course-delivery:write_course_assessments` | entity-write | Write Course Assessments | ✓ |
+| `lms-course-delivery:read_assessment_questions` | entity-read | Read Assessment Questions | ✓ |
+| `lms-course-delivery:write_assessment_questions` | entity-write | Write Assessment Questions | ✓ |
+| `lms-course-delivery:read_assessment_attempts` | entity-read | Read Assessment Attempts | ✓ |
+| `lms-course-delivery:write_assessment_attempts` | entity-write | Write Assessment Attempts | ✓ |
+| `lms-course-delivery:read_quiz_responses` | entity-read | Read Quiz Responses | ✓ |
+| `lms-course-delivery:write_quiz_responses` | entity-write | Write Quiz Responses | ✓ |
+| `lms-course-delivery:read_course_categories` | entity-read | Read Course Categories | ✓ |
+| `lms-course-delivery:write_course_categories` | entity-write | Write Course Categories | ✓ |
+| `lms-course-delivery:read_course_tags` | entity-read | Read Course Tags | ✓ |
+| `lms-course-delivery:write_course_tags` | entity-write | Write Course Tags | ✓ |
+| `lms-course-delivery:read_course_catalogs` | entity-read | Read Course Catalogs | ✓ |
+| `lms-course-delivery:write_course_catalogs` | entity-write | Write Course Catalogs | ✓ |
+| `lms-course-delivery:read_course_discussions` | entity-read | Read Course Discussions | ✓ |
+| `lms-course-delivery:write_course_discussions` | entity-write | Write Course Discussions | ✓ |
+| `lms-course-delivery:read_course_reviews` | entity-read | Read Course Reviews | ✓ |
+| `lms-course-delivery:write_course_reviews` | entity-write | Write Course Reviews | ✓ |
+| `lms-course-delivery:read_course_ratings` | entity-read | Read Course Ratings | ✓ |
+| `lms-course-delivery:write_course_ratings` | entity-write | Write Course Ratings | ✓ |
+| `lms-course-delivery:read_question_banks` | entity-read | Read Question Banks | ✓ |
+| `lms-course-delivery:write_question_banks` | entity-write | Write Question Banks | ✓ |
+| `lms-course-delivery:read_cmi5_assignable_units` | entity-read | Read cmi5 Assignable Units | ✓ |
+| `lms-course-delivery:write_cmi5_assignable_units` | entity-write | Write cmi5 Assignable Units | ✓ |
+| `lms-course-delivery:read_lrs_statement_endpoints` | entity-read | Read LRS Statement Endpoints | ✓ |
+| `lms-course-delivery:write_lrs_statement_endpoints` | entity-write | Write LRS Statement Endpoints | ✓ |
+| `lms-course-delivery:read_observation_checklists` | entity-read | Read Observation Checklists | ✓ |
+| `lms-course-delivery:write_observation_checklists` | entity-write | Write Observation Checklists | ✓ |
+| `lms-course-delivery:read_observation_checklist_results` | entity-read | Read Observation Checklist Results | ✓ |
+| `lms-course-delivery:write_observation_checklist_results` | entity-write | Write Observation Checklist Results | ✓ |
+| `hcm-core-worker:active_employee` | workflow-gate (lifecycle) | Transition `employees` into state `active` | ✓ |
+| `hcm-core-worker:on_leave_employee` | workflow-gate (lifecycle) | Transition `employees` into state `on_leave` | ✓ |
+| `hcm-core-worker:suspended_employee` | workflow-gate (lifecycle) | Transition `employees` into state `suspended` | ✓ |
+| `hcm-core-worker:terminated_employee` | workflow-gate (lifecycle) | Transition `employees` into state `terminated` | ✓ |
+| `hcm-org-positions:approved_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `approved` | ✓ |
+| `hcm-org-positions:open_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `open` | ✓ |
+| `hcm-org-positions:filled_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `filled` | ✓ |
+| `hcm-org-positions:frozen_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `frozen` | ✓ |
+| `hcm-org-positions:eliminated_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `eliminated` | ✓ |
+| `hcm-org-positions:active_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `active` | ✓ |
+| `hcm-org-positions:reorganized_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `reorganized` | ✓ |
+| `hcm-org-positions:closed_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `closed` | ✓ |
+| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `courses` into state `published`, `course_versions` into state `published`, `course_assessments` into state `published`, `course_reviews` into state `published` or `observation_checklists` into state `published` | ✓ |
+| `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `courses` into state `retired`, `course_versions` into state `retired`, `course_assessments` into state `retired` or `observation_checklists` into state `retired` | ✓ |
 | `lms-course-delivery:complete` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `completed` | ✓ |
 | `lms-course-delivery:fail` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `failed` | ✓ |
 | `lms-course-delivery:expire` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `expired` | ✓ |
 | `lms-course-delivery:withdraw` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `withdrawn` | ✓ |
-| `lms-course-delivery:validate` | workflow-gate (lifecycle) | Transition `learning_records` into state `validated` | ✓ |
-| `lms-course-delivery:void` | workflow-gate (lifecycle) | Transition `learning_records` into state `voided` | ✓ |
-| `lms-course-delivery:archive` | workflow-gate (lifecycle) | Transition `learning_content_assets` into state `archived` | ✓ |
+| `lms-course-delivery:validate` | workflow-gate (lifecycle) | Transition `learning_records` into state `validated`, `scorm_packages` into state `validated` or `course_completions` into state `validated` | ✓ |
+| `lms-course-delivery:void` | workflow-gate (lifecycle) | Transition `learning_records` into state `voided` or `course_completions` into state `voided` | ✓ |
+| `lms-course-delivery:archive` | workflow-gate (lifecycle) | Transition `learning_content_assets` into state `archived` or `course_discussions` into state `archived` | ✓ |
 | `lms-course-delivery:deprecate` | workflow-gate (lifecycle) | Transition `scorm_packages` into state `deprecated` | ✓ |
-| `lms-course-delivery:submit` | workflow-gate (lifecycle) | Transition `assessment_attempts` into state `submitted` | ✓ |
+| `lms-course-delivery:submit` | workflow-gate (lifecycle) | Transition `assessment_attempts` into state `submitted` or `observation_checklist_results` into state `submitted` | ✓ |
 | `lms-course-delivery:grade` | workflow-gate (lifecycle) | Transition `assessment_attempts` into state `graded` | ✓ |
 | `lms-course-delivery:close` | workflow-gate (lifecycle) | Transition `course_discussions` into state `closed` | ✓ |
 | `lms-course-delivery:remove` | workflow-gate (lifecycle) | Transition `course_reviews` into state `removed` | ✓ |
 | `lms-course-delivery:sign_off` | workflow-gate (lifecycle) | Transition `observation_checklist_results` into state `signed_off` | ✓ |
+| `hcm-core-worker:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
+| `hcm-core-worker:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
 | `lms-course-delivery:view_all_course_enrollments` | override (personal_content) | View all `course_enrollments` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_course_enrollments` | override (personal_content) | Manage all `course_enrollments` rows beyond row-scope | ✓ |
 | `lms-course-delivery:view_all_learning_records` | override (personal_content) | View all `learning_records` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_learning_records` | override (personal_content) | Manage all `learning_records` rows beyond row-scope | ✓ |
-| `lms-course-delivery:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
-| `lms-course-delivery:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
 | `lms-course-delivery:view_all_xapi_statements` | override (personal_content) | View all `xapi_statements` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_xapi_statements` | override (personal_content) | Manage all `xapi_statements` rows beyond row-scope | ✓ |
 | `lms-course-delivery:view_all_course_completions` | override (personal_content) | View all `course_completions` rows beyond row-scope | ✓ |
@@ -673,13 +657,15 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `lms-course-delivery:view_all_observation_checklist_results` | override (personal_content) | View all `observation_checklist_results` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_observation_checklist_results` | override (personal_content) | Manage all `observation_checklist_results` rows beyond row-scope | ✓ |
 
+_Gates with no process: `hcm-core-worker:suspended_employee`, `hcm-org-positions:open_position`, `hcm-org-positions:filled_position`, `hcm-org-positions:frozen_position`, `hcm-org-positions:eliminated_position`, `hcm-org-positions:closed_org_unit`, `lms-course-delivery:retire`, `lms-course-delivery:fail`, `lms-course-delivery:expire`, `lms-course-delivery:withdraw`, `lms-course-delivery:validate`, `lms-course-delivery:void`, `lms-course-delivery:archive`, `lms-course-delivery:deprecate`, `lms-course-delivery:submit`, `lms-course-delivery:close`, `lms-course-delivery:remove`, `lms-course-delivery:sign_off`. No Accountable can hold them, so this blueprint does not support `raci`._
+
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
+| `employee_edit_scope` | `employees` | has_personal_content | Row-scope by default; override via `hcm-core-worker:view_all_employees` / `hcm-core-worker:manage_all_employees` |
 | `course_enrollment_edit_scope` | `course_enrollments` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_enrollments` / `lms-course-delivery:manage_all_course_enrollments` |
 | `learning_record_edit_scope` | `learning_records` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_learning_records` / `lms-course-delivery:manage_all_learning_records` |
-| `employee_edit_scope` | `employees` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_employees` / `lms-course-delivery:manage_all_employees` |
 | `xapi_statement_edit_scope` | `xapi_statements` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_xapi_statements` / `lms-course-delivery:manage_all_xapi_statements` |
 | `course_completion_edit_scope` | `course_completions` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_completions` / `lms-course-delivery:manage_all_course_completions` |
 | `assessment_attempt_edit_scope` | `assessment_attempts` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_assessment_attempts` / `lms-course-delivery:manage_all_assessment_attempts` |
@@ -709,18 +695,105 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage` |
 | `lms-course-delivery:manage` | `lms-course-delivery:read` |
-| `lms-course-delivery:admin` | `lms-course-delivery:active_employee` |
-| `lms-course-delivery:admin` | `lms-course-delivery:on_leave_employee` |
-| `lms-course-delivery:admin` | `lms-course-delivery:suspended_employee` |
-| `lms-course-delivery:admin` | `lms-course-delivery:terminated_employee` |
-| `lms-course-delivery:admin` | `lms-course-delivery:approved_position` |
-| `lms-course-delivery:admin` | `lms-course-delivery:open_position` |
-| `lms-course-delivery:admin` | `lms-course-delivery:filled_position` |
-| `lms-course-delivery:admin` | `lms-course-delivery:frozen_position` |
-| `lms-course-delivery:admin` | `lms-course-delivery:eliminated_position` |
-| `lms-course-delivery:admin` | `lms-course-delivery:active_org_unit` |
-| `lms-course-delivery:admin` | `lms-course-delivery:reorganized_org_unit` |
-| `lms-course-delivery:admin` | `lms-course-delivery:closed_org_unit` |
+| `lms-course-delivery:read` | `hcm-core-worker:read_employees` |
+| `lms-course-delivery:read` | `hcm-org-positions:read_hcm_positions` |
+| `lms-course-delivery:read` | `hcm-org-positions:read_org_units` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_courses` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_enrollments` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_learning_records` |
+| `lms-course-delivery:read` | `fin-gl-close:read_cost_centers` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_versions` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_modules` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_lessons` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_learning_content_assets` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_scorm_packages` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_xapi_statements` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_completions` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_assessments` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_assessment_questions` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_assessment_attempts` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_quiz_responses` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_categories` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_tags` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_catalogs` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_discussions` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_reviews` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_course_ratings` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_question_banks` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_cmi5_assignable_units` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_lrs_statement_endpoints` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_observation_checklists` |
+| `lms-course-delivery:read` | `lms-course-delivery:read_observation_checklist_results` |
+| `lms-course-delivery:manage` | `hcm-core-worker:write_employees` |
+| `hcm-core-worker:write_employees` | `hcm-core-worker:read_employees` |
+| `lms-course-delivery:manage` | `hcm-org-positions:write_hcm_positions` |
+| `hcm-org-positions:write_hcm_positions` | `hcm-org-positions:read_hcm_positions` |
+| `lms-course-delivery:manage` | `hcm-org-positions:write_org_units` |
+| `hcm-org-positions:write_org_units` | `hcm-org-positions:read_org_units` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_courses` |
+| `lms-course-delivery:write_courses` | `lms-course-delivery:read_courses` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_enrollments` |
+| `lms-course-delivery:write_course_enrollments` | `lms-course-delivery:read_course_enrollments` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_learning_records` |
+| `lms-course-delivery:write_learning_records` | `lms-course-delivery:read_learning_records` |
+| `lms-course-delivery:admin` | `fin-gl-close:write_cost_centers` |
+| `fin-gl-close:write_cost_centers` | `fin-gl-close:read_cost_centers` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_versions` |
+| `lms-course-delivery:write_course_versions` | `lms-course-delivery:read_course_versions` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_course_modules` |
+| `lms-course-delivery:write_course_modules` | `lms-course-delivery:read_course_modules` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_lessons` |
+| `lms-course-delivery:write_lessons` | `lms-course-delivery:read_lessons` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_learning_content_assets` |
+| `lms-course-delivery:write_learning_content_assets` | `lms-course-delivery:read_learning_content_assets` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_scorm_packages` |
+| `lms-course-delivery:write_scorm_packages` | `lms-course-delivery:read_scorm_packages` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_xapi_statements` |
+| `lms-course-delivery:write_xapi_statements` | `lms-course-delivery:read_xapi_statements` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_completions` |
+| `lms-course-delivery:write_course_completions` | `lms-course-delivery:read_course_completions` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_assessments` |
+| `lms-course-delivery:write_course_assessments` | `lms-course-delivery:read_course_assessments` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_assessment_questions` |
+| `lms-course-delivery:write_assessment_questions` | `lms-course-delivery:read_assessment_questions` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_assessment_attempts` |
+| `lms-course-delivery:write_assessment_attempts` | `lms-course-delivery:read_assessment_attempts` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_quiz_responses` |
+| `lms-course-delivery:write_quiz_responses` | `lms-course-delivery:read_quiz_responses` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_course_categories` |
+| `lms-course-delivery:write_course_categories` | `lms-course-delivery:read_course_categories` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_course_tags` |
+| `lms-course-delivery:write_course_tags` | `lms-course-delivery:read_course_tags` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_course_catalogs` |
+| `lms-course-delivery:write_course_catalogs` | `lms-course-delivery:read_course_catalogs` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_discussions` |
+| `lms-course-delivery:write_course_discussions` | `lms-course-delivery:read_course_discussions` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_reviews` |
+| `lms-course-delivery:write_course_reviews` | `lms-course-delivery:read_course_reviews` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_course_ratings` |
+| `lms-course-delivery:write_course_ratings` | `lms-course-delivery:read_course_ratings` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_question_banks` |
+| `lms-course-delivery:write_question_banks` | `lms-course-delivery:read_question_banks` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_cmi5_assignable_units` |
+| `lms-course-delivery:write_cmi5_assignable_units` | `lms-course-delivery:read_cmi5_assignable_units` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_lrs_statement_endpoints` |
+| `lms-course-delivery:write_lrs_statement_endpoints` | `lms-course-delivery:read_lrs_statement_endpoints` |
+| `lms-course-delivery:admin` | `lms-course-delivery:write_observation_checklists` |
+| `lms-course-delivery:write_observation_checklists` | `lms-course-delivery:read_observation_checklists` |
+| `lms-course-delivery:manage` | `lms-course-delivery:write_observation_checklist_results` |
+| `lms-course-delivery:write_observation_checklist_results` | `lms-course-delivery:read_observation_checklist_results` |
+| `lms-course-delivery:admin` | `hcm-core-worker:active_employee` |
+| `lms-course-delivery:admin` | `hcm-core-worker:on_leave_employee` |
+| `lms-course-delivery:admin` | `hcm-core-worker:suspended_employee` |
+| `lms-course-delivery:admin` | `hcm-core-worker:terminated_employee` |
+| `lms-course-delivery:admin` | `hcm-org-positions:approved_position` |
+| `lms-course-delivery:admin` | `hcm-org-positions:open_position` |
+| `lms-course-delivery:admin` | `hcm-org-positions:filled_position` |
+| `lms-course-delivery:admin` | `hcm-org-positions:frozen_position` |
+| `lms-course-delivery:admin` | `hcm-org-positions:eliminated_position` |
+| `lms-course-delivery:admin` | `hcm-org-positions:active_org_unit` |
+| `lms-course-delivery:admin` | `hcm-org-positions:reorganized_org_unit` |
+| `lms-course-delivery:admin` | `hcm-org-positions:closed_org_unit` |
 | `lms-course-delivery:admin` | `lms-course-delivery:publish` |
 | `lms-course-delivery:admin` | `lms-course-delivery:retire` |
 | `lms-course-delivery:admin` | `lms-course-delivery:complete` |
@@ -736,12 +809,12 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `lms-course-delivery:admin` | `lms-course-delivery:close` |
 | `lms-course-delivery:admin` | `lms-course-delivery:remove` |
 | `lms-course-delivery:admin` | `lms-course-delivery:sign_off` |
+| `lms-course-delivery:admin` | `hcm-core-worker:view_all_employees` |
+| `lms-course-delivery:admin` | `hcm-core-worker:manage_all_employees` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_enrollments` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_enrollments` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_learning_records` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_learning_records` |
-| `lms-course-delivery:admin` | `lms-course-delivery:view_all_employees` |
-| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_employees` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_xapi_statements` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_xapi_statements` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_completions` |
@@ -775,31 +848,31 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_maintain_employee_data` | grant gates [lms-course-delivery:active_employee] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_maintain_employee_data` | approval gate |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_maintain_employee_data` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_maintain_employee_data` | grant gates [hcm-core-worker:active_employee] + the gated entities' write tier |
 | `HR-HRIS-ADMIN` | persona | consulted | `manage_maintain_employee_data` | advisory read grant |
-| `PEOPLE-MANAGER` | persona | informed | `manage_maintain_employee_data` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_leave_absence` | grant gates [lms-course-delivery:on_leave_employee] + the gated entities' write tier |
-| `PEOPLE-MANAGER` | persona | accountable | `manage_leave_absence` | approval gate |
+| `PEOPLE-MANAGER` | persona | informed | `manage_maintain_employee_data` | notify on trigger_events [employee.applied_internally] |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_leave_absence` | the gated entities' write tier |
+| `PEOPLE-MANAGER` | persona | accountable | `manage_leave_absence` | grant gates [hcm-core-worker:on_leave_employee] + the gated entities' write tier |
 | `HR-BUSINESS-PARTNER` | persona | consulted | `manage_leave_absence` | blocking consultation state |
-| `HR-HRIS-ADMIN` | persona | informed | `manage_leave_absence` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_separation` | grant gates [lms-course-delivery:terminated_employee] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_separation` | approval gate |
+| `HR-HRIS-ADMIN` | persona | informed | `manage_leave_absence` | ⚠ no event wired |
+| `HR-PEOPLE-OPS-SPECIALIST` | persona | responsible | `manage_separation` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `manage_separation` | grant gates [hcm-core-worker:terminated_employee] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `manage_separation` | advisory read grant |
-| `HR-HRIS-ADMIN` | persona | informed | `manage_separation` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-ORG-DESIGN-ANALYST` | persona | responsible | `create_organizational_design` | grant gates [lms-course-delivery:approved_position, lms-course-delivery:active_org_unit] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `create_organizational_design` | approval gate |
+| `HR-HRIS-ADMIN` | persona | informed | `manage_separation` | notify on trigger_events [employee.terminated] |
+| `HR-ORG-DESIGN-ANALYST` | persona | responsible | `create_organizational_design` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `create_organizational_design` | grant gates [hcm-org-positions:approved_position, hcm-org-positions:active_org_unit] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `create_organizational_design` | advisory read grant |
-| `HR-HRIS-ADMIN` | persona | informed | `create_organizational_design` | notification side effect (trigger_event / webhook_receiver) |
-| `HR-ORG-DESIGN-ANALYST` | persona | responsible | `conduct_organization` | grant gates [lms-course-delivery:reorganized_org_unit] + the gated entities' write tier |
-| `HR-BUSINESS-PARTNER` | persona | accountable | `conduct_organization` | approval gate |
+| `HR-HRIS-ADMIN` | persona | informed | `create_organizational_design` | notify on trigger_events [hcm_position.approved] |
+| `HR-ORG-DESIGN-ANALYST` | persona | responsible | `conduct_organization` | the gated entities' write tier |
+| `HR-BUSINESS-PARTNER` | persona | accountable | `conduct_organization` | grant gates [hcm-org-positions:reorganized_org_unit] + the gated entities' write tier |
 | `PEOPLE-MANAGER` | persona | consulted | `conduct_organization` | advisory read grant |
-| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `develop_conduct_manage_employee` | grant gates [lms-course-delivery:publish, lms-course-delivery:complete] + the gated entities' write tier |
-| `LD-LEARNING-ADMIN` | persona | accountable | `develop_conduct_manage_employee` | approval gate |
+| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `develop_conduct_manage_employee` | the gated entities' write tier |
+| `LD-LEARNING-ADMIN` | persona | accountable | `develop_conduct_manage_employee` | grant gates [lms-course-delivery:publish, lms-course-delivery:complete] + the gated entities' write tier |
 | `LD-INSTRUCTOR` | persona | consulted | `develop_conduct_manage_employee` | advisory read grant |
-| `PEOPLE-MANAGER` | persona | informed | `develop_conduct_manage_employee` | notification side effect (trigger_event / webhook_receiver) |
-| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `evaluate_training_effectiveness` | grant gates [lms-course-delivery:publish, lms-course-delivery:grade] + the gated entities' write tier |
-| `LD-LEARNING-ADMIN` | persona | accountable | `evaluate_training_effectiveness` | approval gate |
+| `PEOPLE-MANAGER` | persona | informed | `develop_conduct_manage_employee` | notify on trigger_events [course.published, course_enrollment.completed] |
+| `LD-INSTRUCTIONAL-DESIGNER` | persona | responsible | `evaluate_training_effectiveness` | the gated entities' write tier |
+| `LD-LEARNING-ADMIN` | persona | accountable | `evaluate_training_effectiveness` | grant gates [lms-course-delivery:publish, lms-course-delivery:grade] + the gated entities' write tier |
 | `LD-INSTRUCTOR` | persona | consulted | `evaluate_training_effectiveness` | advisory read grant |
 
 ### 9.2 Functional ownership and default grants
@@ -807,8 +880,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Learning and Development | `admin` | `:admin` |
-| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Manufacturing Operations | `read` | `:read` |
-| consumer | Sales | `read` | `:read` |
-| consumer | Software Engineering | `read` | `:read` |
+| contributor | Governance, Risk and Compliance | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Manufacturing Operations | `viewer` | `:read` |
+| consumer | Sales | `viewer` | `:read` |
+| consumer | Software Engineering | `viewer` | `:read` |

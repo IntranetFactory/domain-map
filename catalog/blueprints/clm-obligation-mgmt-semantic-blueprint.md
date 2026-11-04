@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Obligation Management
 tagline: Track every commitment a contract creates and act before a deadline slips.
@@ -15,7 +15,8 @@ domain_code: CLM
 icon_name: file-pen
 related_modules: [clm-authoring, clm-negotiation, clm-renewal, clm-repository]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, LEGAL-COUNSEL]
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Obligation Management
@@ -48,10 +49,10 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `contract_milestones` | `contract_milestones` | Contract Milestone | Contract Milestones | master | - | - | optional | - | operational_workflow | `:manage` | - |
-| 2 | `contract_obligations` | `contract_obligations` | Contract Obligation | Contract Obligations | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 1 | `contract_milestones` | `contract_milestones` | Contract Milestone | Contract Milestones | master | - | - | yes | - | operational_workflow | `:manage` | - |
+| 2 | `contract_obligations` | `contract_obligations` | Contract Obligation | Contract Obligations | master | - | - | - | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -59,49 +60,47 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-_(none: no relationships with both endpoints inside the scope)_
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
+_(none: no relationships with both entities in this blueprint)_
 
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | is obligation owner for | `contract_obligations` | one_to_many | optional | source | clear | reference | - |
-| `users` | owns | `contract_milestones` | one_to_many | optional | source | clear | reference | - |
+### 5.2 Relationships to platform built-ins (`users`)
 
-### 5.3 Cross-scope relationships
-
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `legal_contracts` | imposes | `contract_obligations` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `contract_obligations` | breaches_into | `audit_issues` | one_to_many | optional | none | n/a | - |
-| `contract_obligations` | alerts | `customer_cases` | one_to_many | optional | none | n/a | - |
-| `project_billing_milestones` | updates | `contract_obligations` | one_to_many | optional | none | n/a | - |
-| `legal_contracts` | has milestone | `contract_milestones` | one_to_many | optional | none | n/a | - |
+| `users` | is obligation owner for | `contract_obligations` | one_to_many | no | clear | reference | - |
+| `users` | owns | `contract_milestones` | one_to_many | no | clear | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-_(none: no context cross-scope relationships on this scope's embedded shells or consumed entities)_
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `legal_contracts` | imposes | `contract_obligations` | one_to_many | yes | - |
+| `project_billing_milestones` | updates | `contract_obligations` | one_to_many | no | - |
+| `legal_contracts` | has milestone | `contract_milestones` | one_to_many | yes | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `contract_obligations` | breaches_into | `audit_issues` | one_to_many | no | - |
+| `contract_obligations` | alerts | `customer_cases` | one_to_many | no | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLM-OBLIGATION-MGMT | GRC | _(domain-level)_ | `contract_obligation.breached` | _(state_change)_ | `contract_obligations` | manual_handoff | high | Obligation breach creates a GRC issue. Often handled manually; structured breach data is rare. |
-| CLM-OBLIGATION-MGMT | CSM | _(domain-level)_ | `contract_obligation.due` | _(lifecycle)_ | `contract_obligations` | event_stream | medium | Upcoming SLA or deliverable obligation alerted to CSM. |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -115,22 +114,22 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 
 ### `contract_milestones` (Contract Milestone)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `pending` | ✓ | - | - | - | - |
-| 20 | `reached` | - | ✓ | ✓ | `clm-obligation-mgmt:reached_contract_milestone` | - |
-| 30 | `missed` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `pending` | ✓ | - | - | - | - | - |
+| 20 | `reached` | - | ✓ | ✓ | - | `clm-obligation-mgmt:reached_contract_milestone` | - |
+| 30 | `missed` | - | ✓ | - | - | - | - |
 
 ### `contract_obligations` (Contract Obligation)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 10 | `open` | ✓ | - | - | - | Obligation extracted/created and registered. Awaiting work or due date. |
-| 20 | `in_progress` | - | - | - | - | Obligation owner has acknowledged and is actively delivering against the obligation. |
-| 30 | `due` | - | - | - | - | Due date has passed without closure. Alerts have been raised to the obligation owner; escalation pending. |
-| 40 | `satisfied` | - | ✓ | ✓ | `clm-obligation-mgmt:close_contract_obligation` | Obligation has been fully delivered and accepted. Terminal positive outcome. |
-| 50 | `breached` | - | ✓ | ✓ | `clm-obligation-mgmt:mark_obligation_breached` | Obligation has been formally declared breached. Triggers contract-level remedies. Terminal negative outcome. |
-| 60 | `waived` | - | ✓ | ✓ | `clm-obligation-mgmt:waive_contract_obligation` | Obligation formally waived (counterparty release or internal forgiveness). Terminal. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | `open` | ✓ | - | - | - | - | Obligation extracted/created and registered. Awaiting work or due date. |
+| 20 | `in_progress` | - | - | - | - | - | Obligation owner has acknowledged and is actively delivering against the obligation. |
+| 30 | `due` | - | - | - | - | - | Due date has passed without closure. Alerts have been raised to the obligation owner; escalation pending. |
+| 40 | `satisfied` | - | ✓ | ✓ | - | `clm-obligation-mgmt:close_contract_obligation` | Obligation has been fully delivered and accepted. Terminal positive outcome. |
+| 50 | `breached` | - | ✓ | ✓ | - | `clm-obligation-mgmt:mark_obligation_breached` | Obligation has been formally declared breached. Triggers contract-level remedies. Terminal negative outcome. |
+| 60 | `waived` | - | ✓ | ✓ | - | `clm-obligation-mgmt:waive_contract_obligation` | Obligation formally waived (counterparty release or internal forgiveness). Terminal. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -141,10 +140,16 @@ _(none: this scope embeds no masters owned elsewhere; every entity is mastered h
 | `clm-obligation-mgmt:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `clm-obligation-mgmt:manage` | baseline-manage | Edit operational records | ✓ |
 | `clm-obligation-mgmt:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `clm-obligation-mgmt:read_contract_obligations` | entity-read | Read Contract Obligations | ✓ |
+| `clm-obligation-mgmt:write_contract_obligations` | entity-write | Write Contract Obligations | ✓ |
+| `clm-obligation-mgmt:read_contract_milestones` | entity-read | Read Contract Milestones | ✓ |
+| `clm-obligation-mgmt:write_contract_milestones` | entity-write | Write Contract Milestones | ✓ |
 | `clm-obligation-mgmt:close_contract_obligation` | workflow-gate (lifecycle) | Transition `contract_obligations` into state `satisfied` | ✓ |
 | `clm-obligation-mgmt:mark_obligation_breached` | workflow-gate (lifecycle) | Transition `contract_obligations` into state `breached` | ✓ |
 | `clm-obligation-mgmt:waive_contract_obligation` | workflow-gate (lifecycle) | Transition `contract_obligations` into state `waived` | ✓ |
 | `clm-obligation-mgmt:reached_contract_milestone` | workflow-gate (lifecycle) | Transition `contract_milestones` into state `reached` | ✓ |
+
+_Gates with no process: `clm-obligation-mgmt:reached_contract_milestone`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
@@ -162,6 +167,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `clm-obligation-mgmt_viewer` | `clm-obligation-mgmt:read` |
 | `clm-obligation-mgmt_manager` | `clm-obligation-mgmt:manage` |
+| `clm-obligation-mgmt_admin` | `clm-obligation-mgmt:admin` |
 
 **Permission hierarchy:**
 
@@ -169,6 +175,12 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `clm-obligation-mgmt:admin` | `clm-obligation-mgmt:manage` |
 | `clm-obligation-mgmt:manage` | `clm-obligation-mgmt:read` |
+| `clm-obligation-mgmt:read` | `clm-obligation-mgmt:read_contract_obligations` |
+| `clm-obligation-mgmt:read` | `clm-obligation-mgmt:read_contract_milestones` |
+| `clm-obligation-mgmt:manage` | `clm-obligation-mgmt:write_contract_obligations` |
+| `clm-obligation-mgmt:write_contract_obligations` | `clm-obligation-mgmt:read_contract_obligations` |
+| `clm-obligation-mgmt:manage` | `clm-obligation-mgmt:write_contract_milestones` |
+| `clm-obligation-mgmt:write_contract_milestones` | `clm-obligation-mgmt:read_contract_milestones` |
 | `clm-obligation-mgmt:admin` | `clm-obligation-mgmt:close_contract_obligation` |
 | `clm-obligation-mgmt:admin` | `clm-obligation-mgmt:mark_obligation_breached` |
 | `clm-obligation-mgmt:admin` | `clm-obligation-mgmt:waive_contract_obligation` |
@@ -184,14 +196,14 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `CONTRACT-OPS-SPECIALIST` | persona | responsible | `evaluate_enterprise_regulatory` | grant gates [clm-obligation-mgmt:close_contract_obligation, clm-obligation-mgmt:mark_obligation_breached, clm-obligation-mgmt:waive_contract_obligation] + the gated entities' write tier |
-| `CONTRACT-OPS-MANAGER` | persona | accountable | `evaluate_enterprise_regulatory` | approval gate |
-| `LEGAL-COUNSEL` | persona | informed | `evaluate_enterprise_regulatory` | notification side effect (trigger_event / webhook_receiver) |
+| `CONTRACT-OPS-SPECIALIST` | persona | responsible | `evaluate_enterprise_regulatory` | the gated entities' write tier |
+| `CONTRACT-OPS-MANAGER` | persona | accountable | `evaluate_enterprise_regulatory` | grant gates [clm-obligation-mgmt:close_contract_obligation, clm-obligation-mgmt:mark_obligation_breached, clm-obligation-mgmt:waive_contract_obligation] + the gated entities' write tier |
+| `LEGAL-COUNSEL` | persona | informed | `evaluate_enterprise_regulatory` | notify on trigger_events [contract_obligation.breached, contract_obligation.satisfied, contract_obligation.waived] |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Contract Operations | `admin` | `:admin` |
-| contributor | Procurement | `manage` | `:manage` |
-| contributor | Sales | `manage` | `:manage` |
+| contributor | Procurement | `manager` | `:manage` |
+| contributor | Sales | `manager` | `:manage` |

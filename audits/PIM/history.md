@@ -448,3 +448,7 @@ No catalog/database writes. All edits are additive, local to audit files. The 4 
 ### Post-fix status
 
 next_action_by: user. The only agent-executable item (B1A-B9D-VERIFY) is resolved. Remaining open: user decisions (B2-S1/S2/S4/S6/S7/S9 + the new B2-B9D-OWN-1845), deferred personas (B1A-PHASE-P), b1b blocked on other domains' audits (B1B-M7-DELETE-SIBLINGS, B1B-B11-REGULATIONS, B1B-PLM-DISCONTINUED-HANDOFF, B1B-B10B-*), and b3 backlog. The 4 B9d RE-TAGs await user sign-off (destructive, PLM-source).
+
+## 2026-11-04 - pim_products realizer, owner-approved
+
+Plan F5c. dmdo 712 (PIM-SYNDICATION on `pim_products`) went from `consumer` to `embedded_master`, because the module realizes `pim_products.published` and could not write the state. q1 and B2-S1 had recommended deleting this row; that default now covers the other 3 rows only. Applied with `.tmp_deploy/apply_stable_permission_fixes_2026_11_04.ts`; before-values are in `backups/stable-permission-fixes-2026-11-04.json`.

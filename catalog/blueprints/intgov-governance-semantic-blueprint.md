@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Intranet Content Governance and Lifecycle
 tagline: Put a name on every page and keep it accountable over time.
@@ -11,7 +11,8 @@ domain_modules:
 domain_code: INTRANET-GOV
 related_modules: [intgov-inventory, mrm-planning, pm-roadmap-delivery, psa-project-delivery, work-mgmt-goals-okr, work-mgmt-intake, work-mgmt-task-exec]
 persona: [CONTENT-OWNER, DIGITAL-WORKPLACE-GOV-LEAD, ITOPS-INTRANET-ADMIN, OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-27
+supports_raci: true
+created_at: 2026-11-04
 ---
 
 # Intranet Content Governance and Lifecycle
@@ -34,30 +35,30 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
-  intranet_content_ownership_assignments["Content Ownership Assignments"]
-  intranet_content_attestations["Content Attestations"]
   work_items["Work Items"]
   users["Users"]
+  intranet_content_ownership_assignments["Content Ownership Assignments"]
+  intranet_content_attestations["Content Attestations"]
   work_items -->|"depends_on"| work_items
   users -->|"assigned items"| work_items
   users -->|"created items"| work_items
   users -->|"is accountable owner on"| intranet_content_ownership_assignments
   users -->|"attests"| intranet_content_attestations
-  class intranet_content_ownership_assignments master;
-  class intranet_content_attestations master;
   class work_items embedded_master;
   class users consumer;
+  class intranet_content_ownership_assignments master;
+  class intranet_content_attestations master;
   style work_items stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `intranet_content_attestations` | `intranet_content_attestations` | Content Attestation | Content Attestations | master | - | - | required | - | operational_workflow | `:manage` | - |
-| 2 | `intranet_content_ownership_assignments` | `intranet_content_ownership_assignments` | Content Ownership Assignment | Content Ownership Assignments | master | - | - | required | - | junction | `:manage` | - |
-| 3 | `work_items` | `work_items` | Work Item | Work Items | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | optional | - | operational_workflow | `:manage` | - |
-| 4 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | operational_record | `:manage` | - |
+| 1 | `intranet_content_attestations` | `intranet_content_attestations` | Content Attestation | Content Attestations | master | - | - | - | - | operational_workflow | `:manage` | - |
+| 2 | `intranet_content_ownership_assignments` | `intranet_content_ownership_assignments` | Content Ownership Assignment | Content Ownership Assignments | master | - | - | - | - | junction | `:manage` | - |
+| 3 | `work_items` | `work_items` | Work Item | Work Items | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | yes | - | operational_workflow | `:manage` | - |
+| 4 | `users` | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | - | - | operational_record | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -65,118 +66,107 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
-
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | assigned items | `work_items` | one_to_many | optional | source | clear | reference | - |
-| `users` | created items | `work_items` | one_to_many | required | source | restrict | reference | - |
-| `users` | is accountable owner on | `intranet_content_ownership_assignments` | one_to_many | required | source | restrict | reference | - |
-| `users` | attests | `intranet_content_attestations` | one_to_many | required | source | restrict | reference | - |
+| `work_items` | depends_on | `work_items` | many_to_many | association | - | cascade | parent | - |
 
-### 5.3 Cross-scope relationships
+### 5.2 Relationships to platform built-ins (`users`)
 
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `intranet_content_inventory_records` | is governed by | `intranet_content_ownership_assignments` | one_to_many | optional | none | n/a | - |
-| `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | optional | none | n/a | - |
+| `users` | assigned items | `work_items` | one_to_many | no | clear | reference | - |
+| `users` | created items | `work_items` | one_to_many | yes | restrict | reference | - |
+| `users` | is accountable owner on | `intranet_content_ownership_assignments` | one_to_many | yes | restrict | reference | - |
+| `users` | attests | `intranet_content_attestations` | one_to_many | yes | restrict | reference | - |
 
-#### 5.3b Context relationships on embedded shells and consumed entities
+### 5.3 Relationships to entities outside this blueprint
 
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
 
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_dependencies` | blocks | `work_items` | many_to_many | required | none (required-if-present) | n/a | - |
-| `work_approval_chains` | gates | `work_items` | many_to_many | optional | none | n/a | - |
-| `work_user_workloads` | rolls_up | `work_items` | many_to_many | required | none (required-if-present) | n/a | - |
-| `work_custom_field_values` | set_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_items` | placed_in | `work_sections` | one_to_many | optional | none | n/a | - |
-| `work_task_templates` | seeds_item | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_item_tags` | tagged_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_item_comments` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_item_attachments` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | none | n/a | - |
-| `action_plans` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_projects` | contains | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_automations` | drives | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
-| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | none | n/a | - |
-| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
-| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
-| `proofing_sessions` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_time_entries` | logged_against | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
-| `work_goal_relationships` | relates | `work_items` | one_to_many | required | none (required-if-present) | n/a | - |
-| `work_statuses` | is_status_of | `work_items` | one_to_many | optional | none | n/a | - |
-| `work_status_updates` | records_change_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `action_plans` | spawns | `work_items` | one_to_many | no | - |
+| `test_defects` | spawns | `work_items` | one_to_many | no | - |
+| `work_projects` | contains | `work_items` | one_to_many | yes | - |
+| `okr_objectives` | tracked_by | `work_items` | one_to_many | no | - |
+| `work_automations` | drives | `work_items` | one_to_many | no | - |
+| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | no | - |
+| `work_dependencies` | blocks | `work_items` | many_to_many | - | - |
+| `work_approval_chains` | gates | `work_items` | many_to_many | - | - |
+| `work_user_workloads` | rolls_up | `work_items` | many_to_many | - | - |
+| `work_sections` | holds_items | `work_items` | one_to_many | no | - |
+| `work_task_templates` | seeds_item | `work_items` | one_to_many | no | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | no | - |
+| `intranet_content_inventory_records` | is governed by | `intranet_content_ownership_assignments` | one_to_many | yes | - |
+| `intranet_content_inventory_records` | is attested by | `intranet_content_attestations` | one_to_many | yes | - |
+| `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | no | - |
+| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | no | - |
+| `work_statuses` | is_status_of | `work_items` | one_to_many | no | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | no | - |
+| `work_items` | has_field_values | `work_custom_field_values` | one_to_many | yes | - |
+| `work_items` | has_tag_assignments | `work_item_tags` | one_to_many | yes | - |
+| `work_items` | has_comments | `work_item_comments` | one_to_many | yes | - |
+| `work_items` | has_attachments | `work_item_attachments` | one_to_many | yes | - |
+| `work_items` | has_proofing_sessions | `proofing_sessions` | one_to_many | yes | - |
+| `work_items` | has_time_entries | `work_time_entries` | one_to_many | yes | - |
+| `work_items` | is_related_by | `work_goal_relationships` | one_to_many | yes | - |
+| `work_items` | has_status_updates | `work_status_updates` | one_to_many | yes | - |
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results relating down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | low | When WM is the work tracker for a PSA-managed delivery, work_item completion closes the loop on PSA-side time / utilization accounting. Pairs with the existing PSA -> WM project_task.completed inbound for the bidirectional sync pattern. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are related to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke: friction is the mapping between work_item id and roadmap_item id. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal: it drives KR closure recalculation and triggers KR-fully-met evaluations on related objectives. |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-GOALS-OKR | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has related the item to a key result. In-process FK + state read; no message moves. |
-| INTGOV-GOVERNANCE | WORK-MGMT | WORK-MGMT-TASK-EXEC | `intranet_content_attestation.flagged_stale` | `pending` → `flagged_stale` _(state_change)_ | `work_items` | api_call | medium | When content is flagged stale during recertification, an improvement work item is created in Work Management for remediation. |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-INTAKE | `work_form_submission.converted` | `triaged` → `converted` _(lifecycle)_ | `work_items` | lifecycle_progression | low | A converted intake form submission spawns a work item in the task-execution module under the routed project. |
-| WORK-MGMT-TASK-EXEC | MRM | MRM-PLANNING | `marketing_plan_line.scheduled` | `scheduled` _(state_change)_ | `work_items` | api_call | medium | When a plan line is scheduled on the marketing calendar, the delivery work is handed to work-management as tasks and projects. Payload: the work item that delivers the plan line. |
-| INTGOV-GOVERNANCE | INTRANET-GOV | INTGOV-INVENTORY | `intranet_content_inventory_record.registered` | `registered` _(lifecycle)_ | `intranet_content_ownership_assignments` | lifecycle_progression | low | When content is registered in the inventory, the governance module opens an ownership assignment so the item gets an accountable owner. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `work_items` | embedded_master | optional | WORK-MGMT-TASK-EXEC (WORK-MGMT) | - |
-| `users` | consumer | required | _(platform built-in)_ | - |
+| `work_items` | embedded_master | yes | WORK-MGMT-TASK-EXEC (WORK-MGMT) | - |
+| `users` | consumer | - | _(platform built-in)_ | - |
 
 ## 7. Lifecycle states
 
 ### `intranet_content_attestations` (Content Attestation)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - |
-| 2 | `attested_current` | - | - | ✓ | `intgov-governance:attest` | - |
-| 3 | `flagged_stale` | - | - | ✓ | `intgov-governance:flag_stale` | - |
-| 4 | `remediated` | - | - | - | - | - |
-| 5 | `archived` | - | ✓ | ✓ | `intgov-governance:archive` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | _(always)_ | - | - | - | - |
+| 2 | `attested_current` | - | - | `INTGOV-GOVERNANCE` | ✓ | - | `intgov-governance:attest` | - |
+| 3 | `flagged_stale` | - | - | `INTGOV-GOVERNANCE` | ✓ | - | `intgov-governance:flag_stale` | - |
+| 4 | `remediated` | - | - | _(always)_ | - | - | - | - |
+| 5 | `archived` | - | ✓ | `INTGOV-GOVERNANCE` | ✓ | - | `intgov-governance:archive` | - |
 
 ### `work_items` (Work Item)
 
 _This scope holds `work_items` as **embedded_master**; the canonical state machine is owned by `WORK-MGMT-TASK-EXEC`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `open` | ✓ | - | - | - | - |
-| 2 | `in_progress` | - | - | - | - | - |
-| 3 | `blocked` | - | - | - | - | - |
-| 4 | `done` | - | ✓ | - | - | - |
-| 5 | `canceled` | - | ✓ | ✓ | `intgov-governance:cancel_work_item` | - |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | `WORK-MGMT-TASK-EXEC` | - | - | - | - |
+| 2 | `in_progress` | - | - | `WORK-MGMT-TASK-EXEC` | - | - | - | - |
+| 3 | `blocked` | - | - | `WORK-MGMT-TASK-EXEC` | - | - | - | - |
+| 4 | `done` | - | ✓ | `WORK-MGMT-TASK-EXEC` | - | - | - | - |
+| 5 | `canceled` | - | ✓ | `WORK-MGMT-TASK-EXEC` | ✓ | - | `work-mgmt-task-exec:cancel_work_item` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -187,7 +177,13 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | `intgov-governance:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `intgov-governance:manage` | baseline-manage | Edit operational records | ✓ |
 | `intgov-governance:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `intgov-governance:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `canceled` | ✓ |
+| `work-mgmt-task-exec:read_work_items` | entity-read | Read Work Items | ✓ |
+| `work-mgmt-task-exec:write_work_items` | entity-write | Write Work Items | ✓ |
+| `intgov-governance:read_intranet_content_ownership_assignments` | entity-read | Read Content Ownership Assignments | ✓ |
+| `intgov-governance:write_intranet_content_ownership_assignments` | entity-write | Write Content Ownership Assignments | ✓ |
+| `intgov-governance:read_intranet_content_attestations` | entity-read | Read Content Attestations | ✓ |
+| `intgov-governance:write_intranet_content_attestations` | entity-write | Write Content Attestations | ✓ |
+| `work-mgmt-task-exec:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `canceled` | ✓ |
 | `intgov-governance:attest` | workflow-gate (lifecycle) | Transition `intranet_content_attestations` into state `attested_current` | ✓ |
 | `intgov-governance:flag_stale` | workflow-gate (lifecycle) | Transition `intranet_content_attestations` into state `flagged_stale` | ✓ |
 | `intgov-governance:archive` | workflow-gate (lifecycle) | Transition `intranet_content_attestations` into state `archived` | ✓ |
@@ -208,6 +204,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `intgov-governance_viewer` | `intgov-governance:read` |
 | `intgov-governance_manager` | `intgov-governance:manage` |
+| `intgov-governance_admin` | `intgov-governance:admin` |
 
 **Permission hierarchy:**
 
@@ -215,7 +212,16 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `intgov-governance:admin` | `intgov-governance:manage` |
 | `intgov-governance:manage` | `intgov-governance:read` |
-| `intgov-governance:admin` | `intgov-governance:cancel_work_item` |
+| `intgov-governance:read` | `work-mgmt-task-exec:read_work_items` |
+| `intgov-governance:read` | `intgov-governance:read_intranet_content_ownership_assignments` |
+| `intgov-governance:read` | `intgov-governance:read_intranet_content_attestations` |
+| `intgov-governance:manage` | `work-mgmt-task-exec:write_work_items` |
+| `work-mgmt-task-exec:write_work_items` | `work-mgmt-task-exec:read_work_items` |
+| `intgov-governance:manage` | `intgov-governance:write_intranet_content_ownership_assignments` |
+| `intgov-governance:write_intranet_content_ownership_assignments` | `intgov-governance:read_intranet_content_ownership_assignments` |
+| `intgov-governance:manage` | `intgov-governance:write_intranet_content_attestations` |
+| `intgov-governance:write_intranet_content_attestations` | `intgov-governance:read_intranet_content_attestations` |
+| `intgov-governance:admin` | `work-mgmt-task-exec:cancel_work_item` |
 | `intgov-governance:admin` | `intgov-governance:attest` |
 | `intgov-governance:admin` | `intgov-governance:flag_stale` |
 | `intgov-governance:admin` | `intgov-governance:archive` |
@@ -231,10 +237,10 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `OPERATIONS-WORK-CONTRIBUTOR` | persona | responsible | `manage_projects` | grant gates [intgov-governance:cancel_work_item] + the gated entities' write tier |
-| `OPERATIONS-WORK-PROGRAM-LEAD` | persona | accountable | `manage_projects` | approval gate |
-| `CONTENT-OWNER` | persona | responsible | - | grant gates [intgov-governance:attest, intgov-governance:flag_stale, intgov-governance:archive] + the gated entities' write tier |
-| `DIGITAL-WORKPLACE-GOV-LEAD` | persona | accountable | - | approval gate |
+| `OPERATIONS-WORK-CONTRIBUTOR` | persona | responsible | `manage_projects` | the gated entities' write tier |
+| `OPERATIONS-WORK-PROGRAM-LEAD` | persona | accountable | `manage_projects` | grant gates [work-mgmt-task-exec:cancel_work_item] + the gated entities' write tier |
+| `CONTENT-OWNER` | persona | responsible | - | the gated entities' write tier |
+| `DIGITAL-WORKPLACE-GOV-LEAD` | persona | accountable | - | grant gates [intgov-governance:attest, intgov-governance:flag_stale, intgov-governance:archive] + the gated entities' write tier |
 | `ITOPS-INTRANET-ADMIN` | persona | consulted | - | advisory read grant |
 
 ### 9.2 Functional ownership and default grants
@@ -243,5 +249,5 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- | --- | --- |
 | owner | Human Resources | `admin` | `:admin` |
 | owner | IT Operations | `admin` | `:admin` |
-| contributor | Marketing Communications | `manage` | `:manage` |
-| consumer | Executive | `read` | `:read` |
+| contributor | Marketing Communications | `manager` | `:manage` |
+| consumer | Executive | `viewer` | `:read` |

@@ -4,7 +4,7 @@
 // scenario that combines them lives in blueprint_derive.starter.test.ts.
 
 import { describe, expect, test } from "bun:test";
-import { deriveDeleteMode, deriveModuleModel, entityPluralToken, entitySingularToken, isIncomingRelationship, type BlueprintModel } from "../blueprint_derive";
+import { deriveBlueprintModel, deriveDeleteMode, deriveModuleModel, gatesWithoutProcessNote, entityPluralToken, entitySingularToken, isIncomingRelationship, type BlueprintModel } from "../blueprint_derive";
 import {
   buildFixture,
   dataObject,
@@ -30,6 +30,7 @@ type HelpDeskOpts = {
   processes?: any[];
   triggerEvents?: any[];
   withCatalogEntity?: boolean;
+  realizerInScope?: boolean;
 };
 
 function helpDesk(opts: HelpDeskOpts = {}) {
@@ -56,6 +57,7 @@ function helpDesk(opts: HelpDeskOpts = {}) {
     processes: opts.processes ?? [],
     triggerEvents: opts.triggerEvents ?? [],
   });
+  if (opts.realizerInScope) return deriveBlueprintModel([fx.index.modulesById.get(M)!, fx.index.modulesById.get(X)!], fx.ctx);
   return deriveModuleModel(fx.index.modulesById.get(M)!, fx.ctx);
 }
 
@@ -123,10 +125,13 @@ describe("rule 2: one permission set", () => {
     ]);
   });
 
-  test("a gate wired to no process is marked ⚠ no process in its §8.1 description", () => {
+  test("a gate wired to no process is named in the note, and its deployed §8.1 description stays plain", () => {
     const desc = Object.fromEntries(gatePerms(model).map((p) => [p.code, p.description]));
-    expect(desc["helpdesk-core:reopened_ticket"]).toBe("Transition `tickets` into state `reopened` (⚠ no process)");
+    expect(desc["helpdesk-core:reopened_ticket"]).toBe("Transition `tickets` into state `reopened`");
     expect(desc["helpdesk-core:resolved_ticket"]).toBe("Transition `tickets` into state `resolved`");
+    const gates = model.perModule[0].gates;
+    expect(gatesWithoutProcessNote(gates)).toBe("_Gates with no process: `helpdesk-core:reopened_ticket`. No Accountable can hold them, so this blueprint does not support `raci`._");
+    expect(gatesWithoutProcessNote(gates.filter((g) => g.processIds.length > 0))).toBeNull();
   });
 
   test("the high-risk gate is still held by the Accountable row", () => {
@@ -139,7 +144,7 @@ describe("rule 2: one permission set", () => {
 // ---------- rule 3: RACI gate lists are filtered to minted gates and deduplicated ----------
 
 describe("rule 3: RACI gate lists", () => {
-  test("a gate realized by an out-of-scope module is not granted, and a shared code is listed once", () => {
+  test("a gate realized by an out-of-scope module is minted and granted under that module's name, and a shared code is listed once", () => {
     const model = helpDesk({
       lifecycle: [
         open,
@@ -151,11 +156,10 @@ describe("rule 3: RACI gate lists", () => {
       processes: [processRow(500, "resolve_tickets")],
       processRaci: [raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable")],
     });
-    expect(gatePerms(model).map((p) => p.code)).toEqual(["helpdesk-core:close_case"]);
+    expect(gatePerms(model).map((p) => p.code)).toEqual(["helpdesk-core:close_case", "helpdesk-escalation:escalated_ticket"]);
     expect(raciOf(model, "accountable")).toEqual([
-      "SUPPORT-LEAD: grant gates [helpdesk-core:close_case] + the gated entities' write tier",
+      "SUPPORT-LEAD: grant gates [helpdesk-core:close_case, helpdesk-escalation:escalated_ticket] + the gated entities' write tier",
     ]);
-    for (const g of model.perModule[0].raci) expect(g.realization).not.toContain("helpdesk-escalation:");
   });
 });
 
@@ -240,8 +244,9 @@ describe("rule 5: realization text", () => {
     expect(raciOf(model, "accountable")).toEqual(["SUPPORT-LEAD: the gated entities' write tier"]);
   });
 
-  test("an Accountable row whose only gated state mints no gate here says ⚠ no gate wired", () => {
+  test("an Accountable row whose only gated state another module of the scope mints says ⚠ no gate wired", () => {
     const model = helpDesk({
+      realizerInScope: true,
       lifecycle: [open, gated(2, "resolved", 2, { process_id: 500, domain_module_id: X }), closed],
       processes: [processRow(500, "resolve_tickets")],
       processRaci: [raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable")],
@@ -300,7 +305,7 @@ describe("rule 6: shared gate codes", () => {
       ],
     });
     expect(gatePerms(model).map((p) => [p.code, p.description])).toEqual([
-      ["helpdesk-core:close_case", "Transition `tickets` into state `resolved` or `tickets` into state `archived` (⚠ no process)"],
+      ["helpdesk-core:close_case", "Transition `tickets` into state `resolved` or `tickets` into state `archived`"],
     ]);
     expect(model.perModule[0].gates[0].states.map((s) => s.state.state_name)).toEqual(["resolved", "archived"]);
   });
@@ -405,7 +410,7 @@ describe("rule 10: snake_case tokens", () => {
 // ---------- rule 11: an embedded entity's NULL-realizer gate is minted by the installing unit ----------
 
 describe("rule 11: NULL-realizer gate on an embedded entity", () => {
-  test("the installing unit mints the gate re-prefixed and §7 shows that code", () => {
+  test("the installing unit mints the gate under the entity's master's name and §7 shows that code", () => {
     const OWNER = 20, U = 30, ADJ = 301;
     const fx = buildFixture({
       modules: [
@@ -421,9 +426,9 @@ describe("rule 11: NULL-realizer gate on an embedded entity", () => {
     });
     const model = deriveModuleModel(fx.index.modulesById.get(U)!, fx.ctx);
     const gate = model.lifecycle[0].states[1].gate;
-    expect(gate?.code).toBe("ats-background-checks:clear_adjudication");
-    expect(gate?.reprefixed).toBe(true);
-    expect(gatePerms(model).map((p) => p.code)).toEqual(["ats-background-checks:clear_adjudication"]);
+    expect(gate?.code).toBe("bgv-adjudication:clear_adjudication");
+    expect(gate?.heldForOwner).toBe(true);
+    expect(gatePerms(model).map((p) => p.code)).toEqual(["bgv-adjudication:clear_adjudication"]);
     expect(model.perModule[0].lifecycle.map((s: any) => s.state_name)).toEqual(["pending", "clear"]);
   });
 });

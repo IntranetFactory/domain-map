@@ -1,4 +1,4 @@
-// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R10) on
+// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R12) on
 // tiny fixtures, then the invariants over every module of the starter-shaped scenario
 // (fixtures/hiring_starter_scenario.ts). R1-R3 guard rules the derivation already enforces, so their
 // failing cases mutate a derived model by hand.
@@ -96,7 +96,7 @@ describe("realization parsers", () => {
   });
 
   test("every finding carries its rule's severity", () => {
-    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10"]);
+    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12"]);
     const fx = hiringStarterScenario();
     for (const m of fx.index.modules) {
       for (const f of checkModel(deriveModuleModel(m, fx.ctx), { ctx: fx.ctx })) expect(f.result).toBe(RULES[f.id].severity);
@@ -152,12 +152,12 @@ describe("R2 / R3: RACI gate lists", () => {
     expect([...of(findings, "R2"), ...of(findings, "R3")]).toEqual([]);
   });
 
-  test("a gate realized by another module is neither minted nor granted here", () => {
+  test("a gate realized by a module outside the scope is minted and granted here under that module's name", () => {
     const { model, findings } = helpDesk({
       ...opts,
       lifecycle: [open, gated(2, "resolved", 2, { process_id: 500, domain_module_id: X }), closed],
     });
-    expect(model.perModule[0].gates).toEqual([]);
+    expect(model.perModule[0].gates.map((g) => g.code)).toEqual(["helpdesk-escalation:resolved_ticket"]);
     expect([...of(findings, "R2"), ...of(findings, "R3"), ...of(findings, "R4")]).toEqual([]);
   });
 
@@ -492,7 +492,7 @@ describe("R10: entity and state text names no related entity the module can lack
 
 // ---------- the invariants over every module of the starter-shaped scenario ----------
 
-describe("R1-R10 over every module of the hiring-starter scenario", () => {
+describe("R1-R12 over every module of the hiring-starter scenario", () => {
   const fx = hiringStarterScenario();
   const run = (id: number) => checkModel(deriveModuleModel(fx.index.modulesById.get(id)!, fx.ctx), { ctx: fx.ctx });
 
@@ -506,7 +506,7 @@ describe("R1-R10 over every module of the hiring-starter scenario", () => {
 
   test("the starter's deliberately unwired gate is minted, held by no Accountable row, and is no R4 finding", () => {
     const model = deriveModuleModel(fx.index.modulesById.get(IDS.STARTER)!, fx.ctx);
-    const unwired = model.perModule[0].gates.find((g) => g.code === "hiring-starter:flag_do_not_hire")!;
+    const unwired = model.perModule[0].gates.find((g) => g.code === "ats-candidate-crm:flag_do_not_hire")!;
     expect(unwired.processIds).toEqual([]);
     expect(model.perModule[0].raci.some((g) => (grantedGates(g.realization) ?? []).includes(unwired.code))).toBe(false);
     expect(of(run(IDS.STARTER), "R4")).toEqual([]);
@@ -522,7 +522,11 @@ describe("R1-R10 over every module of the hiring-starter scenario", () => {
       "R6 warn ATS-RECRUITMENT-PIPELINE [3]",
       "R9 warn ATS-RECRUITMENT-PIPELINE [LEGAL-COMPLIANCE-SPECIALIST, hire_candidate]",
     ]);
-    for (const id of [IDS.OFFERS, IDS.PRE, IDS.HCM_WORKFLOWS, IDS.HCM_CORE]) expect(run(id)).toEqual([]);
+    expect(shape(run(IDS.PRE))).toEqual([
+      "R6 warn ATS-PRE-EMPLOYEE-RECORD [3]",
+      "R9 warn ATS-PRE-EMPLOYEE-RECORD [LEGAL-COMPLIANCE-SPECIALIST, hire_candidate]",
+    ]);
+    for (const id of [IDS.OFFERS, IDS.HCM_WORKFLOWS, IDS.HCM_CORE]) expect(run(id)).toEqual([]);
   });
 
   test("the high-risk gate is held by its Accountable row (no R2 / R4 finding)", () => {

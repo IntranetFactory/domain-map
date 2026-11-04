@@ -54,15 +54,15 @@ describe("gated body conversion", () => {
   const after = applyGatedConversion(before);
 
   test("the high-risk gate gets ✓ and its admin hierarchy row; nothing else in 8.1 changes", () => {
-    expect(before).toContain("| `hiring-starter:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | - |");
-    expect(after).toContain("| `hiring-starter:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |");
-    expect(before).not.toContain("| `hiring-starter:admin` | `hiring-starter:approve_offer` |");
-    expect(after).toContain("| `hiring-starter:admin` | `hiring-starter:approve_offer` |");
+    expect(before).toContain("| `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | - |");
+    expect(after).toContain("| `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |");
+    expect(before).not.toContain("| `hiring-starter:admin` | `ats-offers:approve_offer` |");
+    expect(after).toContain("| `hiring-starter:admin` | `ats-offers:approve_offer` |");
     expect(after).toContain("| `hiring-starter:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |");
     // The added row sits in 8.1 order, right after the gate before it.
     const h = after.slice(after.indexOf("**Permission hierarchy:**"));
-    expect(h.indexOf("`hiring-starter:publish_posting` |")).toBeLessThan(h.indexOf("`hiring-starter:approve_offer` |"));
-    expect(h.indexOf("`hiring-starter:approve_offer` |")).toBeLessThan(h.indexOf("`hiring-starter:view_all_candidates` |"));
+    expect(h.indexOf("`ats-pre-employee-record:hire_candidate` |")).toBeLessThan(h.indexOf("`ats-offers:approve_offer` |"));
+    expect(h.indexOf("`ats-offers:approve_offer` |")).toBeLessThan(h.indexOf("`ats-candidate-crm:view_all_candidates` |"));
   });
 
   test("the RACI trio and the persona list are dropped; the rest of section 9 stays", () => {
@@ -102,7 +102,7 @@ describe.skipIf(!existsSync(DEFAULT_CHECKER))("the architect checker on the conv
 
   test("at raci the starter is refused: its unwired gate has no Accountable row, so it does not support raci", () => {
     expect(errors("starter-raci")).toEqual([
-      "RACI rule: process gate `hiring-starter:flag_do_not_hire` is in the `grant gates [...]` list of 0 accountable rows; under raci exactly one accountable row holds it",
+      "RACI rule: process gate `ats-candidate-crm:flag_do_not_hire` is in the `grant gates [...]` list of 0 accountable rows; under raci exactly one accountable row holds it",
       "`access_scope: raci` needs `supports_raci: true`",
     ]);
   });

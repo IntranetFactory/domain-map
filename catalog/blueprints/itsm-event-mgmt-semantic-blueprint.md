@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Event and Alert Handling
 tagline: Turn the flood of monitoring alerts into the few incidents that actually matter.
@@ -15,7 +15,8 @@ domain_code: ITSM
 icon_name: headset
 related_modules: [itom-infra-mon]
 persona: []
-created_at: 2026-06-27
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Event and Alert Handling
@@ -43,9 +44,9 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | canonical code | singular | plural | held_as | mastered in | mastered label | necessity | personal_content | entity_type | write tier | notes |
+| # | data_object | catalog code | singular | plural | held_as | mastered in | mastered label | install_optional | personal_content | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `monitoring_alerts` | `monitoring_alerts` | Alert | Alerts | embedded_master | `itom-infra-mon` | Infrastructure Monitoring and Event Management | required | - | operational_workflow | `:manage` | - |
+| 1 | `monitoring_alerts` | `monitoring_alerts` | Alert | Alerts | embedded_master | `itom-infra-mon` | Infrastructure Monitoring and Event Management | - | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -53,37 +54,37 @@ _(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
-### 5.1 Intra-scope relationships
+_`field_required` applies only when both entities are installed. It never makes an entity required._
 
-_(none: no relationships with both endpoints inside the scope)_
+### 5.1 Relationships between entities in this blueprint
 
-### 5.2 Built-in relationships (`users` and other platform built-ins)
+_(none: no relationships with both entities in this blueprint)_
 
-| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | assigned_monitoring_alerts | `monitoring_alerts` | one_to_many | optional | source | clear | reference | - |
+### 5.2 Relationships to platform built-ins (`users`)
 
-### 5.3 Cross-scope relationships
-
-#### 5.3a Outbound from this scope's masters and contributors
-
-_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
-
-_(none: no outbound cross-scope relationships from this scope's masters or contributors)_
-
-#### 5.3b Context relationships on embedded shells and consumed entities
-
-_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `service_incidents` | correlates_to | `monitoring_alerts` | many_to_many | optional | none | n/a | - |
+| `users` | assigned_monitoring_alerts | `monitoring_alerts` | one_to_many | no | clear | reference | - |
+
+### 5.3 Relationships to entities outside this blueprint
+
+_External entities are optional: this blueprint never installs them. If one exists at install, the relationship is proposed. A many-to-many relationship is listed under outgoing and proposed as a new junction table._
+
+#### 5.3a Outgoing relationships: this blueprint's entity points to the external entity
+
+| from | verb | to | cardinality | field_required | notes |
+| --- | --- | --- | --- | --- | --- |
+| `service_incidents` | correlates_to | `monitoring_alerts` | many_to_many | - | - |
+
+#### 5.3b Incoming relationships: the external entity points to this blueprint's entity
+
+_(none: no incoming relationships from external entities)_
 
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_(none: no other module embeds this scope's masters; the canonical owners do.)_
+_(none: this scope masters no entities)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -91,15 +92,13 @@ _(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ITOM-INFRA-MON | OBS | _(domain-level)_ | `monitoring_alert.threshold_breached` | _(threshold)_ | `monitoring_alerts` | event_stream | low | OBS-side alerts (from metric thresholds, log patterns, trace anomalies) are mirrored into the ITOM event/alert stream so AIOPS and ITSM see them in the unified pipeline. Modern stacks make this near-trivial. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | held_as | necessity | canonical owner(s) | slice notes |
+| data_object | held_as | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `monitoring_alerts` | embedded_master | required | ITOM-INFRA-MON (ITOM) | - |
+| `monitoring_alerts` | embedded_master | - | ITOM-INFRA-MON (ITOM) | - |
 
 ## 7. Lifecycle states
 
@@ -113,6 +112,8 @@ _(none: no lifecycle states for the entities in this scope)_
 | `itsm-event-mgmt:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `itsm-event-mgmt:manage` | baseline-manage | Edit operational records | ✓ |
 | `itsm-event-mgmt:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `itom-infra-mon:read_monitoring_alerts` | entity-read | Read Alerts | ✓ |
+| `itom-infra-mon:write_monitoring_alerts` | entity-write | Write Alerts | ✓ |
 
 ### 8.2 Business rules
 
@@ -130,6 +131,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `itsm-event-mgmt_viewer` | `itsm-event-mgmt:read` |
 | `itsm-event-mgmt_manager` | `itsm-event-mgmt:manage` |
+| `itsm-event-mgmt_admin` | `itsm-event-mgmt:admin` |
 
 **Permission hierarchy:**
 
@@ -137,6 +139,9 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `itsm-event-mgmt:admin` | `itsm-event-mgmt:manage` |
 | `itsm-event-mgmt:manage` | `itsm-event-mgmt:read` |
+| `itsm-event-mgmt:read` | `itom-infra-mon:read_monitoring_alerts` |
+| `itsm-event-mgmt:manage` | `itom-infra-mon:write_monitoring_alerts` |
+| `itom-infra-mon:write_monitoring_alerts` | `itom-infra-mon:read_monitoring_alerts` |
 
 **RACI realization:**
 
@@ -147,7 +152,7 @@ _(none: no process_raci assignments wired to this module's gated processes yet)_
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | IT Service Desk | `admin` | `:admin` |
-| contributor | IT Operations | `manage` | `:manage` |
-| contributor | Security | `manage` | `:manage` |
-| consumer | Finance | `read` | `:read` |
-| consumer | Human Resources | `read` | `:read` |
+| contributor | IT Operations | `manager` | `:manage` |
+| contributor | Security | `manager` | `:manage` |
+| consumer | Finance | `viewer` | `:read` |
+| consumer | Human Resources | `viewer` | `:read` |

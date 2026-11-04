@@ -12,7 +12,8 @@ domain_code: ATS
 icon_name: user-plus
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-11-02
+supports_raci: false
+created_at: 2026-11-04
 ---
 
 # Employee Referrals
@@ -79,21 +80,21 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 ### 5.1 Relationships between entities in this blueprint
 
-| from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | is referred through | `candidate_referrals` | one_to_many | reference | yes | source | restrict | reference | - |
-| `candidate_referrals` | earns | `referral_payouts` | one_to_one | reference | no | source | clear | reference | - |
-| `referral_rewards` | governs | `referral_payouts` | one_to_many | reference | yes | source | restrict | reference | - |
-| `referral_campaigns` | overrides | `referral_rewards` | one_to_many | reference | no | source | clear | reference | - |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | reference | yes | restrict | reference | - |
+| `candidate_referrals` | earns | `referral_payouts` | one_to_one | reference | no | clear | reference | - |
+| `referral_rewards` | governs | `referral_payouts` | one_to_many | reference | yes | restrict | reference | - |
+| `referral_campaigns` | overrides | `referral_rewards` | one_to_many | reference | no | clear | reference | - |
 
 ### 5.2 Relationships to platform built-ins (`users`)
 
-| from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | submits | `candidate_referrals` | one_to_many | yes | source | restrict | reference | - |
-| `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
-| `users` | approves | `referral_payouts` | one_to_many | no | source | clear | reference | - |
-| `users` | owns | `referral_campaigns` | one_to_many | no | source | clear | reference | - |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | submits | `candidate_referrals` | one_to_many | yes | restrict | reference | - |
+| `users` | owns as recruiter | `candidates` | one_to_many | no | clear | reference | - |
+| `users` | approves | `referral_payouts` | one_to_many | no | clear | reference | - |
+| `users` | owns | `referral_campaigns` | one_to_many | no | clear | reference | - |
 
 ### 5.3 Relationships to entities outside this blueprint
 
@@ -105,8 +106,8 @@ _External entities are optional: this blueprint never installs them. If one exis
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
 | `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | no | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | no | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
@@ -115,11 +116,10 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | yes | - |
-| `candidates` | becomes | `employees` | one_to_one | yes | - |
+| `candidates` | becomes | `employees` | one_to_one | no | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | yes | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | no | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | yes | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | no | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
@@ -129,7 +129,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgments` | one_to_many | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | yes | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |
@@ -139,26 +139,15 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-_`held_as` and `install_optional` here belong to the other module named in that row, not to this blueprint._
-
-| data_object | other module / domain | held_as | install_optional | notes |
-| --- | --- | --- | --- | --- |
-| `candidate_referrals` | PAYROLL-EARNINGS-DEDUCTIONS (Earnings, Deductions and Garnishments) - PAYROLL | consumer | - | - |
+_(none: no other module embeds this scope's masters)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-REFERRALS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-REFERRALS | PAYROLL | PAYROLL-EARNINGS-DEDUCTIONS | `candidate_referral.bonus_earned` | _(state_change)_ | `candidate_referrals` | api_call | medium | Referral-bonus eligibility milestone reached; PAYROLL pays bonus via off-cycle or next regular run. |
-| ATS-REFERRALS | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-REFERRALS | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
+_(none: no outbound handoffs whose payload is in this scope)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-REFERRALS | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -170,44 +159,44 @@ _`held_as` and `install_optional` here belong to the other module named in that 
 
 ### `candidate_referrals` (Referral)
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `submitted` | ✓ | - | - | - | - | Employee submitted a referral candidate against a requisition. |
-| 2 | `under_review` | - | - | - | - | - | Recruiter is evaluating the referred candidate. |
-| 3 | `converted` | - | ✓ | - | - | - | Referral became a job application in the ATS pipeline. |
-| 4 | `bonus_payable` | - | - | ✓ | - | `ats-referrals:pay_referral_bonus` | Hire confirmed; gated step to approve the referral bonus payout. |
-| 5 | `bonus_paid` | - | ✓ | - | - | - | Referral bonus has been issued to the referring employee. |
-| 6 | `rejected` | - | ✓ | - | - | - | Referral not pursued. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `submitted` | ✓ | - | _(always)_ | - | - | - | Employee submitted a referral candidate against a requisition. |
+| 2 | `under_review` | - | - | _(always)_ | - | - | - | Recruiter is evaluating the referred candidate. |
+| 3 | `converted` | - | ✓ | _(always)_ | - | - | - | Referral became a job application in the ATS pipeline. |
+| 4 | `bonus_payable` | - | - | `ATS-REFERRALS` | ✓ | - | `ats-referrals:pay_referral_bonus` | Hire confirmed; gated step to approve the referral bonus payout. |
+| 5 | `bonus_paid` | - | ✓ | _(always)_ | - | - | - | Referral bonus has been issued to the referring employee. |
+| 6 | `rejected` | - | ✓ | _(always)_ | - | - | - | Referral not pursued. |
 
 ### `candidates` (Candidate)
 
 _This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
-| 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | - | `ats-referrals:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | - | `ats-referrals:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | ✓ | - | - | - | Candidate kept in the database but not active in any pipeline. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | _(always)_ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | _(always)_ | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | - | `ATS-CANDIDATE-CRM` | ✓ | - | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee; a new application moves the person back to active. |
+| 4 | `do_not_hire` | - | ✓ | `ATS-CANDIDATE-CRM` | ✓ | - | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | - | _(always)_ | - | - | - | Candidate kept in the database but not active in any pipeline; a new application moves the candidate back to active. |
 
 ### `referral_campaigns` (Referral Campaign)
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Campaign being scoped. |
-| 2 | `active` | - | - | - | - | - | Campaign live; referrals submitted during window qualify for override reward. |
-| 3 | `ended` | - | ✓ | - | - | - | Campaign window closed. |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | _(always)_ | - | - | - | Campaign being scoped. |
+| 2 | `active` | - | - | _(always)_ | - | - | - | Campaign live; referrals submitted during window qualify for override reward. |
+| 3 | `ended` | - | ✓ | _(always)_ | - | - | - | Campaign window closed. |
 
 ### `referral_payouts` (Referral Payout)
 
-| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - | Referral hire confirmed; tenure clock running. |
-| 2 | `approved` | - | - | ✓ | - | `ats-referrals:approve_referral_payout` | Tenure condition met; payout approved by HR/Finance. |
-| 3 | `paid` | - | ✓ | - | - | - | Payout disbursed to referrer. |
-| 4 | `clawed_back` | - | ✓ | ✓ | - | `ats-referrals:clawback_referral_payout` | Referred employee left before tenure clause expired; payout reversed. |
-| 5 | `forfeited` | - | ✓ | - | - | - | Conditions never met (referred candidate not hired, did not start, voided). |
+| order | state_name | initial? | terminal? | realizing module | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | _(always)_ | - | - | - | Referral hire confirmed; tenure clock running. |
+| 2 | `approved` | - | - | _(always)_ | ✓ | - | `ats-referrals:approve_referral_payout` | Tenure condition met; payout approved by HR/Finance. |
+| 3 | `paid` | - | ✓ | _(always)_ | - | - | - | Payout disbursed to referrer. |
+| 4 | `clawed_back` | - | ✓ | _(always)_ | ✓ | - | `ats-referrals:clawback_referral_payout` | Referred employee left before tenure clause expired; payout reversed. |
+| 5 | `forfeited` | - | ✓ | _(always)_ | - | - | - | Conditions never met (referred candidate not hired, did not start, voided). |
 
 ## 8. Permissions and business rules (derived)
 
@@ -218,19 +207,31 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | `ats-referrals:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `ats-referrals:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-referrals:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `ats-referrals:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
-| `ats-referrals:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
+| `ats-candidate-crm:read_candidates` | entity-read | Read Candidates | ✓ |
+| `ats-candidate-crm:write_candidates` | entity-write | Write Candidates | ✓ |
+| `ats-referrals:read_candidate_referrals` | entity-read | Read Referrals | ✓ |
+| `ats-referrals:write_candidate_referrals` | entity-write | Write Referrals | ✓ |
+| `ats-referrals:read_referral_rewards` | entity-read | Read Referral Rewards | ✓ |
+| `ats-referrals:write_referral_rewards` | entity-write | Write Referral Rewards | ✓ |
+| `ats-referrals:read_referral_payouts` | entity-read | Read Referral Payouts | ✓ |
+| `ats-referrals:write_referral_payouts` | entity-write | Write Referral Payouts | ✓ |
+| `ats-referrals:read_referral_campaigns` | entity-read | Read Referral Campaigns | ✓ |
+| `ats-referrals:write_referral_campaigns` | entity-write | Write Referral Campaigns | ✓ |
+| `ats-candidate-crm:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
+| `ats-candidate-crm:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
 | `ats-referrals:pay_referral_bonus` | workflow-gate (lifecycle) | Transition `candidate_referrals` into state `bonus_payable` | ✓ |
-| `ats-referrals:approve_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` (⚠ no process) | ✓ |
-| `ats-referrals:clawback_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` (⚠ no process) | ✓ |
-| `ats-referrals:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
-| `ats-referrals:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
+| `ats-referrals:approve_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` | ✓ |
+| `ats-referrals:clawback_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` | ✓ |
+| `ats-candidate-crm:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
+
+_Gates with no process: `ats-candidate-crm:flag_do_not_hire`, `ats-referrals:approve_referral_payout`, `ats-referrals:clawback_referral_payout`. No Accountable can hold them, so this blueprint does not support `raci`._
 
 ### 8.2 Business rules
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
-| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-referrals:view_all_candidates` / `ats-referrals:manage_all_candidates` |
+| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidates` / `ats-candidate-crm:manage_all_candidates` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -252,13 +253,28 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `ats-referrals:admin` | `ats-referrals:manage` |
 | `ats-referrals:manage` | `ats-referrals:read` |
-| `ats-referrals:admin` | `ats-referrals:hire_candidate` |
-| `ats-referrals:admin` | `ats-referrals:flag_do_not_hire` |
+| `ats-referrals:read` | `ats-candidate-crm:read_candidates` |
+| `ats-referrals:read` | `ats-referrals:read_candidate_referrals` |
+| `ats-referrals:read` | `ats-referrals:read_referral_rewards` |
+| `ats-referrals:read` | `ats-referrals:read_referral_payouts` |
+| `ats-referrals:read` | `ats-referrals:read_referral_campaigns` |
+| `ats-referrals:manage` | `ats-candidate-crm:write_candidates` |
+| `ats-candidate-crm:write_candidates` | `ats-candidate-crm:read_candidates` |
+| `ats-referrals:manage` | `ats-referrals:write_candidate_referrals` |
+| `ats-referrals:write_candidate_referrals` | `ats-referrals:read_candidate_referrals` |
+| `ats-referrals:admin` | `ats-referrals:write_referral_rewards` |
+| `ats-referrals:write_referral_rewards` | `ats-referrals:read_referral_rewards` |
+| `ats-referrals:manage` | `ats-referrals:write_referral_payouts` |
+| `ats-referrals:write_referral_payouts` | `ats-referrals:read_referral_payouts` |
+| `ats-referrals:manage` | `ats-referrals:write_referral_campaigns` |
+| `ats-referrals:write_referral_campaigns` | `ats-referrals:read_referral_campaigns` |
+| `ats-referrals:admin` | `ats-candidate-crm:hire_candidate` |
+| `ats-referrals:admin` | `ats-candidate-crm:flag_do_not_hire` |
 | `ats-referrals:admin` | `ats-referrals:pay_referral_bonus` |
 | `ats-referrals:admin` | `ats-referrals:approve_referral_payout` |
 | `ats-referrals:admin` | `ats-referrals:clawback_referral_payout` |
-| `ats-referrals:admin` | `ats-referrals:view_all_candidates` |
-| `ats-referrals:admin` | `ats-referrals:manage_all_candidates` |
+| `ats-referrals:admin` | `ats-candidate-crm:view_all_candidates` |
+| `ats-referrals:admin` | `ats-candidate-crm:manage_all_candidates` |
 
 **Processes wired:**
 
@@ -272,7 +288,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
 | `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-referrals:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-candidate-crm:hire_candidate] + the gated entities' write tier |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 | `RECRUITING-RECRUITER` | persona | responsible | `manage_employee_referral` | the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | accountable | `manage_employee_referral` | grant gates [ats-referrals:pay_referral_bonus] + the gated entities' write tier |
@@ -282,6 +298,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
-| contributor | Human Resources | `manage` | `:manage` |
-| contributor | Legal | `manage` | `:manage` |
-| consumer | Finance | `read` | `:read` |
+| contributor | Human Resources | `manager` | `:manage` |
+| contributor | Legal | `manager` | `:manage` |
+| consumer | Finance | `viewer` | `:read` |
